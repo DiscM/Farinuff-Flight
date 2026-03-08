@@ -1,0 +1,97 @@
+[gd_scene load_steps=5 format=3 uid="uid://bpv3rwt1k4f2i"]
+
+[ext_resource type="Script" path="res://entities/player/player.gd" id="1_player"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_player"]
+radius = 16.0
+height = 44.0
+
+[sub_resource type="GDScript" id="GDScript_ship"]
+script/source = "extends Sprite2D
+
+func _ready() -> void:
+	var size := 48
+	var img := Image.create(size, size, false, Image.FORMAT_RGBA8)
+	img.fill(Color.TRANSPARENT)
+
+	# Ship body (triangle shape pointing up)
+	for y in range(size):
+		for x in range(size):
+			var cx := float(x) - size / 2.0
+			var cy := float(y) - size / 2.0
+
+			# Main hull (triangle)
+			var hull_width := (float(y) / size) * (size * 0.7)
+			if absf(cx) < hull_width / 2.0 and cy > -size * 0.45 and cy < size * 0.35:
+				var t := float(y) / size
+				var color := Color(0.15, 0.5, 0.95).lerp(Color(0.1, 0.85, 1.0), t)
+				img.set_pixel(x, y, color)
+
+			# Cockpit (small bright area near top)
+			if absf(cx) < 4.0 and cy > -size * 0.3 and cy < -size * 0.05:
+				img.set_pixel(x, y, Color(0.6, 0.95, 1.0))
+
+			# Wing accents
+			if absf(cx) > hull_width / 2.0 - 3.0 and absf(cx) < hull_width / 2.0 and cy > size * 0.05 and cy < size * 0.35:
+				img.set_pixel(x, y, Color(0.9, 0.4, 0.15))
+
+			# Engine glow at bottom
+			if absf(cx) < 6.0 and cy > size * 0.3 and cy < size * 0.45:
+				img.set_pixel(x, y, Color(0.2, 1.0, 0.5, 0.9))
+
+	texture = ImageTexture.create_from_image(img)
+"
+
+[sub_resource type="GDScript" id="GDScript_shield"]
+script/source = "extends Sprite2D
+
+func _ready() -> void:
+	var size := 64
+	var img := Image.create(size, size, false, Image.FORMAT_RGBA8)
+	img.fill(Color.TRANSPARENT)
+	var center := size / 2.0
+	var radius := size / 2.0 - 2.0
+	for y in range(size):
+		for x in range(size):
+			var dist := Vector2(x - center, y - center).length()
+			if dist > radius - 3.0 and dist < radius:
+				img.set_pixel(x, y, Color(0.3, 0.8, 1.0, 0.6))
+			elif dist > radius - 5.0 and dist < radius - 3.0:
+				img.set_pixel(x, y, Color(0.3, 0.8, 1.0, 0.25))
+	texture = ImageTexture.create_from_image(img)
+"
+
+[node name="Player" type="Area2D" groups=["player"]]
+collision_layer = 1
+collision_mask = 26
+script = ExtResource("1_player")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+script = SubResource("GDScript_ship")
+
+[node name="ShieldSprite" type="Sprite2D" parent="."]
+visible = false
+script = SubResource("GDScript_shield")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CapsuleShape2D_player")
+
+[node name="ShootTimer" type="Timer" parent="."]
+wait_time = 0.22
+one_shot = true
+
+[node name="InvincibilityTimer" type="Timer" parent="."]
+wait_time = 1.5
+one_shot = true
+
+[node name="RapidFireTimer" type="Timer" parent="."]
+wait_time = 8.0
+one_shot = true
+
+[node name="SpreadShotTimer" type="Timer" parent="."]
+wait_time = 8.0
+one_shot = true
+
+[node name="MagnetTimer" type="Timer" parent="."]
+wait_time = 10.0
+one_shot = true

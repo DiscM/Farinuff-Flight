@@ -1,0 +1,46 @@
+[gd_scene load_steps=4 format=3 uid="uid://e7sq4t8n3xg6c"]
+
+[ext_resource type="Script" path="res://entities/enemies/bomber_enemy.gd" id="1_bomber"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_bomber"]
+size = Vector2(36, 28)
+
+[sub_resource type="GDScript" id="GDScript_draw"]
+script/source = "extends Sprite2D
+
+func _ready() -> void:
+	var w := 40
+	var h := 32
+	var img := Image.create(w, h, false, Image.FORMAT_RGBA8)
+	img.fill(Color.TRANSPARENT)
+	for y in range(h):
+		for x in range(w):
+			var cx := float(x) - w / 2.0
+			var cy := float(y) - h / 2.0
+			# Wide body
+			if absf(cx) < w * 0.4 and absf(cy) < h * 0.3:
+				var t := absf(cx) / (w * 0.4)
+				var color := Color(0.2, 0.65, 0.2).lerp(Color(0.1, 0.4, 0.1), t)
+				img.set_pixel(x, y, color)
+			# Wings extended further
+			if absf(cx) > w * 0.2 and absf(cx) < w * 0.48 and cy > -h * 0.1 and cy < h * 0.15:
+				img.set_pixel(x, y, Color(0.15, 0.5, 0.15))
+			# Bomb bay (dark square at bottom center)
+			if absf(cx) < 5.0 and cy > h * 0.1 and cy < h * 0.35:
+				img.set_pixel(x, y, Color(0.25, 0.25, 0.25))
+			# Cockpit
+			if absf(cx) < 3.0 and cy > -h * 0.3 and cy < -h * 0.1:
+				img.set_pixel(x, y, Color(0.8, 0.9, 0.4))
+	texture = ImageTexture.create_from_image(img)
+"
+
+[node name="BomberEnemy" type="Area2D" groups=["enemies"]]
+collision_layer = 2
+collision_mask = 5
+script = ExtResource("1_bomber")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+script = SubResource("GDScript_draw")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_bomber")

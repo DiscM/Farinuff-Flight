@@ -1,0 +1,40 @@
+[gd_scene load_steps=4 format=3 uid="uid://cqwk2m8xh7y3a"]
+
+[ext_resource type="Script" path="res://entities/enemies/basic_enemy.gd" id="1_basic"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_basic"]
+size = Vector2(28, 28)
+
+[sub_resource type="GDScript" id="GDScript_draw"]
+script/source = "extends Sprite2D
+
+func _ready() -> void:
+	var size := 32
+	var img := Image.create(size, size, false, Image.FORMAT_RGBA8)
+	img.fill(Color.TRANSPARENT)
+	for y in range(size):
+		for x in range(size):
+			var cx := float(x) - size / 2.0
+			var cy := float(y) - size / 2.0
+			# Inverted triangle (pointing down)
+			var hull_width := (1.0 - float(y) / size) * (size * 0.8)
+			if absf(cx) < hull_width / 2.0 and cy > -size * 0.4 and cy < size * 0.4:
+				var t := float(y) / size
+				var color := Color(0.9, 0.2, 0.3).lerp(Color(0.7, 0.1, 0.15), t)
+				img.set_pixel(x, y, color)
+			# Eye/window
+			if absf(cx) < 3.0 and cy > -size * 0.15 and cy < size * 0.05:
+				img.set_pixel(x, y, Color(1.0, 0.9, 0.3))
+	texture = ImageTexture.create_from_image(img)
+"
+
+[node name="BasicEnemy" type="Area2D" groups=["enemies"]]
+collision_layer = 2
+collision_mask = 5
+script = ExtResource("1_basic")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+script = SubResource("GDScript_draw")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_basic")

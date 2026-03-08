@@ -1,0 +1,42 @@
+[gd_scene format=3 uid="uid://dd67s6bc4xvjy"]
+
+[ext_resource type="Script" uid="uid://k78vdvgqtcv0" path="res://scenes/game.gd" id="1_game"]
+[ext_resource type="PackedScene" uid="uid://bpv3rwt1k4f2i" path="res://entities/player/player.tscn" id="2_player"]
+[ext_resource type="PackedScene" uid="uid://341t681usqv" path="res://ui/hud.tscn" id="3_hud"]
+[ext_resource type="Script" uid="uid://bkrvihgx6kgex" path="res://systems/enemy_spawner.gd" id="4_espawner"]
+[ext_resource type="Script" uid="uid://u2ouinr3eduo" path="res://systems/powerup_spawner.gd" id="5_pspawner"]
+[ext_resource type="Script" uid="uid://c1e7wgnnkkf57" path="res://effects/star_field.gd" id="6_stars"]
+
+[node name="Game" type="Node2D" unique_id=173375341]
+script = ExtResource("1_game")
+
+[node name="Background" type="ColorRect" parent="." unique_id=846929081]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.02, 0.02, 0.07, 1)
+
+[node name="StarField" type="Node2D" parent="." unique_id=884997156]
+script = ExtResource("6_stars")
+
+[node name="Camera2D" type="Camera2D" parent="." unique_id=98105400]
+anchor_mode = 0
+
+[node name="Player" parent="." unique_id=1991327863 instance=ExtResource("2_player")]
+
+[node name="HUD" parent="." unique_id=2059469327 instance=ExtResource("3_hud")]
+
+[node name="EnemySpawner" type="Node" parent="." unique_id=1134478746]
+script = ExtResource("4_espawner")
+
+[node name="SpawnTimer" type="Timer" parent="EnemySpawner" unique_id=1293180693]
+wait_time = 1.5
+
+[node name="PowerUpSpawner" type="Node" parent="." unique_id=1389430957]
+script = ExtResource("5_pspawner")
+
+[node name="SpawnTimer" type="Timer" parent="PowerUpSpawner" unique_id=241860260]
+wait_time = 10.0
+one_shot = true

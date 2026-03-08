@@ -1,0 +1,32 @@
+[gd_scene load_steps=4 format=3 uid="uid://dkr7t3ep2xbna"]
+
+[ext_resource type="Script" path="res://entities/bullets/enemy_bullet.gd" id="1_ebullet"]
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_ebullet"]
+radius = 4.0
+
+[sub_resource type="GDScript" id="GDScript_draw"]
+script/source = "extends Sprite2D
+
+func _ready() -> void:
+	var img := Image.create(10, 10, false, Image.FORMAT_RGBA8)
+	img.fill(Color(1.0, 0.25, 0.25))
+	for x in range(10):
+		for y in range(10):
+			var cx := x - 4.5
+			var cy := y - 4.5
+			if cx * cx + cy * cy > 20.0:
+				img.set_pixel(x, y, Color.TRANSPARENT)
+	texture = ImageTexture.create_from_image(img)
+"
+
+[node name="EnemyBullet" type="Area2D"]
+collision_layer = 8
+collision_mask = 1
+script = ExtResource("1_ebullet")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("CircleShape2D_ebullet")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+script = SubResource("GDScript_draw")

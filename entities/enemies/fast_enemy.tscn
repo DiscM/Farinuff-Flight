@@ -1,0 +1,39 @@
+[gd_scene load_steps=4 format=3 uid="uid://b5nk9v2p1te4w"]
+
+[ext_resource type="Script" path="res://entities/enemies/fast_enemy.gd" id="1_fast"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_fast"]
+size = Vector2(22, 22)
+
+[sub_resource type="GDScript" id="GDScript_draw"]
+script/source = "extends Sprite2D
+
+func _ready() -> void:
+	var size := 26
+	var img := Image.create(size, size, false, Image.FORMAT_RGBA8)
+	img.fill(Color.TRANSPARENT)
+	for y in range(size):
+		for x in range(size):
+			var cx := float(x) - size / 2.0
+			var cy := float(y) - size / 2.0
+			# Sleek diamond shape
+			if absf(cx) + absf(cy) < size * 0.4:
+				var t := (absf(cx) + absf(cy)) / (size * 0.4)
+				var color := Color(1.0, 0.6, 0.0).lerp(Color(1.0, 0.3, 0.0), t)
+				img.set_pixel(x, y, color)
+			# Bright center
+			if absf(cx) + absf(cy) < size * 0.12:
+				img.set_pixel(x, y, Color(1.0, 1.0, 0.7))
+	texture = ImageTexture.create_from_image(img)
+"
+
+[node name="FastEnemy" type="Area2D" groups=["enemies"]]
+collision_layer = 2
+collision_mask = 5
+script = ExtResource("1_fast")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+script = SubResource("GDScript_draw")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_fast")

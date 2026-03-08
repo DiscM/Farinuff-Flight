@@ -1,0 +1,47 @@
+[gd_scene load_steps=4 format=3 uid="uid://d4pq8r6m2xf5b"]
+
+[ext_resource type="Script" path="res://entities/enemies/tank_enemy.gd" id="1_tank"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_tank"]
+size = Vector2(52, 52)
+
+[sub_resource type="GDScript" id="GDScript_draw"]
+script/source = "extends Sprite2D
+
+func _ready() -> void:
+	var size := 56
+	var img := Image.create(size, size, false, Image.FORMAT_RGBA8)
+	img.fill(Color.TRANSPARENT)
+	var center := size / 2.0
+	for y in range(size):
+		for x in range(size):
+			var cx := float(x) - center
+			var cy := float(y) - center
+			var dist := Vector2(cx, cy).length()
+			# Hexagonal shape
+			var hex_dist := maxf(absf(cx), absf(cx * 0.5 + cy * 0.866)) 
+			hex_dist = maxf(hex_dist, absf(cx * 0.5 - cy * 0.866))
+			if hex_dist < center - 2.0:
+				var t := hex_dist / center
+				var color := Color(0.5, 0.15, 0.6).lerp(Color(0.3, 0.05, 0.4), t)
+				img.set_pixel(x, y, color)
+				# Armored plate lines
+				if fmod(float(y), 8.0) < 1.0 and hex_dist < center - 5.0:
+					img.set_pixel(x, y, Color(0.7, 0.3, 0.8, 0.8))
+			# Core glow
+			if dist < 8.0:
+				var t := dist / 8.0
+				img.set_pixel(x, y, Color(0.9, 0.3, 1.0).lerp(Color(0.5, 0.15, 0.6), t))
+	texture = ImageTexture.create_from_image(img)
+"
+
+[node name="TankEnemy" type="Area2D" groups=["enemies"]]
+collision_layer = 2
+collision_mask = 5
+script = ExtResource("1_tank")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+script = SubResource("GDScript_draw")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_tank")
