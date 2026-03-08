@@ -104,8 +104,7 @@ func _fire_spiral() -> void:
 		for i in range(5):
 			var angle := (TAU / 5.0) * i + (TAU / 3.0) * burst
 			var dir := Vector2(cos(angle), sin(angle))
-			var bullet := _spawn_bullet(dir, 260.0, true)
-			# Slight delay per burst handled by staggering in angle only
+			_spawn_bullet(dir, 260.0)
 
 func _spawn_bullet(dir: Vector2, spd: float, _deferred: bool = false) -> Area2D:
 	var bullet: Area2D = ENEMY_BULLET_SCENE.instantiate()

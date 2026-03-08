@@ -1,10 +1,10 @@
 63f7b34db8d8cdea90c76aacccf841ec
-::res://::1773010152
+::res://::1773010799
 export_presets.cfg::TextFile::-1::1773005690::0::1::::<><><>0<>0<><>::
 icon.svg::CompressedTexture2D::8477374368353171080::1772843521::1772843867::1::::<><><>0<>0<>29546cb631e22340ea556ccab8b209a8<>res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex::
 ::res://autoloads/::1772843867
 game_manager.gd::GDScript::7120198322673670038::1773010088::0::1::::<>Node<><>0<>0<><>::
-signal_bus.gd::GDScript::5696778882194430::1773009088::0::1::::<>Node<><>0<>0<><>::
+signal_bus.gd::GDScript::5696778882194430::1773010704::0::1::::<>Node<><>0<>0<><>::
 ::res://effects/::1772843867
 explosion.gd::GDScript::1239146382503244212::1772843381::0::1::::<>Node2D<><>0<>0<><>::
 explosion.tscn::PackedScene::7526195576154995918::1772843392::0::1::::<><><>0<>0<><>::res://effects/explosion.gd
