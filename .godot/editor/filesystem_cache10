@@ -1,9 +1,9 @@
 63f7b34db8d8cdea90c76aacccf841ec
-::res://::1773006610
+::res://::1773008350
 export_presets.cfg::TextFile::-1::1773005690::0::1::::<><><>0<>0<><>::
 icon.svg::CompressedTexture2D::8477374368353171080::1772843521::1772843867::1::::<><><>0<>0<>29546cb631e22340ea556ccab8b209a8<>res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex::
 ::res://autoloads/::1772843867
-game_manager.gd::GDScript::7120198322673670038::1773006022::0::1::::<>Node<><>0<>0<><>::
+game_manager.gd::GDScript::7120198322673670038::1773008231::0::1::::<>Node<><>0<>0<><>::
 signal_bus.gd::GDScript::5696778882194430::1773003485::0::1::::<>Node<><>0<>0<><>::
 ::res://effects/::1772843867
 explosion.gd::GDScript::1239146382503244212::1772843381::0::1::::<>Node2D<><>0<>0<><>::
@@ -11,7 +11,7 @@ explosion.tscn::PackedScene::7526195576154995918::1772843392::0::1::::<><><>0<>0
 star_field.gd::GDScript::6607991380052699776::1772843964::0::1::::<>Node2D<><>0<>0<><>::
 ::res://entities/::1773003479
 ::res://entities/bullets/::1772843867
-bullet.gd::GDScript::5160029286225152189::1773006578::0::1::::<>Area2D<><>0<>0<><>::
+bullet.gd::GDScript::5160029286225152189::1773008034::0::1::::<>Area2D<><>0<>0<><>::
 bullet.tscn::PackedScene::6999247571323733030::1772843201::0::1::::<><><>0<>0<><>::res://entities/bullets/bullet.gd
 enemy_bullet.gd::GDScript::4569298435493507344::1772845928::0::1::::<>Area2D<><>0<>0<><>::
 enemy_bullet.tscn::PackedScene::7898223260682902790::1772843208::0::1::::<><><>0<>0<><>::res://entities/bullets/enemy_bullet.gd
@@ -19,7 +19,7 @@ enemy_bullet.tscn::PackedScene::7898223260682902790::1772843208::0::1::::<><><>0
 xp_orb.gd::GDScript::5975123289183961248::1773003479::0::1::::<>Area2D<><>0<>0<><>::
 xp_orb.tscn::PackedScene::4237449552992386302::1773003483::0::1::::<><><>0<>0<><>::res://entities/collectibles/xp_orb.gd
 ::res://entities/enemies/::1772843867
-base_enemy.gd::GDScript::4354220982804620300::1773004333::0::1::::BaseEnemy<>Area2D<><>0<>0<><>::
+base_enemy.gd::GDScript::4354220982804620300::1773007394::0::1::::BaseEnemy<>Area2D<><>0<>0<><>::
 basic_enemy.gd::GDScript::7666788716843911835::1772843297::0::1::::<>BaseEnemy<><>0<>0<><>::
 basic_enemy.tscn::PackedScene::5941935244861535144::1772843300::0::1::::<><><>0<>0<><>::res://entities/enemies/basic_enemy.gd
 bomber_enemy.gd::GDScript::4393878285114648440::1772843332::0::1::::<>BaseEnemy<><>0<>0<><>::
@@ -29,7 +29,7 @@ fast_enemy.tscn::PackedScene::4519591935974381528::1772843309::0::1::::<><><>0<>
 tank_enemy.gd::GDScript::5741692442174512813::1773003516::0::1::::<>BaseEnemy<><>0<>0<><>::
 tank_enemy.tscn::PackedScene::3363490489594425::1772843324::0::1::::<><><>0<>0<><>::res://entities/enemies/tank_enemy.gd
 ::res://entities/player/::1772843867
-player.gd::GDScript::2269597157888062947::1773006572::0::1::::<>Area2D<><>0<>0<><>::
+player.gd::GDScript::2269597157888062947::1773008038::0::1::::<>Area2D<><>0<>0<><>::
 player.tscn::PackedScene::3484336891453504314::1772843264::0::1::::<><><>0<>0<><>::res://entities/player/player.gd
 ::res://entities/powerups/::1772843867
 power_up.gd::GDScript::5276629014624626264::1772845579::0::1::::<>Area2D<><>0<>0<><>::
@@ -45,7 +45,7 @@ game_over.gd::GDScript::5293172013872024286::1773002770::0::1::::<>Control<><>0<
 game_over.tscn::PackedScene::4977083771886601735::1773002772::0::1::::<><><>0<>0<><>::res://ui/game_over.gd
 hud.gd::GDScript::3092539083683090707::1773002745::0::1::::<>CanvasLayer<><>0<>0<><>::
 hud.tscn::PackedScene::59610847912939293::1773002733::0::1::::<><><>0<>0<><>::res://ui/hud.gd
-level_up_popup.gd::GDScript::2902886148029102695::1773006580::0::1::::<>Control<><>0<>0<><>::
+level_up_popup.gd::GDScript::2902886148029102695::1773008248::0::1::::<>Control<><>0<>0<><>::
 level_up_popup.tscn::PackedScene::6411188701368436048::1773002852::0::1::::<><><>0<>0<><>::res://ui/level_up_popup.gd
 main_menu.gd::GDScript::1423372426485560357::1772843450::0::1::::<>Control<><>0<>0<><>::
 main_menu.tscn::PackedScene::2518347309899770344::1772843454::0::1::::<><><>0<>0<><>::res://ui/main_menu.gd

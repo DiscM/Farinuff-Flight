@@ -41,6 +41,8 @@ func take_damage(amount: int) -> void:
 		_die()
 
 func _die() -> void:
+	if is_queued_for_deletion():
+		return
 	SignalBus.enemy_killed.emit(points, global_position)
 	# Spawn XP orb (60% chance, but guaranteed if xp_value was explicitly set)
 	var guaranteed_drop := xp_value >= 0
@@ -48,13 +50,13 @@ func _die() -> void:
 		var orb: Area2D = XP_ORB_SCENE.instantiate()
 		orb.global_position = global_position
 		orb.xp_value = points if xp_value < 0 else xp_value
-		get_tree().current_scene.add_child(orb)
+		get_tree().current_scene.call_deferred("add_child", orb)
 	# Spawn explosion effect
 	var explosion_scene := preload("res://effects/explosion.tscn")
 	var explosion := explosion_scene.instantiate()
 	explosion.global_position = global_position
-	get_tree().current_scene.add_child(explosion)
-	queue_free()
+	get_tree().current_scene.call_deferred("add_child", explosion)
+	call_deferred("queue_free")
 
 func _on_area_entered(area: Area2D) -> void:
 	if is_queued_for_deletion():

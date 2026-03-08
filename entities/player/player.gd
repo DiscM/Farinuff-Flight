@@ -306,7 +306,7 @@ func grant_explosive_rounds() -> void:
 	has_explosive_rounds = true
 
 func grant_zigzag() -> void:
-	zigzag_stacks += 1
+	zigzag_stacks = mini(zigzag_stacks + 1, 10)
 
 func grant_orbitals() -> void:
 	if has_orbitals:

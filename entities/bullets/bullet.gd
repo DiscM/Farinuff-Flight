@@ -19,7 +19,9 @@ func _ready() -> void:
 	area_entered.connect(_on_area_entered)
 
 func _physics_process(delta: float) -> void:
-	position += direction * speed * delta
+	# Bullet speed reduced 10% per zigzag stack (max 5 stacks = -50%)
+	var speed_mult := 1.0 - mini(zigzag_stacks, 5) * 0.1
+	position += direction * speed * speed_mult * delta
 	if zigzag:
 		var freq := 18.0 + zigzag_stacks * 3.0   # faster wobble per stack
 		var amp  := 120.0 * zigzag_stacks        # wider sweep per stack
@@ -36,7 +38,7 @@ func _on_area_entered(area: Area2D) -> void:
 			_explode()
 
 		if not piercing:
-			queue_free()
+			call_deferred("queue_free")
 
 func _explode() -> void:
 	# Deal area damage to all enemies within blast radius
@@ -64,6 +66,6 @@ func _explode() -> void:
 	ring.scale_amount_min = 2.0
 	ring.scale_amount_max = 5.0
 	ring.color = Color(1.0, 0.6, 0.15, 0.9)
-	get_tree().current_scene.add_child(ring)
+	get_tree().current_scene.call_deferred("add_child", ring)
 	get_tree().create_timer(0.5).timeout.connect(ring.queue_free)
 	SignalBus.screen_shake.emit(4.0, 0.15)

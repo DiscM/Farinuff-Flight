@@ -25,6 +25,7 @@ var xp_to_next_level: int = 250  # first threshold uses logarithmic curve
 var bonus_speed_pct: float = 0.0
 var bonus_fire_rate_pct: float = 0.0
 var bonus_damage: int = 0
+var speed_stacks: int = 0
 
 func _ready() -> void:
 	SignalBus.enemy_killed.connect(_on_enemy_killed)
@@ -82,7 +83,9 @@ func _level_up() -> void:
 func apply_upgrade(type: String) -> void:
 	match type:
 		"speed":
-			bonus_speed_pct += 0.15
+			if speed_stacks < 5:
+				speed_stacks += 1
+				bonus_speed_pct += 0.01
 		"fire_rate":
 			bonus_fire_rate_pct += 0.25
 		"damage":
@@ -152,6 +155,7 @@ func _on_game_restarted() -> void:
 	bonus_speed_pct = 0.0
 	bonus_fire_rate_pct = 0.0
 	bonus_damage = 0
+	speed_stacks = 0
 
 	is_game_active = true
 	SignalBus.score_changed.emit(score)
