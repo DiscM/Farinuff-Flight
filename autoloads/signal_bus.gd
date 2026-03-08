@@ -1,5 +1,7 @@
 extends Node
 ## Central signal bus for decoupled communication between game systems.
+# Signals are connected/emitted externally — suppress false-positive unused_signal warnings.
+@warning_ignore_all("unused_signal")
 
 # Enemy signals
 signal enemy_killed(points: int, position: Vector2)
