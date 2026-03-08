@@ -8,6 +8,7 @@ var combo: int = 0
 var lives: int = 3
 var current_wave: int = 1
 var is_game_active: bool = false
+var boss_active: bool = false
 
 # --- Difficulty scaling ---
 var base_spawn_interval: float = 1.5
@@ -26,12 +27,14 @@ var bonus_speed_pct: float = 0.0
 var bonus_fire_rate_pct: float = 0.0
 var bonus_damage: int = 0
 var speed_stacks: int = 0
+var fire_rate_stacks: int = 0
 
 func _ready() -> void:
 	SignalBus.enemy_killed.connect(_on_enemy_killed)
 	SignalBus.player_hit.connect(_on_player_hit)
 	SignalBus.game_restarted.connect(_on_game_restarted)
 	SignalBus.xp_orb_collected.connect(_on_xp_orb_collected)
+	SignalBus.boss_died.connect(_on_boss_died)
 
 # --- Score & Combo ---
 
@@ -46,13 +49,17 @@ func _on_enemy_killed(points: int, _position: Vector2) -> void:
 	#_award_xp(points)  # XP now comes from collectible orbs
 
 	enemies_killed_this_wave += 1
-	if enemies_killed_this_wave >= enemies_per_wave:
+	if enemies_killed_this_wave >= enemies_per_wave and not boss_active:
 		_advance_wave()
 
 # --- RPG XP / Level System ---
 
 func _on_xp_orb_collected(value: int) -> void:
 	_award_xp(value)
+
+func _on_boss_died(_points: int) -> void:
+	boss_active = false
+	_advance_wave()
 
 ## Logarithmic XP curve: early levels need more XP, later levels scale gently.
 ## level 1→2 = 250, 2→3 ≈ 396, 3→4 = 500, 5→6 ≈ 646, 10→11 ≈ 866
@@ -87,7 +94,9 @@ func apply_upgrade(type: String) -> void:
 				speed_stacks += 1
 				bonus_speed_pct += 0.01
 		"fire_rate":
-			bonus_fire_rate_pct += 0.25
+			if fire_rate_stacks < 20:
+				fire_rate_stacks += 1
+				bonus_fire_rate_pct += 0.05
 		"damage":
 			bonus_damage += 1
 		"shield":
@@ -131,6 +140,7 @@ func _advance_wave() -> void:
 	enemies_killed_this_wave = 0
 	enemies_per_wave = 8 + current_wave * 2
 	enemy_speed_multiplier = 1.0 + (current_wave - 1) * 0.12
+	boss_active = (current_wave % 5 == 0)
 	SignalBus.wave_started.emit(current_wave)
 
 func get_spawn_interval() -> float:
@@ -156,8 +166,10 @@ func _on_game_restarted() -> void:
 	bonus_fire_rate_pct = 0.0
 	bonus_damage = 0
 	speed_stacks = 0
+	fire_rate_stacks = 0
 
 	is_game_active = true
+	boss_active = false
 	SignalBus.score_changed.emit(score)
 	SignalBus.combo_changed.emit(combo)
 	SignalBus.lives_changed.emit(lives)

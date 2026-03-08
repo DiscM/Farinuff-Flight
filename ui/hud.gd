@@ -10,6 +10,9 @@ extends CanvasLayer
 @onready var power_up_container: HBoxContainer = $MarginContainer2/PowerUpContainer
 @onready var level_label: Label = $XPBarContainer/VBox/LevelLabel
 @onready var xp_bar: ProgressBar = $XPBarContainer/VBox/XPBar
+@onready var boss_bar_container: MarginContainer = $BossBarContainer
+@onready var boss_name_label: Label = $BossBarContainer/VBox/BossNameLabel
+@onready var boss_health_bar: ProgressBar = $BossBarContainer/VBox/BossHealthBar
 
 func _ready() -> void:
 	SignalBus.score_changed.connect(_on_score_changed)
@@ -20,8 +23,12 @@ func _ready() -> void:
 	SignalBus.power_up_collected.connect(_on_power_up_collected)
 	SignalBus.xp_changed.connect(_on_xp_changed)
 	SignalBus.level_up.connect(_on_level_up)
+	SignalBus.boss_spawned.connect(_on_boss_spawned)
+	SignalBus.boss_health_changed.connect(_on_boss_health_changed)
+	SignalBus.boss_died.connect(_on_boss_died)
 	wave_banner.visible = false
 	level_up_banner.visible = false
+	boss_bar_container.visible = false
 
 func update_all() -> void:
 	_on_score_changed(GameManager.score)
@@ -58,12 +65,18 @@ func _on_lives_changed(new_lives: int) -> void:
 
 func _on_wave_started(wave_number: int) -> void:
 	wave_label.text = "WAVE " + str(wave_number)
-	# Show banner
-	wave_banner.text = "— WAVE " + str(wave_number) + " —"
+	var is_boss_wave := (wave_number % 5 == 0)
+	var is_elite_wave := (wave_number % 10 == 0)
+	if is_boss_wave:
+		wave_banner.text = "⚠  " + ("ELITE BOSS!" if is_elite_wave else "BOSS INCOMING!")
+		wave_banner.modulate = Color(1.0, 0.15, 0.4) if is_elite_wave else Color(1.0, 0.5, 0.1)
+	else:
+		wave_banner.text = "— WAVE " + str(wave_number) + " —"
+		wave_banner.modulate = Color.WHITE
 	wave_banner.visible = true
 	wave_banner.modulate.a = 1.0
 	var tween := create_tween()
-	tween.tween_interval(1.5)
+	tween.tween_interval(1.8)
 	tween.tween_property(wave_banner, "modulate:a", 0.0, 0.5)
 	tween.tween_callback(func(): wave_banner.visible = false)
 
@@ -102,6 +115,34 @@ func _on_level_up(new_level: int) -> void:
 	tween.tween_interval(1.0)
 	tween.tween_property(level_up_banner, "modulate:a", 0.0, 0.5)
 	tween.tween_callback(func(): level_up_banner.visible = false)
+
+# --- Boss ---
+
+func _on_boss_spawned(health: int, max_health: int) -> void:
+	boss_health_bar.max_value = max_health
+	boss_health_bar.value = health
+	var is_elite := GameManager.current_wave % 10 == 0
+	boss_name_label.text = "⚠  ELITE BOSS" if is_elite else "⚠  BOSS"
+	boss_name_label.add_theme_color_override("font_color",
+		Color(1.0, 0.1, 0.7) if is_elite else Color(1.0, 0.2, 0.5))
+	boss_bar_container.visible = true
+
+	# Pulse boss bar on spawn
+	var tween := create_tween()
+	tween.set_loops(3)
+	tween.tween_property(boss_bar_container, "modulate:a", 0.3, 0.15)
+	tween.tween_property(boss_bar_container, "modulate:a", 1.0, 0.15)
+
+func _on_boss_health_changed(health: int) -> void:
+	boss_health_bar.value = health
+
+func _on_boss_died(_points: int) -> void:
+	var tween := create_tween()
+	tween.tween_property(boss_bar_container, "modulate:a", 0.0, 0.4)
+	tween.tween_callback(func():
+		boss_bar_container.visible = false
+		boss_bar_container.modulate.a = 1.0
+	)
 
 # --- Power-ups ---
 

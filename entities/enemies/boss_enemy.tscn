@@ -1,0 +1,52 @@
+[gd_scene format=3 uid="uid://cfwkxdrbl7vwt"]
+
+[ext_resource type="Script" path="res://entities/enemies/boss_enemy.gd" id="1_boss"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_boss"]
+size = Vector2(88, 80)
+
+[sub_resource type="GDScript" id="GDScript_draw"]
+script/source = "extends Sprite2D
+
+func _ready() -> void:
+	var w := 96
+	var h := 88
+	var img := Image.create(w, h, false, Image.FORMAT_RGBA8)
+	img.fill(Color.TRANSPARENT)
+	var cx := w / 2.0
+	var cy := h / 2.0
+	for y in range(h):
+		for x in range(w):
+			var dx := float(x) - cx
+			var dy := float(y) - cy
+			var dist := Vector2(dx, dy).length()
+			# Outer hexagonal hull
+			var hex := maxf(absf(dx), absf(dx * 0.5 + dy * 0.866))
+			hex = maxf(hex, absf(dx * 0.5 - dy * 0.866))
+			if hex < cx - 2.0:
+				var t := hex / cx
+				var col := Color(0.15, 0.0, 0.25).lerp(Color(0.05, 0.0, 0.1), t)
+				img.set_pixel(x, y, col)
+				# Armour plates
+				if fmod(float(y), 10.0) < 1.5 and hex < cx - 8.0:
+					img.set_pixel(x, y, Color(0.45, 0.1, 0.6, 0.7))
+			# Inner glowing core
+			if dist < 14.0:
+				var t2 := dist / 14.0
+				img.set_pixel(x, y, Color(1.0, 0.3, 1.0).lerp(Color(0.6, 0.1, 0.8), t2))
+			# Eye slits
+			if absf(dy + 10.0) < 3.0 and absf(dx) > 6.0 and absf(dx) < 22.0:
+				img.set_pixel(x, y, Color(1.0, 0.0, 0.5, 0.9))
+	texture = ImageTexture.create_from_image(img)
+"
+
+[node name="BossEnemy" type="Area2D" groups=["enemies"]]
+collision_layer = 2
+collision_mask = 5
+script = ExtResource("1_boss")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+script = SubResource("GDScript_draw")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_boss")

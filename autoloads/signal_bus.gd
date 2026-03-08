@@ -13,6 +13,11 @@ signal player_died
 signal power_up_collected(type: int, position: Vector2)
 signal xp_orb_collected(xp_value: int)
 
+# Boss signals
+signal boss_spawned(health: int, max_health: int)
+signal boss_health_changed(health: int)
+signal boss_died(points: int)
+
 # Wave signals
 signal wave_started(wave_number: int)
 signal wave_cleared(wave_number: int)

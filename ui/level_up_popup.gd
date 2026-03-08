@@ -7,7 +7,7 @@ signal upgrade_chosen
 # Stat boost upgrades (always available, stackable)
 const STAT_UPGRADES: Array[Dictionary] = [
 	{"id": "speed", "label": "🚀  +1% SPEED", "color": Color(0.3, 0.85, 1.0), "desc": "Move faster (max 5 stacks)", "unique": false},
-	{"id": "fire_rate", "label": "🔥  +25% FIRE RATE", "color": Color(1.0, 0.75, 0.15), "desc": "Shoot faster", "unique": false},
+	{"id": "fire_rate", "label": "🔥  +5% FIRE RATE", "color": Color(1.0, 0.75, 0.15), "desc": "Shoot faster (max 20 stacks)", "unique": false},
 	{"id": "damage", "label": "💥  +1 DAMAGE", "color": Color(1.0, 0.35, 0.25), "desc": "Bullets hit harder", "unique": false},
 	{"id": "shield", "label": "🛡️  SHIELD", "color": Color(0.3, 0.95, 0.55), "desc": "Block one hit", "unique": false},
 	{"id": "life", "label": "❤️  +1 LIFE", "color": Color(1.0, 0.4, 0.55), "desc": "Extra life", "unique": false},
@@ -79,6 +79,8 @@ func _player_has_upgrade(player: Area2D, upgrade_id: String) -> bool:
 	match upgrade_id:
 		"speed":
 			return GameManager.speed_stacks >= 5
+		"fire_rate":
+			return GameManager.fire_rate_stacks >= 20
 		"rear_gun":
 			return player.has_rear_gun
 		"piercing":
