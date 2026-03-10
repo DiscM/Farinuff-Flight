@@ -5,7 +5,8 @@ class_name BaseEnemy
 @export var max_health: int = 1
 @export var speed: float = 150.0
 @export var points: int = 100
-@export var xp_value: int = -1  # -1 means "use points value"
+@export var orb_value: int = 1
+@export var guaranteed_orb: bool = false
 
 const XP_ORB_SCENE := preload("res://entities/collectibles/xp_orb.tscn")
 
@@ -13,9 +14,9 @@ var health: int
 
 func _ready() -> void:
 	add_to_group("enemies")
-	# Scale health with player level: each level adds 30% of base HP (rounded up)
-	var level_bonus := (GameManager.level - 1) * ceili(max_health * 0.3)
-	health = max_health + level_bonus
+	# Scale health with wave: each wave adds 10% of base HP (rounded up)
+	var wave_bonus := (GameManager.current_wave - 1) * ceili(max_health * 0.1)
+	health = max_health + wave_bonus
 	area_entered.connect(_on_area_entered)
 
 	var notifier := VisibleOnScreenNotifier2D.new()
@@ -44,12 +45,11 @@ func _die() -> void:
 	if is_queued_for_deletion():
 		return
 	SignalBus.enemy_killed.emit(points, global_position)
-	# Spawn XP orb (60% chance, but guaranteed if xp_value was explicitly set)
-	var guaranteed_drop := xp_value >= 0
-	if guaranteed_drop or randf() < 0.6:
+	# Spawn XP orb (60% chance, but guaranteed if guaranteed_orb is true)
+	if guaranteed_orb or randf() < 0.6:
 		var orb: Area2D = XP_ORB_SCENE.instantiate()
 		orb.global_position = global_position
-		orb.xp_value = points if xp_value < 0 else xp_value
+		orb.orb_value = orb_value
 		get_tree().current_scene.call_deferred("add_child", orb)
 	# Spawn explosion effect
 	var explosion_scene := preload("res://effects/explosion.tscn")

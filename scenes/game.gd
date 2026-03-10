@@ -2,7 +2,7 @@ extends Node2D
 ## Main game scene — contains the player, spawners, HUD, camera, and background.
 
 const GAME_OVER_SCENE := preload("res://ui/game_over.tscn")
-const LEVEL_UP_POPUP_SCENE := preload("res://ui/level_up_popup.tscn")
+const POINT_ALLOCATION_SCENE := preload("res://ui/point_allocation_popup.tscn")
 
 @onready var player: Area2D = $Player
 @onready var hud: CanvasLayer = $HUD
@@ -11,7 +11,7 @@ const LEVEL_UP_POPUP_SCENE := preload("res://ui/level_up_popup.tscn")
 @onready var powerup_spawner: Node = $PowerUpSpawner
 
 var game_over_shown: bool = false
-var level_up_active: bool = false
+var allocation_active: bool = false
 
 # Screen shake state
 var shake_intensity: float = 0.0
@@ -27,7 +27,7 @@ func _ready() -> void:
 
 	SignalBus.game_over.connect(_on_game_over)
 	SignalBus.screen_shake.connect(_on_screen_shake)
-	SignalBus.level_up.connect(_on_level_up)
+	SignalBus.allocation_triggered.connect(_on_allocation_triggered)
 
 	# Position player at bottom center
 	var viewport_size := get_viewport().get_visible_rect().size
@@ -66,10 +66,10 @@ func _on_game_over(final_score: int) -> void:
 	overlay.add_child(game_over_screen)
 	game_over_screen.show_score(final_score)
 
-func _on_level_up(_new_level: int) -> void:
-	if level_up_active:
-		return  # Prevent stacking popups
-	level_up_active = true
+func _on_allocation_triggered(points: int) -> void:
+	if allocation_active:
+		return
+	allocation_active = true
 
 	# Pause the game immediately
 	get_tree().paused = true
@@ -78,9 +78,10 @@ func _on_level_up(_new_level: int) -> void:
 	var overlay := CanvasLayer.new()
 	overlay.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(overlay)
-	var popup := LEVEL_UP_POPUP_SCENE.instantiate()
-	popup.upgrade_chosen.connect(_on_level_up_closed)
+	var popup := POINT_ALLOCATION_SCENE.instantiate()
+	popup.allocation_done.connect(_on_allocation_closed)
 	overlay.add_child(popup)
+	popup.set_points(points)
 
-func _on_level_up_closed() -> void:
-	level_up_active = false
+func _on_allocation_closed() -> void:
+	allocation_active = false

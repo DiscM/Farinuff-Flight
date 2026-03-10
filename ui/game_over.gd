@@ -12,7 +12,7 @@ func _ready() -> void:
 func show_score(final_score: int) -> void:
 	score_label.text = "SCORE: " + str(final_score)
 	high_score_label.text = "HIGH SCORE: " + str(GameManager.high_score)
-	level_label.text = "LEVEL REACHED: " + str(GameManager.level)
+	level_label.text = "WAVE REACHED: " + str(GameManager.current_wave)
 
 func _on_retry_pressed() -> void:
 	get_tree().change_scene_to_file("res://scenes/game.tscn")

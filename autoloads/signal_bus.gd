@@ -19,6 +19,8 @@ signal player_died
 signal power_up_collected(type: int, position: Vector2)
 @warning_ignore("unused_signal")
 signal xp_orb_collected(xp_value: int)
+@warning_ignore("unused_signal")
+signal orb_meter_changed(current: int, max_orbs: int)
 
 # Boss signals
 @warning_ignore("unused_signal")
@@ -42,11 +44,9 @@ signal combo_changed(new_combo: int)
 @warning_ignore("unused_signal")
 signal lives_changed(new_lives: int)
 
-# RPG / Level-up signals
+# Point allocation signals
 @warning_ignore("unused_signal")
-signal xp_changed(current_xp: int, xp_to_next: int)
-@warning_ignore("unused_signal")
-signal level_up(new_level: int)
+signal allocation_triggered(points: int)
 
 # Effects
 @warning_ignore("unused_signal")

@@ -26,18 +26,19 @@ var max_boss_health: int = 0
 
 func _ready() -> void:
 	if is_elite:
-		max_health = 500
+		max_health = 100
 		points = 5000
-		xp_value = 8000
+		orb_value = 3
 	else:
-		max_health = 200
+		max_health = 40
 		points = 1500
-		xp_value = 2500
+		orb_value = 3
+	guaranteed_orb = true
 	speed = 0.0
 
-	# Scale HP with player level at 25% per level
-	var level_bonus := (GameManager.level - 1) * ceili(max_health * 0.25)
-	max_health += level_bonus
+	# Scale HP with wave at 10% per wave
+	var wave_bonus := (GameManager.current_wave - 1) * ceili(max_health * 0.1)
+	max_health += wave_bonus
 
 	super._ready()
 	max_boss_health = health
@@ -209,3 +210,12 @@ func _spawn_bullet(dir: Vector2, spd: float) -> void:
 func _die() -> void:
 	SignalBus.boss_died.emit(points)
 	super._die()
+
+## Override: player collision deals fixed damage instead of instant death.
+func _on_area_entered(area: Area2D) -> void:
+	if is_queued_for_deletion():
+		return
+	if area.is_in_group("player"):
+		take_damage(10)
+	elif area.collision_layer & 4:
+		take_damage(1 + GameManager.bonus_damage)

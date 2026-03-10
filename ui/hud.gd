@@ -1,18 +1,19 @@
 extends CanvasLayer
-## HUD — displays score, combo, lives, wave, XP bar, level, and active power-up indicators.
+## HUD — displays score, combo, lives, wave, orb meter, and active power-up indicators.
 
 @onready var score_label: Label = $MarginContainer/TopBar/ScoreLabel
 @onready var combo_label: Label = $MarginContainer/TopBar/ComboLabel
 @onready var wave_label: Label = $MarginContainer/TopBar/WaveLabel
 @onready var lives_container: HBoxContainer = $MarginContainer/TopBar/LivesContainer
 @onready var wave_banner: Label = $WaveBanner
-@onready var level_up_banner: Label = $LevelUpBanner
 @onready var power_up_container: HBoxContainer = $MarginContainer2/PowerUpContainer
-@onready var level_label: Label = $XPBarContainer/VBox/LevelLabel
-@onready var xp_bar: ProgressBar = $XPBarContainer/VBox/XPBar
 @onready var boss_bar_container: MarginContainer = $BossBarContainer
 @onready var boss_name_label: Label = $BossBarContainer/VBox/BossNameLabel
 @onready var boss_health_bar: ProgressBar = $BossBarContainer/VBox/BossHealthBar
+
+# Orb meter (built in code)
+var orb_bar: ProgressBar
+var orb_label: Label
 
 func _ready() -> void:
 	SignalBus.score_changed.connect(_on_score_changed)
@@ -21,22 +22,19 @@ func _ready() -> void:
 	SignalBus.wave_started.connect(_on_wave_started)
 	SignalBus.wave_cleared.connect(_on_wave_cleared)
 	SignalBus.power_up_collected.connect(_on_power_up_collected)
-	SignalBus.xp_changed.connect(_on_xp_changed)
-	SignalBus.level_up.connect(_on_level_up)
 	SignalBus.boss_spawned.connect(_on_boss_spawned)
 	SignalBus.boss_health_changed.connect(_on_boss_health_changed)
 	SignalBus.boss_died.connect(_on_boss_died)
+	SignalBus.orb_meter_changed.connect(_on_orb_meter_changed)
 	wave_banner.visible = false
-	level_up_banner.visible = false
 	boss_bar_container.visible = false
+	_build_orb_meter()
 
 func update_all() -> void:
 	_on_score_changed(GameManager.score)
 	_on_combo_changed(GameManager.combo)
 	_on_lives_changed(GameManager.lives)
 	_on_wave_started(GameManager.current_wave)
-	_on_xp_changed(GameManager.xp, GameManager.xp_to_next_level)
-	level_label.text = "LV " + str(GameManager.level)
 
 func _on_score_changed(new_score: int) -> void:
 	score_label.text = "SCORE: " + str(new_score)
@@ -93,28 +91,6 @@ func _on_wave_cleared(wave_number: int) -> void:
 		wave_banner.modulate = Color.WHITE
 	)
 
-# --- XP / Level ---
-
-func _on_xp_changed(current_xp: int, xp_to_next: int) -> void:
-	xp_bar.max_value = xp_to_next
-	xp_bar.value = current_xp
-
-func _on_level_up(new_level: int) -> void:
-	level_label.text = "LV " + str(new_level)
-
-	# Pulse the level label
-	var label_tween := create_tween()
-	label_tween.tween_property(level_label, "scale", Vector2(1.5, 1.5), 0.1)
-	label_tween.tween_property(level_label, "scale", Vector2.ONE, 0.2)
-
-	# Show a brief "LEVEL UP!" banner
-	level_up_banner.text = "⚔  LEVEL " + str(new_level) + "!  ⚔"
-	level_up_banner.visible = true
-	level_up_banner.modulate.a = 1.0
-	var tween := create_tween()
-	tween.tween_interval(1.0)
-	tween.tween_property(level_up_banner, "modulate:a", 0.0, 0.5)
-	tween.tween_callback(func(): level_up_banner.visible = false)
 
 # --- Boss ---
 
@@ -167,3 +143,52 @@ func _on_power_up_collected(type: int, _pos: Vector2) -> void:
 	tween.tween_interval(1.5)
 	tween.tween_property(indicator, "modulate:a", 0.0, 0.4)
 	tween.tween_callback(indicator.queue_free)
+
+# --- Orb Meter ---
+
+func _build_orb_meter() -> void:
+	var container := MarginContainer.new()
+	container.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
+	container.offset_left = 16
+	container.offset_bottom = -12
+	container.offset_top = -42
+	container.offset_right = 200
+	add_child(container)
+
+	var hbox := HBoxContainer.new()
+	hbox.add_theme_constant_override("separation", 6)
+	container.add_child(hbox)
+
+	var icon := Label.new()
+	icon.text = "💎"
+	icon.add_theme_font_size_override("font_size", 16)
+	hbox.add_child(icon)
+
+	orb_bar = ProgressBar.new()
+	orb_bar.custom_minimum_size = Vector2(120, 12)
+	orb_bar.max_value = GameManager.orbs_per_heart
+	orb_bar.value = 0
+	orb_bar.show_percentage = false
+	orb_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	hbox.add_child(orb_bar)
+
+	orb_label = Label.new()
+	orb_label.text = "0/" + str(GameManager.orbs_per_heart)
+	orb_label.add_theme_color_override("font_color", Color(0.6, 0.9, 1.0))
+	orb_label.add_theme_font_size_override("font_size", 13)
+	hbox.add_child(orb_label)
+
+func _on_orb_meter_changed(current: int, max_orbs: int) -> void:
+	orb_bar.max_value = max_orbs
+	orb_bar.value = current
+	orb_label.text = str(current) + "/" + str(max_orbs)
+
+	# Pulse on collection
+	var tween := create_tween()
+	if current == 0:
+		# Heart restored — green flash
+		tween.tween_property(orb_label, "modulate", Color(0.3, 1.0, 0.5), 0.1)
+		tween.tween_property(orb_label, "modulate", Color.WHITE, 0.3)
+	else:
+		tween.tween_property(orb_bar, "scale", Vector2(1.1, 1.3), 0.06)
+		tween.tween_property(orb_bar, "scale", Vector2.ONE, 0.12)

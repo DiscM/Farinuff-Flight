@@ -1,5 +1,5 @@
 extends Node
-## Manages global game state: score, lives, waves, combos, difficulty scaling, and RPG leveling.
+## Manages global game state: score, lives, waves, combos, difficulty scaling, and stat allocation.
 
 # --- State ---
 var score: int = 0
@@ -17,24 +17,27 @@ var enemy_speed_multiplier: float = 1.0
 var enemies_per_wave: int = 8
 var enemies_killed_this_wave: int = 0
 
-# --- RPG Level-Up ---
-var xp: int = 0
-var level: int = 1
-var xp_to_next_level: int = 250  # first threshold uses logarithmic curve
+# --- Point Allocation ---
+var allocation_points_per_milestone: int = 3
+var stat_fire_rate_level: int = 0
+var stat_health_level: int = 0
+var stat_speed_level: int = 0
 
-# Passive per-level bonuses (cumulative)
+# Computed bonuses (driven by stat levels)
 var bonus_speed_pct: float = 0.0
 var bonus_fire_rate_pct: float = 0.0
 var bonus_damage: int = 0
-var speed_stacks: int = 0
-var fire_rate_stacks: int = 0
+
+# --- Orb Meter ---
+var orbs_collected: int = 0
+var orbs_per_heart: int = 10
 
 func _ready() -> void:
 	SignalBus.enemy_killed.connect(_on_enemy_killed)
 	SignalBus.player_hit.connect(_on_player_hit)
 	SignalBus.game_restarted.connect(_on_game_restarted)
-	SignalBus.xp_orb_collected.connect(_on_xp_orb_collected)
 	SignalBus.boss_died.connect(_on_boss_died)
+	SignalBus.xp_orb_collected.connect(_on_orb_collected)
 
 # --- Score & Combo ---
 
@@ -52,70 +55,35 @@ func _on_enemy_killed(points: int, _position: Vector2) -> void:
 	if enemies_killed_this_wave >= enemies_per_wave and not boss_active:
 		_advance_wave()
 
-# --- RPG XP / Level System ---
-
-func _on_xp_orb_collected(value: int) -> void:
-	_award_xp(value)
-
 func _on_boss_died(_points: int) -> void:
 	boss_active = false
 	_advance_wave()
 
-## Logarithmic XP curve: early levels need more XP, later levels scale gently.
-## level 1→2 = 250, 2→3 ≈ 396, 3→4 = 500, 5→6 ≈ 646, 10→11 ≈ 866
-func _calc_xp_for_level(lvl: int) -> int:
-	return int(250.0 * log(float(lvl + 1)) / log(2.0))
+# --- Orb Meter ---
 
-func _award_xp(amount: int) -> void:
-	xp += amount
-	SignalBus.xp_changed.emit(xp, xp_to_next_level)
-	if xp >= xp_to_next_level:
-		_level_up()
+func _on_orb_collected(_value: int) -> void:
+	orbs_collected += 1
+	if orbs_collected >= orbs_per_heart:
+		orbs_collected = 0
+		lives += 1
+		SignalBus.lives_changed.emit(lives)
+	SignalBus.orb_meter_changed.emit(orbs_collected, orbs_per_heart)
 
-func _level_up() -> void:
-	xp -= xp_to_next_level
-	level += 1
-	xp_to_next_level = _calc_xp_for_level(level)
+# --- Point Allocation ---
 
-	# Passive per-level bonuses
-	bonus_speed_pct += 0.05
-	bonus_fire_rate_pct += 0.05
-	if level % 3 == 0:
-		bonus_damage += 1
-
-	SignalBus.xp_changed.emit(xp, xp_to_next_level)
-	SignalBus.level_up.emit(level)
-
-## Called by the level-up popup when the player picks an upgrade.
-func apply_upgrade(type: String) -> void:
-	match type:
-		"speed":
-			if speed_stacks < 5:
-				speed_stacks += 1
-				bonus_speed_pct += 0.01
+## Called by the allocation popup when the player invests a point.
+func apply_stat_point(stat_name: String) -> void:
+	match stat_name:
 		"fire_rate":
-			if fire_rate_stacks < 20:
-				fire_rate_stacks += 1
-				bonus_fire_rate_pct += 0.05
-		"damage":
-			bonus_damage += 1
-		"shield":
-			pass  # Handled by player
-		"life":
+			stat_fire_rate_level += 1
+			bonus_fire_rate_pct += 0.05
+		"health":
+			stat_health_level += 1
 			lives += 1
 			SignalBus.lives_changed.emit(lives)
-		"magnet":
-			pass  # Handled by player
-		"rear_gun":
-			pass  # Handled by player
-		"piercing":
-			pass  # Handled by player
-		"orbitals":
-			pass  # Handled by player
-		"explosive_rounds":
-			pass  # Handled by player
-		"zigzag":
-			pass  # Handled by player
+		"speed":
+			stat_speed_level += 1
+			bonus_speed_pct += 0.03
 
 # --- Player hit ---
 
@@ -135,13 +103,18 @@ func _on_player_hit() -> void:
 # --- Waves ---
 
 func _advance_wave() -> void:
-	SignalBus.wave_cleared.emit(current_wave)
+	var cleared_wave := current_wave
+	SignalBus.wave_cleared.emit(cleared_wave)
 	current_wave += 1
 	enemies_killed_this_wave = 0
 	enemies_per_wave = 8 + current_wave * 2
 	enemy_speed_multiplier = 1.0 + (current_wave - 1) * 0.12
 	boss_active = (current_wave % 5 == 0)
 	SignalBus.wave_started.emit(current_wave)
+
+	# Trigger point allocation every 5 waves (after clearing wave 5, 10, 15…)
+	if cleared_wave % 5 == 0:
+		SignalBus.allocation_triggered.emit(allocation_points_per_milestone)
 
 func get_spawn_interval() -> float:
 	var interval := base_spawn_interval - (current_wave - 1) * 0.1
@@ -158,15 +131,14 @@ func _on_game_restarted() -> void:
 	enemies_per_wave = 8
 	enemy_speed_multiplier = 1.0
 
-	# Reset RPG state
-	xp = 0
-	level = 1
-	xp_to_next_level = _calc_xp_for_level(1)
+	# Reset allocation state
+	stat_fire_rate_level = 0
+	stat_health_level = 0
+	stat_speed_level = 0
 	bonus_speed_pct = 0.0
 	bonus_fire_rate_pct = 0.0
 	bonus_damage = 0
-	speed_stacks = 0
-	fire_rate_stacks = 0
+	orbs_collected = 0
 
 	is_game_active = true
 	boss_active = false
@@ -174,7 +146,6 @@ func _on_game_restarted() -> void:
 	SignalBus.combo_changed.emit(combo)
 	SignalBus.lives_changed.emit(lives)
 	SignalBus.wave_started.emit(current_wave)
-	SignalBus.xp_changed.emit(xp, xp_to_next_level)
 
 func start_game() -> void:
 	_on_game_restarted()

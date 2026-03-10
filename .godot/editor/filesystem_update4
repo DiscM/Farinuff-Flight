@@ -1,1 +1,8 @@
 res://entities/enemies/boss_enemy.gd
+res://autoloads/signal_bus.gd
+res://autoloads/game_manager.gd
+res://ui/hud.gd
+res://entities/enemies/base_enemy.gd
+res://entities/collectibles/xp_orb.gd
+res://entities/collectibles/xp_orb.tscn
+res://entities/enemies/tank_enemy.gd

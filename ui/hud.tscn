@@ -94,53 +94,9 @@ vertical_alignment = 1
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 36
 
-[node name="LevelUpBanner" type="Label" parent="."]
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -200
-offset_top = -140
-offset_right = 200
-offset_bottom = -100
-grow_horizontal = 2
-grow_vertical = 2
-text = "⚔ LEVEL UP! ⚔"
-horizontal_alignment = 1
-vertical_alignment = 1
-theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
-theme_override_font_sizes/font_size = 32
 
-[node name="XPBarContainer" type="MarginContainer" parent="."]
-anchors_preset = 12
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = -65.0
-grow_horizontal = 2
-grow_vertical = 0
-theme_override_constants/margin_left = 16
-theme_override_constants/margin_right = 16
 
-[node name="VBox" type="VBoxContainer" parent="XPBarContainer"]
-layout_mode = 2
-theme_override_constants/separation = 2
 
-[node name="LevelLabel" type="Label" parent="XPBarContainer/VBox"]
-layout_mode = 2
-text = "LV 1"
-theme_override_colors/font_color = Color(0.6, 0.75, 1, 1)
-theme_override_font_sizes/font_size = 14
-
-[node name="XPBar" type="ProgressBar" parent="XPBarContainer/VBox"]
-layout_mode = 2
-custom_minimum_size = Vector2(0, 10)
-max_value = 150.0
-value = 0.0
-show_percentage = false
-theme_override_styles/fill = null
-theme_override_styles/background = null
 
 [node name="MarginContainer2" type="MarginContainer" parent="."]
 anchors_preset = 12
