@@ -103,3 +103,7 @@ func _on_boss_died(_points: int) -> void:
 func _on_game_over(_score: int) -> void:
 	stop_spawning()
 	boss_alive = false
+
+func _on_try_again_accepted() -> void:
+	boss_alive = false
+	start_spawning()

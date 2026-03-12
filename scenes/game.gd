@@ -3,6 +3,9 @@ extends Node2D
 
 const GAME_OVER_SCENE := preload("res://ui/game_over.tscn")
 const POINT_ALLOCATION_SCENE := preload("res://ui/point_allocation_popup.tscn")
+const ELITE_UPGRADE_SCENE := preload("res://ui/elite_upgrade_popup.tscn")
+const PAUSE_MENU_SCENE := preload("res://ui/pause_menu.tscn")
+const TRY_AGAIN_SCENE := preload("res://ui/try_again_popup.tscn")
 
 @onready var player: Area2D = $Player
 @onready var hud: CanvasLayer = $HUD
@@ -12,6 +15,10 @@ const POINT_ALLOCATION_SCENE := preload("res://ui/point_allocation_popup.tscn")
 
 var game_over_shown: bool = false
 var allocation_active: bool = false
+var elite_upgrade_active: bool = false
+var pause_active: bool = false
+var try_again_active: bool = false
+var _final_score_cache: int = 0
 
 # Screen shake state
 var shake_intensity: float = 0.0
@@ -28,6 +35,7 @@ func _ready() -> void:
 	SignalBus.game_over.connect(_on_game_over)
 	SignalBus.screen_shake.connect(_on_screen_shake)
 	SignalBus.allocation_triggered.connect(_on_allocation_triggered)
+	SignalBus.elite_upgrade_triggered.connect(_on_elite_upgrade_triggered)
 
 	# Position player at bottom center
 	var viewport_size := get_viewport().get_visible_rect().size
@@ -46,6 +54,31 @@ func _process(delta: float) -> void:
 	else:
 		camera.offset = Vector2.ZERO
 
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventKey and event.keycode == KEY_ESCAPE and event.pressed and not event.echo:
+		if not GameManager.is_game_active:
+			return
+		if allocation_active or elite_upgrade_active or try_again_active:
+			return
+		if pause_active:
+			return
+		_open_pause_menu()
+
+func _open_pause_menu() -> void:
+	if pause_active:
+		return
+	pause_active = true
+	get_tree().paused = true
+	var overlay := CanvasLayer.new()
+	overlay.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(overlay)
+	var menu := PAUSE_MENU_SCENE.instantiate()
+	menu.resumed.connect(_on_pause_resumed)
+	overlay.add_child(menu)
+
+func _on_pause_resumed() -> void:
+	pause_active = false
+
 func _on_screen_shake(intensity: float, duration: float) -> void:
 	shake_intensity = intensity
 	shake_duration = duration
@@ -54,12 +87,42 @@ func _on_screen_shake(intensity: float, duration: float) -> void:
 func _on_game_over(final_score: int) -> void:
 	if game_over_shown:
 		return
+	_final_score_cache = final_score
+
+	if GameManager.try_again_stocks > 0 and not try_again_active:
+		# Intercept — offer a try-again before the true game over
+		try_again_active = true
+		await get_tree().create_timer(0.6).timeout
+		get_tree().paused = true
+		var overlay := CanvasLayer.new()
+		overlay.process_mode = Node.PROCESS_MODE_ALWAYS
+		add_child(overlay)
+		var popup := TRY_AGAIN_SCENE.instantiate()
+		popup.try_again_accepted.connect(_on_try_again_accepted)
+		popup.try_again_declined.connect(_on_try_again_declined)
+		overlay.add_child(popup)
+	else:
+		_show_game_over(final_score)
+
+func _on_try_again_accepted() -> void:
+	try_again_active = false
+	game_over_shown = false  # allow future deaths to trigger the popup again
+	# Clear all enemies and bullets from the scene
+	get_tree().call_group("enemies", "queue_free")
+	get_tree().call_group("enemy_bullets", "queue_free")
+	get_tree().call_group("powerups", "queue_free")
+	# Restart enemy spawning
+	enemy_spawner._on_try_again_accepted()
+
+func _on_try_again_declined() -> void:
+	try_again_active = false
+	_show_game_over(_final_score_cache)
+
+func _show_game_over(final_score: int) -> void:
+	if game_over_shown:
+		return
 	game_over_shown = true
-
-	# Brief pause
 	await get_tree().create_timer(0.8).timeout
-
-	# Use a CanvasLayer so the Control renders in screen space, not world space
 	var overlay := CanvasLayer.new()
 	add_child(overlay)
 	var game_over_screen := GAME_OVER_SCENE.instantiate()
@@ -85,3 +148,22 @@ func _on_allocation_triggered(points: int) -> void:
 
 func _on_allocation_closed() -> void:
 	allocation_active = false
+
+func _on_elite_upgrade_triggered() -> void:
+	if elite_upgrade_active:
+		return
+	elite_upgrade_active = true
+
+	# Pause the game
+	get_tree().paused = true
+
+	# Show the elite upgrade picker on its own always-process CanvasLayer
+	var overlay := CanvasLayer.new()
+	overlay.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(overlay)
+	var popup := ELITE_UPGRADE_SCENE.instantiate()
+	popup.upgrade_chosen.connect(_on_elite_upgrade_closed)
+	overlay.add_child(popup)
+
+func _on_elite_upgrade_closed() -> void:
+	elite_upgrade_active = false

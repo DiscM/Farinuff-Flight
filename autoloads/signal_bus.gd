@@ -47,6 +47,9 @@ signal lives_changed(new_lives: int)
 # Point allocation signals
 @warning_ignore("unused_signal")
 signal allocation_triggered(points: int)
+@warning_ignore("unused_signal")
+signal elite_upgrade_triggered
+
 
 # Effects
 @warning_ignore("unused_signal")

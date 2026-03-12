@@ -9,6 +9,7 @@ var lives: int = 3
 var current_wave: int = 1
 var is_game_active: bool = false
 var boss_active: bool = false
+var try_again_stocks: int = 3
 
 # --- Difficulty scaling ---
 var base_spawn_interval: float = 1.5
@@ -57,7 +58,11 @@ func _on_enemy_killed(points: int, _position: Vector2) -> void:
 
 func _on_boss_died(_points: int) -> void:
 	boss_active = false
+	# Elite boss on wave 10 (and multiples of 10) triggers the ship-transformation upgrade
+	if current_wave % 10 == 0:
+		SignalBus.elite_upgrade_triggered.emit()
 	_advance_wave()
+
 
 # --- Orb Meter ---
 
@@ -139,6 +144,7 @@ func _on_game_restarted() -> void:
 	bonus_fire_rate_pct = 0.0
 	bonus_damage = 0
 	orbs_collected = 0
+	try_again_stocks = 3
 
 	is_game_active = true
 	boss_active = false

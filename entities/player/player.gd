@@ -24,6 +24,15 @@ var zigzag_stacks: int = 0  # 0 = off, 1-3+ = increasing amplitude
 var orbital_angle: float = 0.0
 var orbital_nodes: Array[Node2D] = []
 
+# Elite (wave-10 boss) upgrades
+var has_twin_cannons: bool = false
+var has_auto_aim: bool = false
+var has_drone: bool = false
+var has_afterburner: bool = false
+var drone_node: Area2D = null
+var drone_shoot_timer: float = 0.0
+const DRONE_FIRE_RATE: float = 0.65
+
 @onready var shoot_timer: Timer = $ShootTimer
 @onready var invincibility_timer: Timer = $InvincibilityTimer
 @onready var rapid_fire_timer: Timer = $RapidFireTimer
@@ -121,6 +130,10 @@ func _physics_process(delta: float) -> void:
 	if has_orbitals:
 		_update_orbitals(delta)
 
+	# --- Drone ---
+	if has_drone:
+		_update_drone(delta)
+
 func _fire() -> void:
 	can_shoot = false
 	shoot_timer.start()
@@ -129,18 +142,38 @@ func _fire() -> void:
 		_spawn_bullet(Vector2.UP)
 		_spawn_bullet(Vector2(-0.3, -0.95).normalized())
 		_spawn_bullet(Vector2(0.3, -0.95).normalized())
+		if has_twin_cannons:
+			_spawn_bullet(Vector2(-0.15, -0.99).normalized(), Vector2(-18, 0))
+			_spawn_bullet(Vector2(0.15, -0.99).normalized(), Vector2(18, 0))
 	else:
 		_spawn_bullet(Vector2.UP)
+		if has_twin_cannons:
+			_spawn_bullet(Vector2.UP, Vector2(-14, 0))
+			_spawn_bullet(Vector2.UP, Vector2(14, 0))
 
 	# Rear gun fires backward
 	if has_rear_gun:
 		_spawn_bullet(Vector2.DOWN)
 
-func _spawn_bullet(dir: Vector2) -> void:
+func _spawn_bullet(dir: Vector2, offset: Vector2 = Vector2.ZERO) -> void:
 	var bullet: Area2D = BULLET_SCENE.instantiate()
+	# Auto-aim: nudge direction toward nearest enemy
+	if has_auto_aim:
+		var enemies := get_tree().get_nodes_in_group("enemies")
+		var best_dist := INF
+		var best_enemy: Node2D = null
+		for e in enemies:
+			if is_instance_valid(e):
+				var d: float = global_position.distance_to(e.global_position)
+				if d < best_dist:
+					best_dist = d
+					best_enemy = e
+			if best_enemy and best_dist < 500.0:
+				var aim_dir := (best_enemy.global_position - global_position).normalized()
+				dir = dir.lerp(aim_dir, 0.35).normalized()
 	bullet.direction = dir
 	var offset_y := -24.0 * scale.y if dir.y < 0 else 24.0 * scale.y
-	bullet.global_position = global_position + Vector2(0, offset_y)
+	bullet.global_position = global_position + Vector2(0, offset_y) + offset
 	# Apply bullet scale upgrade
 	if bullet_scale_level > 0:
 		var bs := 1.0 + bullet_scale_level * 0.5
@@ -283,6 +316,11 @@ func reset_state() -> void:
 	has_explosive_rounds = false
 	zigzag_stacks = 0
 	_remove_orbitals()
+	# Reset elite upgrades
+	has_twin_cannons = false
+	has_auto_aim = false
+	has_afterburner = false
+	_remove_drone()
 
 ## Called by level-up popup for shield upgrade
 func grant_shield() -> void:
@@ -369,3 +407,106 @@ func _remove_orbitals() -> void:
 		if is_instance_valid(node):
 			node.queue_free()
 	orbital_nodes.clear()
+
+# --- Elite Upgrades ---
+
+func grant_twin_cannons() -> void:
+	has_twin_cannons = true
+
+func grant_auto_aim() -> void:
+	has_auto_aim = true
+
+func grant_afterburner() -> void:
+	has_afterburner = true
+	speed = speed * 1.25
+	acceleration = acceleration * 1.3
+	drag = drag * 0.75  # less drag = snappier
+
+func grant_hull_plating() -> void:
+	GameManager.lives += 2
+	SignalBus.lives_changed.emit(GameManager.lives)
+
+
+func grant_drone_escort() -> void:
+	if has_drone:
+		return
+	has_drone = true
+	_spawn_drone()
+
+func _spawn_drone() -> void:
+	if is_instance_valid(drone_node):
+		drone_node.queue_free()
+	drone_node = Area2D.new()
+	drone_node.collision_layer = 4   # player_bullets
+	drone_node.collision_mask = 2    # enemies
+	drone_node.add_to_group("player_orbitals")
+	# Sprite
+	var spr := Sprite2D.new()
+	var img := Image.create(16, 16, false, Image.FORMAT_RGBAF)
+	img.fill(Color.TRANSPARENT)
+	for py in range(16):
+		for px in range(16):
+			var d := Vector2(float(px) - 7.5, float(py) - 7.5).length()
+			if d < 7.5:
+				var t := d / 7.5
+				img.set_pixel(px, py, Color(0.3, 1.0, 0.6, 1.0 - t * 0.5))
+	spr.texture = ImageTexture.create_from_image(img)
+	drone_node.add_child(spr)
+	# Label
+	var lbl := Label.new()
+	lbl.text = "▶"
+	lbl.position = Vector2(-6, -8)
+	lbl.add_theme_font_size_override("font_size", 10)
+	drone_node.add_child(lbl)
+	# Collision
+	var col := CollisionShape2D.new()
+	var circ := CircleShape2D.new()
+	circ.radius = 7.0
+	col.shape = circ
+	drone_node.add_child(col)
+	drone_node.area_entered.connect(_on_drone_hit)
+	get_tree().current_scene.add_child(drone_node)
+
+func _update_drone(delta: float) -> void:
+
+	if not is_instance_valid(drone_node):
+		return
+	# Hover to the right of the player
+	var target_pos := global_position + Vector2(50, -20)
+	drone_node.global_position = drone_node.global_position.lerp(target_pos, delta * 6.0)
+	# Auto-fire at nearest enemy
+	drone_shoot_timer -= delta
+	if drone_shoot_timer <= 0.0:
+		drone_shoot_timer = DRONE_FIRE_RATE
+		_drone_fire()
+
+func _drone_fire() -> void:
+	var enemies := get_tree().get_nodes_in_group("enemies")
+	var best_dist := INF
+	var best_enemy: Node2D = null
+	for e in enemies:
+		if is_instance_valid(e):
+			var d: float = drone_node.global_position.distance_to(e.global_position)
+			if d < best_dist:
+				best_dist = d
+				best_enemy = e
+	var dir := Vector2.UP
+	if best_enemy:
+		dir = (best_enemy.global_position - drone_node.global_position).normalized()
+	var bullet: Area2D = BULLET_SCENE.instantiate()
+	bullet.direction = dir
+	bullet.global_position = drone_node.global_position
+	if has_piercing:
+		bullet.piercing = true
+	get_tree().current_scene.add_child(bullet)
+
+func _on_drone_hit(area: Area2D) -> void:
+	if area.is_in_group("enemies"):
+		area.take_damage(1 + GameManager.bonus_damage)
+
+func _remove_drone() -> void:
+	has_drone = false
+	drone_shoot_timer = 0.0
+	if is_instance_valid(drone_node):
+		drone_node.queue_free()
+	drone_node = null
