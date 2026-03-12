@@ -54,6 +54,8 @@ func _process(delta: float) -> void:
 	else:
 		camera.offset = Vector2.ZERO
 
+var _pause_overlay: CanvasLayer = null
+
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.keycode == KEY_ESCAPE and event.pressed and not event.echo:
 		if not GameManager.is_game_active:
@@ -61,23 +63,32 @@ func _unhandled_input(event: InputEvent) -> void:
 		if allocation_active or elite_upgrade_active or try_again_active:
 			return
 		if pause_active:
+			_close_pause_menu()
 			return
 		_open_pause_menu()
+		get_viewport().set_input_as_handled()
 
 func _open_pause_menu() -> void:
 	if pause_active:
 		return
 	pause_active = true
 	get_tree().paused = true
-	var overlay := CanvasLayer.new()
-	overlay.process_mode = Node.PROCESS_MODE_ALWAYS
-	add_child(overlay)
+	_pause_overlay = CanvasLayer.new()
+	_pause_overlay.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(_pause_overlay)
 	var menu := PAUSE_MENU_SCENE.instantiate()
 	menu.resumed.connect(_on_pause_resumed)
-	overlay.add_child(menu)
+	_pause_overlay.add_child(menu)
+
+func _close_pause_menu() -> void:
+	get_tree().paused = false
+	pause_active = false
+	if is_instance_valid(_pause_overlay):
+		_pause_overlay.queue_free()
+	_pause_overlay = null
 
 func _on_pause_resumed() -> void:
-	pause_active = false
+	_close_pause_menu()
 
 func _on_screen_shake(intensity: float, duration: float) -> void:
 	shake_intensity = intensity

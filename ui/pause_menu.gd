@@ -11,7 +11,8 @@ func _ready() -> void:
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.keycode == KEY_ESCAPE and event.pressed and not event.echo:
-		_on_resume()
+		get_viewport().set_input_as_handled()
+		resumed.emit()
 
 func _build_ui() -> void:
 	# Full-screen semi-transparent overlay

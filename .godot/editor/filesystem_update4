@@ -1,5 +1,2 @@
-res://autoloads/game_manager.gd
 res://scenes/game.gd
 res://ui/pause_menu.gd
-res://systems/enemy_spawner.gd
-res://ui/try_again_popup.gd
