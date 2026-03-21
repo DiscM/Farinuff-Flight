@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://dd67s6bc4xvjy"]
+[gd_scene load_steps=10 format=3 uid="uid://dd67s6bc4xvjy"]
 
 [ext_resource type="Script" uid="uid://k78vdvgqtcv0" path="res://scenes/game.gd" id="1_game"]
 [ext_resource type="PackedScene" uid="uid://bpv3rwt1k4f2i" path="res://entities/player/player.tscn" id="2_player"]
@@ -6,6 +6,14 @@
 [ext_resource type="Script" uid="uid://bkrvihgx6kgex" path="res://systems/enemy_spawner.gd" id="4_espawner"]
 [ext_resource type="Script" uid="uid://u2ouinr3eduo" path="res://systems/powerup_spawner.gd" id="5_pspawner"]
 [ext_resource type="Script" uid="uid://c1e7wgnnkkf57" path="res://effects/star_field.gd" id="6_stars"]
+[ext_resource type="Shader" path="res://effects/shaders/scrolling_bg.gdshader" id="7_bg_shader"]
+[ext_resource type="Shader" path="res://effects/shaders/crt_overlay.gdshader" id="8_crt_shader"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_bg"]
+shader = ExtResource("7_bg_shader")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_crt"]
+shader = ExtResource("8_crt_shader")
 
 [node name="Game" type="Node2D" unique_id=173375341]
 script = ExtResource("1_game")
@@ -17,6 +25,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 color = Color(0.02, 0.02, 0.07, 1)
+material = SubResource("ShaderMaterial_bg")
 
 [node name="StarField" type="Node2D" parent="." unique_id=884997156]
 script = ExtResource("6_stars")
@@ -40,3 +49,15 @@ script = ExtResource("5_pspawner")
 [node name="SpawnTimer" type="Timer" parent="PowerUpSpawner" unique_id=241860260]
 wait_time = 10.0
 one_shot = true
+
+[node name="CRTOverlay" type="ColorRect" parent="."]
+z_index = 100
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(1, 1, 1, 1)
+material = SubResource("ShaderMaterial_crt")
+mouse_filter = 2
+
