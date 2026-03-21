@@ -39,4 +39,5 @@ func _drop_bomb() -> void:
 	var bomb: Area2D = ENEMY_BULLET_SCENE.instantiate()
 	bomb.global_position = global_position + Vector2(0, 16)
 	bomb.add_to_group("enemy_bullets")
+	bomb.set_meta("bullet_color", Color(0.2, 3.0, 0.2, 1.0)) # High contrast neon green
 	get_tree().current_scene.add_child(bomb)

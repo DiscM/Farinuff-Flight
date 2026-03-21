@@ -11,6 +11,11 @@ func _ready() -> void:
 	if has_meta("custom_speed"):
 		speed = get_meta("custom_speed")
 
+	if has_meta("bullet_color"):
+		$Sprite2D.modulate = get_meta("bullet_color")
+	else:
+		$Sprite2D.modulate = Color(3.0, 0.8, 0.1, 1.0) # Default orange/red
+
 	var notifier := VisibleOnScreenNotifier2D.new()
 	add_child(notifier)
 	notifier.screen_exited.connect(queue_free)

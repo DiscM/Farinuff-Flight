@@ -14,8 +14,8 @@ var health: int
 
 func _ready() -> void:
 	add_to_group("enemies")
-	# Scale health with wave: each wave adds 10% of base HP (rounded up)
-	var wave_bonus := (GameManager.current_wave - 1) * ceili(max_health * 0.1)
+	# Scale health with wave: each wave adds 5% of base HP (rounded up)
+	var wave_bonus := (GameManager.current_wave - 1) * ceili(max_health * 0.05)
 	health = max_health + wave_bonus
 	area_entered.connect(_on_area_entered)
 

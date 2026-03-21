@@ -9,20 +9,24 @@ radius = 4.0
 script/source = "extends Sprite2D
 
 func _ready() -> void:
-	var img := Image.create(16, 16, false, Image.FORMAT_RGBAF)
+	var size := 24
+	var img := Image.create(size, size, false, Image.FORMAT_RGBAF)
 	img.fill(Color.TRANSPARENT)
-	var glow_color := Color(2.0, 0.2, 0.2, 1.0)
-	var core_color := Color(3.0, 2.0, 2.0, 1.0)
-	for x in range(16):
-		for y in range(16):
-			var cx := x - 7.5
-			var cy := y - 7.5
+	
+	var center := float(size) / 2.0
+	var radius := center
+	for x in range(size):
+		for y in range(size):
+			var cx := float(x) - center + 0.5
+			var cy := float(y) - center + 0.5
 			var dist := sqrt(cx * cx + cy * cy)
-			if dist <= 8.0:
-				var t := dist / 8.0
-				var c := core_color.lerp(glow_color, pow(t, 1.5))
-				if t > 0.5:
-					c.a = lerp(1.0, 0.0, (t - 0.5) / 0.5)
+			if dist <= radius:
+				var t := dist / radius
+				var c := Color(1.0, 1.0, 1.0, 1.0)
+				if t < 0.35:
+					c = Color(2.0, 2.0, 2.0, 1.0)
+				else:
+					c.a = lerp(1.0, 0.0, (t - 0.35) / 0.65)
 				img.set_pixel(x, y, c)
 	texture = ImageTexture.create_from_image(img)
 "

@@ -14,7 +14,6 @@ var boss_enemy_scene: PackedScene = preload("res://entities/enemies/boss_enemy.t
 
 var viewport_width: float = 720.0
 var margin: float = 40.0
-var boss_alive: bool = false
 
 func _ready() -> void:
 	viewport_width = get_viewport().get_visible_rect().size.x
@@ -34,7 +33,7 @@ func stop_spawning() -> void:
 func _on_spawn_timer_timeout() -> void:
 	if not GameManager.is_game_active:
 		return
-	if boss_alive:
+	if GameManager.boss_active:
 		return  # Don't spawn regulars during boss fight
 	_spawn_enemy()
 	spawn_timer.wait_time = GameManager.get_spawn_interval()
@@ -82,7 +81,6 @@ func _on_wave_started(wave_number: int) -> void:
 		call_deferred("_spawn_boss", wave_number)
 
 func _spawn_boss(wave_number: int) -> void:
-	boss_alive = true
 	stop_spawning()
 	# Clear remaining regular enemies
 	for enemy in get_tree().get_nodes_in_group("enemies"):
@@ -95,15 +93,13 @@ func _spawn_boss(wave_number: int) -> void:
 	get_tree().current_scene.add_child(boss)
 
 func _on_boss_died(_points: int) -> void:
-	boss_alive = false
 	# Resume normal spawning for next wave
 	if GameManager.is_game_active:
 		start_spawning()
 
 func _on_game_over(_score: int) -> void:
 	stop_spawning()
-	boss_alive = false
 
 func _on_try_again_accepted() -> void:
-	if not boss_alive:
+	if not GameManager.boss_active:
 		start_spawning()

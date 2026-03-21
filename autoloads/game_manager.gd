@@ -113,7 +113,7 @@ func _advance_wave() -> void:
 	current_wave += 1
 	enemies_killed_this_wave = 0
 	enemies_per_wave = 8 + current_wave * 2
-	enemy_speed_multiplier = 1.0 + (current_wave - 1) * 0.12
+	enemy_speed_multiplier = 1.0 + (current_wave - 1) * 0.06
 	boss_active = (current_wave % 5 == 0)
 	SignalBus.wave_started.emit(current_wave)
 
@@ -122,7 +122,7 @@ func _advance_wave() -> void:
 		SignalBus.allocation_triggered.emit(allocation_points_per_milestone)
 
 func get_spawn_interval() -> float:
-	var interval := base_spawn_interval - (current_wave - 1) * 0.1
+	var interval := base_spawn_interval - (current_wave - 1) * 0.05
 	return maxf(interval, min_spawn_interval)
 
 # --- Restart ---

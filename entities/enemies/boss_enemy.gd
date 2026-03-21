@@ -26,18 +26,18 @@ var max_boss_health: int = 0
 
 func _ready() -> void:
 	if is_elite:
-		max_health = 100
+		max_health = 125
 		points = 5000
 		orb_value = 3
 	else:
-		max_health = 40
+		max_health = 50
 		points = 1500
 		orb_value = 3
 	guaranteed_orb = true
 	speed = 0.0
 
-	# Scale HP with wave at 10% per wave
-	var wave_bonus := (GameManager.current_wave - 1) * ceili(max_health * 0.1)
+	# Scale HP with wave at 5% per wave
+	var wave_bonus := (GameManager.current_wave - 1) * ceili(max_health * 0.05)
 	max_health += wave_bonus
 
 	super._ready()
@@ -205,6 +205,7 @@ func _spawn_bullet(dir: Vector2, spd: float) -> void:
 	bullet.add_to_group("enemy_bullets")
 	bullet.set_meta("direction", dir)
 	bullet.set_meta("custom_speed", spd)
+	bullet.set_meta("bullet_color", Color(3.0, 0.2, 1.5, 1.0)) # Hot neon pink
 	get_tree().current_scene.call_deferred("add_child", bullet)
 
 func _die() -> void:

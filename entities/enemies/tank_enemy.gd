@@ -35,5 +35,6 @@ func _fire_radial_burst() -> void:
 		# so we drive it manually with a script override via metadata
 		bullet.set_meta("direction", dir)
 		bullet.set_meta("custom_speed", 280.0)
+		bullet.set_meta("bullet_color", Color(2.0, 0.2, 3.0, 1.0)) # High contrast neon purple
 		get_tree().current_scene.add_child(bullet)
 

@@ -54,6 +54,19 @@ This document serves as an internalized skill set to better understand, architec
 - Difficulty should ramp up gradually but dynamically. A good game has "peaks and valleys" in pacing—moments of high tension followed by periods of rest to let the player recover.
 - Keep the player in the "Flow" state: the sweet spot between anxiety (too hard) and boredom (too easy).
 
-## 4. Current Project Context: "Space Shooter"
+## 4. Godot Shaders
+
+Shaders in Godot run directly on the GPU, achieving immense performance for per-pixel calculations that are impossible on the CPU.
+- **CanvasItem Shaders**: specifically for 2D. 
+  - The `fragment()` function executes for every single visible pixel to determine its final color and transparency.
+  - The `vertex()` function executes for the bounding box corners of the sprite, letting you stretch, squash, or twist the mesh.
+- **Shader Materials**: You create a `ShaderMaterial` and write your `.gdshader` code inside it, then attach the material to any node (like a Sprite2D or ColorRect).
+- **Uniforms (Parameters)**: GDScript and Shaders communicate via uniforms: `uniform float flash_amount: hint_range(0.0, 1.0);`. GDScript updates them directly: `$Sprite2D.material.set_shader_parameter("flash_amount", 1.0)`.
+- **Common 2D Heuristics**: 
+  - *Scrolling Textures*: Adding `TIME * speed` to the UV coordinates to pan the image indefinitely.
+  - *Dissolve Effects*: Comparing UVs against a Noise Texture and `discard`ing pixels below a threshold.
+  - *Hit Flashes*: Blending the pixel's color toward pure white based on a uniform float.
+
+## 5. Current Project Context: "Space Shooter"
 - **Physics Layers**: The project has clearly defined routing (`player`, `enemies`, `player_bullets`, `enemy_bullets`, `powerups`). This allows efficient collision filtering using collision masks.
 - **Architecture**: The project currently implements a `SignalBus` and a `GameManager` autoload, indicating a scalable event-driven architecture that perfectly aligns with best practices.
