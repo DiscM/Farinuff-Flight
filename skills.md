@@ -70,3 +70,10 @@ Shaders in Godot run directly on the GPU, achieving immense performance for per-
 ## 5. Current Project Context: "Space Shooter"
 - **Physics Layers**: The project has clearly defined routing (`player`, `enemies`, `player_bullets`, `enemy_bullets`, `powerups`). This allows efficient collision filtering using collision masks.
 - **Architecture**: The project currently implements a `SignalBus` and a `GameManager` autoload, indicating a scalable event-driven architecture that perfectly aligns with best practices.
+
+## 6. Official Godot 4 Documentation References
+When solving unexpected API errors, verifying strict GDScript 2.0 syntax, or seeking best practices for Godot 4.x features, the following official documentation endpoints should be explicitly searched or referenced:
+- **Godot 4.x Stable Documentation**: [https://docs.godotengine.org/en/stable/](https://docs.godotengine.org/en/stable/)
+- **GDScript 2.0 Reference**: [https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html](https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html)
+- **Godot Shading Language**: [https://docs.godotengine.org/en/stable/tutorials/shaders/index.html](https://docs.godotengine.org/en/stable/tutorials/shaders/index.html)
+- **Node & Class API Index**: [https://docs.godotengine.org/en/stable/classes/index.html](https://docs.godotengine.org/en/stable/classes/index.html)
