@@ -41,6 +41,29 @@ func _ready() -> void:
 	var viewport_size := get_viewport().get_visible_rect().size
 	player.position = Vector2(viewport_size.x / 2.0, viewport_size.y - 80.0)
 
+	# --- Shader Injection ---
+	# Dynamically generating shaders explicitly forces Godot to compile and attach them safely
+	var bg_shader := preload("res://effects/shaders/scrolling_bg.gdshader")
+	if bg_shader:
+		var bg_mat := ShaderMaterial.new()
+		bg_mat.shader = bg_shader
+		$Background.material = bg_mat
+
+	var crt_shader := preload("res://effects/shaders/crt_overlay.gdshader")
+	if crt_shader:
+		var crt_mat := ShaderMaterial.new()
+		crt_mat.shader = crt_shader
+		var crt_rect := ColorRect.new()
+		crt_rect.color = Color.WHITE
+		crt_rect.material = crt_mat
+		crt_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+		crt_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		# Using a CanvasLayer at index 100 guarantees it draws over the HUD AND the game world
+		var crt_layer := CanvasLayer.new()
+		crt_layer.layer = 100
+		crt_layer.add_child(crt_rect)
+		add_child(crt_layer)
+
 func _process(delta: float) -> void:
 	# Camera shake
 	if shake_timer > 0:
