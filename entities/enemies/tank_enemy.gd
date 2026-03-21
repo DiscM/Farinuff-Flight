@@ -11,7 +11,7 @@ func _ready() -> void:
 	max_health = 15
 	speed = 80.0
 	points = 300
-	orb_value = 2  # Purple orb
+	orb_value = 3  # High-value Tank orb
 	guaranteed_orb = true
 	super._ready()
 	# Stagger first shot so not all tanks fire at once

@@ -13,6 +13,8 @@ func _ready() -> void:
 	max_health = 2
 	speed = 60.0
 	points = 200
+	orb_value = 2
+	guaranteed_orb = true
 	super._ready()
 	viewport_width = get_viewport_rect().size.x
 	horizontal_dir = [-1.0, 1.0].pick_random()

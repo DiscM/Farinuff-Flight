@@ -3,7 +3,7 @@ extends Area2D
 
 const BULLET_SCENE := preload("res://entities/bullets/bullet.tscn")
 
-@export var speed: float = 280.0
+@export var speed: float = 420.0
 @export var base_fire_rate: float = 0.22  # seconds between shots
 
 # Power-up state (temporary)
@@ -47,7 +47,7 @@ var viewport_rect: Rect2
 var velocity: Vector2 = Vector2.ZERO
 
 # Movement feel
-@export var acceleration: float = 8.0   # how fast we reach top speed
+@export var acceleration: float = 12.0   # how fast we reach top speed
 @export var drag: float = 14.0          # how fast we decelerate (higher = tighter/snappier stop)
 
 func _ready() -> void:

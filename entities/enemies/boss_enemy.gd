@@ -28,11 +28,11 @@ func _ready() -> void:
 	if is_elite:
 		max_health = 125
 		points = 5000
-		orb_value = 3
+		orb_value = 10
 	else:
 		max_health = 50
 		points = 1500
-		orb_value = 3
+		orb_value = 5
 	guaranteed_orb = true
 	speed = 0.0
 

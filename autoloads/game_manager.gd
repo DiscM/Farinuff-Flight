@@ -15,8 +15,8 @@ var try_again_stocks: int = 3
 var base_spawn_interval: float = 1.5
 var min_spawn_interval: float = 0.3
 var enemy_speed_multiplier: float = 1.0
-var enemies_per_wave: int = 8
-var enemies_killed_this_wave: int = 0
+var orbs_needed_this_wave: int = 10
+var orbs_collected_this_wave: int = 0
 
 # --- Point Allocation ---
 var allocation_points_per_milestone: int = 3
@@ -49,13 +49,6 @@ func _on_enemy_killed(points: int, _position: Vector2) -> void:
 	SignalBus.score_changed.emit(score)
 	SignalBus.combo_changed.emit(combo)
 
-	# Award XP equal to base point value
-	#_award_xp(points)  # XP now comes from collectible orbs
-
-	enemies_killed_this_wave += 1
-	if enemies_killed_this_wave >= enemies_per_wave and not boss_active:
-		_advance_wave()
-
 func _on_boss_died(_points: int) -> void:
 	boss_active = false
 	# Elite boss on wave 10 (and multiples of 10) triggers the ship-transformation upgrade
@@ -66,13 +59,18 @@ func _on_boss_died(_points: int) -> void:
 
 # --- Orb Meter ---
 
-func _on_orb_collected(_value: int) -> void:
-	orbs_collected += 1
-	if orbs_collected >= orbs_per_heart:
-		orbs_collected = 0
+func _on_orb_collected(value: int) -> void:
+	orbs_collected += value
+	# If we gained more than enough for a heart, carry over the remainder
+	while orbs_collected >= orbs_per_heart:
+		orbs_collected -= orbs_per_heart
 		lives += 1
 		SignalBus.lives_changed.emit(lives)
 	SignalBus.orb_meter_changed.emit(orbs_collected, orbs_per_heart)
+
+	orbs_collected_this_wave += value
+	if orbs_collected_this_wave >= orbs_needed_this_wave and not boss_active:
+		_advance_wave()
 
 # --- Point Allocation ---
 
@@ -111,8 +109,8 @@ func _advance_wave() -> void:
 	var cleared_wave := current_wave
 	SignalBus.wave_cleared.emit(cleared_wave)
 	current_wave += 1
-	enemies_killed_this_wave = 0
-	enemies_per_wave = 8 + current_wave * 2
+	orbs_collected_this_wave = 0
+	orbs_needed_this_wave = int(10.0 + float(current_wave) * 1.20)
 	enemy_speed_multiplier = 1.0 + (current_wave - 1) * 0.06
 	boss_active = (current_wave % 5 == 0)
 	SignalBus.wave_started.emit(current_wave)
@@ -132,8 +130,8 @@ func _on_game_restarted() -> void:
 	combo = 0
 	lives = 3
 	current_wave = 1
-	enemies_killed_this_wave = 0
-	enemies_per_wave = 8
+	orbs_collected_this_wave = 0
+	orbs_needed_this_wave = 10
 	enemy_speed_multiplier = 1.0
 
 	# Reset allocation state
