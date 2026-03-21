@@ -1,2 +1,10 @@
+res://entities/enemies/base_enemy.gd
+res://entities/enemies/basic_enemy.tscn
+res://entities/enemies/bomber_enemy.tscn
+res://entities/enemies/boss_enemy.tscn
+res://entities/enemies/fast_enemy.tscn
+res://entities/enemies/tank_enemy.tscn
+res://entities/enemies/boss_enemy.gd
+res://entities/player/player.gd
 res://scenes/game.gd
-res://ui/pause_menu.gd
+res://systems/enemy_spawner.gd

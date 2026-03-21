@@ -105,5 +105,5 @@ func _on_game_over(_score: int) -> void:
 	boss_alive = false
 
 func _on_try_again_accepted() -> void:
-	boss_alive = false
-	start_spawning()
+	if not boss_alive:
+		start_spawning()

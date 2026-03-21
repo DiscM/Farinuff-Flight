@@ -18,20 +18,40 @@ func _ready() -> void:
 			var cx := float(x) - center
 			var cy := float(y) - center
 			var dist := Vector2(cx, cy).length()
+			
 			# Hexagonal shape
 			var hex_dist := maxf(absf(cx), absf(cx * 0.5 + cy * 0.866)) 
 			hex_dist = maxf(hex_dist, absf(cx * 0.5 - cy * 0.866))
+			
 			if hex_dist < center - 2.0:
-				var t := hex_dist / center
-				var color := Color(0.5, 0.15, 0.6).lerp(Color(0.3, 0.05, 0.4), t)
+				var t: float = hex_dist / (center - 2.0)
+				var is_edge = hex_dist > center - 4.0
+				var color := Color(0.5, 0.15, 0.6).lerp(Color(0.2, 0.05, 0.3), t)
+				if is_edge:
+					color = Color(0.7, 0.3, 0.8) # Bright edge
 				img.set_pixel(x, y, color)
+				
 				# Armored plate lines
-				if fmod(float(y), 8.0) < 1.0 and hex_dist < center - 5.0:
-					img.set_pixel(x, y, Color(0.7, 0.3, 0.8, 0.8))
+				if fmod(float(y), 10.0) < 1.5 and hex_dist < center - 5.0:
+					img.set_pixel(x, y, Color(0.1, 0.0, 0.15, 0.8))
+				
+				# Rivets on plates
+				if fmod(float(y), 10.0) < 1.0 and fmod(float(x), 10.0) < 1.0 and hex_dist < center - 6.0:
+					img.set_pixel(x, y, Color(0.8, 0.5, 0.9))
+			
+			# Twin Cannons
+			if cy > center * 0.2 and cy < center * 0.8 and (absf(cx + 12.0) < 3.0 or absf(cx - 12.0) < 3.0):
+				img.set_pixel(x, y, Color(0.4, 0.4, 0.5))
+				if cy > center * 0.7: # Muzzle glow
+					img.set_pixel(x, y, Color(1.0, 0.8, 0.2))
+					
 			# Core glow
 			if dist < 8.0:
-				var t := dist / 8.0
+				var t: float = dist / 8.0
 				img.set_pixel(x, y, Color(0.9, 0.3, 1.0).lerp(Color(0.5, 0.15, 0.6), t))
+			elif dist < 10.0 and dist >= 8.0:
+				img.set_pixel(x, y, Color(1.0, 1.0, 1.0)) # Core ring
+				
 	texture = ImageTexture.create_from_image(img)
 "
 

@@ -16,15 +16,30 @@ func _ready() -> void:
 		for x in range(size):
 			var cx := float(x) - size / 2.0
 			var cy := float(y) - size / 2.0
-			# Inverted triangle (pointing down)
+			# Main Hull (Inverted triangle)
 			var hull_width := (1.0 - float(y) / size) * (size * 0.8)
 			if absf(cx) < hull_width / 2.0 and cy > -size * 0.4 and cy < size * 0.4:
-				var t := float(y) / size
-				var color := Color(0.9, 0.2, 0.3).lerp(Color(0.7, 0.1, 0.15), t)
+				var t: float = float(y) / size
+				var is_edge = absf(cx) > (hull_width / 2.0) - 1.5
+				var color := Color(0.9, 0.2, 0.3).lerp(Color(0.5, 0.05, 0.1), t)
+				if is_edge:
+					color = Color(1.0, 0.5, 0.5)
 				img.set_pixel(x, y, color)
-			# Eye/window
-			if absf(cx) < 3.0 and cy > -size * 0.15 and cy < size * 0.05:
-				img.set_pixel(x, y, Color(1.0, 0.9, 0.3))
+			# Winglets
+			if cy > -size * 0.1 and cy < size * 0.1 and absf(cx) >= hull_width / 2.0 and absf(cx) < hull_width / 2.0 + 4.0:
+				var wing_col = Color(0.6, 0.1, 0.15)
+				if absf(cx) > hull_width / 2.0 + 2.5: wing_col = Color(0.8, 0.2, 0.2)
+				img.set_pixel(x, y, wing_col)
+			# Eye/window with reflection
+			if absf(cx) < 4.0 and cy > -size * 0.2 and cy < size * 0.05:
+				var eye_col = Color(1.0, 0.9, 0.2)
+				if cx < -1.0 and cy < -size * 0.05:
+					eye_col = Color(1.0, 1.0, 0.8) # Glint
+				img.set_pixel(x, y, eye_col)
+			# Engine exhausts
+			if cy > size * 0.35 and cy < size * 0.45 and absf(absf(cx) - 4.0) < 2.0:
+				var alpha = 1.0 - (cy - size * 0.35) / (size * 0.1)
+				img.set_pixel(x, y, Color(0.0, 0.8, 1.0, alpha))
 	texture = ImageTexture.create_from_image(img)
 "
 

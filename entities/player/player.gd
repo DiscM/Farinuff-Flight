@@ -195,31 +195,39 @@ func _on_shoot_timer_timeout() -> void:
 
 # --- Taking damage ---
 
+var respawn_invincibility: float = 3.0
+
 func _on_area_entered(area: Area2D) -> void:
 	if not GameManager.is_game_active:
 		return
 	if is_invincible:
 		return
-	if area.is_in_group("enemies") or area.is_in_group("enemy_bullets"):
+	if area.is_in_group("enemies"):
+		respawn_invincibility = 3.0
+		_take_hit()
+	elif area.is_in_group("enemy_bullets"):
+		respawn_invincibility = 2.0
 		_take_hit()
 
 func _take_hit() -> void:
 	if has_shield:
 		has_shield = false
 		shield_sprite.visible = false
-		_start_invincibility()
+		_start_invincibility(1.5)
 		return
 
 	SignalBus.player_hit.emit()
 	if GameManager.lives > 0:
-		_start_invincibility()
+		_start_invincibility(1.5)
 
-func _start_invincibility() -> void:
+func _start_invincibility(duration: float = 1.5) -> void:
 	is_invincible = true
+	invincibility_timer.wait_time = duration
 	invincibility_timer.start()
 	# Flash effect
+	var loops = int(duration / 0.24)
 	var tween := create_tween()
-	tween.set_loops(6)
+	tween.set_loops(loops)
 	tween.tween_property(sprite, "modulate:a", 0.2, 0.12)
 	tween.tween_property(sprite, "modulate:a", 1.0, 0.12)
 

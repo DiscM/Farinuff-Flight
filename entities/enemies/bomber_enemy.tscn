@@ -9,28 +9,49 @@ size = Vector2(36, 28)
 script/source = "extends Sprite2D
 
 func _ready() -> void:
-	var w := 40
-	var h := 32
+	var w := 48  # slightly wider
+	var h := 36
 	var img := Image.create(w, h, false, Image.FORMAT_RGBA8)
 	img.fill(Color.TRANSPARENT)
 	for y in range(h):
 		for x in range(w):
 			var cx := float(x) - w / 2.0
 			var cy := float(y) - h / 2.0
+			
 			# Wide body
-			if absf(cx) < w * 0.4 and absf(cy) < h * 0.3:
-				var t := absf(cx) / (w * 0.4)
-				var color := Color(0.2, 0.65, 0.2).lerp(Color(0.1, 0.4, 0.1), t)
+			if absf(cx) < w * 0.35 and absf(cy) < h * 0.35:
+				var t: float = absf(cx) / (w * 0.35)
+				var color := Color(0.2, 0.65, 0.2).lerp(Color(0.1, 0.3, 0.1), t)
+				if absf(cx) > w * 0.35 - 1.5 or absf(cy) > h * 0.35 - 1.5:
+					color = Color(0.4, 0.8, 0.4) # Highlight
 				img.set_pixel(x, y, color)
-			# Wings extended further
-			if absf(cx) > w * 0.2 and absf(cx) < w * 0.48 and cy > -h * 0.1 and cy < h * 0.15:
-				img.set_pixel(x, y, Color(0.15, 0.5, 0.15))
-			# Bomb bay (dark square at bottom center)
-			if absf(cx) < 5.0 and cy > h * 0.1 and cy < h * 0.35:
-				img.set_pixel(x, y, Color(0.25, 0.25, 0.25))
-			# Cockpit
-			if absf(cx) < 3.0 and cy > -h * 0.3 and cy < -h * 0.1:
-				img.set_pixel(x, y, Color(0.8, 0.9, 0.4))
+			
+			# Swept Heavy Wings
+			if absf(cx) >= w * 0.35 and absf(cx) < w * 0.48 and cy > -h * 0.15 and cy < h * 0.2:
+				var wing_col = Color(0.15, 0.5, 0.15)
+				if cy < -h * 0.1: wing_col = Color(0.3, 0.7, 0.3)
+				img.set_pixel(x, y, wing_col)
+			
+			# Double Bomb bays
+			if cy > h * 0.05 and cy < h * 0.3 and (absf(cx + 6.0) < 4.0 or absf(cx - 6.0) < 4.0):
+				# Warning stripes
+				if fmod(cy + cx, 4.0) < 2.0:
+					img.set_pixel(x, y, Color(0.9, 0.8, 0.1))
+				else:
+					img.set_pixel(x, y, Color(0.1, 0.1, 0.1))
+					
+			# Cockpit window
+			if absf(cx) < 4.0 and cy > -h * 0.3 and cy < -h * 0.1:
+				if cx < -1.0 and cy < -h * 0.2:
+					img.set_pixel(x, y, Color(1.0, 1.0, 1.0))
+				else:
+					img.set_pixel(x, y, Color(0.8, 0.9, 0.4))
+					
+			# Engine thrusters (multiple)
+			if cy > h * 0.35 and cy < h * 0.48 and (absf(absf(cx) - 10.0) < 2.5 or absf(absf(cx) - 3.0) < 2.0):
+				var alpha = 1.0 - (cy - h * 0.35) / (h * 0.13)
+				img.set_pixel(x, y, Color(1.0, 0.4, 0.0, alpha))
+				
 	texture = ImageTexture.create_from_image(img)
 "
 

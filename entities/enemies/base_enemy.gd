@@ -23,6 +23,14 @@ func _ready() -> void:
 	add_child(notifier)
 	notifier.screen_exited.connect(_on_screen_exited)
 
+	# Dynamic procedural tween animation for "breathing" or wobble
+	var sprite := get_node_or_null("Sprite2D")
+	if sprite:
+		var tw := create_tween().set_loops()
+		# Slight squash and stretch
+		tw.tween_property(sprite, "scale", Vector2(1.05, 0.95), 0.6).set_trans(Tween.TRANS_SINE)
+		tw.tween_property(sprite, "scale", Vector2(0.95, 1.05), 0.6).set_trans(Tween.TRANS_SINE)
+
 func _physics_process(delta: float) -> void:
 	if not GameManager.is_game_active:
 		return

@@ -88,7 +88,7 @@ func _execute_move(delta: float) -> void:
 	match move_phase:
 		MovePhase.HOVER:
 			# Gentle wide sway at the top of the screen
-			var t := Time.get_ticks_msec() / 1000.0
+			var t: float = Time.get_ticks_msec() / 1000.0
 			var sway_x := sin(t * 0.85) * 200.0
 			var sway_y := sin(t * 0.5) * 35.0
 			var home := Vector2(viewport_size.x / 2.0, 140.0) + Vector2(sway_x, sway_y)

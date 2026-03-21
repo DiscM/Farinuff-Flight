@@ -1,0 +1,59 @@
+---
+name: Godot Game Development & Design
+description: A comprehensive guide to understanding Godot 4, GDScript 2.0, game development patterns, and core game design principles.
+---
+
+# Godot Game Development & Game Design Framework
+
+This document serves as an internalized skill set to better understand, architect, and implement games in Godot 4. It covers engine specifics, software architecture patterns suited for game development, and high-level design philosophy.
+
+## 1. Godot 4 Engine Concepts
+
+### Node & Scene System
+- **Nodes** are the smallest building blocks (e.g., `Sprite2D`, `CollisionShape2D`, `Timer`).
+- **Scenes** are trees of nodes that can be saved, instantiated, and nested. A scene is essentially a reusable prefab.
+- **Rule of Thumb**: "Call down, signal up." A parent node can directly call methods on its children, but children should emit signals to communicate with their parents.
+
+### GDScript 2.0 Standards
+- **Static Typing**: Always try to use static typing (`var speed: float = 300.0`, `func take_damage(amount: int) -> void:`) for better performance, auto-completion, and error catching.
+- **Callables & Signals**: Instead of passing string names for functions, Godot 4 uses `Callable`. Signals are objects. You connect them via `button.pressed.connect(_on_button_pressed)`.
+- **Await**: Replaces the old `yield`. Use `await get_tree().create_timer(1.0).timeout` to easily pause execution without blocking the main thread.
+- **@export**: Use `@export` to expose variables to the Godot Inspector, making tweaking values easy for designers without touching code.
+
+## 2. Game Architecture Patterns (Godot Context)
+
+### Composition over Inheritance
+- Instead of creating a massive `Enemy.gd` class and deriving `FlyingEnemy`, `GroundEnemy`, etc., use **Components**. 
+- Create a `HealthComponent` node, a `HitboxComponent` node, and a `HurtboxComponent` node. An enemy scene is just a composition of these reusable nodes.
+
+### Autoloads (Singletons)
+- Godot allows defining scripts/scenes that exist globally (`GameManager`, `SignalBus`).
+- **Signal Bus Pattern**: Instead of tightly coupling UI to a specific player instance, have the player emit an event to the `SignalBus` (`SignalBus.player_health_changed.emit(new_health)`), and let the UI listen to the `SignalBus`.
+
+### State Machines
+- For characters or bosses with multiple distinct states (Idle, Run, Jump, Attack), implement a Finite State Machine (FSM). This avoids massive, nested `if-elif-else` blocks in `_process`.
+
+### Object Pooling
+- In a game like a Space Shooter, creating (`instantiate()`) and destroying (`queue_free()`) bullets or enemies rapidly can cause memory fragmentation and lag. 
+- Use object pooling: instantiate a set number of bullets at start-up, hide them, and recycle them as needed rather than destroying them.
+
+## 3. Game Design Fundamentals
+
+### The Core Loop
+- The primary set of actions the player performs repeatedly. If the core loop isn't fun, no amount of polish will save the game. Validate the core loop as early as possible with a barebones prototype.
+
+### Game Feel ("Juice")
+- The tactile sensation of interacting with the game. 
+- **Techniques to implement**: Screen shake, hit-stop (briefly pausing the game on a heavy impact), particle systems, tweening for smooth scaling/movement, and multi-layered sound effects.
+
+### Readability and Affordance
+- A player should be able to look at a screenshot and immediately know what is dangerous, what is interactive, and where the player character is.
+- Use color theory, silhouettes, and contrast to guide the player's eye.
+
+### Pacing and The Flow Channel
+- Difficulty should ramp up gradually but dynamically. A good game has "peaks and valleys" in pacing—moments of high tension followed by periods of rest to let the player recover.
+- Keep the player in the "Flow" state: the sweet spot between anxiety (too hard) and boredom (too easy).
+
+## 4. Current Project Context: "Space Shooter"
+- **Physics Layers**: The project has clearly defined routing (`player`, `enemies`, `player_bullets`, `enemy_bullets`, `powerups`). This allows efficient collision filtering using collision masks.
+- **Architecture**: The project currently implements a `SignalBus` and a `GameManager` autoload, indicating a scalable event-driven architecture that perfectly aligns with best practices.

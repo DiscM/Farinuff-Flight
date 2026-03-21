@@ -118,8 +118,14 @@ func _on_game_over(final_score: int) -> void:
 func _on_try_again_accepted() -> void:
 	try_again_active = false
 	game_over_shown = false  # allow future deaths to trigger the popup again
-	# Clear all enemies and bullets from the scene
-	get_tree().call_group("enemies", "queue_free")
+	
+	if is_instance_valid(player):
+		player._start_invincibility(player.respawn_invincibility)
+		
+	# Clear regular enemies and bullets from the scene, but spare the Boss
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		if is_instance_valid(enemy) and not (enemy is BossEnemy):
+			enemy.queue_free()
 	get_tree().call_group("enemy_bullets", "queue_free")
 	get_tree().call_group("powerups", "queue_free")
 	# Restart enemy spawning

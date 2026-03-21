@@ -26,9 +26,11 @@ GameManager="*res://autoloads/game_manager.gd"
 
 [display]
 
-window/size/viewport_width=720
-window/size/viewport_height=1024
+window/size/viewport_width=360
+window/size/viewport_height=720
+window/size/mode=2
 window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
 window/size/initial_width=450
 window/size/initial_height=640
 

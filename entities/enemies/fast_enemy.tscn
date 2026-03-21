@@ -9,21 +9,32 @@ size = Vector2(22, 22)
 script/source = "extends Sprite2D
 
 func _ready() -> void:
-	var size := 26
+	var size := 32
 	var img := Image.create(size, size, false, Image.FORMAT_RGBA8)
 	img.fill(Color.TRANSPARENT)
 	for y in range(size):
 		for x in range(size):
 			var cx := float(x) - size / 2.0
 			var cy := float(y) - size / 2.0
-			# Sleek diamond shape
-			if absf(cx) + absf(cy) < size * 0.4:
-				var t := (absf(cx) + absf(cy)) / (size * 0.4)
-				var color := Color(1.0, 0.6, 0.0).lerp(Color(1.0, 0.3, 0.0), t)
+			# Swept-back Diamond (Stealth-like)
+			var dist = absf(cx * 1.5) + absf(cy * (0.8 if cy < 0 else 1.5))
+			if dist < size * 0.4:
+				var t: float = dist / (size * 0.4)
+				var is_edge = dist > size * 0.35
+				var color := Color(1.0, 0.5, 0.0).lerp(Color(0.8, 0.1, 0.0), t)
+				if is_edge:
+					color = Color(1.0, 0.8, 0.3)
 				img.set_pixel(x, y, color)
-			# Bright center
-			if absf(cx) + absf(cy) < size * 0.12:
-				img.set_pixel(x, y, Color(1.0, 1.0, 0.7))
+			# Racing stripe
+			if absf(cx) < 2.0 and dist < size * 0.35:
+				img.set_pixel(x, y, Color(0.2, 0.2, 0.2))
+			# Bright cockpit core
+			if dist < size * 0.1:
+				img.set_pixel(x, y, Color(0.0, 1.0, 1.0))
+			# Energy trail
+			if absf(cx) < 1.0 and cy >= size * 0.25 and cy < size * 0.45:
+				var alpha = 1.0 - (cy - size * 0.25) / (size * 0.2)
+				img.set_pixel(x, y, Color(1.0, 0.9, 0.2, alpha))
 	texture = ImageTexture.create_from_image(img)
 "
 
