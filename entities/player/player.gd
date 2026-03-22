@@ -14,6 +14,7 @@ var has_rapid_fire: bool = false
 var has_spread_shot: bool = false
 var has_magnet: bool = false
 var is_invincible: bool = false
+var dev_god_mode: bool = false
 
 # RPG permanent upgrades (persist for the run)
 var has_rear_gun: bool = false
@@ -196,9 +197,21 @@ func _fire() -> void:
 			_spawn_bullet(Vector2.UP, Vector2(-14, 0))
 			_spawn_bullet(Vector2.UP, Vector2(14, 0))
 
-	# Rear gunner fires backward — auto_aim is intentionally skipped here (fires into enemies above)
+	# Rear gunner — mirrors the same spread+twin logic as the front guns, just pointing backward.
+	# skip_auto_aim=true so the rear bullets always fire backward, not toward enemies above.
 	if has_rear_gun or has_rear_gunner:
-		_spawn_bullet(Vector2.DOWN, Vector2.ZERO, true)
+		if has_spread_shot or has_spread_shot_elite:
+			_spawn_bullet(Vector2.DOWN, Vector2.ZERO, true)
+			_spawn_bullet(Vector2(0.3, 0.95).normalized(), Vector2.ZERO, true)
+			_spawn_bullet(Vector2(-0.3, 0.95).normalized(), Vector2.ZERO, true)
+			if has_twin_cannons:
+				_spawn_bullet(Vector2(0.15, 0.99).normalized(), Vector2(-18, 0), true)
+				_spawn_bullet(Vector2(-0.15, 0.99).normalized(), Vector2(18, 0), true)
+		else:
+			_spawn_bullet(Vector2.DOWN, Vector2.ZERO, true)
+			if has_twin_cannons:
+				_spawn_bullet(Vector2.DOWN, Vector2(-14, 0), true)
+				_spawn_bullet(Vector2.DOWN, Vector2(14, 0), true)
 
 func _spawn_bullet(dir: Vector2, offset: Vector2 = Vector2.ZERO, skip_auto_aim: bool = false) -> void:
 	var bullet: Area2D = BULLET_SCENE.instantiate()
@@ -245,7 +258,7 @@ var respawn_invincibility: float = 3.0
 func _on_area_entered(area: Area2D) -> void:
 	if not GameManager.is_game_active:
 		return
-	if is_invincible:
+	if is_invincible or dev_god_mode:
 		return
 	if area.is_in_group("enemies"):
 		respawn_invincibility = 3.0

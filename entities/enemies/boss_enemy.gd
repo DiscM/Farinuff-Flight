@@ -30,6 +30,7 @@ var attack_sequence: Array = []
 var spiral_angle: float = 0.0
 
 var max_boss_health: int = 0
+var _dying: bool = false
 
 func _ready() -> void:
 	if is_elite:
@@ -277,18 +278,47 @@ func _spawn_bullet(dir: Vector2, spd: float) -> void:
 	get_tree().current_scene.call_deferred("add_child", bullet)
 
 func _die() -> void:
-	if is_queued_for_deletion():
+	# Guard against re-entry (e.g. multiple bullets hitting on the same frame)
+	if _dying:
 		return
+	_dying = true
+
+	# Immediately make the boss non-collidable and invisible so it can't
+	# be interacted with again, even if queue_free is blocked by a tree pause.
+	visible = false
+	for child in get_children():
+		if child is CollisionShape2D or child is CollisionPolygon2D:
+			child.set_deferred("disabled", true)
+
+	# Clean up the telegraph marker
 	if is_instance_valid(telegraph_marker):
 		telegraph_marker.queue_free()
-	# super._die() defers queue_free — must run BEFORE boss_died is emitted,
-	# because the elite upgrade handler pauses the tree, which can block deferred calls.
-	super._die()
+
+	# Remove all bullets this boss fired so they don't orphan on screen
+	get_tree().call_group("enemy_bullets", "queue_free")
+
+	# Spawn death orbs and explosion (mirrors base_enemy._die() without queue_free)
+	SignalBus.enemy_killed.emit(points, global_position)
+	if guaranteed_orb or randf() < 0.6:
+		var orb: Area2D = XP_ORB_SCENE.instantiate()
+		orb.global_position = global_position
+		orb.orb_value = orb_value
+		get_tree().current_scene.call_deferred("add_child", orb)
+	var explosion_scene := preload("res://effects/explosion.tscn")
+	var explosion := explosion_scene.instantiate()
+	explosion.global_position = global_position
+	get_tree().current_scene.call_deferred("add_child", explosion)
+
+	# Emit the boss signal AFTER hiding, so the pause triggered by elite upgrade
+	# doesn't block any remaining cleanup.
 	SignalBus.boss_died.emit(points)
+
+	# Free the node — deferred so we're safely outside any signal handlers.
+	call_deferred("queue_free")
 
 ## Override: player collision deals fixed damage instead of instant death.
 func _on_area_entered(area: Area2D) -> void:
-	if is_queued_for_deletion():
+	if _dying or is_queued_for_deletion():
 		return
 	if area.is_in_group("player"):
 		take_damage(10)

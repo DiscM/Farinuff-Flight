@@ -24,6 +24,7 @@ var _final_score_cache: int = 0
 var shake_intensity: float = 0.0
 var shake_duration: float = 0.0
 var shake_timer: float = 0.0
+var _bg_time: float = 0.0
 
 func _ready() -> void:
 	GameManager.start_game()
@@ -76,6 +77,11 @@ func _process(delta: float) -> void:
 		shake_intensity = lerpf(shake_intensity, 0.0, delta * 5.0)
 	else:
 		camera.offset = Vector2.ZERO
+		
+	# Feed paused time to the background shader
+	_bg_time += delta
+	if is_instance_valid($Background) and $Background.material:
+		($Background.material as ShaderMaterial).set_shader_parameter("u_time", _bg_time)
 
 var _pause_overlay: CanvasLayer = null
 
@@ -174,8 +180,8 @@ func _on_allocation_triggered(points: int) -> void:
 		return
 	allocation_active = true
 
-	# Pause the game immediately
-	get_tree().paused = true
+	# Pause the game deferred, ensuring it's the absolute last state change of this frame
+	get_tree().set_deferred("paused", true)
 
 	# Show the popup on a CanvasLayer that processes while paused
 	var overlay := CanvasLayer.new()
@@ -188,14 +194,15 @@ func _on_allocation_triggered(points: int) -> void:
 
 func _on_allocation_closed() -> void:
 	allocation_active = false
+	get_tree().paused = false
 
 func _on_elite_upgrade_triggered() -> void:
 	if elite_upgrade_active:
 		return
 	elite_upgrade_active = true
 
-	# Pause the game
-	get_tree().paused = true
+	# Pause the game deferred, ensuring it's the absolute last state change of this frame
+	get_tree().set_deferred("paused", true)
 
 	# Show the elite upgrade picker on its own always-process CanvasLayer
 	var overlay := CanvasLayer.new()

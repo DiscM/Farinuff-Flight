@@ -2,6 +2,7 @@ shader_type canvas_item;
 // Scrolling procedural nebula background for the game scene.
 
 uniform float scroll_speed : hint_range(0.01, 0.5) = 0.04;
+uniform float u_time = 0.0;
 
 float hash(vec2 p) {
 	p = fract(p * vec2(234.34, 435.345));
@@ -33,7 +34,7 @@ float fbm(vec2 p) {
 
 void fragment() {
 	vec2 uv = UV;
-	float time = TIME * scroll_speed;
+	float time = u_time * scroll_speed;
 
 	// Nebula clouds
 	vec2 q = uv + vec2(time * 0.3, time * 0.15);

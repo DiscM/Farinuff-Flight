@@ -162,9 +162,6 @@ func _on_confirm() -> void:
 		GameManager.apply_stat_point("speed")
 
 	allocation_done.emit()
-
-	# Unpause and remove
-	get_tree().paused = false
 	get_parent().queue_free()
 
 func _refresh_ui() -> void:

@@ -11,7 +11,7 @@ All notable changes to this project will be documented in this file.
 - **Sleek Ship Redesign:** The player's ship procedural drawing algorithm has been completely overhauled from a basic chunky triangle into a sleek, swept-wing titanium stealth fighter with glowing cyan racing lines.
 - **5 New Elite Upgrades:** Added Spread Shot, Shield Burst, Orb Magnet, Overclock, and Rear Gunner to the Wave 10 elite boss reward pool (increasing options from 5 to 10).
 - **Elite Upgrade Uniqueness:** Boss upgrade choices are now tracked—once selected, an upgrade is permanently removed from all future Wave 10 pools during the current run.
-
+- **Developer Testing Menu:** Added an embedded Dev Tools panel to the pause menu for quick testing (add orbs, clear enemies, spawn bosses, trigger UI popups, god mode, full power).
 ### Changed
 - **Orb-Based Wave Progression:** The wave progression system has been entirely overhauled. Waves are no longer cleared by a flat "enemies killed" metric. They are now cleared by the total value of XP Orbs collected (`10 + Wave * 1.20`), directly incentivizing players to assassinate high-value targets.
 - **Economy & HP Rebalance:** 
@@ -31,3 +31,6 @@ All notable changes to this project will be documented in this file.
 - **Elite Boss Despawn Bug:** Fixed an issue where the Elite Boss visual would persist instead of despawning after death due to a signal timing bug pausing the tree prematurely.
 - **Upgrade Menu Pause Issue:** Fixed a logical bug where enemies would resume spawning while the elite upgrade popup was open.
 - **Boss Teleport Jitter:** Resolved a single-frame visual teleport jitter that occurred the exact moment a boss finished its movement phase.
+- **Pause Menu Layout:** Completely rewrote the pause menu to use dynamic scaling instead of absolute anchor presets, resolving issues where it would render off-center or off-screen.
+- **Rear Gun Modifier Inheritance:** Fixed a bug where the Rear Gunner upgrade was only firing a single bullet; it now mirrors all forward cannon behaviors including Spread Shot and Twin Cannons.
+- **Popup Unpausing:** Unified pause state management to prevent the game from silently unpausing behind active popup menus if triggered unexpectedly.
