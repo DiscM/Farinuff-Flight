@@ -15,6 +15,13 @@ var move_target: Vector2 = Vector2.ZERO
 var strafe_angle: float = 0.0
 var viewport_size: Vector2 = Vector2(720.0, 1024.0)
 
+var is_telegraphing: bool = false
+var telegraph_timer: float = 0.0
+var pattern_active: bool = false
+var pattern_time: float = 0.0
+var next_move_phase: MovePhase = MovePhase.HOVER
+var telegraph_marker: Sprite2D = null
+
 # --- Attack Patterns ---
 enum AttackPattern { AIMED, RADIAL, SHOTGUN, SPIRAL, CROSS }
 var attack_timer: float = 0.0
@@ -49,6 +56,27 @@ func _ready() -> void:
 	move_target = Vector2(viewport_size.x / 2.0, 130.0)
 	move_timer = 3.0
 
+	telegraph_marker = Sprite2D.new()
+	telegraph_marker.z_index = 5
+	var img := Image.create(64, 64, false, Image.FORMAT_RGBA8)
+	img.fill(Color.TRANSPARENT)
+	for i in range(64):
+		if i > 26 and i < 38: continue
+		if i > 8 and i < 56:
+			img.set_pixel(32, i, Color(1.0, 0.1, 0.2, 0.8))
+			img.set_pixel(31, i, Color(1.0, 0.1, 0.2, 0.8))
+			img.set_pixel(i, 32, Color(1.0, 0.1, 0.2, 0.8))
+			img.set_pixel(i, 31, Color(1.0, 0.1, 0.2, 0.8))
+	for y in range(64):
+		for x in range(64):
+			var dist = Vector2(x-32, y-32).length()
+			if dist > 26.0 and dist < 30.0:
+				img.set_pixel(x, y, Color(1.0, 0.0, 0.1, 0.6))
+	
+	telegraph_marker.texture = ImageTexture.create_from_image(img)
+	telegraph_marker.visible = false
+	get_tree().current_scene.call_deferred("add_child", telegraph_marker)
+
 	SignalBus.boss_spawned.emit(health, max_boss_health)
 
 func _build_attack_sequence() -> void:
@@ -69,11 +97,25 @@ func _build_attack_sequence() -> void:
 # ---- Movement --------------------------------------------------------
 
 func _move(delta: float) -> void:
-	# Movement phase timer
-	move_timer -= delta
-	if move_timer <= 0.0:
-		_pick_next_move_phase()
-	_execute_move(delta)
+	if is_telegraphing:
+		telegraph_timer -= delta
+		if is_instance_valid(telegraph_marker):
+			telegraph_marker.rotation -= delta * 3.0 # Spinning crosshair
+			telegraph_marker.modulate.a = 0.6 + 0.4 * sin(telegraph_timer * 15.0) # Pulsing effect
+
+		if telegraph_timer <= 0.0:
+			is_telegraphing = false
+			move_phase = next_move_phase
+			if is_instance_valid(telegraph_marker):
+				telegraph_marker.visible = false
+	else:
+		# Execute movement FIRST with the current move_target, THEN check the timer.
+		# If we checked the timer first, _pick_next_move_phase() would overwrite move_target
+		# and _execute_move would snap toward the new target for one frame — the visible teleport.
+		_execute_move(delta)
+		move_timer -= delta
+		if move_timer <= 0.0:
+			_pick_next_move_phase()
 
 	# Attack timer (independent of movement)
 	attack_timer -= delta
@@ -87,12 +129,20 @@ func _move(delta: float) -> void:
 func _execute_move(delta: float) -> void:
 	match move_phase:
 		MovePhase.HOVER:
-			# Gentle wide sway at the top of the screen
-			var t: float = Time.get_ticks_msec() / 1000.0
-			var sway_x := sin(t * 0.85) * 200.0
-			var sway_y := sin(t * 0.5) * 35.0
-			var home := Vector2(viewport_size.x / 2.0, 140.0) + Vector2(sway_x, sway_y)
-			position = position.lerp(home, delta * 2.0)
+			var target := move_target
+			# Fly directly to the telegraphed target first
+			if position.distance_to(move_target) < 30.0:
+				pattern_active = true
+			
+			if pattern_active:
+				pattern_time += delta
+				# Blend the sway in so it doesn't instantly jump
+				var blend := minf(pattern_time, 1.0)
+				var sway_x := sin(pattern_time * 0.85) * 200.0
+				var sway_y := sin(pattern_time * 0.5) * 35.0
+				target += Vector2(sway_x, sway_y) * blend
+				
+			position = position.lerp(target, delta * (4.0 if not pattern_active else 2.0))
 
 		MovePhase.DASH:
 			# Snap to a new position on screen
@@ -100,11 +150,18 @@ func _execute_move(delta: float) -> void:
 
 		MovePhase.STRAFE:
 			# Circle-strafe around the upper half of the screen
-			strafe_angle += delta * (2.0 if is_elite else 1.4)
 			var radius := 210.0
 			var center := Vector2(viewport_size.x / 2.0, 280.0)
+			
+			# Fly to the exact telegraphed spot on the circle before we start orbiting
+			if position.distance_to(move_target) < 30.0:
+				pattern_active = true
+				
+			if pattern_active:
+				strafe_angle += delta * (2.0 if is_elite else 1.4)
+				
 			var target := center + Vector2(cos(strafe_angle), sin(strafe_angle) * 0.5) * radius
-			position = position.lerp(target, delta * 3.5)
+			position = position.lerp(target, delta * (5.0 if not pattern_active else 3.5))
 
 		MovePhase.DIVE:
 			# Rush toward the lower screen then pull back up
@@ -114,29 +171,40 @@ func _pick_next_move_phase() -> void:
 	# Weighted random selection — avoid picking the same phase twice in a row
 	var options: Array = [MovePhase.HOVER, MovePhase.DASH, MovePhase.STRAFE, MovePhase.DIVE]
 	options.erase(move_phase)  # don't repeat current phase
-	move_phase = options[randi() % options.size()]
+	next_move_phase = options[randi() % options.size()]
 
-	match move_phase:
+	# Pre-calculate the starting position of the *next* phase
+	match next_move_phase:
 		MovePhase.HOVER:
 			move_timer = randf_range(2.5, 4.0)
-
+			move_target = Vector2(viewport_size.x / 2.0, 140.0)
 		MovePhase.DASH:
 			move_target = Vector2(
 				randf_range(100.0, viewport_size.x - 100.0),
 				randf_range(80.0, 320.0)
 			)
 			move_timer = randf_range(1.0, 1.8)
-
 		MovePhase.STRAFE:
 			strafe_angle = randf() * TAU
 			move_timer = randf_range(3.0, 5.0)
-
+			var radius := 210.0
+			var center := Vector2(viewport_size.x / 2.0, 280.0)
+			move_target = center + Vector2(cos(strafe_angle), sin(strafe_angle) * 0.5) * radius
 		MovePhase.DIVE:
 			move_target = Vector2(
 				randf_range(120.0, viewport_size.x - 120.0),
 				randf_range(380.0, 580.0)
 			)
 			move_timer = 1.8
+
+	is_telegraphing = true
+	telegraph_timer = 3.0
+	pattern_active = false
+	pattern_time = 0.0
+	
+	if is_instance_valid(telegraph_marker):
+		telegraph_marker.global_position = move_target
+		telegraph_marker.visible = true
 
 # ---- Attacks ---------------------------------------------------------
 
@@ -209,8 +277,14 @@ func _spawn_bullet(dir: Vector2, spd: float) -> void:
 	get_tree().current_scene.call_deferred("add_child", bullet)
 
 func _die() -> void:
-	SignalBus.boss_died.emit(points)
+	if is_queued_for_deletion():
+		return
+	if is_instance_valid(telegraph_marker):
+		telegraph_marker.queue_free()
+	# super._die() defers queue_free — must run BEFORE boss_died is emitted,
+	# because the elite upgrade handler pauses the tree, which can block deferred calls.
 	super._die()
+	SignalBus.boss_died.emit(points)
 
 ## Override: player collision deals fixed damage instead of instant death.
 func _on_area_entered(area: Area2D) -> void:

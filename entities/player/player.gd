@@ -33,6 +33,22 @@ var drone_node: Area2D = null
 var drone_shoot_timer: float = 0.0
 const DRONE_FIRE_RATE: float = 0.65
 
+# New elite upgrades
+var has_spread_shot_elite: bool = false   # Permanent 3-way spread (stacks with twin_cannons → 5 shots)
+var has_shield_burst: bool = false         # Periodic bullet-clearing shockwave
+var has_magnet_field: bool = false         # Permanent orb/powerup magnet (faster pull than temp)
+var has_overclock: bool = false            # Active: triple fire rate for 3 s, 15 s cooldown
+var has_rear_gunner: bool = false          # Permanent rear-facing cannon (inherits all _spawn_bullet modifiers)
+
+var shield_burst_cooldown: float = 0.0
+const SHIELD_BURST_PERIOD: float = 8.0
+
+var overclock_cooldown: float = 0.0
+var overclock_active: bool = false
+var overclock_timer: float = 0.0
+const OVERCLOCK_DURATION: float = 3.0
+const OVERCLOCK_COOLDOWN: float = 15.0
+
 @onready var shoot_timer: Timer = $ShootTimer
 @onready var invincibility_timer: Timer = $InvincibilityTimer
 @onready var rapid_fire_timer: Timer = $RapidFireTimer
@@ -115,8 +131,11 @@ func _physics_process(delta: float) -> void:
 	if Input.is_action_pressed("shoot") and can_shoot:
 		# Apply fire-rate bonus from leveling
 		var effective_rate: float
-		if has_rapid_fire:
-			effective_rate = base_fire_rate * 0.4 * maxf(1.0 - GameManager.bonus_fire_rate_pct, 0.15)
+		if has_rapid_fire or overclock_active:
+			var rate_factor := 0.4
+			if has_rapid_fire and overclock_active:
+				rate_factor = 0.15  # stacking: rapid fire + overclock = ultra fast
+			effective_rate = base_fire_rate * rate_factor * maxf(1.0 - GameManager.bonus_fire_rate_pct, 0.15)
 		else:
 			effective_rate = base_fire_rate * maxf(1.0 - GameManager.bonus_fire_rate_pct, 0.15)
 		shoot_timer.wait_time = maxf(effective_rate, 0.05)
@@ -134,15 +153,41 @@ func _physics_process(delta: float) -> void:
 	if has_drone:
 		_update_drone(delta)
 
+	# --- Shield Burst cooldown ---
+	if has_shield_burst:
+		shield_burst_cooldown -= delta
+		if shield_burst_cooldown <= 0.0:
+			shield_burst_cooldown = SHIELD_BURST_PERIOD
+			_trigger_shield_burst()
+
+	# --- Overclock cooldown / active timer ---
+	if has_overclock:
+		if overclock_active:
+			overclock_timer -= delta
+			if overclock_timer <= 0.0:
+				overclock_active = false
+				overclock_cooldown = OVERCLOCK_COOLDOWN
+		else:
+			overclock_cooldown -= delta
+			if overclock_cooldown <= 0.0:
+				overclock_active = true
+				overclock_timer = OVERCLOCK_DURATION
+				_flash_overclock()
+
+	# --- Permanent magnet field ---
+	if has_magnet_field and not has_magnet:
+		_attract_powerups_fast(delta)
+
 func _fire() -> void:
 	can_shoot = false
 	shoot_timer.start()
 
-	if has_spread_shot:
+	if has_spread_shot or has_spread_shot_elite:
 		_spawn_bullet(Vector2.UP)
 		_spawn_bullet(Vector2(-0.3, -0.95).normalized())
 		_spawn_bullet(Vector2(0.3, -0.95).normalized())
 		if has_twin_cannons:
+			# Twin cannons add 2 extra offset parallel bullets — direction follows the fan
 			_spawn_bullet(Vector2(-0.15, -0.99).normalized(), Vector2(-18, 0))
 			_spawn_bullet(Vector2(0.15, -0.99).normalized(), Vector2(18, 0))
 	else:
@@ -151,14 +196,14 @@ func _fire() -> void:
 			_spawn_bullet(Vector2.UP, Vector2(-14, 0))
 			_spawn_bullet(Vector2.UP, Vector2(14, 0))
 
-	# Rear gun fires backward
-	if has_rear_gun:
-		_spawn_bullet(Vector2.DOWN)
+	# Rear gunner fires backward — auto_aim is intentionally skipped here (fires into enemies above)
+	if has_rear_gun or has_rear_gunner:
+		_spawn_bullet(Vector2.DOWN, Vector2.ZERO, true)
 
-func _spawn_bullet(dir: Vector2, offset: Vector2 = Vector2.ZERO) -> void:
+func _spawn_bullet(dir: Vector2, offset: Vector2 = Vector2.ZERO, skip_auto_aim: bool = false) -> void:
 	var bullet: Area2D = BULLET_SCENE.instantiate()
-	# Auto-aim: nudge direction toward nearest enemy
-	if has_auto_aim:
+	# Auto-aim: nudge direction toward nearest enemy (skipped for rear-facing bullets)
+	if has_auto_aim and not skip_auto_aim:
 		var enemies := get_tree().get_nodes_in_group("enemies")
 		var best_dist := INF
 		var best_enemy: Node2D = null
@@ -329,6 +374,16 @@ func reset_state() -> void:
 	has_auto_aim = false
 	has_afterburner = false
 	_remove_drone()
+	# Reset new elite upgrades
+	has_spread_shot_elite = false
+	has_shield_burst = false
+	shield_burst_cooldown = 0.0
+	has_magnet_field = false
+	has_overclock = false
+	overclock_active = false
+	overclock_cooldown = 0.0
+	overclock_timer = 0.0
+	has_rear_gunner = false
 
 ## Called by level-up popup for shield upgrade
 func grant_shield() -> void:
@@ -433,6 +488,88 @@ func grant_afterburner() -> void:
 func grant_hull_plating() -> void:
 	GameManager.lives += 2
 	SignalBus.lives_changed.emit(GameManager.lives)
+
+# --- New Elite Upgrades ---
+
+func grant_spread_shot_elite() -> void:
+	## Permanent 3-way spread. Stacks with twin_cannons (→ 5 bullets), auto_aim, piercing, explosive, zigzag.
+	has_spread_shot_elite = true
+
+func grant_shield_burst() -> void:
+	## Periodic bullet-clearing shockwave every 8 s. Independent of all fire upgrades.
+	has_shield_burst = true
+	shield_burst_cooldown = SHIELD_BURST_PERIOD  # first burst after first full cycle
+
+func grant_magnet_field() -> void:
+	## Permanent magnetic pull on orbs/powerups — faster than the temp powerup.
+	has_magnet_field = true
+
+func grant_overclock() -> void:
+	## Triple fire rate for 3 s every 15 s. Stacks with rapid_fire powerup (→ 0.15× rate).
+	## Also stacks with twin_cannons and spread_shot (more bullets per burst).
+	has_overclock = true
+	overclock_cooldown = 3.0  # first overclock triggers soon after upgrade
+
+func grant_rear_gunner() -> void:
+	## Backward-facing cannon. Inherits piercing, explosive, zigzag from _spawn_bullet.
+	## Auto-aim is intentionally skipped so it doesn't curve bullets away from threats above.
+	has_rear_gunner = true
+
+# --- Shield Burst implementation ---
+
+func _trigger_shield_burst() -> void:
+	## Destroy all enemy bullets within a large radius; deal 1 damage to nearby enemies.
+	var burst_radius := 160.0
+	SignalBus.screen_shake.emit(4.0, 0.18)
+	# Destroy nearby enemy bullets
+	for b in get_tree().get_nodes_in_group("enemy_bullets"):
+		if is_instance_valid(b) and global_position.distance_to(b.global_position) < burst_radius:
+			b.queue_free()
+	# Damage enemies caught in the burst
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if is_instance_valid(e) and global_position.distance_to(e.global_position) < burst_radius:
+			e.take_damage(1 + GameManager.bonus_damage)
+	# Visual flash ring
+	_spawn_burst_ring(burst_radius)
+
+func _spawn_burst_ring(radius: float) -> void:
+	var ring := Node2D.new()
+	ring.global_position = global_position
+	get_tree().current_scene.add_child(ring)
+	var tween := ring.create_tween()
+	tween.tween_property(ring, "scale", Vector2(radius / 40.0, radius / 40.0), 0.35)\
+		.from(Vector2.ONE).set_ease(Tween.EASE_OUT)
+	tween.parallel().tween_property(ring, "modulate:a", 0.0, 0.35).set_ease(Tween.EASE_IN)
+	tween.tween_callback(ring.queue_free)
+	# Draw a simple ring using a canvas draw pass on a custom node
+	var spr := Sprite2D.new()
+	var img := Image.create(80, 80, false, Image.FORMAT_RGBA8)
+	for y in range(80):
+		for x in range(80):
+			var d := Vector2(float(x) - 40.0, float(y) - 40.0).length()
+			if d >= 36.0 and d <= 40.0:
+				img.set_pixel(x, y, Color(0.4, 0.9, 1.0, 0.85))
+	spr.texture = ImageTexture.create_from_image(img)
+	ring.add_child(spr)
+
+func _flash_overclock() -> void:
+	## Brief visual cue when Overclock activates.
+	var tween := create_tween()
+	tween.tween_property(sprite, "modulate", Color(1.0, 0.7, 0.0), 0.05)
+	tween.tween_property(sprite, "modulate", Color.WHITE, 0.25)
+
+func _attract_powerups_fast(delta: float) -> void:
+	## Faster pull than the temp magnet powerup (500 px/s vs 350 px/s).
+	var powerups := get_tree().get_nodes_in_group("powerups")
+	for pu in powerups:
+		if is_instance_valid(pu):
+			var dir: Vector2 = (global_position - pu.global_position).normalized()
+			pu.global_position += dir * 500.0 * delta
+	var orbs := get_tree().get_nodes_in_group("xp_orbs")
+	for orb in orbs:
+		if is_instance_valid(orb):
+			var dir: Vector2 = (global_position - orb.global_position).normalized()
+			orb.global_position += dir * 500.0 * delta
 
 
 func grant_drone_escort() -> void:

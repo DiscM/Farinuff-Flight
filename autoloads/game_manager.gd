@@ -11,6 +11,10 @@ var is_game_active: bool = false
 var boss_active: bool = false
 var try_again_stocks: int = 3
 
+# --- Elite Upgrade Tracking ---
+# Upgrade IDs chosen so far this run — excluded from future pools.
+var chosen_upgrade_ids: Array[String] = []
+
 # --- Difficulty scaling ---
 var base_spawn_interval: float = 1.5
 var min_spawn_interval: float = 0.3
@@ -51,7 +55,7 @@ func _on_enemy_killed(points: int, _position: Vector2) -> void:
 
 func _on_boss_died(_points: int) -> void:
 	boss_active = false
-	# Elite boss on wave 10 (and multiples of 10) triggers the ship-transformation upgrade
+	# Emit elite upgrade trigger FIRST so the game pauses before wave advances + spawning restarts.
 	if current_wave % 10 == 0:
 		SignalBus.elite_upgrade_triggered.emit()
 	_advance_wave()
@@ -143,6 +147,7 @@ func _on_game_restarted() -> void:
 	bonus_damage = 0
 	orbs_collected = 0
 	try_again_stocks = 3
+	chosen_upgrade_ids = []
 
 	is_game_active = true
 	boss_active = false

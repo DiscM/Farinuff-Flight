@@ -7,6 +7,7 @@ signal upgrade_chosen
 # ── Upgrade Definitions ────────────────────────────────────────────────────────
 
 const ALL_UPGRADES: Array[Dictionary] = [
+	# ── Original 5 ─────────────────────────────────────────────────────────────
 	{
 		"id": "twin_cannons",
 		"name": "Twin Cannons",
@@ -42,6 +43,42 @@ const ALL_UPGRADES: Array[Dictionary] = [
 		"description": "+25% speed and snappier\nmaneuverability.",
 		"color": Color(1.0, 0.45, 0.15),
 	},
+	# ── New Wave-10 Upgrades ────────────────────────────────────────────────────
+	{
+		"id": "spread_shot_elite",
+		"name": "Spread Shot",
+		"icon": "✦",
+		"description": "Fire a permanent 3-way fan.\nStacks with Twin Cannons → 5 bullets.",
+		"color": Color(1.0, 0.55, 0.9),
+	},
+	{
+		"id": "shield_burst",
+		"name": "Shield Burst",
+		"icon": "💥",
+		"description": "Every 8 s, emit a shockwave\nthat clears bullets & damages enemies.",
+		"color": Color(0.3, 0.8, 1.0),
+	},
+	{
+		"id": "magnet_field",
+		"name": "Orb Magnet",
+		"icon": "🧲",
+		"description": "Permanently attract XP orbs\nand power-ups (faster pull).",
+		"color": Color(1.0, 0.75, 0.1),
+	},
+	{
+		"id": "overclock",
+		"name": "Overclock",
+		"icon": "⚡",
+		"description": "Triple fire rate for 3 s\nevery 15 s. Stacks with Rapid Fire.",
+		"color": Color(0.9, 1.0, 0.2),
+	},
+	{
+		"id": "rear_gunner",
+		"name": "Rear Gunner",
+		"icon": "🔺",
+		"description": "A rear cannon fires backward\neach shot. Inherits all bullet mods.",
+		"color": Color(1.0, 0.35, 0.35),
+	},
 ]
 
 var chosen_upgrades: Array[Dictionary] = []
@@ -55,7 +92,11 @@ func _ready() -> void:
 	_animate_in()
 
 func _pick_upgrades() -> void:
-	var pool := ALL_UPGRADES.duplicate()
+	# Exclude upgrades that were chosen in previous Wave-10 events this run.
+	var pool: Array[Dictionary] = []
+	for upg in ALL_UPGRADES:
+		if not GameManager.chosen_upgrade_ids.has(upg["id"]):
+			pool.append(upg)
 	pool.shuffle()
 	chosen_upgrades = pool.slice(0, 3)
 
@@ -189,19 +230,27 @@ func _on_card_unhover(card: PanelContainer, style: StyleBoxFlat) -> void:
 # ── Interaction ────────────────────────────────────────────────────────────────
 
 func _on_upgrade_selected(upgrade_id: String) -> void:
+	# Record as chosen so it won't appear in future Wave-10 upgrade pools.
+	GameManager.chosen_upgrade_ids.append(upgrade_id)
+
 	# Apply to player
 	var players := get_tree().get_nodes_in_group("player")
 	if not players.is_empty():
 		var player := players[0]
 		match upgrade_id:
-			"twin_cannons":   player.grant_twin_cannons()
-			"auto_aim":       player.grant_auto_aim()
-			"drone_escort":   player.grant_drone_escort()
-			"hull_plating":   player.grant_hull_plating()
-			"afterburner":    player.grant_afterburner()
+			"twin_cannons":      player.grant_twin_cannons()
+			"auto_aim":          player.grant_auto_aim()
+			"drone_escort":      player.grant_drone_escort()
+			"hull_plating":      player.grant_hull_plating()
+			"afterburner":       player.grant_afterburner()
+			"spread_shot_elite": player.grant_spread_shot_elite()
+			"shield_burst":      player.grant_shield_burst()
+			"magnet_field":      player.grant_magnet_field()
+			"overclock":         player.grant_overclock()
+			"rear_gunner":       player.grant_rear_gunner()
 
 	upgrade_chosen.emit()
-	get_tree().paused = false
+	# game.gd owns the pause state — it unpauses when it receives upgrade_chosen.
 	get_parent().queue_free()
 
 # ── Animation ──────────────────────────────────────────────────────────────────

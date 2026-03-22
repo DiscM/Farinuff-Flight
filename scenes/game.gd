@@ -207,3 +207,4 @@ func _on_elite_upgrade_triggered() -> void:
 
 func _on_elite_upgrade_closed() -> void:
 	elite_upgrade_active = false
+	get_tree().paused = false
