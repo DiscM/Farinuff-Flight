@@ -11,9 +11,83 @@ var is_game_active: bool = false
 var boss_active: bool = false
 var try_again_stocks: int = 3
 
-# --- Elite Upgrade Tracking ---
 # Upgrade IDs chosen so far this run — excluded from future pools.
 var chosen_upgrade_ids: Array[String] = []
+
+const ALL_UPGRADES: Array[Dictionary] = [
+	# ── Original 5 ─────────────────────────────────────────────────────────────
+	{
+		"id": "twin_cannons",
+		"name": "Twin Cannons",
+		"icon": "🔫",
+		"description": "Fire two parallel bullets\nwith every shot.",
+		"color": Color(1.0, 0.8, 0.2),
+	},
+	{
+		"id": "auto_aim",
+		"name": "Auto-Aim Core",
+		"icon": "🎯",
+		"description": "Bullets home in on\nthe nearest enemy.",
+		"color": Color(0.3, 1.0, 0.5),
+	},
+	{
+		"id": "drone_escort",
+		"name": "Drone Escort",
+		"icon": "🤖",
+		"description": "A combat drone joins you,\nauto-firing at enemies.",
+		"color": Color(0.4, 0.85, 1.0),
+	},
+	{
+		"id": "hull_plating",
+		"name": "Hull Plating",
+		"icon": "🛡️",
+		"description": "Reinforce the hull.\nGain +2 max lives.",
+		"color": Color(0.8, 0.55, 1.0),
+	},
+	{
+		"id": "afterburner",
+		"name": "Afterburner",
+		"icon": "🚀",
+		"description": "+25% speed and snappier\nmaneuverability.",
+		"color": Color(1.0, 0.45, 0.15),
+	},
+	# ── New Wave-10 Upgrades ────────────────────────────────────────────────────
+	{
+		"id": "spread_shot_elite",
+		"name": "Spread Shot",
+		"icon": "✦",
+		"description": "Fire a permanent 3-way fan.\nStacks with Twin Cannons → 5 bullets.",
+		"color": Color(1.0, 0.55, 0.9),
+	},
+	{
+		"id": "shield_burst",
+		"name": "Shield Burst",
+		"icon": "💥",
+		"description": "Every 8 s, emit a shockwave\nthat clears bullets & damages enemies.",
+		"color": Color(0.3, 0.8, 1.0),
+	},
+	{
+		"id": "magnet_field",
+		"name": "Orb Magnet",
+		"icon": "🧲",
+		"description": "Permanently attract XP orbs\nand power-ups (faster pull).",
+		"color": Color(1.0, 0.75, 0.1),
+	},
+	{
+		"id": "overclock",
+		"name": "Overclock",
+		"icon": "⚡",
+		"description": "Triple fire rate for 3 s\nevery 15 s. Stacks with Rapid Fire.",
+		"color": Color(0.9, 1.0, 0.2),
+	},
+	{
+		"id": "rear_gunner",
+		"name": "Rear Gunner",
+		"icon": "🔺",
+		"description": "A rear cannon fires backward\neach shot. Inherits all bullet mods.",
+		"color": Color(1.0, 0.35, 0.35),
+	},
+]
 
 # --- Difficulty scaling ---
 var base_spawn_interval: float = 1.5
@@ -56,7 +130,8 @@ func _on_enemy_killed(points: int, _position: Vector2) -> void:
 func _on_boss_died(_points: int) -> void:
 	boss_active = false
 	# Emit elite upgrade trigger FIRST so the game pauses before wave advances + spawning restarts.
-	if current_wave % 10 == 0:
+	# But ONLY if we haven't already collected all possible elite upgrades.
+	if current_wave % 10 == 0 and chosen_upgrade_ids.size() < ALL_UPGRADES.size():
 		SignalBus.elite_upgrade_triggered.emit()
 	_advance_wave()
 
