@@ -68,6 +68,14 @@ var last_aim_direction: Vector2 = Vector2.UP
 var is_using_free_aim: bool = false
 @onready var reticle: Node2D = null
 
+# --- Boost ---
+var is_boosting: bool = false
+var boost_cooldown_timer: float = 0.0
+var boost_duration_timer: float = 0.0
+const BOOST_MULTIPLIER: float = 2.4
+const BOOST_DURATION: float = 0.22
+const BOOST_COOLDOWN: float = 0.85
+
 # Movement feel
 @export var acceleration: float = 12.0   # how fast we reach top speed
 @export var drag: float = 14.0          # how fast we decelerate (higher = tighter/snappier stop)
@@ -135,6 +143,8 @@ func _physics_process(delta: float) -> void:
 		input_dir = input_dir.normalized()
 
 	var effective_speed := speed * (1.0 + GameManager.bonus_speed_pct)
+	if is_boosting:
+		effective_speed *= BOOST_MULTIPLIER
 
 	if input_dir.length() > 0.0:
 		# Accelerate toward target velocity
@@ -155,6 +165,9 @@ func _physics_process(delta: float) -> void:
 	var half_h: float = 24.0 * scale.y
 	position.x = clampf(position.x, half_w, viewport_rect.size.x - half_w)
 	position.y = clampf(position.y, half_h, viewport_rect.size.y - half_h)
+
+	# --- Boost Logic ---
+	_update_boost(delta)
 
 	# --- Aiming ---
 	_update_aiming(delta)
@@ -210,6 +223,26 @@ func _physics_process(delta: float) -> void:
 	if has_magnet_field and not has_magnet:
 		_attract_powerups_fast(delta)
 
+func _update_boost(delta: float) -> void:
+	if is_boosting:
+		boost_duration_timer -= delta
+		if boost_duration_timer <= 0.0:
+			is_boosting = false
+			boost_cooldown_timer = BOOST_COOLDOWN
+			# Reset visual
+			sprite.modulate = Color.WHITE if not dev_god_mode else Color(1.2, 1.2, 0.2)
+	else:
+		if boost_cooldown_timer > 0.0:
+			boost_cooldown_timer -= delta
+		
+		if Input.is_action_just_pressed("boost") and boost_cooldown_timer <= 0.0:
+			is_boosting = true
+			boost_duration_timer = BOOST_DURATION
+			# Visual feedback
+			var tween := create_tween()
+			tween.tween_property(sprite, "modulate", Color(1.5, 1.5, 2.0), 0.05)
+			SignalBus.screen_shake.emit(3.0, 0.1)
+
 func _update_aiming(_delta: float) -> void:
 	# 1. Controller Right Stick
 	var joy_dir := Vector2(
@@ -231,7 +264,7 @@ func _update_aiming(_delta: float) -> void:
 			
 	if is_using_free_aim:
 		reticle.visible = true
-		reticle.rotation = last_aim_direction.angle() + PI/2.0
+		rotation = last_aim_direction.angle() + PI/2.0
 
 func _fire() -> void:
 	can_shoot = false
@@ -462,6 +495,12 @@ func reset_state() -> void:
 	is_using_free_aim = false
 	if is_instance_valid(reticle):
 		reticle.visible = false
+
+	# Reset boost
+	is_boosting = false
+	boost_cooldown_timer = 0.0
+	boost_duration_timer = 0.0
+	sprite.modulate = Color.WHITE
 
 ## Called by level-up popup for shield upgrade
 func grant_shield() -> void:
