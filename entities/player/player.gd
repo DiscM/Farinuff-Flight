@@ -63,6 +63,11 @@ var can_shoot: bool = true
 var viewport_rect: Rect2
 var velocity: Vector2 = Vector2.ZERO
 
+# --- Free Aim ---
+var last_aim_direction: Vector2 = Vector2.UP
+var is_using_free_aim: bool = false
+@onready var reticle: Node2D = null
+
 # Movement feel
 @export var acceleration: float = 12.0   # how fast we reach top speed
 @export var drag: float = 14.0          # how fast we decelerate (higher = tighter/snappier stop)
@@ -94,6 +99,29 @@ func _ready() -> void:
 	area_entered.connect(_on_area_entered)
 	SignalBus.power_up_collected.connect(_on_power_up_collected)
 	shield_sprite.visible = false
+
+	# Initialize reticle
+	_setup_reticle()
+
+func _setup_reticle() -> void:
+	reticle = Node2D.new()
+	add_child(reticle)
+	
+	# Small glowing dot or crosshair
+	var dot := Sprite2D.new()
+	var img := Image.create(16, 16, false, Image.FORMAT_RGBA8)
+	img.fill(Color.TRANSPARENT)
+	for y in range(16):
+		for x in range(16):
+			var d := Vector2(float(x) - 8.0, float(y) - 8.0).length()
+			if d < 4.0:
+				img.set_pixel(x, y, Color(1.0, 0.4, 0.4, 0.9))
+			elif d < 6.0:
+				img.set_pixel(x, y, Color(1.0, 1.0, 1.0, 0.3))
+	dot.texture = ImageTexture.create_from_image(img)
+	reticle.add_child(dot)
+	dot.position = Vector2(0, -60) # distance from player
+	reticle.visible = false # hide until free aim is used
 
 func _physics_process(delta: float) -> void:
 	if not GameManager.is_game_active:
@@ -127,6 +155,9 @@ func _physics_process(delta: float) -> void:
 	var half_h: float = 24.0 * scale.y
 	position.x = clampf(position.x, half_w, viewport_rect.size.x - half_w)
 	position.y = clampf(position.y, half_h, viewport_rect.size.y - half_h)
+
+	# --- Aiming ---
+	_update_aiming(delta)
 
 	# --- Auto-fire ---
 	if Input.is_action_pressed("shoot") and can_shoot:
@@ -179,39 +210,66 @@ func _physics_process(delta: float) -> void:
 	if has_magnet_field and not has_magnet:
 		_attract_powerups_fast(delta)
 
+func _update_aiming(_delta: float) -> void:
+	# 1. Controller Right Stick
+	var joy_dir := Vector2(
+		Input.get_joy_axis(0, JOY_AXIS_RIGHT_X),
+		Input.get_joy_axis(0, JOY_AXIS_RIGHT_Y)
+	)
+	if joy_dir.length() > 0.4:
+		last_aim_direction = joy_dir.normalized()
+		is_using_free_aim = true
+	
+	# 2. Mouse (if moved or button pressed)
+	var mouse_pos := get_global_mouse_position()
+	var to_mouse := (mouse_pos - global_position).normalized()
+	# Only use mouse if it's far enough away or moving, to avoid jitter
+	if (mouse_pos - global_position).length() > 30.0:
+		if Input.get_last_mouse_velocity().length() > 10.0 or Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+			last_aim_direction = to_mouse
+			is_using_free_aim = true
+			
+	if is_using_free_aim:
+		reticle.visible = true
+		reticle.rotation = last_aim_direction.angle() + PI/2.0
+
 func _fire() -> void:
 	can_shoot = false
 	shoot_timer.start()
 
-	if has_spread_shot or has_spread_shot_elite:
-		_spawn_bullet(Vector2.UP)
-		_spawn_bullet(Vector2(-0.3, -0.95).normalized())
-		_spawn_bullet(Vector2(0.3, -0.95).normalized())
-		if has_twin_cannons:
-			# Twin cannons add 2 extra offset parallel bullets — direction follows the fan
-			_spawn_bullet(Vector2(-0.15, -0.99).normalized(), Vector2(-18, 0))
-			_spawn_bullet(Vector2(0.15, -0.99).normalized(), Vector2(18, 0))
-	else:
-		_spawn_bullet(Vector2.UP)
-		if has_twin_cannons:
-			_spawn_bullet(Vector2.UP, Vector2(-14, 0))
-			_spawn_bullet(Vector2.UP, Vector2(14, 0))
+	# Main fire direction
+	var aim_dir = last_aim_direction
+	var side_offset = aim_dir.rotated(PI/2.0) # perpendicular vector for parallel bullets
 
-	# Rear gunner — mirrors the same spread+twin logic as the front guns, just pointing backward.
-	# skip_auto_aim=true so the rear bullets always fire backward, not toward enemies above.
+	if has_spread_shot or has_spread_shot_elite:
+		_spawn_bullet(aim_dir)
+		_spawn_bullet(aim_dir.rotated(deg_to_rad(-25)))
+		_spawn_bullet(aim_dir.rotated(deg_to_rad(25)))
+		if has_twin_cannons:
+			# Twin cannons add 2 parallel bullets
+			_spawn_bullet(aim_dir.rotated(deg_to_rad(-12)), side_offset * -18)
+			_spawn_bullet(aim_dir.rotated(deg_to_rad(12)), side_offset * 18)
+	else:
+		_spawn_bullet(aim_dir)
+		if has_twin_cannons:
+			_spawn_bullet(aim_dir, side_offset * -14)
+			_spawn_bullet(aim_dir, side_offset * 14)
+
+	# Rear gunner logic
 	if has_rear_gun or has_rear_gunner:
+		var back_dir = -aim_dir
 		if has_spread_shot or has_spread_shot_elite:
-			_spawn_bullet(Vector2.DOWN, Vector2.ZERO, true)
-			_spawn_bullet(Vector2(0.3, 0.95).normalized(), Vector2.ZERO, true)
-			_spawn_bullet(Vector2(-0.3, 0.95).normalized(), Vector2.ZERO, true)
+			_spawn_bullet(back_dir, Vector2.ZERO, true)
+			_spawn_bullet(back_dir.rotated(deg_to_rad(-25)), Vector2.ZERO, true)
+			_spawn_bullet(back_dir.rotated(deg_to_rad(25)), Vector2.ZERO, true)
 			if has_twin_cannons:
-				_spawn_bullet(Vector2(0.15, 0.99).normalized(), Vector2(-18, 0), true)
-				_spawn_bullet(Vector2(-0.15, 0.99).normalized(), Vector2(18, 0), true)
+				_spawn_bullet(back_dir.rotated(deg_to_rad(-12)), side_offset * 18, true)
+				_spawn_bullet(back_dir.rotated(deg_to_rad(12)), side_offset * -18, true)
 		else:
-			_spawn_bullet(Vector2.DOWN, Vector2.ZERO, true)
+			_spawn_bullet(back_dir, Vector2.ZERO, true)
 			if has_twin_cannons:
-				_spawn_bullet(Vector2.DOWN, Vector2(-14, 0), true)
-				_spawn_bullet(Vector2.DOWN, Vector2(14, 0), true)
+				_spawn_bullet(back_dir, side_offset * 14, true)
+				_spawn_bullet(back_dir, side_offset * -14, true)
 
 func _spawn_bullet(dir: Vector2, offset: Vector2 = Vector2.ZERO, skip_auto_aim: bool = false) -> void:
 	var bullet: Area2D = BULLET_SCENE.instantiate()
@@ -230,8 +288,9 @@ func _spawn_bullet(dir: Vector2, offset: Vector2 = Vector2.ZERO, skip_auto_aim: 
 				var aim_dir := (best_enemy.global_position - global_position).normalized()
 				dir = dir.lerp(aim_dir, 0.35).normalized()
 	bullet.direction = dir
-	var offset_y := -24.0 * scale.y if dir.y < 0 else 24.0 * scale.y
-	bullet.global_position = global_position + Vector2(0, offset_y) + offset
+	# Offset along the barrel/direction
+	var dist_offset = dir * 24.0 * scale.y
+	bullet.global_position = global_position + dist_offset + offset
 	# Apply bullet scale upgrade
 	if bullet_scale_level > 0:
 		var bs := 1.0 + bullet_scale_level * 0.5
@@ -397,6 +456,12 @@ func reset_state() -> void:
 	overclock_cooldown = 0.0
 	overclock_timer = 0.0
 	has_rear_gunner = false
+
+	# Reset free aim
+	last_aim_direction = Vector2.UP
+	is_using_free_aim = false
+	if is_instance_valid(reticle):
+		reticle.visible = false
 
 ## Called by level-up popup for shield upgrade
 func grant_shield() -> void:
