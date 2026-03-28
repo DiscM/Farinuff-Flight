@@ -1,1 +1,3 @@
 res://entities/player/player.gd
+res://effects/shaders/crt_overlay.gdshader
+res://scenes/game.gd

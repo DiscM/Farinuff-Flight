@@ -29,6 +29,7 @@ var _bg_time: float = 0.0
 func _ready() -> void:
 	GameManager.start_game()
 	hud.update_all()
+	hud.layer = 10 # Lift above post-processing
 
 	enemy_spawner.start_spawning()
 	powerup_spawner.start_spawning()
@@ -42,28 +43,75 @@ func _ready() -> void:
 	var viewport_size := get_viewport().get_visible_rect().size
 	player.position = Vector2(viewport_size.x / 2.0, viewport_size.y - 80.0)
 
-	# --- Shader Injection ---
-	# Dynamically generating shaders explicitly forces Godot to compile and attach them safely
-	var bg_shader := preload("res://effects/shaders/scrolling_bg.gdshader")
-	if bg_shader:
-		var bg_mat := ShaderMaterial.new()
-		bg_mat.shader = bg_shader
-		$Background.material = bg_mat
+	# --- Parallax Background ---
+	var parallax_scene := preload("res://effects/parallax_layer.gd")
+	
+	# Layer configs: [scroll_speed_y, star_count, min_size, max_size, color, show_nebulae, nebula_count]
+	var layer_configs := [
+		# Layer 1 — Deep (slowest, tiny dim stars, faint nebulae)
+		{"speed": 15.0, "stars": 120, "min_sz": 0.5, "max_sz": 1.2,
+		 "color": Color(0.6, 0.7, 1.0), "nebulae": true, "neb_count": 5},
+		# Layer 2 — Mid (medium speed, normal stars)
+		{"speed": 40.0, "stars": 80, "min_sz": 1.0, "max_sz": 2.2,
+		 "color": Color(0.8, 0.88, 1.0), "nebulae": false, "neb_count": 0},
+		# Layer 3 — Near (fastest, large bright stars with subtle color)
+		{"speed": 80.0, "stars": 35, "min_sz": 1.8, "max_sz": 3.5,
+		 "color": Color(0.9, 0.95, 1.0), "nebulae": true, "neb_count": 3},
+	]
+	
+	for cfg in layer_configs:
+		var p2d := Parallax2D.new()
+		p2d.autoscroll = Vector2(0.0, cfg["speed"])
+		p2d.repeat_size = Vector2(720.0, 1024.0)
+		
+		var layer_renderer := parallax_scene.new()
+		layer_renderer.star_count = cfg["stars"]
+		layer_renderer.min_size = cfg["min_sz"]
+		layer_renderer.max_size = cfg["max_sz"]
+		layer_renderer.base_color = cfg["color"]
+		layer_renderer.show_nebulae = cfg["nebulae"]
+		layer_renderer.nebula_count = cfg["neb_count"]
+		
+		p2d.add_child(layer_renderer)
+		# Insert before the player/enemies so they draw over the background
+		add_child(p2d)
+		move_child(p2d, 1) # After Background ColorRect
 
+	# --- Shader Injection ---
 	var crt_shader := preload("res://effects/shaders/crt_overlay.gdshader")
+	var distort_shader := preload("res://effects/shaders/distortion_only.gdshader")
+	
 	if crt_shader:
 		var crt_mat := ShaderMaterial.new()
 		crt_mat.shader = crt_shader
+		crt_mat.set_shader_parameter("apply_distortion", false) # Scanlines only on world
+		
 		var crt_rect := ColorRect.new()
 		crt_rect.color = Color.WHITE
 		crt_rect.material = crt_mat
 		crt_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
 		crt_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		# Using a CanvasLayer at index 100 guarantees it draws over the HUD AND the game world
+		
 		var crt_layer := CanvasLayer.new()
-		crt_layer.layer = 100
+		crt_layer.layer = 1
 		crt_layer.add_child(crt_rect)
 		add_child(crt_layer)
+
+	if distort_shader:
+		var distort_mat := ShaderMaterial.new()
+		distort_mat.shader = distort_shader
+		
+		var distort_rect := ColorRect.new()
+		distort_rect.color = Color.WHITE
+		distort_rect.material = distort_mat
+		distort_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
+		distort_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		
+		# Universal distortion layer (affects everything below it i.e. game world + scanlines + HUD)
+		var distort_layer := CanvasLayer.new()
+		distort_layer.layer = 100
+		distort_layer.add_child(distort_rect)
+		add_child(distort_layer)
 
 func _process(delta: float) -> void:
 	# Camera shake

@@ -77,3 +77,19 @@ When solving unexpected API errors, verifying strict GDScript 2.0 syntax, or see
 - **GDScript 2.0 Reference**: [https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html](https://docs.godotengine.org/en/stable/tutorials/scripting/gdscript/gdscript_basics.html)
 - **Godot Shading Language**: [https://docs.godotengine.org/en/stable/tutorials/shaders/index.html](https://docs.godotengine.org/en/stable/tutorials/shaders/index.html)
 - **Node & Class API Index**: [https://docs.godotengine.org/en/stable/classes/index.html](https://docs.godotengine.org/en/stable/classes/index.html)
+
+## 7. Parallax Effects (Godot 4.3+)
+
+Parallax creates an illusion of depth by moving background layers at different speeds relative to the camera.
+
+### Parallax2D (Modern Standard)
+In Godot 4.3, `Parallax2D` replaced the older `ParallaxBackground` system. It is a `Node2D` that can be placed anywhere in the tree.
+- **Scroll Scale**: Determines the layer's speed. `0.2` makes it move 20% of camera speed (looks far away), while `1.5` makes it move faster than the foreground (looks very close).
+- **Repeat Size**: Enables infinite scrolling. Set this to the width/height of your texture to have the engine handle seamless tiling.
+- **Autoscroll**: A built-in property for constant movement (e.g., a scrolling star field) without manual scripting.
+
+### ParallaxBackground / ParallaxLayer (Legacy)
+Required for projects before Godot 4.3.
+- `ParallaxBackground` is a specialized `CanvasLayer`.
+- `ParallaxLayer` contains the `motion_scale` and `motion_mirroring` properties.
+- **Conversion**: In Godot 4.3+, you can right-click a `ParallaxBackground` in the Scene dock and select "Convert to Parallax2D" for an automatic migration.
