@@ -3,7 +3,7 @@ extends Area2D
 
 const BULLET_SCENE := preload("res://entities/bullets/bullet.tscn")
 
-@export var speed: float = 420.0
+@export var speed: float = 280.0
 @export var base_fire_rate: float = 0.22  # seconds between shots
 
 # Power-up state (temporary)
@@ -72,9 +72,22 @@ var is_using_free_aim: bool = false
 var is_boosting: bool = false
 var boost_cooldown_timer: float = 0.0
 var boost_duration_timer: float = 0.0
-const BOOST_MULTIPLIER: float = 2.4
-const BOOST_DURATION: float = 0.22
+var afterimage_spawn_timer: float = 0.0
+const AF_SPAWN_LIMIT: float = 0.04
+const BOOST_MULTIPLIER: float = 3.5
+const BOOST_DURATION: float = 0.44 # doubled distance
 const BOOST_COOLDOWN: float = 0.85
+const POST_BOOST_SLIDE_DURATION: float = 0.4
+const DRIFT_STEER_INFLUENCE: float = 0.65
+
+# --- Drift Params ---
+var drift_speed_bonus: float = 1.0
+var post_boost_slide_timer: float = 0.0
+const DRIFT_BONUS_MAX: float = 2.0
+const DRIFT_BONUS_RATE: float = 0.45
+const DRIFT_DECAY_RATE: float = 0.8
+const DRIFT_DRAG_BASE: float = 1.6
+const DRIFT_ACCEL_BASE: float = 2.4
 
 # Movement feel
 @export var acceleration: float = 12.0   # how fast we reach top speed
@@ -142,17 +155,52 @@ func _physics_process(delta: float) -> void:
 	if input_dir.length() > 1.0:
 		input_dir = input_dir.normalized()
 
-	var effective_speed := speed * (1.0 + GameManager.bonus_speed_pct)
-	if is_boosting:
-		effective_speed *= BOOST_MULTIPLIER
+	var effective_speed := speed * (1.0 + GameManager.bonus_speed_pct) * drift_speed_bonus
+	var current_accel := acceleration
+	var current_drag := drag
+	
+	if is_boosting or post_boost_slide_timer > 0.0:
+		if is_boosting:
+			effective_speed *= BOOST_MULTIPLIER
+		
+		# Curvature: Blend movement input with aim direction
+		if input_dir.length() > 0.0:
+			input_dir = input_dir.lerp(last_aim_direction, DRIFT_STEER_INFLUENCE).normalized()
+		elif is_boosting:
+			# If no movement input, drift slightly in aim direction anyway
+			input_dir = last_aim_direction * 0.4
+		
+		# Reduced friction window (boosting OR post-boost slide)
+		current_accel = DRIFT_ACCEL_BASE
+		current_drag = DRIFT_DRAG_BASE
+		
+		# Scale based on current speed ratio
+		var speed_ratio = clampf(velocity.length() / (speed * 2.5), 0.0, 1.0)
+		current_drag *= lerpf(1.0, 0.15, speed_ratio)
+		current_accel *= lerpf(1.0, 0.4, speed_ratio)
+		
+		# Handle slide timer
+		if not is_boosting:
+			post_boost_slide_timer -= delta
+		
+		# --- Braking Logic ---
+		if input_dir.length() > 0.1 and velocity.length() > 100.0:
+			var dot = input_dir.dot(velocity.normalized())
+			if dot < -0.7:
+				# Opposite input! Apply heavy braking
+				current_drag = 22.0
+				current_accel = 2.0 # Heavy to reverse
+				drift_speed_bonus = move_toward(drift_speed_bonus, 1.0, 5.0 * delta)
+				# Visual feedback: flash red/orange
+				sprite.modulate = Color(1.8, 0.7, 0.5)
 
 	if input_dir.length() > 0.0:
 		# Accelerate toward target velocity
 		var target_velocity := input_dir * effective_speed
-		velocity = velocity.lerp(target_velocity, acceleration * delta)
+		velocity = velocity.lerp(target_velocity, current_accel * delta)
 	else:
 		# Apply drag when no input (slide to stop)
-		velocity = velocity.lerp(Vector2.ZERO, drag * delta)
+		velocity = velocity.lerp(Vector2.ZERO, current_drag * delta)
 
 	position += velocity * delta
 
@@ -226,22 +274,55 @@ func _physics_process(delta: float) -> void:
 func _update_boost(delta: float) -> void:
 	if is_boosting:
 		boost_duration_timer -= delta
+		
+		# --- Speed Gain while drifting ---
+		drift_speed_bonus = move_toward(drift_speed_bonus, DRIFT_BONUS_MAX, DRIFT_BONUS_RATE * delta)
+		# Visual tint for high speed
+		if drift_speed_bonus > 1.2:
+			var t = (drift_speed_bonus - 1.0) / (DRIFT_BONUS_MAX - 1.0)
+			sprite.modulate = Color(1.0 + t*0.5, 1.0 + t*0.5, 1.0 + t*1.5)
+
+		# --- Afterimages ---
+		afterimage_spawn_timer -= delta
+		if afterimage_spawn_timer <= 0.0:
+			afterimage_spawn_timer = AF_SPAWN_LIMIT
+			_spawn_afterimage()
+
 		if boost_duration_timer <= 0.0:
 			is_boosting = false
 			boost_cooldown_timer = BOOST_COOLDOWN
-			# Reset visual
-			sprite.modulate = Color.WHITE if not dev_god_mode else Color(1.2, 1.2, 0.2)
+			post_boost_slide_timer = POST_BOOST_SLIDE_DURATION
 	else:
+		# Decay bonus when not boosting/drifting
+		drift_speed_bonus = move_toward(drift_speed_bonus, 1.0, DRIFT_DECAY_RATE * delta)
+		if drift_speed_bonus <= 1.05 and not dev_god_mode:
+			sprite.modulate = Color.WHITE
+
 		if boost_cooldown_timer > 0.0:
 			boost_cooldown_timer -= delta
 		
 		if Input.is_action_just_pressed("boost") and boost_cooldown_timer <= 0.0:
 			is_boosting = true
 			boost_duration_timer = BOOST_DURATION
+			afterimage_spawn_timer = 0.0 # spawn immediately
 			# Visual feedback
-			var tween := create_tween()
-			tween.tween_property(sprite, "modulate", Color(1.5, 1.5, 2.0), 0.05)
 			SignalBus.screen_shake.emit(3.0, 0.1)
+
+func _spawn_afterimage() -> void:
+	var af := Sprite2D.new()
+	# Use current sprite configuration
+	af.texture = sprite.texture
+	af.global_position = global_position
+	af.rotation = rotation
+	af.scale = scale
+	af.modulate = Color(0.4, 0.7, 1.0, 0.6) # blue ghost tint
+	af.z_index = -1 # Draw behind player
+	get_tree().current_scene.add_child(af)
+	
+	var tween := af.create_tween()
+	tween.tween_property(af, "modulate:a", 0.0, 0.35).set_ease(Tween.EASE_OUT)
+	tween.parallel().tween_property(af, "scale", scale * 0.8, 0.35)
+	tween.tween_callback(af.queue_free)
 
 func _update_aiming(_delta: float) -> void:
 	# 1. Controller Right Stick
@@ -500,6 +581,8 @@ func reset_state() -> void:
 	is_boosting = false
 	boost_cooldown_timer = 0.0
 	boost_duration_timer = 0.0
+	drift_speed_bonus = 1.0
+	post_boost_slide_timer = 0.0
 	sprite.modulate = Color.WHITE
 
 ## Called by level-up popup for shield upgrade

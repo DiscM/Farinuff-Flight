@@ -1,5 +1,5 @@
 63f7b34db8d8cdea90c76aacccf841ec
-::res://::1774735816
+::res://::1774736632
 animation_skills.md::TextFile::-1::1774734740::0::1::::<><><>0<>0<><>::
 CHANGELOG.md::TextFile::-1::1774734740::0::1::::<><><>0<>0<><>::
 export_presets.cfg::TextFile::-1::1773282138::0::1::::<><><>0<>0<><>::
@@ -38,7 +38,7 @@ fast_enemy.tscn::PackedScene::4519591935974381528::1774734740::0::1::::<><><>0<>
 tank_enemy.gd::GDScript::5741692442174512813::1774734740::0::1::::<>BaseEnemy<><>0<>0<><>::
 tank_enemy.tscn::PackedScene::3363490489594425::1774734740::0::1::::<><><>0<>0<><>::res://entities/enemies/tank_enemy.gd
 ::res://entities/player/::1774734740
-player.gd::GDScript::2269597157888062947::1774735786::0::1::::<>Area2D<><>0<>0<><>::
+player.gd::GDScript::2269597157888062947::1774736601::0::1::::<>Area2D<><>0<>0<><>::
 player.tscn::PackedScene::3484336891453504314::1774734740::0::1::::<><><>0<>0<><>::res://entities/player/player.gd
 ::res://entities/powerups/::1772843867
 power_up.gd::GDScript::5276629014624626264::1772845579::0::1::::<>Area2D<><>0<>0<><>::
