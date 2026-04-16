@@ -13,10 +13,12 @@ var boss_enemy_scene: PackedScene = preload("res://entities/enemies/boss_enemy.t
 @onready var spawn_timer: Timer = $SpawnTimer
 
 var viewport_width: float = 720.0
+var viewport_height: float = 1024.0
 var margin: float = 40.0
 
 func _ready() -> void:
 	viewport_width = get_viewport().get_visible_rect().size.x
+	viewport_height = get_viewport().get_visible_rect().size.y
 	spawn_timer.wait_time = GameManager.get_spawn_interval()
 	spawn_timer.timeout.connect(_on_spawn_timer_timeout)
 
@@ -40,11 +42,23 @@ func _on_spawn_timer_timeout() -> void:
 
 func _spawn_enemy() -> void:
 	var scene: PackedScene = _pick_enemy_scene()
-	var enemy: Area2D = scene.instantiate()
-	enemy.position = Vector2(
-		randf_range(margin, viewport_width - margin),
-		-40.0
-	)
+	var enemy: BaseEnemy = scene.instantiate() as BaseEnemy
+
+	# Pick a random side: 0=top, 1=bottom, 2=left, 3=right
+	var side := randi() % 4
+	match side:
+		0: # Top
+			enemy.position = Vector2(randf_range(margin, viewport_width - margin), -40.0)
+			enemy.spawn_direction = Vector2.DOWN
+		1: # Bottom
+			enemy.position = Vector2(randf_range(margin, viewport_width - margin), viewport_height + 40.0)
+			enemy.spawn_direction = Vector2.UP
+		2: # Left
+			enemy.position = Vector2(-40.0, randf_range(margin, viewport_height - margin))
+			enemy.spawn_direction = Vector2.RIGHT
+		3: # Right
+			enemy.position = Vector2(viewport_width + 40.0, randf_range(margin, viewport_height - margin))
+			enemy.spawn_direction = Vector2.LEFT
 	get_tree().current_scene.add_child(enemy)
 
 func _pick_enemy_scene() -> PackedScene:

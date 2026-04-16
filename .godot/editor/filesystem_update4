@@ -1,0 +1,4 @@
+res://entities/enemies/base_enemy.gd
+res://entities/enemies/fast_enemy.gd
+res://systems/enemy_spawner.gd
+res://entities/enemies/bomber_enemy.gd

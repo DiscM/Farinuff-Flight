@@ -11,6 +11,8 @@ class_name BaseEnemy
 const XP_ORB_SCENE := preload("res://entities/collectibles/xp_orb.tscn")
 
 var health: int
+## The normalized direction this enemy travels. Set by the spawner before adding to scene.
+var spawn_direction: Vector2 = Vector2.DOWN
 
 func _ready() -> void:
 	add_to_group("enemies")
@@ -37,7 +39,7 @@ func _physics_process(delta: float) -> void:
 	_move(delta)
 
 func _move(delta: float) -> void:
-	position.y += speed * GameManager.enemy_speed_multiplier * delta
+	position += spawn_direction * speed * GameManager.enemy_speed_multiplier * delta
 
 func take_damage(amount: int) -> void:
 	health -= amount
@@ -77,6 +79,17 @@ func _on_area_entered(area: Area2D) -> void:
 		take_damage(1)
 
 func _on_screen_exited() -> void:
-	# Only free if past the bottom of the screen
-	if global_position.y > 0:
+	# Free once the enemy has moved past the edge it's heading toward
+	var vp := get_viewport_rect()
+	var pos := global_position
+	var past_edge := false
+	if spawn_direction.y > 0.3 and pos.y > vp.size.y + 60:
+		past_edge = true
+	elif spawn_direction.y < -0.3 and pos.y < -60:
+		past_edge = true
+	elif spawn_direction.x > 0.3 and pos.x > vp.size.x + 60:
+		past_edge = true
+	elif spawn_direction.x < -0.3 and pos.x < -60:
+		past_edge = true
+	if past_edge:
 		queue_free()

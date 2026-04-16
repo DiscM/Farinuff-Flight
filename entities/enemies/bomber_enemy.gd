@@ -1,13 +1,13 @@
 extends BaseEnemy
-## Bomber enemy — moves horizontally, drops bombs periodically.
+## Bomber enemy — drifts perpendicular to its travel direction, drops bombs periodically.
 
 const ENEMY_BULLET_SCENE := preload("res://entities/bullets/enemy_bullet.tscn")
 
-var horizontal_speed: float = 120.0
-var horizontal_dir: float = 1.0
+var drift_speed: float = 120.0
+var drift_dir: float = 1.0
 var drop_interval: float = 2.0
 var drop_timer: float = 0.0
-var viewport_width: float = 720.0
+var viewport_size: Vector2 = Vector2(720.0, 1024.0)
 
 func _ready() -> void:
 	max_health = 2
@@ -16,20 +16,32 @@ func _ready() -> void:
 	orb_value = 2
 	guaranteed_orb = true
 	super._ready()
-	viewport_width = get_viewport_rect().size.x
-	horizontal_dir = [-1.0, 1.0].pick_random()
+	viewport_size = get_viewport_rect().size
+	drift_dir = [-1.0, 1.0].pick_random()
 	drop_timer = randf_range(0.5, drop_interval)
 
 func _move(delta: float) -> void:
-	# Slow downward drift + horizontal movement
-	position.y += speed * GameManager.enemy_speed_multiplier * delta
-	position.x += horizontal_speed * horizontal_dir * delta
+	# Slow drift along travel direction
+	position += spawn_direction * speed * GameManager.enemy_speed_multiplier * delta
 
-	# Bounce off edges
+	# Drift perpendicular to travel direction and bounce off screen edges
+	var perp := Vector2(-spawn_direction.y, spawn_direction.x)
+	position += perp * drift_speed * drift_dir * delta
+
+	# Bounce: clamp to screen bounds on both axes
 	if position.x < 30:
-		horizontal_dir = 1.0
-	elif position.x > viewport_width - 30:
-		horizontal_dir = -1.0
+		drift_dir = 1.0 if perp.x != 0 else drift_dir
+		position.x = 30
+	elif position.x > viewport_size.x - 30:
+		drift_dir = -1.0 if perp.x != 0 else drift_dir
+		position.x = viewport_size.x - 30
+
+	if position.y < 30:
+		drift_dir = 1.0 if perp.y != 0 else drift_dir
+		position.y = 30
+	elif position.y > viewport_size.y - 30:
+		drift_dir = -1.0 if perp.y != 0 else drift_dir
+		position.y = viewport_size.y - 30
 
 	# Drop bombs
 	drop_timer -= delta
