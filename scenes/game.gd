@@ -131,6 +131,9 @@ func _process(delta: float) -> void:
 	if is_instance_valid($Background) and $Background.material:
 		($Background.material as ShaderMaterial).set_shader_parameter("u_time", _bg_time)
 
+func _update_pause_state() -> void:
+	get_tree().paused = pause_active or allocation_active or elite_upgrade_active or try_again_active
+
 var _pause_overlay: CanvasLayer = null
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -149,7 +152,7 @@ func _open_pause_menu() -> void:
 	if pause_active:
 		return
 	pause_active = true
-	get_tree().paused = true
+	_update_pause_state()
 	_pause_overlay = CanvasLayer.new()
 	_pause_overlay.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(_pause_overlay)
@@ -158,8 +161,8 @@ func _open_pause_menu() -> void:
 	_pause_overlay.add_child(menu)
 
 func _close_pause_menu() -> void:
-	get_tree().paused = false
 	pause_active = false
+	_update_pause_state()
 	if is_instance_valid(_pause_overlay):
 		_pause_overlay.queue_free()
 	_pause_overlay = null
@@ -181,7 +184,7 @@ func _on_game_over(final_score: int) -> void:
 		# Intercept — offer a try-again before the true game over
 		try_again_active = true
 		await get_tree().create_timer(0.6).timeout
-		get_tree().paused = true
+		_update_pause_state()
 		var overlay := CanvasLayer.new()
 		overlay.process_mode = Node.PROCESS_MODE_ALWAYS
 		add_child(overlay)
@@ -195,6 +198,7 @@ func _on_game_over(final_score: int) -> void:
 func _on_try_again_accepted() -> void:
 	try_again_active = false
 	game_over_shown = false  # allow future deaths to trigger the popup again
+	_update_pause_state()
 	
 	if is_instance_valid(player):
 		player._start_invincibility(player.respawn_invincibility)
@@ -210,6 +214,7 @@ func _on_try_again_accepted() -> void:
 
 func _on_try_again_declined() -> void:
 	try_again_active = false
+	_update_pause_state()
 	_show_game_over(_final_score_cache)
 
 func _show_game_over(final_score: int) -> void:
@@ -228,8 +233,8 @@ func _on_allocation_triggered(points: int) -> void:
 		return
 	allocation_active = true
 
-	# Pause the game deferred, ensuring it's the absolute last state change of this frame
-	get_tree().set_deferred("paused", true)
+	# Pause the game immediately to stop movement and spawning
+	get_tree().paused = true
 
 	# Show the popup on a CanvasLayer that processes while paused
 	var overlay := CanvasLayer.new()
@@ -242,15 +247,15 @@ func _on_allocation_triggered(points: int) -> void:
 
 func _on_allocation_closed() -> void:
 	allocation_active = false
-	get_tree().paused = false
+	_update_pause_state()
 
 func _on_elite_upgrade_triggered() -> void:
 	if elite_upgrade_active:
 		return
 	elite_upgrade_active = true
 
-	# Pause the game deferred, ensuring it's the absolute last state change of this frame
-	get_tree().set_deferred("paused", true)
+	# Pause the game immediately
+	get_tree().paused = true
 
 	# Show the elite upgrade picker on its own always-process CanvasLayer
 	var overlay := CanvasLayer.new()
@@ -262,4 +267,4 @@ func _on_elite_upgrade_triggered() -> void:
 
 func _on_elite_upgrade_closed() -> void:
 	elite_upgrade_active = false
-	get_tree().paused = false
+	_update_pause_state()

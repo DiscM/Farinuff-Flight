@@ -106,7 +106,6 @@ func _make_btn(label: String, col: Color, callback: Callable, width: float) -> B
 
 func _on_resume() -> void:
 	resumed.emit()
-	get_tree().paused = false
 	get_parent().queue_free()
 
 func _on_dev_tools() -> void:

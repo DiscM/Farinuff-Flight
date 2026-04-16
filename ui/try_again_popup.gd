@@ -120,13 +120,11 @@ func _on_try_again() -> void:
 	GameManager.is_game_active = true
 	SignalBus.lives_changed.emit(GameManager.lives)
 	try_again_accepted.emit()
-	get_tree().paused = false
 	get_parent().queue_free()
 
 
 func _on_give_up() -> void:
 	try_again_declined.emit()
-	get_tree().paused = false
 	get_parent().queue_free()
 
 # ── Animation ──────────────────────────────────────────────────────────────────
