@@ -6,6 +6,9 @@ signal allocation_done
 
 var points_remaining: int = 0
 
+# When true, no fullscreen overlay bg is drawn — used for side-by-side layout
+var panel_only: bool = false
+
 # Temp allocation (committed on confirm)
 var alloc_fire_rate: int = 0
 var alloc_health: int = 0
@@ -34,19 +37,24 @@ func set_points(p: int) -> void:
 # ── UI Construction ──────────────────────────────────────────────
 
 func _build_ui() -> void:
-	# Dark overlay background
-	var bg := ColorRect.new()
-	bg.color = Color(0.01, 0.01, 0.04, 0.90)
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(bg)
+	if not panel_only:
+		# Dark overlay background (fullscreen)
+		var bg := ColorRect.new()
+		bg.color = Color(0.01, 0.01, 0.04, 0.90)
+		bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+		add_child(bg)
 
 	# Center container
 	var vbox := VBoxContainer.new()
-	vbox.set_anchors_preset(Control.PRESET_CENTER)
-	vbox.offset_left = -220
-	vbox.offset_right = 220
-	vbox.offset_top = -240
-	vbox.offset_bottom = 240
+	if panel_only:
+		vbox.set_anchors_preset(Control.PRESET_FULL_RECT)
+		vbox.set_offsets_preset(Control.PRESET_FULL_RECT)
+	else:
+		vbox.set_anchors_preset(Control.PRESET_CENTER)
+		vbox.offset_left = -220
+		vbox.offset_right = 220
+		vbox.offset_top = -240
+		vbox.offset_bottom = 240
 	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	vbox.add_theme_constant_override("separation", 14)
 	add_child(vbox)
@@ -162,7 +170,9 @@ func _on_confirm() -> void:
 		GameManager.apply_stat_point("speed")
 
 	allocation_done.emit()
-	get_parent().queue_free()
+	# In panel_only mode the parent is a shared HBoxContainer; game.gd cleans up the overlay.
+	if not panel_only:
+		get_parent().queue_free()
 
 func _refresh_ui() -> void:
 	points_label.text = "Points remaining: " + str(points_remaining)

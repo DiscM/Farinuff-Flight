@@ -20,6 +20,9 @@ var pause_active: bool = false
 var try_again_active: bool = false
 var _final_score_cache: int = 0
 
+# Pending allocation: stored when elite and allocation trigger simultaneously
+var _pending_allocation_points: int = -1
+
 # Screen shake state
 var shake_intensity: float = 0.0
 var shake_duration: float = 0.0
@@ -27,6 +30,7 @@ var shake_timer: float = 0.0
 var _bg_time: float = 0.0
 
 func _ready() -> void:
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	GameManager.start_game()
 	hud.update_all()
 	hud.layer = 10 # Lift above post-processing
@@ -233,10 +237,23 @@ func _on_allocation_triggered(points: int) -> void:
 		return
 	allocation_active = true
 
-	# Pause the game immediately to stop movement and spawning
-	get_tree().paused = true
+	# If the elite upgrade is already active (Wave 10), defer and show side-by-side
+	if elite_upgrade_active:
+		_pending_allocation_points = points
+		return
 
-	# Show the popup on a CanvasLayer that processes while paused
+	# If the elite upgrade hasn't triggered yet but will this same frame, wait one frame
+	# (boss_died emits elite_upgrade_triggered BEFORE allocation_triggered at Wave 10)
+	# So we check on the next frame whether elite is also pending.
+	_pending_allocation_points = points
+	await get_tree().process_frame
+	if elite_upgrade_active:
+		# Elite already handled — it will call _show_combined when it opens
+		return
+
+	# Solo allocation
+	_pending_allocation_points = -1
+	get_tree().paused = true
 	var overlay := CanvasLayer.new()
 	overlay.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(overlay)
@@ -254,10 +271,19 @@ func _on_elite_upgrade_triggered() -> void:
 		return
 	elite_upgrade_active = true
 
-	# Pause the game immediately
+	# Pause immediately
 	get_tree().paused = true
 
-	# Show the elite upgrade picker on its own always-process CanvasLayer
+	# Wait one frame so allocation_triggered (emitted right after) can set its flag
+	await get_tree().process_frame
+
+	if _pending_allocation_points >= 0:
+		# Both active — show side by side
+		_show_combined(_pending_allocation_points)
+		_pending_allocation_points = -1
+		return
+
+	# Solo elite upgrade
 	var overlay := CanvasLayer.new()
 	overlay.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(overlay)
@@ -268,3 +294,66 @@ func _on_elite_upgrade_triggered() -> void:
 func _on_elite_upgrade_closed() -> void:
 	elite_upgrade_active = false
 	_update_pause_state()
+
+## Shows the elite upgrade and point allocation panels side by side.
+func _show_combined(alloc_points: int) -> void:
+	var overlay := CanvasLayer.new()
+	overlay.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(overlay)
+
+	# Single shared dark background
+	var root := Control.new()
+	root.set_anchors_preset(Control.PRESET_FULL_RECT)
+	root.set_offsets_preset(Control.PRESET_FULL_RECT)
+	root.process_mode = Node.PROCESS_MODE_ALWAYS
+	overlay.add_child(root)
+
+	var bg := ColorRect.new()
+	bg.color = Color(0.0, 0.0, 0.05, 0.92)
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	root.add_child(bg)
+
+	# Side-by-side HBox
+	var hbox := HBoxContainer.new()
+	hbox.set_anchors_preset(Control.PRESET_FULL_RECT)
+	hbox.set_offsets_preset(Control.PRESET_FULL_RECT)
+	hbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	hbox.add_theme_constant_override("separation", 0)
+	root.add_child(hbox)
+
+	# Left: elite upgrade panel
+	var elite_panel := ELITE_UPGRADE_SCENE.instantiate()
+	elite_panel.panel_only = true
+	elite_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	elite_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	hbox.add_child(elite_panel)
+	elite_panel.upgrade_chosen.connect(func():
+		_on_elite_upgrade_closed()
+		if not allocation_active:
+			overlay.queue_free()
+	)
+
+	# Vertical divider
+	var div := ColorRect.new()
+	div.color = Color(0.3, 0.4, 0.6, 0.3)
+	div.custom_minimum_size = Vector2(2, 0)
+	div.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	hbox.add_child(div)
+
+	# Right: allocation panel
+	var alloc_panel := POINT_ALLOCATION_SCENE.instantiate()
+	alloc_panel.panel_only = true
+	alloc_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	alloc_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	hbox.add_child(alloc_panel)
+	alloc_panel.allocation_done.connect(func():
+		_on_allocation_closed()
+		if not elite_upgrade_active:
+			overlay.queue_free()
+	)
+	alloc_panel.set_points(alloc_points)
+
+	# Animate the whole root in
+	root.modulate.a = 0.0
+	var tween := root.create_tween()
+	tween.tween_property(root, "modulate:a", 1.0, 0.35).set_ease(Tween.EASE_OUT)

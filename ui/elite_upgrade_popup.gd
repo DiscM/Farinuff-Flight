@@ -10,6 +10,9 @@ signal upgrade_chosen
 
 var chosen_upgrades: Array[Dictionary] = []
 
+# When true, no fullscreen overlay bg is drawn — used for side-by-side layout
+var panel_only: bool = false
+
 # ── Setup ──────────────────────────────────────────────────────────────────────
 
 func _ready() -> void:
@@ -30,11 +33,12 @@ func _pick_upgrades() -> void:
 # ── UI ─────────────────────────────────────────────────────────────────────────
 
 func _build_ui() -> void:
-	# Full-screen dark overlay
-	var bg := ColorRect.new()
-	bg.color = Color(0.0, 0.0, 0.05, 0.92)
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(bg)
+	if not panel_only:
+		# Full-screen dark overlay
+		var bg := ColorRect.new()
+		bg.color = Color(0.0, 0.0, 0.05, 0.92)
+		bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+		add_child(bg)
 
 	# Outer vertical container
 	var outer := VBoxContainer.new()
@@ -178,7 +182,9 @@ func _on_upgrade_selected(upgrade_id: String) -> void:
 
 	upgrade_chosen.emit()
 	# game.gd owns the pause state — it unpauses when it receives upgrade_chosen.
-	get_parent().queue_free()
+	# In panel_only mode the parent is a shared HBoxContainer; game.gd cleans up the overlay.
+	if not panel_only:
+		get_parent().queue_free()
 
 # ── Animation ──────────────────────────────────────────────────────────────────
 

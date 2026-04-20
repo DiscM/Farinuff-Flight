@@ -1,10 +1,6 @@
-[gd_scene load_steps=5 format=3 uid="uid://bpv3rwt1k4f2i"]
+[gd_scene format=3 uid="uid://bpv3rwt1k4f2i"]
 
-[ext_resource type="Script" path="res://entities/player/player.gd" id="1_player"]
-
-[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_player"]
-radius = 16.0
-height = 44.0
+[ext_resource type="Script" uid="uid://7ln60ie1rip4" path="res://entities/player/player.gd" id="1_player"]
 
 [sub_resource type="GDScript" id="GDScript_ship"]
 script/source = "extends Sprite2D
@@ -84,37 +80,40 @@ func _ready() -> void:
 	texture = ImageTexture.create_from_image(img)
 "
 
-[node name="Player" type="Area2D" groups=["player"]]
-collision_layer = 1
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_player"]
+radius = 16.0
+height = 44.0
+
+[node name="Player" type="Area2D" unique_id=1283111666 groups=["player"]]
 collision_mask = 26
 script = ExtResource("1_player")
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=127688907]
 script = SubResource("GDScript_ship")
 
-[node name="ShieldSprite" type="Sprite2D" parent="."]
+[node name="ShieldSprite" type="Sprite2D" parent="." unique_id=1052076704]
 visible = false
 script = SubResource("GDScript_shield")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=518650347]
 shape = SubResource("CapsuleShape2D_player")
 
-[node name="ShootTimer" type="Timer" parent="."]
+[node name="ShootTimer" type="Timer" parent="." unique_id=735393874]
 wait_time = 0.22
 one_shot = true
 
-[node name="InvincibilityTimer" type="Timer" parent="."]
+[node name="InvincibilityTimer" type="Timer" parent="." unique_id=671144235]
 wait_time = 1.5
 one_shot = true
 
-[node name="RapidFireTimer" type="Timer" parent="."]
+[node name="RapidFireTimer" type="Timer" parent="." unique_id=1302864786]
 wait_time = 8.0
 one_shot = true
 
-[node name="SpreadShotTimer" type="Timer" parent="."]
+[node name="SpreadShotTimer" type="Timer" parent="." unique_id=442247236]
 wait_time = 8.0
 one_shot = true
 
-[node name="MagnetTimer" type="Timer" parent="."]
+[node name="MagnetTimer" type="Timer" parent="." unique_id=2070256593]
 wait_time = 10.0
 one_shot = true

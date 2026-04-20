@@ -127,19 +127,12 @@ func _ready() -> void:
 func _setup_reticle() -> void:
 	reticle = Node2D.new()
 	add_child(reticle)
-	
-	# Small glowing dot or crosshair
+
+	# Crosshair reticle using the themed cursor asset
 	var dot := Sprite2D.new()
-	var img := Image.create(16, 16, false, Image.FORMAT_RGBA8)
-	img.fill(Color.TRANSPARENT)
-	for y in range(16):
-		for x in range(16):
-			var d := Vector2(float(x) - 8.0, float(y) - 8.0).length()
-			if d < 4.0:
-				img.set_pixel(x, y, Color(1.0, 0.4, 0.4, 0.9))
-			elif d < 6.0:
-				img.set_pixel(x, y, Color(1.0, 1.0, 1.0, 0.3))
-	dot.texture = ImageTexture.create_from_image(img)
+	dot.texture = load("res://assets/ui/cursor_crosshair.png")
+	dot.scale = Vector2(0.375, 0.375)  # scale 64px asset down to ~24px
+	dot.modulate = Color(0.38, 0.88, 1.0, 0.9)  # neon cyan tint to match HUD
 	reticle.add_child(dot)
 	dot.position = Vector2(0, -60) # distance from player
 	reticle.visible = false # hide until free aim is used

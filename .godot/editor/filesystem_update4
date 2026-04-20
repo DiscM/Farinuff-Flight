@@ -1,4 +1,7 @@
-res://entities/enemies/base_enemy.gd
-res://entities/enemies/fast_enemy.gd
-res://systems/enemy_spawner.gd
-res://entities/enemies/bomber_enemy.gd
+res://autoloads/game_manager.gd
+res://entities/player/player.tscn
+res://entities/player/player.gd
+res://scenes/game.gd
+res://ui/main_menu.gd
+res://ui/elite_upgrade_popup.gd
+res://ui/point_allocation_popup.gd
