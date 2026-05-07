@@ -184,8 +184,10 @@ func _physics_process(delta: float) -> void:
 				current_drag = 22.0
 				current_accel = 2.0 # Heavy to reverse
 				drift_speed_bonus = move_toward(drift_speed_bonus, 1.0, 5.0 * delta)
-				# Visual feedback: flash red/orange
-				sprite.modulate = Color(1.8, 0.7, 0.5)
+				# Visual feedback: flash red/orange — only write RGB so alpha (invincibility blink) is preserved
+				sprite.modulate.r = 1.8
+				sprite.modulate.g = 0.7
+				sprite.modulate.b = 0.5
 
 	if input_dir.length() > 0.0:
 		# Accelerate toward target velocity
@@ -273,7 +275,10 @@ func _update_boost(delta: float) -> void:
 		# Visual tint for high speed
 		if drift_speed_bonus > 1.2:
 			var t = (drift_speed_bonus - 1.0) / (DRIFT_BONUS_MAX - 1.0)
-			sprite.modulate = Color(1.0 + t*0.5, 1.0 + t*0.5, 1.0 + t*1.5)
+			# Only write RGB — leave alpha alone so invincibility blink isn't interrupted
+			sprite.modulate.r = 1.0 + t * 0.5
+			sprite.modulate.g = 1.0 + t * 0.5
+			sprite.modulate.b = 1.0 + t * 1.5
 
 		# --- Afterimages ---
 		afterimage_spawn_timer -= delta
@@ -289,7 +294,10 @@ func _update_boost(delta: float) -> void:
 		# Decay bonus when not boosting/drifting
 		drift_speed_bonus = move_toward(drift_speed_bonus, 1.0, DRIFT_DECAY_RATE * delta)
 		if drift_speed_bonus <= 1.05 and not dev_god_mode:
-			sprite.modulate = Color.WHITE
+			# Only reset RGB — leave alpha alone so invincibility blink isn't interrupted
+			sprite.modulate.r = 1.0
+			sprite.modulate.g = 1.0
+			sprite.modulate.b = 1.0
 
 		if boost_cooldown_timer > 0.0:
 			boost_cooldown_timer -= delta
@@ -299,7 +307,6 @@ func _update_boost(delta: float) -> void:
 			boost_duration_timer = BOOST_DURATION
 			afterimage_spawn_timer = 0.0 # spawn immediately
 			# Visual feedback
-			SignalBus.screen_shake.emit(3.0, 0.1)
 
 func _spawn_afterimage() -> void:
 	var af := Sprite2D.new()
@@ -310,8 +317,13 @@ func _spawn_afterimage() -> void:
 	af.scale = scale
 	af.modulate = Color(0.4, 0.7, 1.0, 0.6) # blue ghost tint
 	af.z_index = -1 # Draw behind player
-	get_tree().current_scene.add_child(af)
-	
+
+	# Parent into the dedicated AfterimageContainer so adding/removing these sprites
+	# doesn't mutate the root scene tree and invalidate star-field draw calls (flicker fix).
+	var containers := get_tree().get_nodes_in_group("afterimage_container")
+	var parent: Node = containers[0] if not containers.is_empty() else get_tree().current_scene
+	parent.add_child(af)
+
 	var tween := af.create_tween()
 	tween.tween_property(af, "modulate:a", 0.0, 0.35).set_ease(Tween.EASE_OUT)
 	tween.parallel().tween_property(af, "scale", scale * 0.8, 0.35)
@@ -391,9 +403,9 @@ func _spawn_bullet(dir: Vector2, offset: Vector2 = Vector2.ZERO, skip_auto_aim: 
 				if d < best_dist:
 					best_dist = d
 					best_enemy = e
-			if best_enemy and best_dist < 500.0:
-				var aim_dir := (best_enemy.global_position - global_position).normalized()
-				dir = dir.lerp(aim_dir, 0.35).normalized()
+		if best_enemy and best_dist < 500.0:
+			var aim_dir := (best_enemy.global_position - global_position).normalized()
+			dir = dir.lerp(aim_dir, 0.35).normalized()
 	bullet.direction = dir
 	# Offset along the barrel/direction
 	var dist_offset = dir * 24.0 * scale.y
@@ -443,6 +455,7 @@ func _take_hit() -> void:
 		return
 
 	SignalBus.player_hit.emit()
+	# Only grant invincibility if the player still has lives left after the hit
 	if GameManager.lives > 0:
 		_start_invincibility(1.5)
 

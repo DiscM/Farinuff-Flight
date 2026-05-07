@@ -112,6 +112,7 @@ var orbs_collected: int = 0
 var orbs_per_heart: int = 10
 
 func _ready() -> void:
+	randomize()
 	SignalBus.enemy_killed.connect(_on_enemy_killed)
 	SignalBus.player_hit.connect(_on_player_hit)
 	SignalBus.game_restarted.connect(_on_game_restarted)
@@ -233,3 +234,4 @@ func _on_game_restarted() -> void:
 
 func start_game() -> void:
 	_on_game_restarted()
+	SignalBus.orb_meter_changed.emit(orbs_collected, orbs_per_heart)

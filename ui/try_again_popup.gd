@@ -93,6 +93,7 @@ func _stock_icons(n: int) -> String:
 # ── Countdown ──────────────────────────────────────────────────────────────────
 
 var _countdown: float = 10.0
+var _action_taken: bool = false
 
 func _start_countdown(lbl: Label) -> void:
 	_countdown = 10.0
@@ -102,6 +103,8 @@ func _start_countdown(lbl: Label) -> void:
 	set_meta("timer_label", lbl)
 
 func _process(delta: float) -> void:
+	if _action_taken:
+		return
 	_countdown -= delta
 	var lbl := get_meta("timer_label") as Label
 	if _countdown <= 0.0:
@@ -114,6 +117,7 @@ func _process(delta: float) -> void:
 # ── Actions ────────────────────────────────────────────────────────────────────
 
 func _on_try_again() -> void:
+	_action_taken = true
 	GameManager.try_again_stocks -= 1
 	# Restore lives to 3 and mark game active
 	GameManager.lives = 3
@@ -124,6 +128,7 @@ func _on_try_again() -> void:
 
 
 func _on_give_up() -> void:
+	_action_taken = true
 	try_again_declined.emit()
 	get_parent().queue_free()
 

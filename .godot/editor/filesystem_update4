@@ -1,7 +1,0 @@
-res://autoloads/game_manager.gd
-res://entities/player/player.tscn
-res://entities/player/player.gd
-res://scenes/game.gd
-res://ui/main_menu.gd
-res://ui/elite_upgrade_popup.gd
-res://ui/point_allocation_popup.gd

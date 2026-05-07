@@ -45,8 +45,9 @@ void fragment() {
 		// Blend: small lines are the base, big lines add periodic "thicker" gaps
 		float scanline = (s_small * 0.6 + s_big * 0.4) * 0.5 + 0.5;
 		
-		// Add subtle high-speed refresh flicker
-		float flicker = sin(TIME * 60.0) * 0.02 + 0.98;
+		// Subtle, low-frequency brightness variation (no high-speed flicker that
+		// causes visible blinking on sub-pixel elements like stars)
+		float flicker = sin(TIME * 4.0) * 0.005 + 0.995;
 		
 		// Vary the width/intensity of the lines across the screen for non-uniformity
 		float width_var = sin(uv.y * 12.0 - TIME * 0.4) * 0.15 + 1.45;

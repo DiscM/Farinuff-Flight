@@ -47,6 +47,15 @@ func _ready() -> void:
 	var viewport_size := get_viewport().get_visible_rect().size
 	player.position = Vector2(viewport_size.x / 2.0, viewport_size.y - 80.0)
 
+	# Dedicated container for boost afterimage sprites.
+	# Parenting afterimages here (rather than the scene root) prevents
+	# child-tree modifications from invalidating the star field's draw calls,
+	# which was causing the star flicker during boost.
+	var afterimage_container := Node2D.new()
+	afterimage_container.name = "AfterimageContainer"
+	afterimage_container.add_to_group("afterimage_container")
+	add_child(afterimage_container)
+
 	# --- Parallax Background ---
 	var parallax_scene := preload("res://effects/parallax_layer.gd")
 	
@@ -75,11 +84,35 @@ func _ready() -> void:
 		layer_renderer.base_color = cfg["color"]
 		layer_renderer.show_nebulae = cfg["nebulae"]
 		layer_renderer.nebula_count = cfg["neb_count"]
+		layer_renderer.repeat_size = p2d.repeat_size  # match repeat region so stars tile seamlessly
 		
 		p2d.add_child(layer_renderer)
 		# Insert before the player/enemies so they draw over the background
 		add_child(p2d)
 		move_child(p2d, 1) # After Background ColorRect
+
+	# --- Background Planets ---
+	var planet_scene := preload("res://effects/planet_background.gd")
+	var planet_parallax := Parallax2D.new()
+	planet_parallax.autoscroll = Vector2(0.0, 10.0) # Very slow deep space movement
+	planet_parallax.repeat_size = Vector2(720.0, 3000.0) # Large repeat area
+	add_child(planet_parallax)
+	move_child(planet_parallax, 1) # Behind stars
+	
+	var planet_count := randi_range(3, 5)
+	for i in range(planet_count):
+		var planet_spawner = Node2D.new()
+		planet_spawner.set_script(planet_scene)
+		
+		# Spread across the entire parallax repeat area
+		var spawn_x := randf_range(0, planet_parallax.repeat_size.x)
+		var spawn_y := randf_range(0, planet_parallax.repeat_size.y)
+		planet_spawner.position = Vector2(spawn_x, spawn_y)
+		
+		# Wider variety of scales for depth
+		var s := randf_range(0.3, 1.1)
+		planet_spawner.scale = Vector2(s, s)
+		planet_parallax.add_child(planet_spawner)
 
 	# --- Shader Injection ---
 	var crt_shader := preload("res://effects/shaders/crt_overlay.gdshader")
@@ -225,8 +258,10 @@ func _show_game_over(final_score: int) -> void:
 	if game_over_shown:
 		return
 	game_over_shown = true
-	await get_tree().create_timer(0.8).timeout
+	get_tree().paused = true
+	await get_tree().create_timer(0.8, false, false, true).timeout
 	var overlay := CanvasLayer.new()
+	overlay.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(overlay)
 	var game_over_screen := GAME_OVER_SCENE.instantiate()
 	overlay.add_child(game_over_screen)

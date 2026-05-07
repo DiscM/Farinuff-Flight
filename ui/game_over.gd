@@ -15,7 +15,9 @@ func show_score(final_score: int) -> void:
 	level_label.text = "WAVE REACHED: " + str(GameManager.current_wave)
 
 func _on_retry_pressed() -> void:
+	get_tree().paused = false
 	get_tree().change_scene_to_file("res://scenes/game.tscn")
 
 func _on_menu_pressed() -> void:
+	get_tree().paused = false
 	get_tree().change_scene_to_file("res://ui/main_menu.tscn")
