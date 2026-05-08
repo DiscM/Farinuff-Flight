@@ -1,5 +1,5 @@
 63f7b34db8d8cdea90c76aacccf841ec
-::res://::1777575859
+::res://::1778208535
 animation_skills.md::TextFile::-1::1774734740::0::1::::<><><>0<>0<><>::
 CHANGELOG.md::TextFile::-1::1776298420::0::1::::<><><>0<>0<><>::
 export_presets.cfg::TextFile::-1::1773282138::0::1::::<><><>0<>0<><>::
@@ -10,11 +10,12 @@ skills.md::TextFile::-1::1774738707::0::1::::<><><>0<>0<><>::
 ::res://assets/ui/::1776645066
 cursor_crosshair.png::CompressedTexture2D::6107262660716177582::1776644769::1776645066::1::::<><><>0<>0<>083d5687fdb333473dd98f359b7c7644<>res://.godot/imported/cursor_crosshair.png-d4cd33f2f92f1d1652b621ff416efbba.ctex::
 ::res://autoloads/::1774734740
-game_manager.gd::GDScript::7120198322673670038::1776648060::0::1::::<>Node<><>0<>0<><>::
+game_manager.gd::GDScript::7120198322673670038::1778122524::0::1::::<>Node<><>0<>0<><>::
 signal_bus.gd::GDScript::5696778882194430::1773278940::0::1::::<>Node<><>0<>0<><>::
-::res://effects/::1776648111
+::res://effects/::1778122471
 explosion.gd::GDScript::1239146382503244212::1772843381::0::1::::<>Node2D<><>0<>0<><>::
 explosion.tscn::PackedScene::7526195576154995918::1772843392::0::1::::<><><>0<>0<><>::res://effects/explosion.gd
+parallax_layer.gd::GDScript::5583730345090116245::1778122471::0::1::::<>Node2D<><>0<>0<><>::
 planet_background.gd::GDScript::8922071838988063816::1776648232::0::1::::<>Node2D<><>0<>0<><>::
 ::res://effects/shaders/::1776648111
 crt_overlay.gdshader::Shader::4527088308230386869::1776647574::0::1::::<><><>0<>0<><>::
@@ -42,13 +43,13 @@ fast_enemy.tscn::PackedScene::4519591935974381528::1774734740::0::1::::<><><>0<>
 tank_enemy.gd::GDScript::5741692442174512813::1774734740::0::1::::<>BaseEnemy<><>0<>0<><>::
 tank_enemy.tscn::PackedScene::3363490489594425::1774734740::0::1::::<><><>0<>0<><>::res://entities/enemies/tank_enemy.gd
 ::res://entities/player/::1776644571
-player.gd::GDScript::2269597157888062947::1776647727::0::1::::<>Area2D<><>0<>0<><>::
+player.gd::GDScript::2269597157888062947::1778122535::0::1::::<>Area2D<><>0<>0<><>::
 player.tscn::PackedScene::3484336891453504314::1776644571::0::1::::<><><>0<>0<><>::uid://7ln60ie1rip4::::res://entities/player/player.gd
 ::res://entities/powerups/::1772843867
 power_up.gd::GDScript::5276629014624626264::1772845579::0::1::::<>Area2D<><>0<>0<><>::
 power_up.tscn::PackedScene::5061265943830679215::1772845590::0::1::::<><><>0<>0<><>::res://entities/powerups/power_up.gd
 ::res://scenes/::1776648157
-game.gd::GDScript::769989877249219715::1776648157::0::1::::<>Node2D<><>0<>0<><>::
+game.gd::GDScript::769989877249219715::1778122546::0::1::::<>Node2D<><>0<>0<><>::
 game.tscn::PackedScene::7435801010327280422::1776647987::0::1::::<><><>0<>0<><>::uid://k78vdvgqtcv0::::res://scenes/game.gd<>uid://bpv3rwt1k4f2i::::res://entities/player/player.tscn<>uid://341t681usqv::::res://ui/hud.tscn<>uid://bkrvihgx6kgex::::res://systems/enemy_spawner.gd<>uid://u2ouinr3eduo::::res://systems/powerup_spawner.gd
 ::res://systems/::1774734740
 enemy_spawner.gd::GDScript::3124693263110894807::1776298805::0::1::::<>Node<><>0<>0<><>::
@@ -58,7 +59,7 @@ dev_menu.gd::GDScript::152362777473384317::1774734740::0::1::::<>PanelContainer<
 dev_menu.tscn::PackedScene::-1::1774734740::0::1::::<><><>0<>0<><>::res://ui/dev_menu.gd
 elite_upgrade_popup.gd::GDScript::4760008941652056126::1776645599::0::1::::<>Control<><>0<>0<><>::
 elite_upgrade_popup.tscn::PackedScene::-1::1773279104::0::1::::<><><>0<>0<><>::res://ui/elite_upgrade_popup.gd
-game_over.gd::GDScript::5293172013872024286::1773105621::0::1::::<>Control<><>0<>0<><>::
+game_over.gd::GDScript::5293172013872024286::1778122556::0::1::::<>Control<><>0<>0<><>::
 game_over.tscn::PackedScene::4977083771886601735::1773002772::0::1::::<><><>0<>0<><>::res://ui/game_over.gd
 hud.gd::GDScript::3092539083683090707::1773106082::0::1::::<>CanvasLayer<><>0<>0<><>::
 hud.tscn::PackedScene::59610847912939293::1774734740::0::1::::<><><>0<>0<><>::res://ui/hud.gd
@@ -68,7 +69,7 @@ pause_menu.gd::GDScript::7530150649654257765::1776296752::0::1::::<>Control<><>0
 pause_menu.tscn::PackedScene::-1::1773279869::0::1::::<><><>0<>0<><>::res://ui/pause_menu.gd
 point_allocation_popup.gd::GDScript::7685877997245871944::1776645601::0::1::::<>Control<><>0<>0<><>::
 point_allocation_popup.tscn::PackedScene::6411188701368436049::1773105569::0::1::::<><><>0<>0<><>::res://ui/point_allocation_popup.gd
-try_again_popup.gd::GDScript::6790247434263373156::1776296757::0::1::::<>Control<><>0<>0<><>::
+try_again_popup.gd::GDScript::6790247434263373156::1778122514::0::1::::<>Control<><>0<>0<><>::
 try_again_popup.tscn::PackedScene::-1::1773280069::0::1::::<><><>0<>0<><>::res://ui/try_again_popup.gd
 ::res://ui/kenney_ui-pack-space-expansion/::1776646427
 License.txt::TextFile::-1::1776646322::0::1::::<><><>0<>0<><>::
