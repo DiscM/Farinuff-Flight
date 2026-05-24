@@ -73,17 +73,19 @@ var is_boosting: bool = false
 var boost_cooldown_timer: float = 0.0
 var boost_duration_timer: float = 0.0
 var boost_reflected_projectiles: int = 0
+var boost_direction: Vector2 = Vector2.UP
+var boost_distance_remaining: float = 0.0
 var afterimage_spawn_timer: float = 0.0
 const AF_SPAWN_LIMIT: float = 0.04
-const BOOST_MULTIPLIER: float = 3.5
 const BOOST_DURATION: float = 0.68
+const BOOST_DISTANCE: float = 340.0
+const BOOST_STEER_RATE: float = 10.0
 const BOOST_COOLDOWN: float = 0.85
 const BOOST_REFLECT_COOLDOWN: float = 0.35
 const BOOST_REFLECT_COOLDOWN_STEP: float = 0.08
 const BOOST_REFLECT_COOLDOWN_MIN: float = 0.10
 const BOOST_DEFLECT_RADIUS: float = 74.0
 const POST_BOOST_SLIDE_DURATION: float = 0.4
-const DRIFT_STEER_INFLUENCE: float = 0.65
 
 # --- Drift Params ---
 var drift_speed_bonus: float = 1.0
@@ -165,18 +167,15 @@ func _physics_process(delta: float) -> void:
 	var current_accel := acceleration
 	var current_drag := drag
 	
-	if is_boosting or post_boost_slide_timer > 0.0:
-		if is_boosting:
-			effective_speed *= BOOST_MULTIPLIER
-		
-		# Curvature: Blend movement input with aim direction
-		if input_dir.length() > 0.0:
-			input_dir = input_dir.lerp(last_aim_direction, DRIFT_STEER_INFLUENCE).normalized()
-		elif is_boosting:
-			# If no movement input, drift slightly in aim direction anyway
-			input_dir = last_aim_direction * 0.4
-		
-		# Reduced friction window (boosting OR post-boost slide)
+	if is_boosting:
+		_steer_boost(input_dir, delta)
+		var boost_speed := BOOST_DISTANCE / BOOST_DURATION
+		var step_distance := minf(boost_speed * delta, boost_distance_remaining)
+		velocity = boost_direction * boost_speed
+		position += boost_direction * step_distance
+		boost_distance_remaining -= step_distance
+	elif post_boost_slide_timer > 0.0:
+		# Preserve momentum briefly after the dash while returning full steering control.
 		current_accel = DRIFT_ACCEL_BASE
 		current_drag = DRIFT_DRAG_BASE
 		
@@ -185,9 +184,7 @@ func _physics_process(delta: float) -> void:
 		current_drag *= lerpf(1.0, 0.15, speed_ratio)
 		current_accel *= lerpf(1.0, 0.4, speed_ratio)
 		
-		# Handle slide timer
-		if not is_boosting:
-			post_boost_slide_timer -= delta
+		post_boost_slide_timer -= delta
 		
 		# --- Braking Logic ---
 		if input_dir.length() > 0.1 and velocity.length() > 100.0:
@@ -202,15 +199,16 @@ func _physics_process(delta: float) -> void:
 				sprite.modulate.g = 0.7
 				sprite.modulate.b = 0.5
 
-	if input_dir.length() > 0.0:
-		# Accelerate toward target velocity
-		var target_velocity := input_dir * effective_speed
-		velocity = velocity.lerp(target_velocity, current_accel * delta)
-	else:
-		# Apply drag when no input (slide to stop)
-		velocity = velocity.lerp(Vector2.ZERO, current_drag * delta)
+	if not is_boosting:
+		if input_dir.length() > 0.0:
+			# Accelerate toward target velocity
+			var target_velocity := input_dir * effective_speed
+			velocity = velocity.lerp(target_velocity, current_accel * delta)
+		else:
+			# Apply drag when no input (slide to stop)
+			velocity = velocity.lerp(Vector2.ZERO, current_drag * delta)
 
-	position += velocity * delta
+		position += velocity * delta
 
 	# Refresh bounds every frame so they match actual window size
 	viewport_rect = get_viewport().get_visible_rect()
@@ -300,8 +298,9 @@ func _update_boost(delta: float) -> void:
 			afterimage_spawn_timer = AF_SPAWN_LIMIT
 			_spawn_afterimage()
 
-		if boost_duration_timer <= 0.0:
+		if boost_duration_timer <= 0.0 or boost_distance_remaining <= 0.0:
 			is_boosting = false
+			boost_distance_remaining = 0.0
 			boost_cooldown_timer = _get_boost_cooldown()
 			post_boost_slide_timer = POST_BOOST_SLIDE_DURATION
 	else:
@@ -317,11 +316,23 @@ func _update_boost(delta: float) -> void:
 			boost_cooldown_timer -= delta
 		
 		if Input.is_action_just_pressed("boost") and boost_cooldown_timer <= 0.0:
-			is_boosting = true
-			boost_duration_timer = BOOST_DURATION
-			boost_reflected_projectiles = 0
-			afterimage_spawn_timer = 0.0 # spawn immediately
-			# Visual feedback
+			_begin_boost()
+
+
+func _begin_boost() -> void:
+	is_boosting = true
+	boost_duration_timer = BOOST_DURATION
+	boost_reflected_projectiles = 0
+	boost_direction = velocity.normalized() if velocity.length() > 1.0 else Vector2.UP
+	boost_distance_remaining = BOOST_DISTANCE
+	afterimage_spawn_timer = 0.0 # spawn immediately
+
+
+func _steer_boost(input_dir: Vector2, delta: float) -> void:
+	if input_dir.is_zero_approx():
+		return
+	var steering_weight := clampf(BOOST_STEER_RATE * delta, 0.0, 1.0)
+	boost_direction = boost_direction.lerp(input_dir.normalized(), steering_weight).normalized()
 
 
 func _deflect_nearby_projectiles() -> void:
@@ -640,6 +651,8 @@ func reset_state() -> void:
 	boost_cooldown_timer = 0.0
 	boost_duration_timer = 0.0
 	boost_reflected_projectiles = 0
+	boost_direction = Vector2.UP
+	boost_distance_remaining = 0.0
 	drift_speed_bonus = 1.0
 	post_boost_slide_timer = 0.0
 	sprite.modulate = Color.WHITE

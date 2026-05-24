@@ -1,5 +1,5 @@
 63f7b34db8d8cdea90c76aacccf841ec
-::res://::1779663916
+::res://::1779666755
 animation_skills.md::TextFile::-1::1774734740::0::1::::<><><>0<>0<><>::
 CHANGELOG.md::TextFile::-1::1779687039::0::1::::<><><>0<>0<><>::
 export_presets.cfg::TextFile::-1::1773282138::0::1::::<><><>0<>0<><>::
@@ -41,7 +41,7 @@ scrolling_bg.gdshader::Shader::1085784493048393240::1774734740::0::1::::<><><>0<
 ::res://entities/bullets/::1774734740
 bullet.gd::GDScript::5160029286225152189::1779663444::0::1::::<>Area2D<><>0<>0<><>::
 bullet.tscn::PackedScene::6999247571323733030::1772843201::0::1::::<><><>0<>0<><>::res://entities/bullets/bullet.gd
-enemy_bullet.gd::GDScript::4569298435493507344::1776297278::0::1::::<>Area2D<><>0<>0<><>::
+enemy_bullet.gd::GDScript::4569298435493507344::1779665968::0::1::::<>Area2D<><>0<>0<><>::
 enemy_bullet.tscn::PackedScene::7898223260682902790::1774734740::0::1::::<><><>0<>0<><>::res://entities/bullets/enemy_bullet.gd
 ::res://entities/collectibles/::1773003504
 xp_orb.gd::GDScript::5975123289183961248::1773106644::0::1::::<>Area2D<><>0<>0<><>::
@@ -52,7 +52,7 @@ basic_enemy.gd::GDScript::7666788716843911835::1772843297::0::1::::<>BaseEnemy<>
 basic_enemy.tscn::PackedScene::5941935244861535144::1779662887::0::1::::<><><>0<>0<><>::res://entities/enemies/basic_enemy.gd<>res://assets/sprites/generated/strip_animator.gd<>res://assets/sprites/generated/basic_enemy_idle_strip.png
 bomber_enemy.gd::GDScript::4393878285114648440::1779687039::0::1::::<>BaseEnemy<><>0<>0<><>::
 bomber_enemy.tscn::PackedScene::2606536803366434448::1779662895::0::1::::<><><>0<>0<><>::res://entities/enemies/bomber_enemy.gd<>res://assets/sprites/generated/strip_animator.gd<>res://assets/sprites/generated/bomber_enemy_idle_strip.png
-boss_enemy.gd::GDScript::7223811862780956895::1779663517::0::1::::BossEnemy<>BaseEnemy<><>0<>0<><>::
+boss_enemy.gd::GDScript::7223811862780956895::1779665079::0::1::::BossEnemy<>BaseEnemy<><>0<>0<><>::
 boss_enemy.tscn::PackedScene::5169850323246299747::1779662897::0::1::::<><><>0<>0<><>::res://entities/enemies/boss_enemy.gd<>res://assets/sprites/generated/strip_animator.gd<>res://assets/sprites/generated/boss_enemy_idle_strip.png
 fast_enemy.gd::GDScript::549245206852792296::1776298842::0::1::::<>BaseEnemy<><>0<>0<><>::
 fast_enemy.tscn::PackedScene::4519591935974381528::1779662889::0::1::::<><><>0<>0<><>::res://entities/enemies/fast_enemy.gd<>res://assets/sprites/generated/strip_animator.gd<>res://assets/sprites/generated/fast_enemy_idle_strip.png
@@ -62,7 +62,7 @@ tank_enemy.gd::GDScript::5741692442174512813::1779687039::0::1::::<>BaseEnemy<><
 tank_enemy.tscn::PackedScene::3363490489594425::1779662893::0::1::::<><><>0<>0<><>::res://entities/enemies/tank_enemy.gd<>res://assets/sprites/generated/strip_animator.gd<>res://assets/sprites/generated/tank_enemy_idle_strip.png
 tempest_section.gd::GDScript::1946423271925880030::1779663444::0::1::::TempestSection<>Area2D<><>0<>0<><>::
 ::res://entities/player/::1776644571
-player.gd::GDScript::2269597157888062947::1779663746::0::1::::<>Area2D<><>0<>0<><>::
+player.gd::GDScript::2269597157888062947::1779666533::0::1::::<>Area2D<><>0<>0<><>::
 player.tscn::PackedScene::3484336891453504314::1779663084::0::1::::<><><>0<>0<><>::uid://7ln60ie1rip4::::res://entities/player/player.gd<>res://assets/sprites/generated/strip_animator.gd<>res://assets/sprites/generated/player_idle_strip.png
 ::res://entities/powerups/::1772843867
 power_up.gd::GDScript::5276629014624626264::1772845579::0::1::::<>Area2D<><>0<>0<><>::
@@ -73,7 +73,7 @@ game.tscn::PackedScene::7435801010327280422::1776647987::0::1::::<><><>0<>0<><>:
 ::res://systems/::1774734740
 enemy_spawner.gd::GDScript::3124693263110894807::1779663402::0::1::::<>Node<><>0<>0<><>::
 powerup_spawner.gd::GDScript::1460401266976329602::1772843920::0::1::::<>Node<><>0<>0<><>::
-::res://tools/::1779663862
+::res://tools/::1779666564
 ::res://ui/::1779686012
 dev_menu.gd::GDScript::152362777473384317::1779663799::0::1::::<>PanelContainer<><>0<>0<><>::
 dev_menu.tscn::PackedScene::-1::1774734740::0::1::::<><><>0<>0<><>::res://ui/dev_menu.gd
