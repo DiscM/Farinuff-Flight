@@ -36,11 +36,15 @@ var attack_index: int = 0
 var attack_sequence: Array = []
 var spiral_angle: float = 0.0
 
-enum TempestPhase { BARRIER, ARMAMENTS, EXPOSED, OVERLOAD }
+enum TempestPhase { BARRIER, ARMAMENTS, CONDUITS, EXPOSED, OVERLOAD }
 var tempest_phase: TempestPhase = TempestPhase.BARRIER
 var tempest_sections: Array[Area2D] = []
 var tempest_core_exposed: bool = false
 var tempest_section_attack_timer: float = 0.0
+var tempest_special_attack_timer: float = 0.0
+var tempest_orbit_angle: float = 0.0
+var tempest_damage_multiplier: float = 1.0
+var tempest_warning_markers: Array[Sprite2D] = []
 var tempest_overload_triggered: bool = false
 
 var max_boss_health: int = 0
@@ -103,7 +107,7 @@ func _ready() -> void:
 
 
 func _configure_tempest_core() -> void:
-	max_health = 220
+	max_health = 300
 	points = 12000
 	orb_value = 18
 	boss_variant = BossVariant.TEMPEST
@@ -169,6 +173,7 @@ func _start_tempest_phase(next_phase: TempestPhase, announce: bool = true) -> vo
 	tempest_phase = next_phase
 	attack_index = 0
 	_clear_tempest_sections()
+	_clear_tempest_warnings()
 	get_tree().call_group("enemy_bullets", "queue_free")
 	var sprite := get_node_or_null("Sprite2D") as Sprite2D
 
@@ -176,31 +181,53 @@ func _start_tempest_phase(next_phase: TempestPhase, announce: bool = true) -> vo
 		TempestPhase.BARRIER:
 			boss_title = "WAVE 20: TEMPEST CORE - SHIELD ARRAY"
 			tempest_core_exposed = false
+			tempest_damage_multiplier = 0.0
 			attack_sequence = [AttackPattern.CROSS, AttackPattern.RADIAL, AttackPattern.AIMED]
-			_spawn_tempest_section("LeftShieldPylon", Vector2(-63.0, 0.0), 28, Vector2(28.0, 52.0), Color(0.2, 0.92, 1.0))
-			_spawn_tempest_section("RightShieldPylon", Vector2(63.0, 0.0), 28, Vector2(28.0, 52.0), Color(0.2, 0.92, 1.0))
+			_spawn_tempest_section("ShieldPylonA", Vector2(70.0, 0.0), 34, Vector2(27.0, 48.0), Color(0.2, 0.92, 1.0), 70.0, 0.0)
+			_spawn_tempest_section("ShieldPylonB", Vector2(-35.0, 60.0), 34, Vector2(27.0, 48.0), Color(0.2, 0.92, 1.0), 70.0, TAU / 3.0)
+			_spawn_tempest_section("ShieldPylonC", Vector2(-35.0, -60.0), 34, Vector2(27.0, 48.0), Color(0.2, 0.92, 1.0), 70.0, TAU * 2.0 / 3.0)
 			tempest_section_attack_timer = 1.0
+			tempest_special_attack_timer = 4.5
 			if sprite:
 				sprite.modulate = Color(0.76, 0.95, 1.0)
 		TempestPhase.ARMAMENTS:
 			boss_title = "TEMPEST CORE - STORM BATTERIES"
 			tempest_core_exposed = false
+			tempest_damage_multiplier = 0.0
 			attack_sequence = [AttackPattern.SWEEP, AttackPattern.SHOTGUN, AttackPattern.SPIRAL, AttackPattern.AIMED]
-			_spawn_tempest_section("LeftStormBattery", Vector2(-58.0, 20.0), 38, Vector2(32.0, 46.0), Color(1.0, 0.32, 0.72))
-			_spawn_tempest_section("RightStormBattery", Vector2(58.0, 20.0), 38, Vector2(32.0, 46.0), Color(1.0, 0.32, 0.72))
+			_spawn_tempest_section("LeftStormBattery", Vector2(-62.0, 20.0), 46, Vector2(33.0, 47.0), Color(1.0, 0.32, 0.72))
+			_spawn_tempest_section("RightStormBattery", Vector2(62.0, 20.0), 46, Vector2(33.0, 47.0), Color(1.0, 0.32, 0.72))
+			_spawn_tempest_section("VentralLauncher", Vector2(0.0, 68.0), 34, Vector2(36.0, 30.0), Color(1.0, 0.55, 0.16))
 			tempest_section_attack_timer = 0.45
+			tempest_special_attack_timer = 3.3
 			if sprite:
 				sprite.modulate = Color(1.0, 0.8, 0.95)
+		TempestPhase.CONDUITS:
+			boss_title = "TEMPEST CORE - FLUX CONDUITS"
+			tempest_core_exposed = true
+			tempest_damage_multiplier = 0.35
+			attack_sequence = [AttackPattern.SPIRAL, AttackPattern.SWEEP, AttackPattern.AIMED]
+			_spawn_tempest_section("FluxConduitA", Vector2(56.0, 0.0), 28, Vector2(25.0, 35.0), Color(0.32, 1.0, 0.55), 56.0, 0.0)
+			_spawn_tempest_section("FluxConduitB", Vector2(-28.0, 48.0), 28, Vector2(25.0, 35.0), Color(0.32, 1.0, 0.55), 56.0, TAU / 3.0)
+			_spawn_tempest_section("FluxConduitC", Vector2(-28.0, -48.0), 28, Vector2(25.0, 35.0), Color(0.32, 1.0, 0.55), 56.0, TAU * 2.0 / 3.0)
+			tempest_section_attack_timer = 0.7
+			tempest_special_attack_timer = 2.8
+			if sprite:
+				sprite.modulate = Color(0.68, 1.0, 0.8)
 		TempestPhase.EXPOSED:
 			boss_title = "TEMPEST CORE - CORE EXPOSED"
 			tempest_core_exposed = true
+			tempest_damage_multiplier = 1.0
 			attack_sequence = [AttackPattern.SPIRAL, AttackPattern.RADIAL, AttackPattern.SWEEP, AttackPattern.AIMED, AttackPattern.CROSS]
+			tempest_special_attack_timer = 2.2
 			if sprite:
 				sprite.modulate = Color(1.0, 0.68, 0.92)
 		TempestPhase.OVERLOAD:
 			boss_title = "TEMPEST CORE - OVERLOAD"
 			tempest_core_exposed = true
+			tempest_damage_multiplier = 1.0
 			attack_sequence = [AttackPattern.SPIRAL, AttackPattern.SWEEP, AttackPattern.RADIAL, AttackPattern.SPIRAL, AttackPattern.SHOTGUN]
+			tempest_special_attack_timer = 1.2
 			bullet_color = Color(3.0, 0.25, 1.4, 1.0)
 			if sprite:
 				sprite.modulate = Color(1.5, 0.45, 0.8)
@@ -210,11 +237,13 @@ func _start_tempest_phase(next_phase: TempestPhase, announce: bool = true) -> vo
 		SignalBus.boss_spawned.emit(health, max_boss_health, boss_title)
 
 
-func _spawn_tempest_section(section_name: String, local_position: Vector2, hp: int, size: Vector2, color: Color) -> void:
+func _spawn_tempest_section(section_name: String, local_position: Vector2, hp: int, size: Vector2, color: Color, orbit_radius: float = 0.0, orbit_offset: float = 0.0) -> void:
 	var section = TEMPEST_SECTION_SCRIPT.new()
 	add_child(section)
 	section.position = local_position
 	section.setup(section_name, hp, size, color)
+	section.set_meta("orbit_radius", orbit_radius)
+	section.set_meta("orbit_offset", orbit_offset)
 	section.destroyed.connect(_on_tempest_section_destroyed)
 	tempest_sections.append(section)
 
@@ -226,6 +255,13 @@ func _clear_tempest_sections() -> void:
 	tempest_sections.clear()
 
 
+func _clear_tempest_warnings() -> void:
+	for marker in tempest_warning_markers:
+		if is_instance_valid(marker):
+			marker.queue_free()
+	tempest_warning_markers.clear()
+
+
 func _on_tempest_section_destroyed(section: Area2D) -> void:
 	tempest_sections.erase(section)
 	_spawn_section_burst(section.global_position)
@@ -234,6 +270,8 @@ func _on_tempest_section_destroyed(section: Area2D) -> void:
 	if tempest_phase == TempestPhase.BARRIER:
 		_start_tempest_phase(TempestPhase.ARMAMENTS)
 	elif tempest_phase == TempestPhase.ARMAMENTS:
+		_start_tempest_phase(TempestPhase.CONDUITS)
+	elif tempest_phase == TempestPhase.CONDUITS:
 		_start_tempest_phase(TempestPhase.EXPOSED)
 
 
@@ -289,7 +327,92 @@ func _move(delta: float) -> void:
 		if tempest_section_attack_timer <= 0.0:
 			_fire_tempest_sections()
 
+	if is_tempest_core:
+		_update_tempest_systems(delta)
+
 	SignalBus.boss_health_changed.emit(health)
+
+
+func _update_tempest_systems(delta: float) -> void:
+	var orbit_speed := 0.0
+	if tempest_phase == TempestPhase.BARRIER:
+		orbit_speed = 0.72
+	elif tempest_phase == TempestPhase.CONDUITS:
+		orbit_speed = -1.18
+
+	if orbit_speed != 0.0:
+		tempest_orbit_angle += delta * orbit_speed
+		for section in tempest_sections:
+			if not is_instance_valid(section):
+				continue
+			var orbit_radius := float(section.get_meta("orbit_radius", 0.0))
+			if orbit_radius <= 0.0:
+				continue
+			var angle := tempest_orbit_angle + float(section.get_meta("orbit_offset", 0.0))
+			section.position = Vector2(cos(angle), sin(angle)) * orbit_radius
+
+	tempest_special_attack_timer -= delta
+	if tempest_special_attack_timer <= 0.0:
+		_begin_tempest_storm_strike()
+		match tempest_phase:
+			TempestPhase.BARRIER:
+				tempest_special_attack_timer = 4.4
+			TempestPhase.ARMAMENTS:
+				tempest_special_attack_timer = 3.2
+			TempestPhase.CONDUITS:
+				tempest_special_attack_timer = 2.6
+			TempestPhase.EXPOSED:
+				tempest_special_attack_timer = 2.1
+			TempestPhase.OVERLOAD:
+				tempest_special_attack_timer = 1.15
+
+
+func _begin_tempest_storm_strike() -> void:
+	var players := get_tree().get_nodes_in_group("player")
+	if players.is_empty():
+		return
+	var target_position: Vector2 = players[0].global_position
+	var marker := Sprite2D.new()
+	var image := Image.create(84, 84, false, Image.FORMAT_RGBA8)
+	image.fill(Color.TRANSPARENT)
+	for y in range(84):
+		for x in range(84):
+			var distance := Vector2(float(x) - 42.0, float(y) - 42.0).length()
+			if distance > 35.0 and distance < 40.0:
+				image.set_pixel(x, y, Color(0.2, 0.9, 1.0, 0.85))
+			elif (absf(float(x) - 42.0) < 1.5 or absf(float(y) - 42.0) < 1.5) and distance < 29.0:
+				image.set_pixel(x, y, Color(1.0, 0.32, 0.75, 0.8))
+	marker.texture = ImageTexture.create_from_image(image)
+	marker.global_position = target_position
+	marker.z_index = 6
+	get_tree().current_scene.add_child(marker)
+	tempest_warning_markers.append(marker)
+
+	var lane_count := 5
+	if tempest_phase == TempestPhase.CONDUITS:
+		lane_count = 7
+	elif tempest_phase == TempestPhase.EXPOSED:
+		lane_count = 9
+	elif tempest_phase == TempestPhase.OVERLOAD:
+		lane_count = 11
+	var tween := marker.create_tween()
+	tween.tween_property(marker, "modulate:a", 0.2, 0.18)
+	tween.tween_property(marker, "modulate:a", 1.0, 0.18)
+	tween.tween_callback(_release_tempest_storm_strike.bind(target_position, lane_count))
+	tween.tween_property(marker, "scale", Vector2(1.65, 1.65), 0.12)
+	tween.parallel().tween_property(marker, "modulate:a", 0.0, 0.12)
+	tween.tween_callback(marker.queue_free)
+
+
+func _release_tempest_storm_strike(target_position: Vector2, lane_count: int) -> void:
+	if _dying:
+		return
+	var direction := (target_position - global_position).normalized()
+	for i in range(lane_count):
+		var offset := (float(i) - float(lane_count - 1) / 2.0) * 0.105
+		_spawn_bullet(direction.rotated(offset), 500.0)
+	if tempest_phase >= TempestPhase.EXPOSED:
+		_fire_radial(10 if tempest_phase == TempestPhase.EXPOSED else 14)
 
 func _execute_move(delta: float) -> void:
 	match move_phase:
@@ -379,6 +502,8 @@ func _get_attack_delay() -> float:
 			return 1.15
 		if tempest_phase == TempestPhase.ARMAMENTS:
 			return 0.62
+		if tempest_phase == TempestPhase.CONDUITS:
+			return 0.54
 		if tempest_phase == TempestPhase.EXPOSED:
 			return 0.46
 		return 0.27
@@ -492,24 +617,34 @@ func _fire_tempest_sections() -> void:
 		if not is_instance_valid(section):
 			continue
 		var aim_direction := (player_position - section.global_position).normalized()
-		_spawn_bullet_from(section.global_position, aim_direction, 380.0)
-		if tempest_phase == TempestPhase.ARMAMENTS:
+		if tempest_phase == TempestPhase.BARRIER:
+			_spawn_bullet_from(section.global_position, aim_direction, 360.0)
+		elif tempest_phase == TempestPhase.ARMAMENTS:
+			_spawn_bullet_from(section.global_position, aim_direction, 400.0)
 			_spawn_bullet_from(section.global_position, aim_direction.rotated(-0.18), 420.0)
 			_spawn_bullet_from(section.global_position, aim_direction.rotated(0.18), 420.0)
-	tempest_section_attack_timer = 0.9 if tempest_phase == TempestPhase.BARRIER else 0.48
+		elif tempest_phase == TempestPhase.CONDUITS:
+			var tangent := section.position.normalized().rotated(PI / 2.0)
+			_spawn_bullet_from(section.global_position, tangent, 350.0)
+			_spawn_bullet_from(section.global_position, -tangent, 350.0)
+	tempest_section_attack_timer = 0.9 if tempest_phase == TempestPhase.BARRIER else (0.64 if tempest_phase == TempestPhase.CONDUITS else 0.48)
 
 
 func take_damage(amount: int) -> void:
 	if _dying:
 		return
-	if is_tempest_core and not tempest_core_exposed:
+	if is_tempest_core and tempest_damage_multiplier <= 0.0:
 		var sprite := get_node_or_null("Sprite2D") as Sprite2D
 		if sprite:
 			var tween := create_tween()
 			tween.tween_property(sprite, "modulate", Color(0.5, 1.5, 2.0), 0.04)
 			tween.tween_property(sprite, "modulate", Color(0.76, 0.95, 1.0) if tempest_phase == TempestPhase.BARRIER else Color(1.0, 0.8, 0.95), 0.1)
 		return
-	super.take_damage(amount)
+	if is_tempest_core and tempest_damage_multiplier < 1.0:
+		var reduced_damage := mini(maxi(1, ceili(float(amount) * tempest_damage_multiplier)), 12)
+		super.take_damage(reduced_damage)
+	else:
+		super.take_damage(amount)
 	if is_tempest_core and health > 0 and not tempest_overload_triggered and health <= int(max_boss_health * 0.42):
 		tempest_overload_triggered = true
 		_start_tempest_phase(TempestPhase.OVERLOAD)
@@ -532,6 +667,7 @@ func _die() -> void:
 	if is_instance_valid(telegraph_marker):
 		telegraph_marker.queue_free()
 	_clear_tempest_sections()
+	_clear_tempest_warnings()
 
 	# Remove all bullets this boss fired so they don't orphan on screen
 	get_tree().call_group("enemy_bullets", "queue_free")
