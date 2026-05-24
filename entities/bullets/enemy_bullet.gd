@@ -3,6 +3,7 @@ extends Area2D
 
 @export var speed: float = 400.0
 static var _visibility_ring_texture: Texture2D
+const PLAYER_PROJECTILE_COLOR := Color(0.2, 1.0, 0.6, 1.0)
 var direction: Vector2 = Vector2.DOWN
 var _visibility_ring: Sprite2D
 var _pulse_time: float = 0.0
@@ -39,9 +40,9 @@ func _physics_process(delta: float) -> void:
 		_visibility_ring.modulate.a = lerpf(0.86, 1.0, pulse)
 
 
-func deflect(deflector_position: Vector2, deflector_velocity: Vector2) -> void:
+func deflect(deflector_position: Vector2, deflector_velocity: Vector2) -> bool:
 	if is_deflected:
-		return
+		return false
 	is_deflected = true
 	var reflected_direction := (global_position - deflector_position).normalized()
 	if reflected_direction.is_zero_approx():
@@ -54,10 +55,11 @@ func deflect(deflector_position: Vector2, deflector_velocity: Vector2) -> void:
 	# Detect enemies from this script only, avoiding duplicate player-bullet damage.
 	collision_layer = 0
 	collision_mask = 2
-	$Sprite2D.modulate = Color(0.22, 2.5, 3.5, 1.0)
+	$Sprite2D.modulate = PLAYER_PROJECTILE_COLOR
 	if is_instance_valid(_visibility_ring):
-		_visibility_ring.modulate = Color(0.25, 1.0, 1.0, 1.0)
+		_visibility_ring.modulate = PLAYER_PROJECTILE_COLOR
 		_visibility_ring.scale = Vector2.ONE * 1.18
+	return true
 
 
 func _create_visibility_ring() -> void:
@@ -91,6 +93,7 @@ func _on_area_entered(area: Area2D) -> void:
 		return
 	if area.is_in_group("player"):
 		if area.get("is_boosting"):
-			deflect(area.global_position, area.velocity)
+			if deflect(area.global_position, area.velocity) and area.has_method("register_boost_reflection"):
+				area.register_boost_reflection()
 			return
 		queue_free()

@@ -72,11 +72,15 @@ var is_using_free_aim: bool = false
 var is_boosting: bool = false
 var boost_cooldown_timer: float = 0.0
 var boost_duration_timer: float = 0.0
+var boost_reflected_projectiles: int = 0
 var afterimage_spawn_timer: float = 0.0
 const AF_SPAWN_LIMIT: float = 0.04
 const BOOST_MULTIPLIER: float = 3.5
 const BOOST_DURATION: float = 0.68
 const BOOST_COOLDOWN: float = 0.85
+const BOOST_REFLECT_COOLDOWN: float = 0.35
+const BOOST_REFLECT_COOLDOWN_STEP: float = 0.08
+const BOOST_REFLECT_COOLDOWN_MIN: float = 0.10
 const BOOST_DEFLECT_RADIUS: float = 74.0
 const POST_BOOST_SLIDE_DURATION: float = 0.4
 const DRIFT_STEER_INFLUENCE: float = 0.65
@@ -298,7 +302,7 @@ func _update_boost(delta: float) -> void:
 
 		if boost_duration_timer <= 0.0:
 			is_boosting = false
-			boost_cooldown_timer = BOOST_COOLDOWN
+			boost_cooldown_timer = _get_boost_cooldown()
 			post_boost_slide_timer = POST_BOOST_SLIDE_DURATION
 	else:
 		# Decay bonus when not boosting/drifting
@@ -315,6 +319,7 @@ func _update_boost(delta: float) -> void:
 		if Input.is_action_just_pressed("boost") and boost_cooldown_timer <= 0.0:
 			is_boosting = true
 			boost_duration_timer = BOOST_DURATION
+			boost_reflected_projectiles = 0
 			afterimage_spawn_timer = 0.0 # spawn immediately
 			# Visual feedback
 
@@ -325,8 +330,27 @@ func _deflect_nearby_projectiles() -> void:
 			continue
 		if global_position.distance_squared_to(projectile.global_position) > BOOST_DEFLECT_RADIUS * BOOST_DEFLECT_RADIUS:
 			continue
-		if projectile.has_method("deflect"):
-			projectile.deflect(global_position, velocity)
+		_try_deflect_projectile(projectile)
+
+
+func _try_deflect_projectile(projectile: Area2D) -> void:
+	if projectile.has_method("deflect") and projectile.deflect(global_position, velocity):
+		register_boost_reflection()
+
+
+func register_boost_reflection() -> void:
+	if is_boosting:
+		boost_reflected_projectiles += 1
+
+
+func _get_boost_cooldown() -> float:
+	if boost_reflected_projectiles <= 0:
+		return BOOST_COOLDOWN
+	var additional_reflects := boost_reflected_projectiles - 1
+	return maxf(
+		BOOST_REFLECT_COOLDOWN - float(additional_reflects) * BOOST_REFLECT_COOLDOWN_STEP,
+		BOOST_REFLECT_COOLDOWN_MIN
+	)
 
 
 func _spawn_afterimage() -> void:
@@ -468,8 +492,7 @@ func _on_area_entered(area: Area2D) -> void:
 		_take_hit()
 	elif area.is_in_group("enemy_bullets"):
 		if is_boosting:
-			if area.has_method("deflect"):
-				area.deflect(global_position, velocity)
+			_try_deflect_projectile(area)
 			return
 		respawn_invincibility = 2.0
 		_take_hit()
@@ -616,6 +639,7 @@ func reset_state() -> void:
 	is_boosting = false
 	boost_cooldown_timer = 0.0
 	boost_duration_timer = 0.0
+	boost_reflected_projectiles = 0
 	drift_speed_bonus = 1.0
 	post_boost_slide_timer = 0.0
 	sprite.modulate = Color.WHITE

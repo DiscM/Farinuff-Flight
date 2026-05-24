@@ -1,2 +1,4 @@
 res://entities/enemies/boss_enemy.gd
 res://entities/bullets/enemy_bullet.gd
+res://entities/player/player.gd
+res://tools/boost_deflect_smoke_test.gd
