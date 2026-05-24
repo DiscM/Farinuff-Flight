@@ -92,7 +92,10 @@ func _on_area_entered(area: Area2D) -> void:
 			queue_free()
 		return
 	if area.is_in_group("player"):
-		if area.get("is_boosting"):
+		var can_be_deflected := bool(area.get("is_boosting"))
+		if area.has_method("can_deflect_projectiles"):
+			can_be_deflected = area.can_deflect_projectiles()
+		if can_be_deflected:
 			if deflect(area.global_position, area.velocity) and area.has_method("register_boost_reflection"):
 				area.register_boost_reflection()
 			return

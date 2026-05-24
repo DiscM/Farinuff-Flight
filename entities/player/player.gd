@@ -75,6 +75,7 @@ var boost_duration_timer: float = 0.0
 var boost_reflected_projectiles: int = 0
 var boost_direction: Vector2 = Vector2.UP
 var boost_distance_remaining: float = 0.0
+var boost_chain_window_timer: float = 0.0
 var afterimage_spawn_timer: float = 0.0
 const AF_SPAWN_LIMIT: float = 0.04
 const BOOST_DURATION: float = 0.68
@@ -84,6 +85,8 @@ const BOOST_COOLDOWN: float = 0.85
 const BOOST_REFLECT_COOLDOWN: float = 0.35
 const BOOST_REFLECT_COOLDOWN_STEP: float = 0.08
 const BOOST_REFLECT_COOLDOWN_MIN: float = 0.10
+const BOOST_CHAIN_REFLECT_THRESHOLD: int = 3
+const BOOST_CHAIN_WINDOW: float = 0.18
 const BOOST_DEFLECT_RADIUS: float = 74.0
 const POST_BOOST_SLIDE_DURATION: float = 0.4
 
@@ -281,6 +284,9 @@ func _update_boost(delta: float) -> void:
 	if is_boosting:
 		boost_duration_timer -= delta
 		_deflect_nearby_projectiles()
+		if Input.is_action_just_pressed("boost") and _has_boost_chain():
+			_begin_boost()
+			return
 		
 		# --- Speed Gain while drifting ---
 		drift_speed_bonus = move_toward(drift_speed_bonus, DRIFT_BONUS_MAX, DRIFT_BONUS_RATE * delta)
@@ -301,9 +307,17 @@ func _update_boost(delta: float) -> void:
 		if boost_duration_timer <= 0.0 or boost_distance_remaining <= 0.0:
 			is_boosting = false
 			boost_distance_remaining = 0.0
-			boost_cooldown_timer = _get_boost_cooldown()
+			if _has_boost_chain():
+				boost_chain_window_timer = BOOST_CHAIN_WINDOW
+				boost_cooldown_timer = 0.0
+			else:
+				boost_cooldown_timer = _get_boost_cooldown()
 			post_boost_slide_timer = POST_BOOST_SLIDE_DURATION
 	else:
+		if boost_chain_window_timer > 0.0:
+			boost_chain_window_timer = maxf(boost_chain_window_timer - delta, 0.0)
+			_deflect_nearby_projectiles()
+
 		# Decay bonus when not boosting/drifting
 		drift_speed_bonus = move_toward(drift_speed_bonus, 1.0, DRIFT_DECAY_RATE * delta)
 		if drift_speed_bonus <= 1.05 and not dev_god_mode:
@@ -323,6 +337,7 @@ func _begin_boost() -> void:
 	is_boosting = true
 	boost_duration_timer = BOOST_DURATION
 	boost_reflected_projectiles = 0
+	boost_chain_window_timer = 0.0
 	boost_direction = velocity.normalized() if velocity.length() > 1.0 else Vector2.UP
 	boost_distance_remaining = BOOST_DISTANCE
 	afterimage_spawn_timer = 0.0 # spawn immediately
@@ -352,6 +367,14 @@ func _try_deflect_projectile(projectile: Area2D) -> void:
 func register_boost_reflection() -> void:
 	if is_boosting:
 		boost_reflected_projectiles += 1
+
+
+func _has_boost_chain() -> bool:
+	return boost_reflected_projectiles >= BOOST_CHAIN_REFLECT_THRESHOLD
+
+
+func can_deflect_projectiles() -> bool:
+	return is_boosting or boost_chain_window_timer > 0.0
 
 
 func _get_boost_cooldown() -> float:
@@ -502,7 +525,7 @@ func _on_area_entered(area: Area2D) -> void:
 		respawn_invincibility = 3.0
 		_take_hit()
 	elif area.is_in_group("enemy_bullets"):
-		if is_boosting:
+		if can_deflect_projectiles():
 			_try_deflect_projectile(area)
 			return
 		respawn_invincibility = 2.0
@@ -653,6 +676,7 @@ func reset_state() -> void:
 	boost_reflected_projectiles = 0
 	boost_direction = Vector2.UP
 	boost_distance_remaining = 0.0
+	boost_chain_window_timer = 0.0
 	drift_speed_bonus = 1.0
 	post_boost_slide_timer = 0.0
 	sprite.modulate = Color.WHITE

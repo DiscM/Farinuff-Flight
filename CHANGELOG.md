@@ -17,6 +17,9 @@ All notable changes to this project will be documented in this file.
 - **Elite Upgrade Balance:** Adjusted Hull Plating to grant `+1` life, Shield Burst to trigger every `10` seconds, Overclock to last `2.5` seconds every `16` seconds, and Afterburner to provide a more controlled mobility boost.
 - **Milestone Stat Balance:** Fire-rate and speed allocations now grow by `4%` per point with a `40%` cap to protect late-run tuning.
 - **Projectile Variety:** Bomber, sniper, tank, and boss projectiles now use bounded speed variation, including staggered tank bullet rings, for less uniform attack timing.
+- **Shift Dash Rework:** Shift dash now launches from the ship's current movement direction, travels a normalized distance, and accepts fine directional steering while active.
+- **Reflect Rewarding:** Reflecting enemy projectiles now shortens dash cooldown, scales down further for each additional reflect, and unlocks chained dash continuation after three successful reflects.
+- **Projectile Ownership Color:** Player-fired bullets now use a single consistent green, and reflected enemy bullets convert to that same player-fire color for immediate readability.
 
 ### Fixed
 - **Background Planet Loading:** Corrected the asteroid resource path and removed an unavailable moon entry from random background selection.
