@@ -6,6 +6,7 @@ static var _visibility_ring_texture: Texture2D
 var direction: Vector2 = Vector2.DOWN
 var _visibility_ring: Sprite2D
 var _pulse_time: float = 0.0
+var is_deflected: bool = false
 
 func _ready() -> void:
 	# Tank radial bullets set direction/speed via metadata before add_child
@@ -33,8 +34,30 @@ func _physics_process(delta: float) -> void:
 	_pulse_time += delta
 	if is_instance_valid(_visibility_ring):
 		var pulse := (sin(_pulse_time * 11.0) + 1.0) * 0.5
-		_visibility_ring.scale = Vector2.ONE * lerpf(0.98, 1.07, pulse)
+		var base_scale := 1.18 if is_deflected else 1.0
+		_visibility_ring.scale = Vector2.ONE * base_scale * lerpf(0.98, 1.07, pulse)
 		_visibility_ring.modulate.a = lerpf(0.86, 1.0, pulse)
+
+
+func deflect(deflector_position: Vector2, deflector_velocity: Vector2) -> void:
+	if is_deflected:
+		return
+	is_deflected = true
+	var reflected_direction := (global_position - deflector_position).normalized()
+	if reflected_direction.is_zero_approx():
+		reflected_direction = -direction
+	if not deflector_velocity.is_zero_approx():
+		reflected_direction = reflected_direction.lerp(deflector_velocity.normalized(), 0.32).normalized()
+	direction = reflected_direction
+	speed = maxf(speed * 1.35, 560.0)
+	remove_from_group("enemy_bullets")
+	# Detect enemies from this script only, avoiding duplicate player-bullet damage.
+	collision_layer = 0
+	collision_mask = 2
+	$Sprite2D.modulate = Color(0.22, 2.5, 3.5, 1.0)
+	if is_instance_valid(_visibility_ring):
+		_visibility_ring.modulate = Color(0.25, 1.0, 1.0, 1.0)
+		_visibility_ring.scale = Vector2.ONE * 1.18
 
 
 func _create_visibility_ring() -> void:
@@ -61,7 +84,13 @@ func _create_visibility_ring() -> void:
 
 
 func _on_area_entered(area: Area2D) -> void:
+	if is_deflected:
+		if area.is_in_group("enemies") or area.is_in_group("tempest_sections"):
+			area.take_damage(1 + GameManager.bonus_damage)
+			queue_free()
+		return
 	if area.is_in_group("player"):
 		if area.get("is_boosting"):
+			deflect(area.global_position, area.velocity)
 			return
 		queue_free()

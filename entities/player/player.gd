@@ -75,8 +75,9 @@ var boost_duration_timer: float = 0.0
 var afterimage_spawn_timer: float = 0.0
 const AF_SPAWN_LIMIT: float = 0.04
 const BOOST_MULTIPLIER: float = 3.5
-const BOOST_DURATION: float = 0.44 # doubled distance
+const BOOST_DURATION: float = 0.68
 const BOOST_COOLDOWN: float = 0.85
+const BOOST_DEFLECT_RADIUS: float = 74.0
 const POST_BOOST_SLIDE_DURATION: float = 0.4
 const DRIFT_STEER_INFLUENCE: float = 0.65
 
@@ -277,6 +278,7 @@ func _physics_process(delta: float) -> void:
 func _update_boost(delta: float) -> void:
 	if is_boosting:
 		boost_duration_timer -= delta
+		_deflect_nearby_projectiles()
 		
 		# --- Speed Gain while drifting ---
 		drift_speed_bonus = move_toward(drift_speed_bonus, DRIFT_BONUS_MAX, DRIFT_BONUS_RATE * delta)
@@ -315,6 +317,17 @@ func _update_boost(delta: float) -> void:
 			boost_duration_timer = BOOST_DURATION
 			afterimage_spawn_timer = 0.0 # spawn immediately
 			# Visual feedback
+
+
+func _deflect_nearby_projectiles() -> void:
+	for projectile in get_tree().get_nodes_in_group("enemy_bullets"):
+		if not is_instance_valid(projectile):
+			continue
+		if global_position.distance_squared_to(projectile.global_position) > BOOST_DEFLECT_RADIUS * BOOST_DEFLECT_RADIUS:
+			continue
+		if projectile.has_method("deflect"):
+			projectile.deflect(global_position, velocity)
+
 
 func _spawn_afterimage() -> void:
 	var af := Sprite2D.new()
@@ -455,6 +468,8 @@ func _on_area_entered(area: Area2D) -> void:
 		_take_hit()
 	elif area.is_in_group("enemy_bullets"):
 		if is_boosting:
+			if area.has_method("deflect"):
+				area.deflect(global_position, velocity)
 			return
 		respawn_invincibility = 2.0
 		_take_hit()
