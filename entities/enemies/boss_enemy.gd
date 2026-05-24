@@ -46,6 +46,7 @@ var tempest_orbit_angle: float = 0.0
 var tempest_damage_multiplier: float = 1.0
 var tempest_warning_markers: Array[Sprite2D] = []
 var tempest_overload_triggered: bool = false
+var tempest_phase_transition_pending: bool = false
 
 var max_boss_health: int = 0
 var _dying: bool = false
@@ -268,11 +269,25 @@ func _on_tempest_section_destroyed(section: Area2D) -> void:
 	if not tempest_sections.is_empty():
 		return
 	if tempest_phase == TempestPhase.BARRIER:
-		_start_tempest_phase(TempestPhase.ARMAMENTS)
+		_queue_tempest_phase_transition(TempestPhase.ARMAMENTS)
 	elif tempest_phase == TempestPhase.ARMAMENTS:
-		_start_tempest_phase(TempestPhase.CONDUITS)
+		_queue_tempest_phase_transition(TempestPhase.CONDUITS)
 	elif tempest_phase == TempestPhase.CONDUITS:
-		_start_tempest_phase(TempestPhase.EXPOSED)
+		_queue_tempest_phase_transition(TempestPhase.EXPOSED)
+
+
+func _queue_tempest_phase_transition(next_phase: TempestPhase) -> void:
+	if tempest_phase_transition_pending or _dying:
+		return
+	tempest_phase_transition_pending = true
+	_complete_tempest_phase_transition.call_deferred(tempest_phase, next_phase)
+
+
+func _complete_tempest_phase_transition(previous_phase: TempestPhase, next_phase: TempestPhase) -> void:
+	tempest_phase_transition_pending = false
+	if _dying or tempest_phase != previous_phase:
+		return
+	_start_tempest_phase(next_phase)
 
 
 func _spawn_section_burst(burst_position: Vector2) -> void:
