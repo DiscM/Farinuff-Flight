@@ -69,6 +69,15 @@
       "frame_size": 128,
       "target_extent": 114,
       "scale": 0.6951
+    },
+    {
+      "name": "tempest_core_idle",
+      "file": "tempest_core_idle_strip.png",
+      "fps": 8,
+      "frames": 4,
+      "frame_size": 128,
+      "target_extent": 116,
+      "scale": 0.8593
     }
   ]
 }

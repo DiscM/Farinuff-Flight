@@ -528,6 +528,50 @@ def draw_boss(raw: Image.Image, phase: float) -> None:
     glow_circle(raw, (center[0], center[1] + 58), 7.0, rgba(255, 143, 59, int(170 * pulse)), blur=3.0)
 
 
+def draw_tempest_core(raw: Image.Image, phase: float) -> None:
+    draw = ImageDraw.Draw(raw)
+    bob = math.sin(phase * 0.58) * 2.2
+    pulse = 0.7 + 0.3 * math.sin(phase * 2.0 + 0.4)
+    center = (RAW_CENTER[0], RAW_CENTER[1] + bob)
+
+    hull = [
+        (center[0], center[1] - 46),
+        (center[0] + 34, center[1] - 24),
+        (center[0] + 40, center[1] + 12),
+        (center[0] + 18, center[1] + 37),
+        (center[0], center[1] + 44),
+        (center[0] - 18, center[1] + 37),
+        (center[0] - 40, center[1] + 12),
+        (center[0] - 34, center[1] - 24),
+    ]
+    draw_ship_outline(draw, hull, rgba(41, 12, 72), rgba(161, 55, 242), width=2)
+    glow_polygon(raw, hull, rgba(183, 54, 255, 48), blur=7.0)
+
+    for y in (-22, -8, 8, 22):
+        draw.line(
+            [(center[0] - 27, center[1] + y), (center[0] + 27, center[1] + y)],
+            fill=rgba(94, 30, 132),
+            width=2,
+        )
+
+    for dx, dy in [(-23, -14), (23, -14), (-23, 13), (23, 13)]:
+        glow_circle(raw, (center[0] + dx, center[1] + dy), 6.0, rgba(71, 216, 255, 135), blur=3.0)
+        draw.ellipse(
+            (center[0] + dx - 3, center[1] + dy - 3, center[0] + dx + 3, center[1] + dy + 3),
+            fill=rgba(214, 247, 255),
+        )
+
+    eye_left = [(center[0] - 30, center[1] - 12), (center[0] - 8, center[1] - 8), (center[0] - 11, center[1] - 3)]
+    eye_right = [(center[0] * 2 - x, y) for x, y in eye_left]
+    draw.polygon(eye_left, fill=rgba(255, 54, 153))
+    draw.polygon(eye_right, fill=rgba(255, 54, 153))
+
+    core = (center[0], center[1] + 3)
+    glow_circle(raw, core, 19.0, rgba(255, 56, 235, int(170 * pulse)), blur=5.0)
+    glow_circle(raw, core, 10.0, rgba(255, 255, 255, 145), blur=2.5)
+    draw.ellipse((core[0] - 6, core[1] - 6, core[0] + 6, core[1] + 6), fill=rgba(255, 255, 255))
+
+
 def normalize_frames(raw_frames: list[Image.Image], target_extent: int) -> tuple[list[Image.Image], dict[str, float | int]]:
     boxes = [alpha_bbox(frame) for frame in raw_frames]
     union = union_bbox(boxes)
@@ -628,6 +672,7 @@ def main() -> None:
         SpriteSpec("tank_enemy_idle", "tank_enemy_idle_strip.png", 90, 7, draw_tank),
         SpriteSpec("bomber_enemy_idle", "bomber_enemy_idle_strip.png", 94, 7, draw_bomber),
         SpriteSpec("boss_enemy_idle", "boss_enemy_idle_strip.png", 114, 6, draw_boss),
+        SpriteSpec("tempest_core_idle", "tempest_core_idle_strip.png", 116, 8, draw_tempest_core),
     ]
 
     manifest: dict[str, object] = {

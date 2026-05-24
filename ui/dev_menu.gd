@@ -32,6 +32,7 @@ func _ready() -> void:
 	_add_btn(vbox, "+ 50 Orbs",            _on_add_orbs)
 	_add_btn(vbox, "Clear Enemies",         _on_clear_enemies)
 	_add_btn(vbox, "Spawn Elite Boss",      _on_spawn_elite_boss)
+	_add_btn(vbox, "Spawn Tempest Core",    _on_spawn_tempest_core)
 	_add_btn(vbox, "Trigger Elite Upgrade", _on_elite_upgrade)
 	_add_btn(vbox, "Trigger Point Alloc",   _on_point_allocation)
 	_add_btn(vbox, "+ 5 Lives",             _on_add_lives)
@@ -55,6 +56,7 @@ func _on_add_orbs() -> void:
 
 func _on_clear_enemies() -> void:
 	get_tree().call_group("enemies", "take_damage", 9999)
+	get_tree().call_group("tempest_sections", "take_damage", 9999)
 	get_tree().call_group("enemy_bullets", "queue_free")
 
 func _on_spawn_elite_boss() -> void:
@@ -63,6 +65,12 @@ func _on_spawn_elite_boss() -> void:
 	GameManager.current_wave = 10
 	GameManager.boss_active = true
 	SignalBus.wave_started.emit(10)
+
+func _on_spawn_tempest_core() -> void:
+	force_close.emit()
+	GameManager.current_wave = 20
+	GameManager.boss_active = true
+	SignalBus.wave_started.emit(20)
 
 func _on_elite_upgrade() -> void:
 	force_close.emit()

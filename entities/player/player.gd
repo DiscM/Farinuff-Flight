@@ -450,7 +450,7 @@ func _on_area_entered(area: Area2D) -> void:
 		return
 	if is_invincible or dev_god_mode:
 		return
-	if area.is_in_group("enemies"):
+	if area.is_in_group("enemies") or area.is_in_group("tempest_sections"):
 		respawn_invincibility = 3.0
 		_take_hit()
 	elif area.is_in_group("enemy_bullets"):
@@ -542,6 +542,7 @@ func _on_magnet_ended() -> void:
 
 func _apply_nuke() -> void:
 	get_tree().call_group("enemies", "take_damage", 9999)
+	get_tree().call_group("tempest_sections", "take_damage", 9999)
 
 func _attract_powerups(delta: float) -> void:
 	var powerups := get_tree().get_nodes_in_group("powerups")
@@ -679,7 +680,7 @@ func _update_orbitals(delta: float) -> void:
 			orbital_nodes[i].global_position = global_position + Vector2(cos(angle), sin(angle)) * radius
 
 func _on_orbital_hit(area: Area2D, _orb: Area2D) -> void:
-	if area.is_in_group("enemies"):
+	if area.is_in_group("enemies") or area.is_in_group("tempest_sections"):
 		area.take_damage(1 + GameManager.bonus_damage)
 
 func _remove_orbitals() -> void:
@@ -742,8 +743,9 @@ func _trigger_shield_burst() -> void:
 	for b in get_tree().get_nodes_in_group("enemy_bullets"):
 		if is_instance_valid(b) and global_position.distance_to(b.global_position) < burst_radius:
 			b.queue_free()
-	# Damage enemies caught in the burst
-	for e in get_tree().get_nodes_in_group("enemies"):
+	# Damage enemies and exposed boss systems caught in the burst.
+	var targets := get_tree().get_nodes_in_group("enemies") + get_tree().get_nodes_in_group("tempest_sections")
+	for e in targets:
 		if is_instance_valid(e) and global_position.distance_to(e.global_position) < burst_radius:
 			e.take_damage(1 + GameManager.bonus_damage)
 	# Visual flash ring
@@ -863,7 +865,7 @@ func _drone_fire() -> void:
 	get_tree().current_scene.add_child(bullet)
 
 func _on_drone_hit(area: Area2D) -> void:
-	if area.is_in_group("enemies"):
+	if area.is_in_group("enemies") or area.is_in_group("tempest_sections"):
 		area.take_damage(1 + GameManager.bonus_damage)
 
 func _remove_drone() -> void:

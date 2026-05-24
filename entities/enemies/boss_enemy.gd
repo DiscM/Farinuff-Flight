@@ -4,8 +4,11 @@ class_name BossEnemy
 ## Regular (every 5th wave): 200 HP. Elite (every 10th wave): 500 HP.
 
 const ENEMY_BULLET_SCENE := preload("res://entities/bullets/enemy_bullet.tscn")
+const TEMPEST_SECTION_SCRIPT := preload("res://entities/enemies/tempest_section.gd")
+const TEMPEST_CORE_TEXTURE := preload("res://assets/sprites/generated/tempest_core_idle_strip.png")
 
 var is_elite: bool = false
+var is_tempest_core: bool = false
 enum BossVariant { ASSAULT, BULWARK, TEMPEST }
 var boss_variant: BossVariant = BossVariant.ASSAULT
 var boss_title: String = "BOSS: ASSAULT WING"
@@ -33,11 +36,20 @@ var attack_index: int = 0
 var attack_sequence: Array = []
 var spiral_angle: float = 0.0
 
+enum TempestPhase { BARRIER, ARMAMENTS, EXPOSED, OVERLOAD }
+var tempest_phase: TempestPhase = TempestPhase.BARRIER
+var tempest_sections: Array[Area2D] = []
+var tempest_core_exposed: bool = false
+var tempest_section_attack_timer: float = 0.0
+var tempest_overload_triggered: bool = false
+
 var max_boss_health: int = 0
 var _dying: bool = false
 
 func _ready() -> void:
-	if is_elite:
+	if is_tempest_core:
+		_configure_tempest_core()
+	elif is_elite:
 		max_health = 125
 		points = 5000
 		orb_value = 10
@@ -53,8 +65,15 @@ func _ready() -> void:
 	super._ready()
 	max_boss_health = health
 
+	if is_tempest_core:
+		var sprite := get_node_or_null("Sprite2D") as Sprite2D
+		if sprite:
+			sprite.texture = TEMPEST_CORE_TEXTURE
+
 	viewport_size = get_viewport_rect().size
 	_build_attack_sequence()
+	if is_tempest_core:
+		_start_tempest_phase(TempestPhase.BARRIER, false)
 	attack_timer = 1.5  # initial delay before first attack
 	move_target = Vector2(viewport_size.x / 2.0, 130.0)
 	move_timer = 3.0
@@ -82,6 +101,16 @@ func _ready() -> void:
 
 	SignalBus.boss_spawned.emit(health, max_boss_health, boss_title)
 
+
+func _configure_tempest_core() -> void:
+	max_health = 220
+	points = 12000
+	orb_value = 18
+	boss_variant = BossVariant.TEMPEST
+	boss_title = "WAVE 20: TEMPEST CORE - SHIELD ARRAY"
+	bullet_color = Color(0.2, 2.0, 3.0, 1.0)
+
+
 func _configure_regular_variant() -> void:
 	var encounter_index := floori(float(GameManager.current_wave) / 5.0)
 	match encounter_index % 3:
@@ -102,6 +131,12 @@ func _configure_regular_variant() -> void:
 			bullet_color = Color(0.2, 2.0, 3.0, 1.0)
 
 func _build_attack_sequence() -> void:
+	if is_tempest_core:
+		attack_sequence = [
+			AttackPattern.CROSS, AttackPattern.RADIAL,
+			AttackPattern.AIMED, AttackPattern.SWEEP,
+		]
+		return
 	if is_elite:
 		attack_sequence = [
 			AttackPattern.AIMED, AttackPattern.RADIAL,
@@ -128,6 +163,96 @@ func _build_attack_sequence() -> void:
 				AttackPattern.AIMED, AttackPattern.SPIRAL,
 				AttackPattern.RADIAL,
 			]
+
+
+func _start_tempest_phase(next_phase: TempestPhase, announce: bool = true) -> void:
+	tempest_phase = next_phase
+	attack_index = 0
+	_clear_tempest_sections()
+	get_tree().call_group("enemy_bullets", "queue_free")
+	var sprite := get_node_or_null("Sprite2D") as Sprite2D
+
+	match tempest_phase:
+		TempestPhase.BARRIER:
+			boss_title = "WAVE 20: TEMPEST CORE - SHIELD ARRAY"
+			tempest_core_exposed = false
+			attack_sequence = [AttackPattern.CROSS, AttackPattern.RADIAL, AttackPattern.AIMED]
+			_spawn_tempest_section("LeftShieldPylon", Vector2(-63.0, 0.0), 28, Vector2(28.0, 52.0), Color(0.2, 0.92, 1.0))
+			_spawn_tempest_section("RightShieldPylon", Vector2(63.0, 0.0), 28, Vector2(28.0, 52.0), Color(0.2, 0.92, 1.0))
+			tempest_section_attack_timer = 1.0
+			if sprite:
+				sprite.modulate = Color(0.76, 0.95, 1.0)
+		TempestPhase.ARMAMENTS:
+			boss_title = "TEMPEST CORE - STORM BATTERIES"
+			tempest_core_exposed = false
+			attack_sequence = [AttackPattern.SWEEP, AttackPattern.SHOTGUN, AttackPattern.SPIRAL, AttackPattern.AIMED]
+			_spawn_tempest_section("LeftStormBattery", Vector2(-58.0, 20.0), 38, Vector2(32.0, 46.0), Color(1.0, 0.32, 0.72))
+			_spawn_tempest_section("RightStormBattery", Vector2(58.0, 20.0), 38, Vector2(32.0, 46.0), Color(1.0, 0.32, 0.72))
+			tempest_section_attack_timer = 0.45
+			if sprite:
+				sprite.modulate = Color(1.0, 0.8, 0.95)
+		TempestPhase.EXPOSED:
+			boss_title = "TEMPEST CORE - CORE EXPOSED"
+			tempest_core_exposed = true
+			attack_sequence = [AttackPattern.SPIRAL, AttackPattern.RADIAL, AttackPattern.SWEEP, AttackPattern.AIMED, AttackPattern.CROSS]
+			if sprite:
+				sprite.modulate = Color(1.0, 0.68, 0.92)
+		TempestPhase.OVERLOAD:
+			boss_title = "TEMPEST CORE - OVERLOAD"
+			tempest_core_exposed = true
+			attack_sequence = [AttackPattern.SPIRAL, AttackPattern.SWEEP, AttackPattern.RADIAL, AttackPattern.SPIRAL, AttackPattern.SHOTGUN]
+			bullet_color = Color(3.0, 0.25, 1.4, 1.0)
+			if sprite:
+				sprite.modulate = Color(1.5, 0.45, 0.8)
+
+	attack_timer = 0.65
+	if announce:
+		SignalBus.boss_spawned.emit(health, max_boss_health, boss_title)
+
+
+func _spawn_tempest_section(section_name: String, local_position: Vector2, hp: int, size: Vector2, color: Color) -> void:
+	var section = TEMPEST_SECTION_SCRIPT.new()
+	add_child(section)
+	section.position = local_position
+	section.setup(section_name, hp, size, color)
+	section.destroyed.connect(_on_tempest_section_destroyed)
+	tempest_sections.append(section)
+
+
+func _clear_tempest_sections() -> void:
+	for section in tempest_sections:
+		if is_instance_valid(section):
+			section.queue_free()
+	tempest_sections.clear()
+
+
+func _on_tempest_section_destroyed(section: Area2D) -> void:
+	tempest_sections.erase(section)
+	_spawn_section_burst(section.global_position)
+	if not tempest_sections.is_empty():
+		return
+	if tempest_phase == TempestPhase.BARRIER:
+		_start_tempest_phase(TempestPhase.ARMAMENTS)
+	elif tempest_phase == TempestPhase.ARMAMENTS:
+		_start_tempest_phase(TempestPhase.EXPOSED)
+
+
+func _spawn_section_burst(burst_position: Vector2) -> void:
+	var ring := Sprite2D.new()
+	var image := Image.create(48, 48, false, Image.FORMAT_RGBA8)
+	image.fill(Color.TRANSPARENT)
+	for y in range(48):
+		for x in range(48):
+			var distance := Vector2(float(x) - 24.0, float(y) - 24.0).length()
+			if distance > 16.0 and distance < 21.0:
+				image.set_pixel(x, y, Color(0.4, 0.95, 1.0, 0.9))
+	ring.texture = ImageTexture.create_from_image(image)
+	ring.global_position = burst_position
+	get_tree().current_scene.add_child(ring)
+	var tween := ring.create_tween()
+	tween.tween_property(ring, "scale", Vector2(2.0, 2.0), 0.24)
+	tween.parallel().tween_property(ring, "modulate:a", 0.0, 0.24)
+	tween.tween_callback(ring.queue_free)
 
 # ---- Movement --------------------------------------------------------
 
@@ -158,6 +283,11 @@ func _move(delta: float) -> void:
 		_fire_current_pattern()
 		attack_index = (attack_index + 1) % attack_sequence.size()
 		attack_timer = _get_attack_delay()
+
+	if is_tempest_core and not tempest_sections.is_empty():
+		tempest_section_attack_timer -= delta
+		if tempest_section_attack_timer <= 0.0:
+			_fire_tempest_sections()
 
 	SignalBus.boss_health_changed.emit(health)
 
@@ -244,6 +374,14 @@ func _pick_next_move_phase() -> void:
 # ---- Attacks ---------------------------------------------------------
 
 func _get_attack_delay() -> float:
+	if is_tempest_core:
+		if tempest_phase == TempestPhase.BARRIER:
+			return 1.15
+		if tempest_phase == TempestPhase.ARMAMENTS:
+			return 0.62
+		if tempest_phase == TempestPhase.EXPOSED:
+			return 0.46
+		return 0.27
 	match attack_sequence[attack_index]:
 		AttackPattern.SPIRAL:
 			return 0.35 if is_elite else 0.5
@@ -259,7 +397,13 @@ func _get_attack_delay() -> float:
 func _fire_current_pattern() -> void:
 	match attack_sequence[attack_index]:
 		AttackPattern.AIMED:   _fire_aimed()
-		AttackPattern.RADIAL:  _fire_radial(16 if is_elite else 12)
+		AttackPattern.RADIAL:
+			var bullet_count := 12
+			if is_tempest_core:
+				bullet_count = 24 if tempest_phase == TempestPhase.OVERLOAD else 18
+			elif is_elite:
+				bullet_count = 16
+			_fire_radial(bullet_count)
 		AttackPattern.SHOTGUN: _fire_shotgun()
 		AttackPattern.SPIRAL:  _fire_spiral_tick()
 		AttackPattern.CROSS:   _fire_cross()
@@ -273,6 +417,8 @@ func _fire_aimed() -> void:
 	var player_pos: Vector2 = players[0].global_position
 	var base_dir := (player_pos - global_position).normalized()
 	var count := 5 if is_elite else 3
+	if is_tempest_core:
+		count = 7 if tempest_phase >= TempestPhase.EXPOSED else 5
 	for i in range(count):
 		var off := (float(i) - float(count - 1) / 2.0) * 0.18
 		_spawn_bullet(base_dir.rotated(off), 420.0)
@@ -286,6 +432,8 @@ func _fire_radial(count: int) -> void:
 func _fire_shotgun() -> void:
 	## Wide downward cone — punishes players who sit directly below.
 	var count := 7 if is_elite else 5
+	if is_tempest_core:
+		count = 11 if tempest_phase == TempestPhase.OVERLOAD else 9
 	for i in range(count):
 		var off := (float(i) - float(count - 1) / 2.0) * 0.28
 		_spawn_bullet(Vector2.DOWN.rotated(off), 360.0)
@@ -294,6 +442,8 @@ func _fire_spiral_tick() -> void:
 	## Rotating spiral — covers a wide area over successive ticks.
 	spiral_angle += TAU / 8.0
 	var arms := 3 if is_elite else 2
+	if is_tempest_core:
+		arms = 4 if tempest_phase == TempestPhase.OVERLOAD else 3
 	for i in range(arms):
 		var angle := spiral_angle + (TAU / arms) * i
 		_spawn_bullet(Vector2(cos(angle), sin(angle)), 280.0)
@@ -301,6 +451,8 @@ func _fire_spiral_tick() -> void:
 func _fire_cross() -> void:
 	## Cardinal + diagonal shots — 4-way for regular, 8-way for elite.
 	var count := 8 if is_elite else 4
+	if is_tempest_core and tempest_phase >= TempestPhase.EXPOSED:
+		count = 12
 	for i in range(count):
 		var angle := (TAU / count) * i
 		_spawn_bullet(Vector2(cos(angle), sin(angle)), 320.0)
@@ -309,19 +461,59 @@ func _fire_sweep() -> void:
 	## A rotating fan creates moving safe gaps instead of a static burst.
 	spiral_angle += 0.34 if is_elite else 0.48
 	var shot_count := 5 if is_elite else 3
+	if is_tempest_core:
+		spiral_angle += 0.14
+		shot_count = 7 if tempest_phase == TempestPhase.OVERLOAD else 5
 	var base_direction := Vector2.DOWN.rotated(sin(spiral_angle) * 0.9)
 	for i in range(shot_count):
 		var offset := (float(i) - float(shot_count - 1) / 2.0) * 0.22
 		_spawn_bullet(base_direction.rotated(offset), 350.0)
 
 func _spawn_bullet(dir: Vector2, spd: float) -> void:
+	_spawn_bullet_from(global_position, dir, spd)
+
+
+func _spawn_bullet_from(origin: Vector2, dir: Vector2, spd: float) -> void:
 	var bullet: Area2D = ENEMY_BULLET_SCENE.instantiate()
-	bullet.global_position = global_position
+	bullet.global_position = origin
 	bullet.add_to_group("enemy_bullets")
 	bullet.set_meta("direction", dir)
 	bullet.set_meta("custom_speed", spd * randf_range(0.92, 1.08))
 	bullet.set_meta("bullet_color", bullet_color)
 	get_tree().current_scene.call_deferred("add_child", bullet)
+
+
+func _fire_tempest_sections() -> void:
+	var players := get_tree().get_nodes_in_group("player")
+	if players.is_empty():
+		return
+	var player_position: Vector2 = players[0].global_position
+	for section in tempest_sections:
+		if not is_instance_valid(section):
+			continue
+		var aim_direction := (player_position - section.global_position).normalized()
+		_spawn_bullet_from(section.global_position, aim_direction, 380.0)
+		if tempest_phase == TempestPhase.ARMAMENTS:
+			_spawn_bullet_from(section.global_position, aim_direction.rotated(-0.18), 420.0)
+			_spawn_bullet_from(section.global_position, aim_direction.rotated(0.18), 420.0)
+	tempest_section_attack_timer = 0.9 if tempest_phase == TempestPhase.BARRIER else 0.48
+
+
+func take_damage(amount: int) -> void:
+	if _dying:
+		return
+	if is_tempest_core and not tempest_core_exposed:
+		var sprite := get_node_or_null("Sprite2D") as Sprite2D
+		if sprite:
+			var tween := create_tween()
+			tween.tween_property(sprite, "modulate", Color(0.5, 1.5, 2.0), 0.04)
+			tween.tween_property(sprite, "modulate", Color(0.76, 0.95, 1.0) if tempest_phase == TempestPhase.BARRIER else Color(1.0, 0.8, 0.95), 0.1)
+		return
+	super.take_damage(amount)
+	if is_tempest_core and health > 0 and not tempest_overload_triggered and health <= int(max_boss_health * 0.42):
+		tempest_overload_triggered = true
+		_start_tempest_phase(TempestPhase.OVERLOAD)
+
 
 func _die() -> void:
 	# Guard against re-entry (e.g. multiple bullets hitting on the same frame)
@@ -339,6 +531,7 @@ func _die() -> void:
 	# Clean up the telegraph marker
 	if is_instance_valid(telegraph_marker):
 		telegraph_marker.queue_free()
+	_clear_tempest_sections()
 
 	# Remove all bullets this boss fired so they don't orphan on screen
 	get_tree().call_group("enemy_bullets", "queue_free")

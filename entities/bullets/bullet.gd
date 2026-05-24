@@ -30,7 +30,7 @@ func _physics_process(delta: float) -> void:
 		position += perp * sin(_zigzag_time) * amp * delta
 
 func _on_area_entered(area: Area2D) -> void:
-	if area.is_in_group("enemies"):
+	if area.is_in_group("enemies") or area.is_in_group("tempest_sections"):
 		var dmg := 1 + GameManager.bonus_damage
 		area.take_damage(dmg)
 
@@ -43,8 +43,8 @@ func _on_area_entered(area: Area2D) -> void:
 func _explode() -> void:
 	# Deal area damage to all enemies within blast radius
 	var blast_radius := 80.0
-	var enemies := get_tree().get_nodes_in_group("enemies")
-	for enemy in enemies:
+	var targets := get_tree().get_nodes_in_group("enemies") + get_tree().get_nodes_in_group("tempest_sections")
+	for enemy in targets:
 		if is_instance_valid(enemy) and enemy != self:
 			var dist: float = global_position.distance_to(enemy.global_position)
 			if dist < blast_radius:

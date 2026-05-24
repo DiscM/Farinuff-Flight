@@ -66,7 +66,10 @@ func _on_wave_started(wave_number: int) -> void:
 	var is_boss_wave := (wave_number % 5 == 0)
 	var is_elite_wave := (wave_number % 10 == 0)
 	if is_boss_wave:
-		wave_banner.text = "⚠  " + ("ELITE BOSS!" if is_elite_wave else "BOSS INCOMING!")
+		if wave_number == 20:
+			wave_banner.text = "TEMPEST CORE INCOMING!"
+		else:
+			wave_banner.text = "ELITE BOSS!" if is_elite_wave else "BOSS INCOMING!"
 		wave_banner.modulate = Color(1.0, 0.15, 0.4) if is_elite_wave else Color(1.0, 0.5, 0.1)
 	else:
 		wave_banner.text = "— WAVE " + str(wave_number) + " —"

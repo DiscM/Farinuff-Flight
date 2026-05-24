@@ -109,6 +109,7 @@ func _spawn_boss(wave_number: int) -> void:
 	var boss: BossEnemy = boss_enemy_scene.instantiate() as BossEnemy
 	boss.position = Vector2(viewport_width / 2.0, -80.0)
 	boss.is_elite = (wave_number % 10 == 0)
+	boss.is_tempest_core = (wave_number == 20)
 	get_tree().current_scene.add_child(boss)
 
 func _on_boss_died(_points: int) -> void:
