@@ -1,31 +1,11 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://entities/enemies/sniper_enemy.gd" id="1_sniper"]
+[ext_resource type="Script" path="res://assets/sprites/generated/strip_animator.gd" id="2_strip_animator"]
+[ext_resource type="Texture2D" path="res://assets/sprites/generated/sniper_enemy_idle_strip.png" id="3_sniper_strip"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_sniper"]
 size = Vector2(34, 34)
-
-[sub_resource type="GDScript" id="GDScript_draw"]
-script/source = "extends Sprite2D
-
-func _ready() -> void:
-	var size := 40
-	var img := Image.create(size, size, false, Image.FORMAT_RGBA8)
-	img.fill(Color.TRANSPARENT)
-	var center := Vector2(20.0, 20.0)
-	for y in range(size):
-		for x in range(size):
-			var p := Vector2(float(x), float(y)) - center
-			var body := absf(p.x) + absf(p.y) * 1.25
-			if body < 14.0:
-				var tint := Color(0.1, 0.65, 0.8).lerp(Color(0.03, 0.2, 0.4), body / 14.0)
-				img.set_pixel(x, y, tint)
-			if absf(p.x) < 2.0 and p.y > -13.0 and p.y < 10.0:
-				img.set_pixel(x, y, Color(0.5, 1.0, 1.0))
-			if p.length() < 4.0:
-				img.set_pixel(x, y, Color(1.0, 0.35, 0.2))
-	texture = ImageTexture.create_from_image(img)
-"
 
 [node name="SniperEnemy" type="Area2D" groups=["enemies"]]
 collision_layer = 2
@@ -33,7 +13,10 @@ collision_mask = 5
 script = ExtResource("1_sniper")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
-script = SubResource("GDScript_draw")
+script = ExtResource("2_strip_animator")
+texture = ExtResource("3_sniper_strip")
+hframes = 4
+fps = 8.0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_sniper")

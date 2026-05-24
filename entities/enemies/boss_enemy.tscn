@@ -1,73 +1,11 @@
-[gd_scene format=3 uid="uid://cfwkxdrbl7vwt"]
+[gd_scene load_steps=5 format=3 uid="uid://cfwkxdrbl7vwt"]
 
 [ext_resource type="Script" path="res://entities/enemies/boss_enemy.gd" id="1_boss"]
+[ext_resource type="Script" path="res://assets/sprites/generated/strip_animator.gd" id="2_strip_animator"]
+[ext_resource type="Texture2D" path="res://assets/sprites/generated/boss_enemy_idle_strip.png" id="3_boss_strip"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_boss"]
 size = Vector2(88, 80)
-
-[sub_resource type="GDScript" id="GDScript_draw"]
-script/source = "extends Sprite2D
-
-func _ready() -> void:
-	var w := 96
-	var h := 88
-	var img := Image.create(w, h, false, Image.FORMAT_RGBA8)
-	img.fill(Color.TRANSPARENT)
-	var cx := w / 2.0
-	var cy := h / 2.0
-	for y in range(h):
-		for x in range(w):
-			var dx := float(x) - cx
-			var dy := float(y) - cy
-			var dist := Vector2(dx, dy).length()
-			
-			# Outer hexagonal hull
-			var hex := maxf(absf(dx), absf(dx * 0.5 + dy * 0.866))
-			hex = maxf(hex, absf(dx * 0.5 - dy * 0.866))
-			
-			if hex < cx - 2.0:
-				var t: float = hex / cx
-				var is_edge = hex > cx - 5.0
-				var col := Color(0.15, 0.0, 0.25).lerp(Color(0.05, 0.0, 0.1), t)
-				if is_edge:
-					col = Color(0.5, 0.1, 0.8) # Strong neon edge
-				img.set_pixel(x, y, col)
-				
-				# Intricate Armour plates
-				if fmod(float(y), 12.0) < 2.0 and hex < cx - 10.0:
-					var plate_col = Color(0.2, 0.05, 0.3, 0.9)
-					if fmod(float(x), 12.0) < 2.0:
-						plate_col = Color(0.8, 0.3, 1.0) # Energy nodes at intersections
-					img.set_pixel(x, y, plate_col)
-
-			# Four geometric sub-cores
-			if absf(absf(dx) - 20.0) < 5.0 and absf(absf(dy) - 15.0) < 5.0:
-				var sub_dist = Vector2(absf(dx)-20.0, absf(dy)-15.0).length()
-				if sub_dist < 4.0:
-					img.set_pixel(x, y, Color(0.5, 0.8, 1.0))
-					
-			# Inner glowing core shield
-			if dist < 20.0 and dist > 16.0:
-				var shield_t = (dist - 16.0) / 4.0
-				img.set_pixel(x, y, Color(1.0, 0.3, 1.0, 0.5).lerp(Color.TRANSPARENT, shield_t))
-				
-			# Inner glowing core
-			if dist < 14.0:
-				var t2: float = dist / 14.0
-				img.set_pixel(x, y, Color(1.0, 0.3, 1.0).lerp(Color(0.6, 0.1, 0.8), t2))
-				if dist < 6.0:
-					img.set_pixel(x, y, Color(1.0, 1.0, 1.0)) # Super bright center
-					
-			# Menacing Eye slits
-			if absf(dy + 12.0) < 4.0 and absf(dx) > 8.0 and absf(dx) < 26.0:
-				var eye_t = (absf(dy + 12.0)) / 4.0
-				var eye_col = Color(1.0, 0.0, 0.5).lerp(Color(0.5, 0.0, 0.2), eye_t)
-				if absf(dx) > 14.0 and absf(dx) < 18.0:
-					eye_col = Color(1.0, 1.0, 1.0) # glowing pupil
-				img.set_pixel(x, y, eye_col)
-				
-	texture = ImageTexture.create_from_image(img)
-"
 
 [node name="BossEnemy" type="Area2D" groups=["enemies"]]
 collision_layer = 2
@@ -75,7 +13,10 @@ collision_mask = 5
 script = ExtResource("1_boss")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
-script = SubResource("GDScript_draw")
+script = ExtResource("2_strip_animator")
+texture = ExtResource("3_boss_strip")
+hframes = 4
+fps = 6.0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_boss")

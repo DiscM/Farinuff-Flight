@@ -137,6 +137,14 @@ func _setup_reticle() -> void:
 	dot.position = Vector2(0, -60) # distance from player
 	reticle.visible = false # hide until free aim is used
 
+
+func _get_sprite_frame_size() -> Vector2:
+	if not is_instance_valid(sprite) or sprite.texture == null:
+		return Vector2(48.0, 48.0)
+	var frame_w := sprite.texture.get_size().x / float(max(sprite.hframes, 1))
+	var frame_h := sprite.texture.get_size().y / float(max(sprite.vframes, 1))
+	return Vector2(frame_w, frame_h)
+
 func _physics_process(delta: float) -> void:
 	if not GameManager.is_game_active:
 		return
@@ -202,10 +210,10 @@ func _physics_process(delta: float) -> void:
 	# Refresh bounds every frame so they match actual window size
 	viewport_rect = get_viewport().get_visible_rect()
 
-	# Clamp to viewport (account for scale)
-	# Sprite image is 48px wide, 48px tall — half in each axis
-	var half_w: float = 24.0 * scale.x
-	var half_h: float = 24.0 * scale.y
+	# Clamp to viewport using the displayed frame size, not the full strip texture.
+	var sprite_frame_size := _get_sprite_frame_size()
+	var half_w: float = 0.5 * sprite_frame_size.x * scale.x * sprite.scale.x
+	var half_h: float = 0.5 * sprite_frame_size.y * scale.y * sprite.scale.y
 	position.x = clampf(position.x, half_w, viewport_rect.size.x - half_w)
 	position.y = clampf(position.y, half_h, viewport_rect.size.y - half_h)
 
@@ -312,9 +320,12 @@ func _spawn_afterimage() -> void:
 	var af := Sprite2D.new()
 	# Use current sprite configuration
 	af.texture = sprite.texture
+	af.hframes = sprite.hframes
+	af.vframes = sprite.vframes
+	af.frame = sprite.frame
 	af.global_position = global_position
 	af.rotation = rotation
-	af.scale = scale
+	af.scale = scale * sprite.scale
 	af.modulate = Color(0.4, 0.7, 1.0, 0.6) # blue ghost tint
 	af.z_index = -1 # Draw behind player
 
@@ -326,7 +337,7 @@ func _spawn_afterimage() -> void:
 
 	var tween := af.create_tween()
 	tween.tween_property(af, "modulate:a", 0.0, 0.35).set_ease(Tween.EASE_OUT)
-	tween.parallel().tween_property(af, "scale", scale * 0.8, 0.35)
+	tween.parallel().tween_property(af, "scale", scale * sprite.scale * 0.8, 0.35)
 	tween.tween_callback(af.queue_free)
 
 func _update_aiming(_delta: float) -> void:
@@ -408,7 +419,8 @@ func _spawn_bullet(dir: Vector2, offset: Vector2 = Vector2.ZERO, skip_auto_aim: 
 			dir = dir.lerp(aim_dir, 0.35).normalized()
 	bullet.direction = dir
 	# Offset along the barrel/direction
-	var dist_offset = dir * 24.0 * scale.y
+	var sprite_frame_size := _get_sprite_frame_size()
+	var dist_offset = dir * 0.5 * sprite_frame_size.y * scale.y * sprite.scale.y
 	bullet.global_position = global_position + dist_offset + offset
 	# Apply bullet scale upgrade
 	if bullet_scale_level > 0:

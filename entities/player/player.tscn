@@ -1,65 +1,8 @@
-[gd_scene format=3 uid="uid://bpv3rwt1k4f2i"]
+[gd_scene load_steps=6 format=3 uid="uid://bpv3rwt1k4f2i"]
 
 [ext_resource type="Script" uid="uid://7ln60ie1rip4" path="res://entities/player/player.gd" id="1_player"]
-
-[sub_resource type="GDScript" id="GDScript_ship"]
-script/source = "extends Sprite2D
-
-func _ready() -> void:
-	var size := 48
-	var img := Image.create(size, size, false, Image.FORMAT_RGBA8)
-	img.fill(Color.TRANSPARENT)
-
-	for y in range(size):
-		for x in range(size):
-			var cx := float(x) - size / 2.0
-			var cy := float(y) - size / 2.0
-			
-			# Normalize Y from top of ship (-16) to bottom (+16)
-			var n_y := (cy + 16.0) / 32.0 
-			
-			if n_y >= 0.0 and n_y <= 1.0:
-				# Sleek parabolic fuselage
-				var core_width := 5.0 * (1.0 - pow(n_y * 2.0 - 1.0, 2.0))
-				
-				# Sharp swept delta wings
-				var wing_width := 0.0
-				if n_y > 0.3 and n_y < 0.8:
-					var wt := (n_y - 0.3) / 0.5
-					wing_width = 20.0 * wt if wt < 0.8 else 80.0 * (1.0 - wt)
-					
-				var total_width := maxf(core_width, wing_width)
-				
-				if absf(cx) <= total_width:
-					# Base Titanium/Silver coloring
-					var color := Color(0.85, 0.88, 0.92)
-					
-					# Edges darkened for faux 3D curve
-					var nd := absf(cx) / total_width
-					color = color.darkened(nd * 0.45)
-					
-					# Cockpit glass (deep violet/black)
-					if n_y > 0.15 and n_y < 0.45 and absf(cx) < 2.5:
-						color = Color(0.05, 0.05, 0.15)
-						if cx >= 0.0 and cy < -4.0: # Highlight reflection
-							color = Color.WHITE
-							
-					# Core energy racing lines down the fuselage
-					if total_width == core_width and absf(cx) > 1.25 and absf(cx) < 2.75 and n_y > 0.4 and n_y < 0.85:
-						color = Color(0.0, 0.8, 1.0) # Bright cyan glow
-						
-					# Glowing Wing blades (exterior edges of wings)
-					if wing_width > core_width and absf(cx) > wing_width - 1.2:
-						color = Color(0.1, 0.9, 1.0)
-						
-					# Main Engine Thruster
-					if n_y >= 0.85 and absf(cx) < core_width * 0.8:
-						color = Color(0.4, 1.0, 1.0, 0.9) # Blinding engine core
-
-					img.set_pixel(x, y, color)
-
-	texture = ImageTexture.create_from_image(img)
-"
+[ext_resource type="Script" path="res://assets/sprites/generated/strip_animator.gd" id="2_strip_animator"]
+[ext_resource type="Texture2D" path="res://assets/sprites/generated/player_idle_strip.png" id="3_player_strip"]
 
 [sub_resource type="GDScript" id="GDScript_shield"]
 script/source = "extends Sprite2D
@@ -89,7 +32,11 @@ collision_mask = 26
 script = ExtResource("1_player")
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=127688907]
-script = SubResource("GDScript_ship")
+script = ExtResource("2_strip_animator")
+texture = ExtResource("3_player_strip")
+hframes = 4
+fps = 8.0
+scale = Vector2(0.706, 0.706)
 
 [node name="ShieldSprite" type="Sprite2D" parent="." unique_id=1052076704]
 visible = false

@@ -1,0 +1,74 @@
+{
+  "frame_size": 128,
+  "raw_size": 192,
+  "anchor": {
+    "x": 64.0,
+    "y": 64.0
+  },
+  "frames": 4,
+  "assets": [
+    {
+      "name": "player_idle",
+      "file": "player_idle_strip.png",
+      "fps": 8,
+      "frames": 4,
+      "frame_size": 128,
+      "target_extent": 92,
+      "scale": 0.8519
+    },
+    {
+      "name": "basic_enemy_idle",
+      "file": "basic_enemy_idle_strip.png",
+      "fps": 8,
+      "frames": 4,
+      "frame_size": 128,
+      "target_extent": 68,
+      "scale": 0.7083
+    },
+    {
+      "name": "fast_enemy_idle",
+      "file": "fast_enemy_idle_strip.png",
+      "fps": 10,
+      "frames": 4,
+      "frame_size": 128,
+      "target_extent": 64,
+      "scale": 0.6882
+    },
+    {
+      "name": "sniper_enemy_idle",
+      "file": "sniper_enemy_idle_strip.png",
+      "fps": 8,
+      "frames": 4,
+      "frame_size": 128,
+      "target_extent": 70,
+      "scale": 0.625
+    },
+    {
+      "name": "tank_enemy_idle",
+      "file": "tank_enemy_idle_strip.png",
+      "fps": 7,
+      "frames": 4,
+      "frame_size": 128,
+      "target_extent": 90,
+      "scale": 0.8333
+    },
+    {
+      "name": "bomber_enemy_idle",
+      "file": "bomber_enemy_idle_strip.png",
+      "fps": 7,
+      "frames": 4,
+      "frame_size": 128,
+      "target_extent": 94,
+      "scale": 0.8246
+    },
+    {
+      "name": "boss_enemy_idle",
+      "file": "boss_enemy_idle_strip.png",
+      "fps": 6,
+      "frames": 4,
+      "frame_size": 128,
+      "target_extent": 114,
+      "scale": 0.6951
+    }
+  ]
+}

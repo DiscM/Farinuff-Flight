@@ -42,7 +42,7 @@ func _ready() -> void:
 		points = 5000
 		orb_value = 10
 		boss_variant = BossVariant.TEMPEST
-		boss_title = "ELITE BOSS: TEMPEST CORE"
+		boss_title = "ELITE BOSS: VOID HARBINGER"
 	else:
 		_configure_regular_variant()
 		points = 1500
@@ -97,7 +97,7 @@ func _configure_regular_variant() -> void:
 			bullet_color = Color(2.0, 0.4, 3.0, 1.0)
 		_:
 			boss_variant = BossVariant.TEMPEST
-			boss_title = "BOSS: TEMPEST CORE"
+			boss_title = "BOSS: VOID HARBINGER"
 			max_health = 52
 			bullet_color = Color(0.2, 2.0, 3.0, 1.0)
 

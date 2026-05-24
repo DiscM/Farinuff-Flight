@@ -1,42 +1,11 @@
-[gd_scene load_steps=4 format=3 uid="uid://b5nk9v2p1te4w"]
+[gd_scene load_steps=6 format=3 uid="uid://b5nk9v2p1te4w"]
 
 [ext_resource type="Script" path="res://entities/enemies/fast_enemy.gd" id="1_fast"]
+[ext_resource type="Script" path="res://assets/sprites/generated/strip_animator.gd" id="2_strip_animator"]
+[ext_resource type="Texture2D" path="res://assets/sprites/generated/fast_enemy_idle_strip.png" id="3_fast_strip"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_fast"]
 size = Vector2(22, 22)
-
-[sub_resource type="GDScript" id="GDScript_draw"]
-script/source = "extends Sprite2D
-
-func _ready() -> void:
-	var size := 32
-	var img := Image.create(size, size, false, Image.FORMAT_RGBA8)
-	img.fill(Color.TRANSPARENT)
-	for y in range(size):
-		for x in range(size):
-			var cx := float(x) - size / 2.0
-			var cy := float(y) - size / 2.0
-			# Swept-back Diamond (Stealth-like)
-			var dist = absf(cx * 1.5) + absf(cy * (0.8 if cy < 0 else 1.5))
-			if dist < size * 0.4:
-				var t: float = dist / (size * 0.4)
-				var is_edge = dist > size * 0.35
-				var color := Color(1.0, 0.5, 0.0).lerp(Color(0.8, 0.1, 0.0), t)
-				if is_edge:
-					color = Color(1.0, 0.8, 0.3)
-				img.set_pixel(x, y, color)
-			# Racing stripe
-			if absf(cx) < 2.0 and dist < size * 0.35:
-				img.set_pixel(x, y, Color(0.2, 0.2, 0.2))
-			# Bright cockpit core
-			if dist < size * 0.1:
-				img.set_pixel(x, y, Color(0.0, 1.0, 1.0))
-			# Energy trail
-			if absf(cx) < 1.0 and cy >= size * 0.25 and cy < size * 0.45:
-				var alpha = 1.0 - (cy - size * 0.25) / (size * 0.2)
-				img.set_pixel(x, y, Color(1.0, 0.9, 0.2, alpha))
-	texture = ImageTexture.create_from_image(img)
-"
 
 [node name="FastEnemy" type="Area2D" groups=["enemies"]]
 collision_layer = 2
@@ -44,7 +13,10 @@ collision_mask = 5
 script = ExtResource("1_fast")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
-script = SubResource("GDScript_draw")
+script = ExtResource("2_strip_animator")
+texture = ExtResource("3_fast_strip")
+hframes = 4
+fps = 10.0
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
 shape = SubResource("RectangleShape2D_fast")
