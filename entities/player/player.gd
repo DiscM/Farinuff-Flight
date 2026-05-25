@@ -529,7 +529,6 @@ func _on_magnet_ended() -> void:
 	has_magnet = false
 
 func _apply_nuke() -> void:
-	SignalBus.screen_shake.emit(12.0, 0.5)
 	get_tree().call_group("enemies", "take_damage", 9999)
 
 func _attract_powerups(delta: float) -> void:
@@ -727,7 +726,6 @@ func grant_rear_gunner() -> void:
 func _trigger_shield_burst() -> void:
 	## Destroy all enemy bullets within a large radius; deal 1 damage to nearby enemies.
 	var burst_radius := 160.0
-	SignalBus.screen_shake.emit(4.0, 0.18)
 	# Destroy nearby enemy bullets
 	for b in get_tree().get_nodes_in_group("enemy_bullets"):
 		if is_instance_valid(b) and global_position.distance_to(b.global_position) < burst_radius:

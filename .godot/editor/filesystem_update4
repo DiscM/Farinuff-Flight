@@ -1,0 +1,7 @@
+res://effects/planet_background.gd
+res://effects/shaders/crt_overlay.gdshader
+res://ui/elite_upgrade_popup.gd
+res://autoloads/game_manager.gd
+res://entities/bullets/bullet.gd
+res://entities/player/player.gd
+res://scenes/game.gd

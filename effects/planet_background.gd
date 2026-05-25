@@ -41,6 +41,7 @@ func _spawn_planet() -> void:
 		
 	current_planet = scene.instantiate()
 	add_child(current_planet)
+	_make_materials_local(current_planet)
 	
 	# Randomize
 	if planet_seed < 0:
@@ -58,3 +59,13 @@ func _spawn_planet() -> void:
 	
 	# Random rotation speed if supported
 	current_planet.set_rotates(randf_range(0.01, 0.05))
+
+## PixelPlanets scenes share materials by default; local copies prevent later spawns
+## from overwriting palettes and shader seeds on planets already on screen.
+func _make_materials_local(node: Node) -> void:
+	if node is CanvasItem:
+		var canvas_item := node as CanvasItem
+		if canvas_item.material:
+			canvas_item.material = canvas_item.material.duplicate(true)
+	for child in node.get_children():
+		_make_materials_local(child)

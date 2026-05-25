@@ -19,6 +19,10 @@ All notable changes to this project will be documented in this file.
 
 ### Fixed
 - **Background Planet Loading:** Corrected the asteroid resource path and removed an unavailable moon entry from random background selection.
+- **Background Planet Stability:** Planet shader materials are now localized per instance so spawning a new planet cannot change the palette or terrain seed of planets already visible.
+- **Background Flicker:** Removed animated full-screen CRT brightness and scanline movement that made hit-heavy moments read as background flashing.
+- **Elite Upgrade Feedback:** Selecting an elite transformation now highlights the chosen card and briefly confirms installation before play resumes.
+- **Damage Screen Shake:** Enemy-hit effects no longer shake the whole scene; player damage now triggers a reduced shake only after losing two lives within five seconds.
 
 ## [Unreleased] - 2026-03-21
 

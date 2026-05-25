@@ -107,6 +107,11 @@ var bonus_speed_pct: float = 0.0
 var bonus_fire_rate_pct: float = 0.0
 var bonus_damage: int = 0
 
+# --- Damage Feedback ---
+const DAMAGE_SHAKE_WINDOW: float = 5.0
+const DAMAGE_SHAKE_THRESHOLD: int = 2
+var recent_player_damage_times: Array[float] = []
+
 # --- Orb Meter ---
 var orbs_collected: int = 0
 var orbs_per_heart: int = 12
@@ -176,7 +181,7 @@ func _on_player_hit() -> void:
 	SignalBus.combo_changed.emit(combo)
 	lives -= 1
 	SignalBus.lives_changed.emit(lives)
-	SignalBus.screen_shake.emit(8.0, 0.3)
+	_record_player_damage_for_shake()
 
 	if lives <= 0:
 		is_game_active = false
@@ -184,6 +189,16 @@ func _on_player_hit() -> void:
 			high_score = score
 			SaveManager.record_high_score(high_score)
 		SignalBus.game_over.emit(score)
+
+func _record_player_damage_for_shake() -> void:
+	var now := Time.get_ticks_msec() / 1000.0
+	for i in range(recent_player_damage_times.size() - 1, -1, -1):
+		if now - recent_player_damage_times[i] > DAMAGE_SHAKE_WINDOW:
+			recent_player_damage_times.remove_at(i)
+	recent_player_damage_times.append(now)
+	if recent_player_damage_times.size() >= DAMAGE_SHAKE_THRESHOLD:
+		SignalBus.screen_shake.emit(4.0, 0.18)
+		recent_player_damage_times.clear()
 
 # --- Waves ---
 
@@ -224,6 +239,7 @@ func _on_game_restarted() -> void:
 	bonus_fire_rate_pct = 0.0
 	bonus_damage = 0
 	orbs_collected = 0
+	recent_player_damage_times.clear()
 	try_again_stocks = 2
 	chosen_upgrade_ids = []
 

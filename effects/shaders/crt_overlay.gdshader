@@ -37,22 +37,17 @@ void fragment() {
 		float b = texture(screen_texture, uv - offset).b;
 		vec4 col = vec4(r, g, b, 1.0);
 
-		// Scanlines — horizontal dark bands
-		// Animated with a slow scroll and high-frequency flicker
-		float s_small = sin(uv.y * scanline_count + TIME * 1.25);
-		float s_big = sin(uv.y * (scanline_count * 0.5) - TIME * 0.8);
+		// Stable scanlines keep hit feedback from reading as a background flash.
+		float s_small = sin(uv.y * scanline_count);
+		float s_big = sin(uv.y * (scanline_count * 0.5));
 		
 		// Blend: small lines are the base, big lines add periodic "thicker" gaps
 		float scanline = (s_small * 0.6 + s_big * 0.4) * 0.5 + 0.5;
 		
-		// Subtle, low-frequency brightness variation (no high-speed flicker that
-		// causes visible blinking on sub-pixel elements like stars)
-		float flicker = sin(TIME * 4.0) * 0.005 + 0.995;
+		// Vary line intensity across the screen without animating the background.
+		float width_var = sin(uv.y * 12.0) * 0.15 + 1.45;
 		
-		// Vary the width/intensity of the lines across the screen for non-uniformity
-		float width_var = sin(uv.y * 12.0 - TIME * 0.4) * 0.15 + 1.45;
-		
-		scanline = pow(scanline, width_var) * flicker;
+		scanline = pow(scanline, width_var);
 		scanline = 1.0 - scanline_intensity * (1.0 - scanline);
 		col.rgb *= scanline;
 

@@ -68,4 +68,3 @@ func _explode() -> void:
 	ring.color = Color(1.0, 0.6, 0.15, 0.9)
 	get_tree().current_scene.call_deferred("add_child", ring)
 	get_tree().create_timer(0.5).timeout.connect(ring.queue_free)
-	SignalBus.screen_shake.emit(4.0, 0.15)
