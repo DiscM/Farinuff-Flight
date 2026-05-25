@@ -94,11 +94,11 @@ func _on_wave_cleared(wave_number: int) -> void:
 
 # --- Boss ---
 
-func _on_boss_spawned(health: int, max_health: int) -> void:
+func _on_boss_spawned(health: int, max_health: int, boss_name: String) -> void:
 	boss_health_bar.max_value = max_health
 	boss_health_bar.value = health
 	var is_elite := GameManager.current_wave % 10 == 0
-	boss_name_label.text = "⚠  ELITE BOSS" if is_elite else "⚠  BOSS"
+	boss_name_label.text = boss_name
 	boss_name_label.add_theme_color_override("font_color",
 		Color(1.0, 0.1, 0.7) if is_elite else Color(1.0, 0.2, 0.5))
 	boss_bar_container.visible = true

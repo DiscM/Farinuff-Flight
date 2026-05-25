@@ -9,7 +9,7 @@ var lives: int = 3
 var current_wave: int = 1
 var is_game_active: bool = false
 var boss_active: bool = false
-var try_again_stocks: int = 3
+var try_again_stocks: int = 2
 
 # Upgrade IDs chosen so far this run — excluded from future pools.
 var chosen_upgrade_ids: Array[String] = []
@@ -20,7 +20,7 @@ const ALL_UPGRADES: Array[Dictionary] = [
 		"id": "twin_cannons",
 		"name": "Twin Cannons",
 		"icon": "🔫",
-		"description": "Fire two parallel bullets\nwith every shot.",
+		"description": "Fire two additional bullets\nwith every shot.",
 		"color": Color(1.0, 0.8, 0.2),
 	},
 	{
@@ -41,7 +41,7 @@ const ALL_UPGRADES: Array[Dictionary] = [
 		"id": "hull_plating",
 		"name": "Hull Plating",
 		"icon": "🛡️",
-		"description": "Reinforce the hull.\nGain +2 max lives.",
+		"description": "Reinforce the hull.\nGain +1 life.",
 		"color": Color(0.8, 0.55, 1.0),
 	},
 	{
@@ -63,7 +63,7 @@ const ALL_UPGRADES: Array[Dictionary] = [
 		"id": "shield_burst",
 		"name": "Shield Burst",
 		"icon": "💥",
-		"description": "Every 8 s, emit a shockwave\nthat clears bullets & damages enemies.",
+		"description": "Every 10 s, emit a shockwave\nthat clears bullets & damages enemies.",
 		"color": Color(0.3, 0.8, 1.0),
 	},
 	{
@@ -77,7 +77,7 @@ const ALL_UPGRADES: Array[Dictionary] = [
 		"id": "overclock",
 		"name": "Overclock",
 		"icon": "⚡",
-		"description": "Triple fire rate for 3 s\nevery 15 s. Stacks with Rapid Fire.",
+		"description": "Triple fire rate for 2.5 s\nevery 16 s. Stacks with Rapid Fire.",
 		"color": Color(0.9, 1.0, 0.2),
 	},
 	{
@@ -90,8 +90,8 @@ const ALL_UPGRADES: Array[Dictionary] = [
 ]
 
 # --- Difficulty scaling ---
-var base_spawn_interval: float = 1.5
-var min_spawn_interval: float = 0.3
+var base_spawn_interval: float = 1.55
+var min_spawn_interval: float = 0.48
 var enemy_speed_multiplier: float = 1.0
 var orbs_needed_this_wave: int = 10
 var orbs_collected_this_wave: int = 0
@@ -109,10 +109,11 @@ var bonus_damage: int = 0
 
 # --- Orb Meter ---
 var orbs_collected: int = 0
-var orbs_per_heart: int = 10
+var orbs_per_heart: int = 12
 
 func _ready() -> void:
 	randomize()
+	high_score = SaveManager.high_score
 	SignalBus.enemy_killed.connect(_on_enemy_killed)
 	SignalBus.player_hit.connect(_on_player_hit)
 	SignalBus.game_restarted.connect(_on_game_restarted)
@@ -159,14 +160,14 @@ func apply_stat_point(stat_name: String) -> void:
 	match stat_name:
 		"fire_rate":
 			stat_fire_rate_level += 1
-			bonus_fire_rate_pct += 0.05
+			bonus_fire_rate_pct = minf(bonus_fire_rate_pct + 0.04, 0.40)
 		"health":
 			stat_health_level += 1
 			lives += 1
 			SignalBus.lives_changed.emit(lives)
 		"speed":
 			stat_speed_level += 1
-			bonus_speed_pct += 0.03
+			bonus_speed_pct = minf(bonus_speed_pct + 0.04, 0.40)
 
 # --- Player hit ---
 
@@ -181,6 +182,7 @@ func _on_player_hit() -> void:
 		is_game_active = false
 		if score > high_score:
 			high_score = score
+			SaveManager.record_high_score(high_score)
 		SignalBus.game_over.emit(score)
 
 # --- Waves ---
@@ -190,8 +192,8 @@ func _advance_wave() -> void:
 	SignalBus.wave_cleared.emit(cleared_wave)
 	current_wave += 1
 	orbs_collected_this_wave = 0
-	orbs_needed_this_wave = int(10.0 + float(current_wave) * 1.20)
-	enemy_speed_multiplier = 1.0 + (current_wave - 1) * 0.06
+	orbs_needed_this_wave = int(10.0 + float(current_wave) * 1.30)
+	enemy_speed_multiplier = minf(1.0 + float(current_wave - 1) * 0.045, 2.20)
 	boss_active = (current_wave % 5 == 0)
 	SignalBus.wave_started.emit(current_wave)
 
@@ -200,7 +202,7 @@ func _advance_wave() -> void:
 		SignalBus.allocation_triggered.emit(allocation_points_per_milestone)
 
 func get_spawn_interval() -> float:
-	var interval := base_spawn_interval - (current_wave - 1) * 0.05
+	var interval := base_spawn_interval - float(current_wave - 1) * 0.045
 	return maxf(interval, min_spawn_interval)
 
 # --- Restart ---
@@ -222,7 +224,7 @@ func _on_game_restarted() -> void:
 	bonus_fire_rate_pct = 0.0
 	bonus_damage = 0
 	orbs_collected = 0
-	try_again_stocks = 3
+	try_again_stocks = 2
 	chosen_upgrade_ids = []
 
 	is_game_active = true

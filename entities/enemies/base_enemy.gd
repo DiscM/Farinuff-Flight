@@ -16,8 +16,8 @@ var spawn_direction: Vector2 = Vector2.DOWN
 
 func _ready() -> void:
 	add_to_group("enemies")
-	# Scale health with wave: each wave adds 5% of base HP (rounded up)
-	var wave_bonus := (GameManager.current_wave - 1) * ceili(max_health * 0.05)
+	# Scale from the full accumulated percentage so low-HP ships do not gain 1 HP every wave.
+	var wave_bonus := ceili(float(max_health) * float(GameManager.current_wave - 1) * 0.05)
 	health = max_health + wave_bonus
 	area_entered.connect(_on_area_entered)
 

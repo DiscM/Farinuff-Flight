@@ -38,17 +38,17 @@ const DRONE_FIRE_RATE: float = 0.65
 var has_spread_shot_elite: bool = false   # Permanent 3-way spread (stacks with twin_cannons → 5 shots)
 var has_shield_burst: bool = false         # Periodic bullet-clearing shockwave
 var has_magnet_field: bool = false         # Permanent orb/powerup magnet (faster pull than temp)
-var has_overclock: bool = false            # Active: triple fire rate for 3 s, 15 s cooldown
+var has_overclock: bool = false            # Active: triple fire rate for 2.5 s, 16 s cooldown
 var has_rear_gunner: bool = false          # Permanent rear-facing cannon (inherits all _spawn_bullet modifiers)
 
 var shield_burst_cooldown: float = 0.0
-const SHIELD_BURST_PERIOD: float = 8.0
+const SHIELD_BURST_PERIOD: float = 10.0
 
 var overclock_cooldown: float = 0.0
 var overclock_active: bool = false
 var overclock_timer: float = 0.0
-const OVERCLOCK_DURATION: float = 3.0
-const OVERCLOCK_COOLDOWN: float = 15.0
+const OVERCLOCK_DURATION: float = 2.5
+const OVERCLOCK_COOLDOWN: float = 16.0
 
 @onready var shoot_timer: Timer = $ShootTimer
 @onready var invincibility_timer: Timer = $InvincibilityTimer
@@ -689,12 +689,11 @@ func grant_auto_aim() -> void:
 
 func grant_afterburner() -> void:
 	has_afterburner = true
-	speed = speed * 1.25
-	acceleration = acceleration * 1.3
-	drag = drag * 0.75  # less drag = snappier
+	speed = speed * 1.20
+	acceleration = acceleration * 1.15
 
 func grant_hull_plating() -> void:
-	GameManager.lives += 2
+	GameManager.lives += 1
 	SignalBus.lives_changed.emit(GameManager.lives)
 
 # --- New Elite Upgrades ---
@@ -704,7 +703,7 @@ func grant_spread_shot_elite() -> void:
 	has_spread_shot_elite = true
 
 func grant_shield_burst() -> void:
-	## Periodic bullet-clearing shockwave every 8 s. Independent of all fire upgrades.
+	## Periodic bullet-clearing shockwave every 10 s. Independent of all fire upgrades.
 	has_shield_burst = true
 	shield_burst_cooldown = SHIELD_BURST_PERIOD  # first burst after first full cycle
 
@@ -713,7 +712,7 @@ func grant_magnet_field() -> void:
 	has_magnet_field = true
 
 func grant_overclock() -> void:
-	## Triple fire rate for 3 s every 15 s. Stacks with rapid_fire powerup (→ 0.15× rate).
+	## Triple fire rate for 2.5 s every 16 s. Stacks with rapid-fire powerups.
 	## Also stacks with twin_cannons and spread_shot (more bullets per burst).
 	has_overclock = true
 	overclock_cooldown = 3.0  # first overclock triggers soon after upgrade

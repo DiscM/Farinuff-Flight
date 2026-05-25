@@ -24,7 +24,7 @@ signal orb_meter_changed(current: int, max_orbs: int)
 
 # Boss signals
 @warning_ignore("unused_signal")
-signal boss_spawned(health: int, max_health: int)
+signal boss_spawned(health: int, max_health: int, boss_name: String)
 @warning_ignore("unused_signal")
 signal boss_health_changed(health: int)
 @warning_ignore("unused_signal")

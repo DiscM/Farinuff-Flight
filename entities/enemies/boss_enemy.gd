@@ -6,6 +6,10 @@ class_name BossEnemy
 const ENEMY_BULLET_SCENE := preload("res://entities/bullets/enemy_bullet.tscn")
 
 var is_elite: bool = false
+enum BossVariant { ASSAULT, BULWARK, TEMPEST }
+var boss_variant: BossVariant = BossVariant.ASSAULT
+var boss_title: String = "BOSS: ASSAULT WING"
+var bullet_color: Color = Color(3.0, 0.2, 1.5, 1.0)
 
 # --- Movement Phases ---
 enum MovePhase { HOVER, DASH, STRAFE, DIVE }
@@ -23,7 +27,7 @@ var next_move_phase: MovePhase = MovePhase.HOVER
 var telegraph_marker: Sprite2D = null
 
 # --- Attack Patterns ---
-enum AttackPattern { AIMED, RADIAL, SHOTGUN, SPIRAL, CROSS }
+enum AttackPattern { AIMED, RADIAL, SHOTGUN, SPIRAL, CROSS, SWEEP }
 var attack_timer: float = 0.0
 var attack_index: int = 0
 var attack_sequence: Array = []
@@ -37,16 +41,14 @@ func _ready() -> void:
 		max_health = 125
 		points = 5000
 		orb_value = 10
+		boss_variant = BossVariant.TEMPEST
+		boss_title = "ELITE BOSS: TEMPEST CORE"
 	else:
-		max_health = 50
+		_configure_regular_variant()
 		points = 1500
 		orb_value = 5
 	guaranteed_orb = true
 	speed = 0.0
-
-	# Scale HP with wave at 5% per wave
-	var wave_bonus := (GameManager.current_wave - 1) * ceili(max_health * 0.05)
-	max_health += wave_bonus
 
 	super._ready()
 	max_boss_health = health
@@ -78,22 +80,54 @@ func _ready() -> void:
 	telegraph_marker.visible = false
 	get_tree().current_scene.call_deferred("add_child", telegraph_marker)
 
-	SignalBus.boss_spawned.emit(health, max_boss_health)
+	SignalBus.boss_spawned.emit(health, max_boss_health, boss_title)
+
+func _configure_regular_variant() -> void:
+	var encounter_index := floori(float(GameManager.current_wave) / 5.0)
+	match encounter_index % 3:
+		1:
+			boss_variant = BossVariant.ASSAULT
+			boss_title = "BOSS: ASSAULT WING"
+			max_health = 46
+			bullet_color = Color(3.0, 0.35, 0.35, 1.0)
+		2:
+			boss_variant = BossVariant.BULWARK
+			boss_title = "BOSS: BULWARK ARRAY"
+			max_health = 62
+			bullet_color = Color(2.0, 0.4, 3.0, 1.0)
+		_:
+			boss_variant = BossVariant.TEMPEST
+			boss_title = "BOSS: TEMPEST CORE"
+			max_health = 52
+			bullet_color = Color(0.2, 2.0, 3.0, 1.0)
 
 func _build_attack_sequence() -> void:
 	if is_elite:
 		attack_sequence = [
 			AttackPattern.AIMED, AttackPattern.RADIAL,
 			AttackPattern.SPIRAL, AttackPattern.CROSS,
-			AttackPattern.SHOTGUN, AttackPattern.AIMED,
+			AttackPattern.SWEEP, AttackPattern.AIMED,
 			AttackPattern.SPIRAL, AttackPattern.RADIAL,
 		]
-	else:
-		attack_sequence = [
-			AttackPattern.AIMED, AttackPattern.RADIAL,
-			AttackPattern.SHOTGUN, AttackPattern.CROSS,
-			AttackPattern.AIMED, AttackPattern.RADIAL,
-		]
+		return
+	match boss_variant:
+		BossVariant.ASSAULT:
+			attack_sequence = [
+				AttackPattern.AIMED, AttackPattern.SHOTGUN,
+				AttackPattern.AIMED, AttackPattern.CROSS,
+				AttackPattern.SHOTGUN,
+			]
+		BossVariant.BULWARK:
+			attack_sequence = [
+				AttackPattern.RADIAL, AttackPattern.CROSS,
+				AttackPattern.RADIAL, AttackPattern.SHOTGUN,
+			]
+		BossVariant.TEMPEST:
+			attack_sequence = [
+				AttackPattern.SPIRAL, AttackPattern.SWEEP,
+				AttackPattern.AIMED, AttackPattern.SPIRAL,
+				AttackPattern.RADIAL,
+			]
 
 # ---- Movement --------------------------------------------------------
 
@@ -217,6 +251,8 @@ func _get_attack_delay() -> float:
 			return 1.8 if is_elite else 2.2
 		AttackPattern.CROSS:
 			return 1.6 if is_elite else 2.0
+		AttackPattern.SWEEP:
+			return 0.75 if is_elite else 1.0
 		_:
 			return 1.4 if is_elite else 1.8
 
@@ -227,6 +263,7 @@ func _fire_current_pattern() -> void:
 		AttackPattern.SHOTGUN: _fire_shotgun()
 		AttackPattern.SPIRAL:  _fire_spiral_tick()
 		AttackPattern.CROSS:   _fire_cross()
+		AttackPattern.SWEEP:   _fire_sweep()
 
 func _fire_aimed() -> void:
 	## Tight spread aimed at the player — rewards player Rear Gun by shooting from below.
@@ -268,13 +305,22 @@ func _fire_cross() -> void:
 		var angle := (TAU / count) * i
 		_spawn_bullet(Vector2(cos(angle), sin(angle)), 320.0)
 
+func _fire_sweep() -> void:
+	## A rotating fan creates moving safe gaps instead of a static burst.
+	spiral_angle += 0.34 if is_elite else 0.48
+	var shot_count := 5 if is_elite else 3
+	var base_direction := Vector2.DOWN.rotated(sin(spiral_angle) * 0.9)
+	for i in range(shot_count):
+		var offset := (float(i) - float(shot_count - 1) / 2.0) * 0.22
+		_spawn_bullet(base_direction.rotated(offset), 350.0)
+
 func _spawn_bullet(dir: Vector2, spd: float) -> void:
 	var bullet: Area2D = ENEMY_BULLET_SCENE.instantiate()
 	bullet.global_position = global_position
 	bullet.add_to_group("enemy_bullets")
 	bullet.set_meta("direction", dir)
 	bullet.set_meta("custom_speed", spd)
-	bullet.set_meta("bullet_color", Color(3.0, 0.2, 1.5, 1.0)) # Hot neon pink
+	bullet.set_meta("bullet_color", bullet_color)
 	get_tree().current_scene.call_deferred("add_child", bullet)
 
 func _die() -> void:

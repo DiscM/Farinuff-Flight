@@ -3,7 +3,7 @@ extends Node2D
 
 const BASE_PATH = "res://effects/shaders/PixelPlanets/Planets/"
 const PLANET_SCENES = [
-	"Asteroids/Asteroids.tscn",
+	"Asteroids/Asteroid.tscn",
 	"BlackHole/BlackHole.tscn",
 	"DryTerran/DryTerran.tscn",
 	"Galaxy/Galaxy.tscn",
@@ -12,7 +12,6 @@ const PLANET_SCENES = [
 	"IceWorld/IceWorld.tscn",
 	"LandMasses/LandMasses.tscn",
 	"LavaWorld/LavaWorld.tscn",
-	"Moon/Moon.tscn",
 	"NoAtmosphere/NoAtmosphere.tscn",
 	"Rivers/Rivers.tscn",
 	"Star/Star.tscn"

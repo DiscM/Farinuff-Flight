@@ -5,8 +5,10 @@ extends Control
 signal resumed
 
 const DEV_MENU_SCENE := preload("res://ui/dev_menu.tscn")
+const SETTINGS_MENU_SCENE := preload("res://ui/settings_menu.tscn")
 var _dev_panel: PanelContainer = null
 var _dev_slot: VBoxContainer = null
+var _settings_menu: Node = null
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -73,6 +75,7 @@ func _build_ui() -> void:
 	var btn_w := minf(vp_size.x * 0.8, 300.0)
 	outer.add_child(_make_btn("▶  Resume",     Color(0.3, 1.0, 0.5),  _on_resume,    btn_w))
 	outer.add_child(_make_btn("🔄  Retry",     Color(0.4, 0.82, 1.0), _on_retry,     btn_w))
+	outer.add_child(_make_btn("Settings",        Color(0.7, 0.9, 1.0),  _on_settings,  btn_w))
 	outer.add_child(_make_btn("🏠  Main Menu", Color(1.0, 0.5, 0.5),  _on_menu,      btn_w))
 
 	var dev_separator := HSeparator.new()
@@ -127,6 +130,13 @@ func _on_retry() -> void:
 func _on_menu() -> void:
 	get_tree().paused = false
 	get_tree().change_scene_to_file("res://ui/main_menu.tscn")
+
+func _on_settings() -> void:
+	if is_instance_valid(_settings_menu):
+		return
+	_settings_menu = SETTINGS_MENU_SCENE.instantiate()
+	_settings_menu.connect("closed", func(): _settings_menu = null)
+	add_child(_settings_menu)
 
 # ── Animation ──────────────────────────────────────────────────────────────────
 

@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased] - 2026-05-24
+
+### Added
+- **Persistent Settings and Save Data:** Added automatic persistence for high scores and player preferences in `user://save_data.json`, including master volume, screen shake, CRT scanlines, and distortion settings.
+- **Settings Menus:** Added an in-game settings overlay accessible from both the title screen and pause menu; visual options update during active runs.
+- **Sniper Enemy:** Added a ranged enemy archetype that enters the playfield, holds a lateral firing lane, aims high-speed shots at the player, and then withdraws.
+- **Boss Archetypes:** Regular bosses now rotate through Assault Wing, Bulwark Array, and Tempest Core encounters, each with distinct health values, bullet colors, and attack sequencing.
+- **Sweep Attack Pattern:** Added a rotating fan-pattern boss attack used by Tempest and Elite encounters.
+
+### Changed
+- **Wave Pacing Balance:** Reduced late-game enemy speed and spawn acceleration, raised the extra-life orb cost from `10` to `12`, and reduced starting try-again stocks from `3` to `2`.
+- **Health Scaling Balance:** Corrected per-wave enemy health calculation so low-health enemies no longer gain a full extra hit point on every wave.
+- **Elite Upgrade Balance:** Adjusted Hull Plating to grant `+1` life, Shield Burst to trigger every `10` seconds, Overclock to last `2.5` seconds every `16` seconds, and Afterburner to provide a more controlled mobility boost.
+- **Milestone Stat Balance:** Fire-rate and speed allocations now grow by `4%` per point with a `40%` cap to protect late-run tuning.
+
+### Fixed
+- **Background Planet Loading:** Corrected the asteroid resource path and removed an unavailable moon entry from random background selection.
+
 ## [Unreleased] - 2026-03-21
 
 ### Added

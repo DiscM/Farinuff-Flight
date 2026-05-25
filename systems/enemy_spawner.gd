@@ -9,6 +9,7 @@ var fast_enemy_scene: PackedScene = preload("res://entities/enemies/fast_enemy.t
 var tank_enemy_scene: PackedScene = preload("res://entities/enemies/tank_enemy.tscn")
 var bomber_enemy_scene: PackedScene = preload("res://entities/enemies/bomber_enemy.tscn")
 var boss_enemy_scene: PackedScene = preload("res://entities/enemies/boss_enemy.tscn")
+var sniper_enemy_scene: PackedScene = preload("res://entities/enemies/sniper_enemy.tscn")
 
 @onready var spawn_timer: Timer = $SpawnTimer
 
@@ -71,23 +72,27 @@ func _pick_enemy_scene() -> PackedScene:
 		else:
 			return fast_enemy_scene
 	elif wave <= 5:
-		if roll < 0.40:
+		if roll < 0.34:
 			return basic_enemy_scene
-		elif roll < 0.65:
+		elif roll < 0.58:
 			return fast_enemy_scene
-		elif roll < 0.85:
+		elif roll < 0.76:
 			return bomber_enemy_scene
-		else:
+		elif roll < 0.90:
 			return tank_enemy_scene
+		else:
+			return sniper_enemy_scene
 	else:
-		if roll < 0.25:
+		if roll < 0.18:
 			return basic_enemy_scene
-		elif roll < 0.45:
+		elif roll < 0.36:
 			return fast_enemy_scene
-		elif roll < 0.70:
+		elif roll < 0.57:
 			return bomber_enemy_scene
-		else:
+		elif roll < 0.80:
 			return tank_enemy_scene
+		else:
+			return sniper_enemy_scene
 
 func _on_wave_started(wave_number: int) -> void:
 	spawn_timer.wait_time = GameManager.get_spawn_interval()
