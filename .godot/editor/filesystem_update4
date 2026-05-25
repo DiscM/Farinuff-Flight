@@ -5,3 +5,7 @@ res://autoloads/game_manager.gd
 res://entities/bullets/bullet.gd
 res://entities/player/player.gd
 res://scenes/game.gd
+res://entities/enemies/bomber_enemy.gd
+res://entities/enemies/boss_enemy.gd
+res://entities/enemies/sniper_enemy.gd
+res://entities/enemies/tank_enemy.gd

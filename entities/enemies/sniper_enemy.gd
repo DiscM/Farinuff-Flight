@@ -51,6 +51,6 @@ func _fire_aimed_shot() -> void:
 	bullet.global_position = global_position
 	bullet.add_to_group("enemy_bullets")
 	bullet.set_meta("direction", direction)
-	bullet.set_meta("custom_speed", 460.0)
+	bullet.set_meta("custom_speed", randf_range(430.0, 500.0))
 	bullet.set_meta("bullet_color", Color(0.2, 1.8, 2.8, 1.0))
 	get_tree().current_scene.add_child(bullet)

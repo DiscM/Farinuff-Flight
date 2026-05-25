@@ -28,13 +28,14 @@ func _fire_radial_burst() -> void:
 	for i in range(bullet_count):
 		var angle := (TAU / bullet_count) * i
 		var dir := Vector2(sin(angle), cos(angle))
+		var shot_speed := (245.0 if i % 2 == 0 else 305.0) + randf_range(-8.0, 8.0)
 		var bullet: Area2D = ENEMY_BULLET_SCENE.instantiate()
 		bullet.global_position = global_position
 		bullet.add_to_group("enemy_bullets")
 		# Override speed direction — enemy_bullet.gd moves via position.y,
 		# so we drive it manually with a script override via metadata
 		bullet.set_meta("direction", dir)
-		bullet.set_meta("custom_speed", 280.0)
+		bullet.set_meta("custom_speed", shot_speed)
 		bullet.set_meta("bullet_color", Color(2.0, 0.2, 3.0, 1.0)) # High contrast neon purple
 		get_tree().current_scene.add_child(bullet)
 

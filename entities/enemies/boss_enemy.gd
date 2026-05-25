@@ -319,7 +319,7 @@ func _spawn_bullet(dir: Vector2, spd: float) -> void:
 	bullet.global_position = global_position
 	bullet.add_to_group("enemy_bullets")
 	bullet.set_meta("direction", dir)
-	bullet.set_meta("custom_speed", spd)
+	bullet.set_meta("custom_speed", spd * randf_range(0.92, 1.08))
 	bullet.set_meta("bullet_color", bullet_color)
 	get_tree().current_scene.call_deferred("add_child", bullet)
 
