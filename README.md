@@ -1,26 +1,55 @@
-# Farinuff Flight 🚀
+# Space Shooter
 
-A high-octane, procedural 2D space shooter built in **Godot 4.x**. 
+A procedural 2D arcade shooter built in Godot 4. The game centers on fast survival play, drift-heavy ship handling, wave escalation, temporary combat power-ups, and permanent run upgrades earned through boss milestones.
 
-Fight through endless waves of increasingly difficult enemies, collect powerful upgrades, and survive intense boss encounters. Featuring retro CRT aesthetics, procedural generation, and momentum-based movement.
+![Gameplay capture](assets/readme/gameplay-capture.png)
 
-## Features
-- **Dynamic Wave Progression:** The game progresses based on the total XP orb value you collect, incentivizing players to hunt down high-value targets.
-- **RPG Upgrade System:** Collect power-ups mid-wave and allocate points for permanent ship upgrades (Orbitals, Twin Cannons, Piercing Rounds).
-- **Elites & Bosses:** Face challenging Boss encounters every 5 waves, with terrifying Elite Bosses dropping massive XP rewards at wave 10.
-- **Procedural Rendering:** Ships, backgrounds, and visual effects are heavily driven by code and Godot 4 Shader Materials (`.gdshader`).
-- **Retro Aesthetic:** A custom-built, full-screen CRT post-processing shader provides authentic barrel distortion, RGB chromatic aberration, and scanlines.
+![Elite boss fight capture 1](assets/readme/elite-boss-fight.png)
+
+![Elite boss fight capture 2](assets/readme/elite-boss-fight-fullpower.png)
+
+## Gameplay Mechanics
+
+Space Shooter uses an endless wave structure. Standard enemies spawn from the screen edges, drop XP orbs on defeat, and increase pressure as the wave count rises. XP orbs fill the wave meter, restore lives after enough collection, and advance the run toward tougher enemy mixes.
+
+Combat uses held auto-fire with free aim support. The ship can aim with mouse movement or controller right stick input, while keyboard movement keeps the ship inside the visible playfield. Boosting adds a short high-speed dash, post-boost drift, afterimages, projectile deflection, and chain potential after multiple reflected shots.
+
+Power-ups appear during active waves and can be collected by contact or shot pickup. Current temporary effects include bullet scale increases, rapid fire, shield, spread shot, magnet, and nuke. These stack with run upgrades to create different weapon profiles across a session.
+
+Progression adds permanent run choices at milestone moments. Every fifth cleared wave grants stat allocation points for fire rate, health, and movement speed. Boss waves occur every 5 waves, while every 10th wave triggers an elite upgrade choice with options such as twin cannons, auto-aim, drone escort, afterburner, shield burst, magnet field, overclock, and rear gunner.
+
+Failure uses a try-again flow before final game over. Remaining try-again stocks can continue a run, clear immediate pressure, and return the ship with temporary invincibility. Final game over records score, high score, and highest wave reached.
 
 ## Controls
-- **Movement:** `Arrow Keys` or `W-A-S-D`
-- **Shoot:** `Spacebar` (Hold for auto-fire)
-- **Pause:** `Escape`
 
-## Development
-This project is explicitly built focusing on Godot 4's modern standards:
-- Extensive use of GDScript 2.0 static typing.
-- Decoupled event routing through a global `SignalBus`.
-- Code-driven shader injection to preserve scene modularity.
+- Movement: `WASD` or `Arrow Keys`
+- Shoot: hold `Space`
+- Boost: `Shift`
+- Pause: `Escape`
+- Free aim: mouse movement or controller right stick
 
----
-*Built with [Godot Engine 4](https://godotengine.org).*
+## Tech Stack
+
+- Engine: Godot 4.6 project format with GL Compatibility rendering
+- Language: GDScript 2.0 with typed scripts across gameplay systems
+- Architecture: scene-based composition with reusable player, enemy, bullet, power-up, HUD, menu, and popup scenes
+- Global state: autoload singletons for `GameManager`, `SignalBus`, and `SaveManager`
+- Event flow: signal-driven score, combo, life, orb meter, wave, boss, allocation, elite upgrade, settings, and game-over updates
+- Rendering: procedural starfield and background layers, shader-driven CRT overlay, distortion pass, screen shake, tweens, and generated visual effects
+- Persistence: saved settings and high score through the save manager
+- Build target: exported Windows desktop build included with the repository
+
+## Playtest Capture
+
+Local playtest run: May 28, 2026, using Godot 4.6.1 on Windows.
+
+Verified during the capture pass:
+
+- Main game scene loads into active Wave 1 play.
+- Movement, held shooting, boost input, enemy spawning, score updates, lives display, and orb meter render during play.
+- CRT scanlines, barrel distortion, starfield, background bodies, pickup/orb visuals, and HUD remain visible in the captured gameplay frame.
+- Pause menu opens through `Escape`, exposes the developer tools panel, and applies `Full Power`, `Toggle God Mode`, and `Spawn Elite Boss`.
+- Elite boss capture confirms Wave 10 boss spawning, boss health UI, full-power weapon output, god-mode player tint, orbitals, a longer attack-pattern cycle, and the ship firing at the boss during the fight.
+- Runtime reported missing PixelPlanets scene resources during background planet spawning, while core gameplay, HUD, enemies, pickups, and shader presentation continued to render.
+
+Captured frames are stored at `assets/readme/gameplay-capture.png`, `assets/readme/elite-boss-fight.png`, and `assets/readme/elite-boss-fight-fullpower.png`.
