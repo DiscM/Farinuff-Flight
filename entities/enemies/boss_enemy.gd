@@ -175,7 +175,7 @@ func _start_tempest_phase(next_phase: TempestPhase, announce: bool = true) -> vo
 	attack_index = 0
 	_clear_tempest_sections()
 	_clear_tempest_warnings()
-	get_tree().call_group("enemy_bullets", "queue_free")
+	# Keep active shots alive across phase swaps; they already self-clean on exit.
 	var sprite := get_node_or_null("Sprite2D") as Sprite2D
 
 	match tempest_phase:
@@ -683,9 +683,7 @@ func _die() -> void:
 		telegraph_marker.queue_free()
 	_clear_tempest_sections()
 	_clear_tempest_warnings()
-
-	# Remove all bullets this boss fired so they don't orphan on screen
-	get_tree().call_group("enemy_bullets", "queue_free")
+	# Let live projectiles finish their normal lifecycle instead of being purged here.
 
 	# Spawn death orbs and explosion (mirrors base_enemy._die() without queue_free)
 	SignalBus.enemy_killed.emit(points, global_position)
