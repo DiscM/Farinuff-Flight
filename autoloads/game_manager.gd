@@ -97,6 +97,9 @@ var orbs_needed_this_wave: int = 10
 var orbs_collected_this_wave: int = 0
 
 # --- Point Allocation ---
+const STAT_BONUS_STEP: float = 0.045
+const STAT_BONUS_CAP: float = 0.45
+
 var allocation_points_per_milestone: int = 3
 var stat_fire_rate_level: int = 0
 var stat_health_level: int = 0
@@ -165,14 +168,14 @@ func apply_stat_point(stat_name: String) -> void:
 	match stat_name:
 		"fire_rate":
 			stat_fire_rate_level += 1
-			bonus_fire_rate_pct = minf(bonus_fire_rate_pct + 0.04, 0.40)
+			bonus_fire_rate_pct = minf(bonus_fire_rate_pct + STAT_BONUS_STEP, STAT_BONUS_CAP)
 		"health":
 			stat_health_level += 1
 			lives += 1
 			SignalBus.lives_changed.emit(lives)
 		"speed":
 			stat_speed_level += 1
-			bonus_speed_pct = minf(bonus_speed_pct + 0.04, 0.40)
+			bonus_speed_pct = minf(bonus_speed_pct + STAT_BONUS_STEP, STAT_BONUS_CAP)
 
 # --- Player hit ---
 

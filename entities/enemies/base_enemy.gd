@@ -7,6 +7,9 @@ class_name BaseEnemy
 @export var points: int = 100
 @export var orb_value: int = 1
 @export var guaranteed_orb: bool = false
+var health_scale_multiplier: float = 1.0
+
+const HEALTH_SCALE_PER_WAVE: float = 0.045
 
 const XP_ORB_SCENE := preload("res://entities/collectibles/xp_orb.tscn")
 
@@ -17,7 +20,7 @@ var spawn_direction: Vector2 = Vector2.DOWN
 func _ready() -> void:
 	add_to_group("enemies")
 	# Scale from the full accumulated percentage so low-HP ships do not gain 1 HP every wave.
-	var wave_bonus := ceili(float(max_health) * float(GameManager.current_wave - 1) * 0.05)
+	var wave_bonus := ceili(float(max_health) * float(GameManager.current_wave - 1) * HEALTH_SCALE_PER_WAVE * health_scale_multiplier)
 	health = max_health + wave_bonus
 	area_entered.connect(_on_area_entered)
 

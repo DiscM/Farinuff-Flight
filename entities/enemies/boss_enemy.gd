@@ -6,6 +6,7 @@ class_name BossEnemy
 const ENEMY_BULLET_SCENE := preload("res://entities/bullets/enemy_bullet.tscn")
 const TEMPEST_SECTION_SCRIPT := preload("res://entities/enemies/tempest_section.gd")
 const TEMPEST_CORE_TEXTURE := preload("res://assets/sprites/generated/tempest_core_idle_strip.png")
+const BOSS_HEALTH_SCALE_MULTIPLIER: float = 0.7
 
 var is_elite: bool = false
 var is_tempest_core: bool = false
@@ -52,6 +53,9 @@ var max_boss_health: int = 0
 var _dying: bool = false
 
 func _ready() -> void:
+	# Bosses should scale a little more gently than standard enemies because
+	# their phase mechanics already extend fight length.
+	health_scale_multiplier = BOSS_HEALTH_SCALE_MULTIPLIER
 	if is_tempest_core:
 		_configure_tempest_core()
 	elif is_elite:

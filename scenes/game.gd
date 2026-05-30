@@ -399,7 +399,7 @@ func _show_combined(alloc_points: int) -> void:
 	hbox.set_anchors_preset(Control.PRESET_FULL_RECT)
 	hbox.set_offsets_preset(Control.PRESET_FULL_RECT)
 	hbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	hbox.add_theme_constant_override("separation", 0)
+	hbox.add_theme_constant_override("separation", 24)
 	root.add_child(hbox)
 
 	# Left: elite upgrade panel
@@ -413,13 +413,6 @@ func _show_combined(alloc_points: int) -> void:
 		if not allocation_active:
 			overlay.queue_free()
 	)
-
-	# Vertical divider
-	var div := ColorRect.new()
-	div.color = Color(0.3, 0.4, 0.6, 0.3)
-	div.custom_minimum_size = Vector2(2, 0)
-	div.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	hbox.add_child(div)
 
 	# Right: allocation panel
 	var alloc_panel := POINT_ALLOCATION_SCENE.instantiate()
