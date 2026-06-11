@@ -35,6 +35,10 @@ var drone_node: Area2D = null
 var drone_shoot_timer: float = 0.0
 const DRONE_FIRE_RATE: float = 0.65
 
+static var _orbital_texture: Texture2D
+static var _burst_ring_texture: Texture2D
+static var _drone_texture: Texture2D
+
 # New elite upgrades
 var has_spread_shot_elite: bool = false   # Permanent 3-way spread (stacks with twin_cannons → 5 shots)
 var has_shield_burst: bool = false         # Periodic bullet-clearing shockwave
@@ -833,16 +837,8 @@ func _spawn_orbitals() -> void:
 		orb_node.add_to_group("player_orbitals")
 		# Visual — small glowing circle
 		var spr := Sprite2D.new()
-		var img := Image.create(12, 12, false, Image.FORMAT_RGBA8)
-		img.fill(Color.TRANSPARENT)
-		for y in range(12):
-			for x in range(12):
-				var dist := Vector2(float(x) - 6.0, float(y) - 6.0).length()
-				if dist < 5.0:
-					var t := dist / 5.0
-					spr.modulate = Color(0.4, 1.0, 0.9)
-					img.set_pixel(x, y, Color(1.0, 1.0, 1.0, 1.0 - t * 0.4))
-		spr.texture = ImageTexture.create_from_image(img)
+		spr.modulate = Color(0.4, 1.0, 0.9)
+		spr.texture = _get_orbital_texture()
 		orb_node.add_child(spr)
 		# Collision
 		var shape := CollisionShape2D.new()
@@ -854,6 +850,21 @@ func _spawn_orbitals() -> void:
 		orb_node.area_entered.connect(_on_orbital_hit.bind(orb_node))
 		scene_root.add_child(orb_node)
 		orbital_nodes.append(orb_node)
+
+## Returns the cached orbital texture used by the three orbiting player
+## projectiles. Lazily builds it once, then reuses it for every spawn.
+func _get_orbital_texture() -> Texture2D:
+	if _orbital_texture == null:
+		var img := Image.create(12, 12, false, Image.FORMAT_RGBA8)
+		img.fill(Color.TRANSPARENT)
+		for y in range(12):
+			for x in range(12):
+				var dist := Vector2(float(x) - 6.0, float(y) - 6.0).length()
+				if dist < 5.0:
+					var t := dist / 5.0
+					img.set_pixel(x, y, Color(1.0, 1.0, 1.0, 1.0 - t * 0.4))
+		_orbital_texture = ImageTexture.create_from_image(img)
+	return _orbital_texture
 
 ## Rotates all orbital nodes around the player at a fixed radius and
 ## evenly spaced angles.
@@ -973,14 +984,21 @@ func _spawn_burst_ring(radius: float) -> void:
 	tween.tween_callback(ring.queue_free)
 	# Draw a simple ring using a canvas draw pass on a custom node
 	var spr := Sprite2D.new()
-	var img := Image.create(80, 80, false, Image.FORMAT_RGBA8)
-	for y in range(80):
-		for x in range(80):
-			var d := Vector2(float(x) - 40.0, float(y) - 40.0).length()
-			if d >= 36.0 and d <= 40.0:
-				img.set_pixel(x, y, Color(0.4, 0.9, 1.0, 0.85))
-	spr.texture = ImageTexture.create_from_image(img)
+	spr.texture = _get_burst_ring_texture()
 	ring.add_child(spr)
+
+## Returns the cached shield burst ring texture so the flash effect does
+## not rebuild its image every time the shield clears bullets.
+func _get_burst_ring_texture() -> Texture2D:
+	if _burst_ring_texture == null:
+		var img := Image.create(80, 80, false, Image.FORMAT_RGBA8)
+		for y in range(80):
+			for x in range(80):
+				var d := Vector2(float(x) - 40.0, float(y) - 40.0).length()
+				if d >= 36.0 and d <= 40.0:
+					img.set_pixel(x, y, Color(0.4, 0.9, 1.0, 0.85))
+		_burst_ring_texture = ImageTexture.create_from_image(img)
+	return _burst_ring_texture
 
 ## Plays a brief yellow flash on the player sprite to indicate overclock
 ## activation.
@@ -1027,15 +1045,7 @@ func _spawn_drone() -> void:
 	drone_node.add_to_group("player_orbitals")
 	# Sprite
 	var spr := Sprite2D.new()
-	var img := Image.create(16, 16, false, Image.FORMAT_RGBAF)
-	img.fill(Color.TRANSPARENT)
-	for py in range(16):
-		for px in range(16):
-			var d := Vector2(float(px) - 7.5, float(py) - 7.5).length()
-			if d < 7.5:
-				var t := d / 7.5
-				img.set_pixel(px, py, Color(0.3, 1.0, 0.6, 1.0 - t * 0.5))
-	spr.texture = ImageTexture.create_from_image(img)
+	spr.texture = _get_drone_texture()
 	drone_node.add_child(spr)
 	# Label
 	var lbl := Label.new()
@@ -1052,6 +1062,21 @@ func _spawn_drone() -> void:
 	drone_node.area_entered.connect(_on_drone_hit)
 	var scene_root := get_tree().current_scene
 	scene_root.add_child(drone_node)
+
+## Returns the cached drone texture so the escort ship can spawn without
+## regenerating its radial glow each time the upgrade is granted.
+func _get_drone_texture() -> Texture2D:
+	if _drone_texture == null:
+		var img := Image.create(16, 16, false, Image.FORMAT_RGBA8)
+		img.fill(Color.TRANSPARENT)
+		for py in range(16):
+			for px in range(16):
+				var d := Vector2(float(px) - 7.5, float(py) - 7.5).length()
+				if d < 7.5:
+					var t := d / 7.5
+					img.set_pixel(px, py, Color(0.3, 1.0, 0.6, 1.0 - t * 0.5))
+		_drone_texture = ImageTexture.create_from_image(img)
+	return _drone_texture
 
 ## Updates the drone each frame: lerps toward a hover position offset
 ## from the player, and auto-fires a bullet at the nearest enemy on a

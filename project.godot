@@ -23,6 +23,10 @@ config/icon="res://icon.svg"
 
 
 
+
+
+
+
 SignalBus="*res://autoloads/signal_bus.gd"
 SaveManager="*res://autoloads/save_manager.gd"
 GameManager="*res://autoloads/game_manager.gd"

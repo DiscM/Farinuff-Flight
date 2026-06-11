@@ -1,31 +1,10 @@
-[gd_scene load_steps=5 format=3 uid="uid://f8rt5u9o4yh7d"]
+[gd_scene load_steps=4 format=3 uid="uid://f8rt5u9o4yh7d"]
 
 [ext_resource type="Script" path="res://entities/powerups/power_up.gd" id="1_pu"]
+[ext_resource type="Script" path="res://assets/sprites/generated/powerup_draw.gd" id="2_powerup_draw"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_pu"]
 radius = 14.0
-
-[sub_resource type="GDScript" id="GDScript_draw"]
-script/source = "extends Sprite2D
-
-func _ready() -> void:
-	var size := 32
-	var img := Image.create(size, size, false, Image.FORMAT_RGBA8)
-	img.fill(Color.TRANSPARENT)
-	var center := size / 2.0
-	for y in range(size):
-		for x in range(size):
-			var dist := Vector2(float(x) - center, float(y) - center).length()
-			# Outer ring
-			if dist < center - 1.0 and dist > center - 4.0:
-				img.set_pixel(x, y, Color(1.0, 1.0, 1.0, 0.9))
-			# Inner fill
-			elif dist < center - 4.0:
-				var t := dist / (center - 4.0)
-				var color := Color(1.0, 1.0, 1.0, 0.8).lerp(Color(0.8, 0.8, 0.8, 0.5), t)
-				img.set_pixel(x, y, color)
-	texture = ImageTexture.create_from_image(img)
-"
 
 [sub_resource type="LabelSettings" id="LabelSettings_pu"]
 font_size = 12
@@ -39,7 +18,7 @@ collision_mask = 5
 script = ExtResource("1_pu")
 
 [node name="Sprite2D" type="Sprite2D" parent="."]
-script = SubResource("GDScript_draw")
+script = ExtResource("2_powerup_draw")
 
 [node name="Label" type="Label" parent="."]
 offset_left = -10

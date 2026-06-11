@@ -7,8 +7,11 @@ class_name BossEnemy
 const ENEMY_BULLET_SCENE := preload("res://entities/bullets/enemy_bullet.tscn")
 const TEMPEST_SECTION_SCRIPT := preload("res://entities/enemies/tempest_section.gd")
 const TEMPEST_CORE_TEXTURE := preload("res://assets/sprites/generated/tempest_core_idle_strip.png")
-const EXPLOSION_SCENE := preload("res://effects/explosion.tscn")
 const BOSS_HEALTH_SCALE_MULTIPLIER: float = 0.7
+
+static var _telegraph_marker_texture: Texture2D
+static var _section_burst_texture: Texture2D
+static var _tempest_warning_texture: Texture2D
 
 var is_elite: bool = false
 var is_tempest_core: bool = false
@@ -94,27 +97,35 @@ func _ready() -> void:
 
 	telegraph_marker = Sprite2D.new()
 	telegraph_marker.z_index = 5
-	var img := Image.create(64, 64, false, Image.FORMAT_RGBA8)
-	img.fill(Color.TRANSPARENT)
-	for i in range(64):
-		if i > 26 and i < 38: continue
-		if i > 8 and i < 56:
-			img.set_pixel(32, i, Color(1.0, 0.1, 0.2, 0.8))
-			img.set_pixel(31, i, Color(1.0, 0.1, 0.2, 0.8))
-			img.set_pixel(i, 32, Color(1.0, 0.1, 0.2, 0.8))
-			img.set_pixel(i, 31, Color(1.0, 0.1, 0.2, 0.8))
-	for y in range(64):
-		for x in range(64):
-			var dist = Vector2(x-32, y-32).length()
-			if dist > 26.0 and dist < 30.0:
-				img.set_pixel(x, y, Color(1.0, 0.0, 0.1, 0.6))
-	
-	telegraph_marker.texture = ImageTexture.create_from_image(img)
+	telegraph_marker.texture = _get_telegraph_marker_texture()
 	telegraph_marker.visible = false
 	var scene_root := get_tree().current_scene
 	scene_root.call_deferred("add_child", telegraph_marker)
 
 	SignalBus.boss_spawned.emit(health, max_boss_health, boss_title)
+
+
+## Returns the cached red crosshair texture shown while the boss is
+## telegraphing its attack. Built once and reused for every boss spawn.
+func _get_telegraph_marker_texture() -> Texture2D:
+	if _telegraph_marker_texture == null:
+		var img := Image.create(64, 64, false, Image.FORMAT_RGBA8)
+		img.fill(Color.TRANSPARENT)
+		for i in range(64):
+			if i > 26 and i < 38:
+				continue
+			if i > 8 and i < 56:
+				img.set_pixel(32, i, Color(1.0, 0.1, 0.2, 0.8))
+				img.set_pixel(31, i, Color(1.0, 0.1, 0.2, 0.8))
+				img.set_pixel(i, 32, Color(1.0, 0.1, 0.2, 0.8))
+				img.set_pixel(i, 31, Color(1.0, 0.1, 0.2, 0.8))
+		for y in range(64):
+			for x in range(64):
+				var dist := Vector2(float(x) - 32.0, float(y) - 32.0).length()
+				if dist > 26.0 and dist < 30.0:
+					img.set_pixel(x, y, Color(1.0, 0.0, 0.1, 0.6))
+		_telegraph_marker_texture = ImageTexture.create_from_image(img)
+	return _telegraph_marker_texture
 
 
 ## Configures the Tempest Core boss (Wave 20): sets high HP, points,
@@ -327,14 +338,7 @@ func _complete_tempest_phase_transition(previous_phase: TempestPhase, next_phase
 ## tempest section is destroyed, providing clear feedback to the player.
 func _spawn_section_burst(burst_position: Vector2) -> void:
 	var ring := Sprite2D.new()
-	var image := Image.create(48, 48, false, Image.FORMAT_RGBA8)
-	image.fill(Color.TRANSPARENT)
-	for y in range(48):
-		for x in range(48):
-			var distance := Vector2(float(x) - 24.0, float(y) - 24.0).length()
-			if distance > 16.0 and distance < 21.0:
-				image.set_pixel(x, y, Color(0.4, 0.95, 1.0, 0.9))
-	ring.texture = ImageTexture.create_from_image(image)
+	ring.texture = _get_section_burst_texture()
 	ring.global_position = burst_position
 	var scene_root := get_tree().current_scene
 	scene_root.add_child(ring)
@@ -342,6 +346,20 @@ func _spawn_section_burst(burst_position: Vector2) -> void:
 	tween.tween_property(ring, "scale", Vector2(2.0, 2.0), 0.24)
 	tween.parallel().tween_property(ring, "modulate:a", 0.0, 0.24)
 	tween.tween_callback(ring.queue_free)
+
+
+## Returns the cached cyan ring used when tempest sections are destroyed.
+func _get_section_burst_texture() -> Texture2D:
+	if _section_burst_texture == null:
+		var image := Image.create(48, 48, false, Image.FORMAT_RGBA8)
+		image.fill(Color.TRANSPARENT)
+		for y in range(48):
+			for x in range(48):
+				var distance := Vector2(float(x) - 24.0, float(y) - 24.0).length()
+				if distance > 16.0 and distance < 21.0:
+					image.set_pixel(x, y, Color(0.4, 0.95, 1.0, 0.9))
+		_section_burst_texture = ImageTexture.create_from_image(image)
+	return _section_burst_texture
 
 # ---- Movement --------------------------------------------------------
 
@@ -432,22 +450,12 @@ func _begin_tempest_storm_strike() -> void:
 		return
 	var target_position: Vector2 = player.global_position
 	var marker := Sprite2D.new()
-	var image := Image.create(84, 84, false, Image.FORMAT_RGBA8)
-	image.fill(Color.TRANSPARENT)
-	for y in range(84):
-		for x in range(84):
-			var distance := Vector2(float(x) - 42.0, float(y) - 42.0).length()
-			if distance > 35.0 and distance < 40.0:
-				image.set_pixel(x, y, Color(0.2, 0.9, 1.0, 0.85))
-			elif (absf(float(x) - 42.0) < 1.5 or absf(float(y) - 42.0) < 1.5) and distance < 29.0:
-				image.set_pixel(x, y, Color(1.0, 0.32, 0.75, 0.8))
-	marker.texture = ImageTexture.create_from_image(image)
+	marker.texture = _get_tempest_warning_texture()
 	marker.global_position = target_position
 	marker.z_index = 6
 	var scene_root := get_tree().current_scene
 	scene_root.add_child(marker)
 	tempest_warning_markers.append(marker)
-
 	var lane_count := 5
 	if tempest_phase == TempestPhase.CONDUITS:
 		lane_count = 7
@@ -462,6 +470,22 @@ func _begin_tempest_storm_strike() -> void:
 	tween.tween_property(marker, "scale", Vector2(1.65, 1.65), 0.12)
 	tween.parallel().tween_property(marker, "modulate:a", 0.0, 0.12)
 	tween.tween_callback(marker.queue_free)
+
+
+## Returns the cached warning marker texture used for Tempest Core tells.
+func _get_tempest_warning_texture() -> Texture2D:
+	if _tempest_warning_texture == null:
+		var image := Image.create(84, 84, false, Image.FORMAT_RGBA8)
+		image.fill(Color.TRANSPARENT)
+		for y in range(84):
+			for x in range(84):
+				var distance := Vector2(float(x) - 42.0, float(y) - 42.0).length()
+				if distance > 35.0 and distance < 40.0:
+					image.set_pixel(x, y, Color(0.2, 0.9, 1.0, 0.85))
+				elif (absf(float(x) - 42.0) < 1.5 or absf(float(y) - 42.0) < 1.5) and distance < 29.0:
+					image.set_pixel(x, y, Color(1.0, 0.32, 0.75, 0.8))
+		_tempest_warning_texture = ImageTexture.create_from_image(image)
+	return _tempest_warning_texture
 
 
 ## Fires the actual storm strike: a fan of bullets aimed at the telegraphed
