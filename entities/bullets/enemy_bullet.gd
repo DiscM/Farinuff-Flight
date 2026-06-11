@@ -9,6 +9,9 @@ var _visibility_ring: Sprite2D
 var _pulse_time: float = 0.0
 var is_deflected: bool = false
 
+## Initializes the bullet: reads direction, speed, and color overrides from
+## metadata (set by spawning enemies), configures high z_index for visibility,
+## creates a pulsing visibility ring outline, and sets up screen-exit cleanup.
 func _ready() -> void:
 	# Tank radial bullets set direction/speed via metadata before add_child
 	if has_meta("direction"):
@@ -30,6 +33,8 @@ func _ready() -> void:
 	notifier.screen_exited.connect(queue_free)
 	area_entered.connect(_on_area_entered)
 
+## Moves the bullet along its direction and animates a subtle pulse on the
+## visibility ring for readability against busy backgrounds.
 func _physics_process(delta: float) -> void:
 	position += direction * speed * delta
 	_pulse_time += delta
@@ -40,6 +45,11 @@ func _physics_process(delta: float) -> void:
 		_visibility_ring.modulate.a = lerpf(0.86, 1.0, pulse)
 
 
+## Deflects the bullet when hit by a boosting player. Reverses its direction
+## (biased toward the deflector's velocity), increases speed, changes collision
+## layers so it damages enemies instead of the player, and recolors it green
+## to indicate it's now friendly. Returns true on success, false if already
+## deflected.
 func deflect(deflector_position: Vector2, deflector_velocity: Vector2) -> bool:
 	if is_deflected:
 		return false
@@ -62,6 +72,9 @@ func deflect(deflector_position: Vector2, deflector_velocity: Vector2) -> bool:
 	return true
 
 
+## Creates a static visibility ring texture (shared across all instances for
+## performance) consisting of a dark outline ring and a bright inner ring.
+## Attaches it as a child Sprite2D drawn behind the bullet sprite.
 func _create_visibility_ring() -> void:
 	if _visibility_ring_texture == null:
 		var image_size := 34
@@ -85,6 +98,10 @@ func _create_visibility_ring() -> void:
 	add_child(_visibility_ring)
 
 
+## Handles collision: if deflected, damages enemies on contact and self-destructs.
+## If not deflected and touching the player, checks whether the player can
+## deflect (is boosting), attempts deflection, and self-destructs if the player
+## can't deflect.
 func _on_area_entered(area: Area2D) -> void:
 	if is_deflected:
 		if area.is_in_group("enemies") or area.is_in_group("tempest_sections"):

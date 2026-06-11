@@ -3,6 +3,8 @@ extends PanelContainer
 
 signal force_close
 
+## Builds the dev tools UI: creates a styled panel container with a green
+## border, title label, and a column of cheat/debug buttons.
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	custom_minimum_size = Vector2(280, 0)
@@ -39,6 +41,8 @@ func _ready() -> void:
 	_add_btn(vbox, "Toggle God Mode",       _on_toggle_god_mode)
 	_add_btn(vbox, "Full Power",            _on_full_power)
 
+## Helper: creates a styled button with the given text and callback,
+## and adds it to the parent container.
 func _add_btn(parent: Node, text: String, callback: Callable) -> void:
 	var btn := Button.new()
 	btn.text = text
@@ -51,14 +55,18 @@ func _add_btn(parent: Node, text: String, callback: Callable) -> void:
 
 # ── Actions ─────────────────────────────────────────────────────────────────────
 
+## Simulates collecting 50 XP orbs at once via the signal bus.
 func _on_add_orbs() -> void:
 	SignalBus.xp_orb_collected.emit(50)
 
+## Instantly kills all enemies, tempest sections, and clears all enemy bullets.
 func _on_clear_enemies() -> void:
 	get_tree().call_group("enemies", "take_damage", 9999)
 	get_tree().call_group("tempest_sections", "take_damage", 9999)
 	get_tree().call_group("enemy_bullets", "queue_free")
 
+## Forces the game to wave 10 and spawns an elite boss, closing the
+## pause menu first so the boss fight begins immediately.
 func _on_spawn_elite_boss() -> void:
 	# Close the pause menu first so the boss spawns into a live game
 	force_close.emit()
@@ -66,24 +74,31 @@ func _on_spawn_elite_boss() -> void:
 	GameManager.boss_active = true
 	SignalBus.wave_started.emit(10)
 
+## Forces the game to wave 20 and spawns the Tempest Core boss.
 func _on_spawn_tempest_core() -> void:
 	force_close.emit()
 	GameManager.current_wave = 20
 	GameManager.boss_active = true
 	SignalBus.wave_started.emit(20)
 
+## Triggers the elite upgrade selection popup (normally shown after a
+## Wave-10 boss kill).
 func _on_elite_upgrade() -> void:
 	force_close.emit()
 	SignalBus.elite_upgrade_triggered.emit()
 
+## Triggers the stat point allocation popup with 3 points to distribute.
 func _on_point_allocation() -> void:
 	force_close.emit()
 	SignalBus.allocation_triggered.emit(3)
 
+## Adds 5 lives to the player and updates the HUD.
 func _on_add_lives() -> void:
 	GameManager.lives += 5
 	SignalBus.lives_changed.emit(GameManager.lives)
 
+## Toggles invincibility (god mode) on the player. Tints the sprite
+## yellow when active.
 func _on_toggle_god_mode() -> void:
 	var players := get_tree().get_nodes_in_group("player")
 	if not players.is_empty():
@@ -91,6 +106,8 @@ func _on_toggle_god_mode() -> void:
 		p.dev_god_mode = not p.dev_god_mode
 		p.sprite.modulate = Color(1.2, 1.2, 0.2) if p.dev_god_mode else Color.WHITE
 
+## Grants the player a suite of powerful upgrades: rapid fire, spread shot,
+## orbitals, piercing, and explosive rounds.
 func _on_full_power() -> void:
 	var players := get_tree().get_nodes_in_group("player")
 	if not players.is_empty():

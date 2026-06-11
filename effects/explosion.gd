@@ -1,6 +1,9 @@
 extends Node2D
 ## Explosion effect — particle burst then self-destruct.
 
+## Creates a one-shot CPU particle system with an orange-to-dark gradient,
+## adds a brief white flash sprite that shrinks and fades, and schedules
+## automatic cleanup after 0.7 seconds.
 func _ready() -> void:
 	var particles := CPUParticles2D.new()
 	add_child(particles)
@@ -33,6 +36,8 @@ func _ready() -> void:
 	# Self destruct
 	get_tree().create_timer(0.7).timeout.connect(queue_free)
 
+## Creates a 3-stop color gradient for the explosion particles:
+## bright yellow → orange → transparent dark, simulating a fireball decay.
 func _create_gradient() -> Gradient:
 	var gradient := Gradient.new()
 	gradient.colors = PackedColorArray([

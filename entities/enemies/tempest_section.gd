@@ -10,6 +10,10 @@ var section_size: Vector2 = Vector2(26.0, 42.0)
 var disabled: bool = false
 
 
+## Initializes the section with a display name, hit points, collision size,
+## and color. Sets up collision layers (enemy layer 2, detects player bullets
+## layer 4), adds to the "tempest_sections" group, creates a rectangle
+## collision shape, and triggers a draw pass for the visual hull.
 func setup(display_name: String, hp: int, size: Vector2, color: Color) -> void:
 	name = display_name.replace(" ", "")
 	health = hp
@@ -28,6 +32,9 @@ func setup(display_name: String, hp: int, size: Vector2, color: Color) -> void:
 	queue_redraw()
 
 
+## Reduces the section's health. If health reaches 0, marks as disabled,
+## emits the destroyed signal, and frees the node. Otherwise, plays a
+## white flash tween and redraws the hull (color darkens as health drops).
 func take_damage(amount: int) -> void:
 	if disabled:
 		return
@@ -44,6 +51,9 @@ func take_damage(amount: int) -> void:
 	queue_redraw()
 
 
+## Draws the section's hexagonal hull shape. The fill color darkens as health
+## decreases, the outline uses the section's assigned color, and a glowing
+## center dot indicates the section is active.
 func _draw() -> void:
 	var half := section_size * 0.5
 	var points := PackedVector2Array([

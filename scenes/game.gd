@@ -37,6 +37,10 @@ var _planet_spawn_timer: float = 0.0
 var _planet_spawn_interval: float = 6.0   # seconds between planet spawns
 var _planet_scene_ref = null              # cached preloaded script
 
+## Initializes the game scene: starts the game via GameManager, sets up spawners,
+## connects signals, positions the player, builds the parallax star field with
+## three depth layers, seeds the background planet spawner, and injects CRT/distortion
+## shader post-processing layers.
 func _ready() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	GameManager.start_game()
@@ -153,6 +157,9 @@ func _ready() -> void:
 
 	_apply_visual_settings()
 
+## Per-frame update: handles camera shake decay, feeds time to the background
+## shader, scrolls background planets downward, cleans up off-screen planets,
+## and periodically spawns new planets above the viewport.
 func _process(delta: float) -> void:
 	# Camera shake
 	if shake_timer > 0:
@@ -190,6 +197,8 @@ func _process(delta: float) -> void:
 			_spawn_background_planet(-150.0)  # just above the viewport
 
 ## Spawns a single background planet at the given Y position (random X).
+## Creates a Node2D with the planet_background script attached and adds it
+## to the planet container at a random scale for depth variation.
 func _spawn_background_planet(y_pos: float) -> void:
 	if not is_instance_valid(_planet_container) or _planet_scene_ref == null:
 		return
@@ -201,11 +210,16 @@ func _spawn_background_planet(y_pos: float) -> void:
 	node.scale = Vector2(s, s)
 	_planet_container.add_child(node)
 
+## Consolidates all pause sources (pause menu, allocation popup, elite upgrade,
+## try-again screen) into a single paused state for the scene tree.
 func _update_pause_state() -> void:
 	get_tree().paused = pause_active or allocation_active or elite_upgrade_active or try_again_active
 
 var _pause_overlay: CanvasLayer = null
 
+## Handles the ESC key press: opens or closes the pause menu, but only when
+## the game is active and no modal popup (allocation / elite upgrade / try-again)
+## is already open.
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.keycode == KEY_ESCAPE and event.pressed and not event.echo:
 		if not GameManager.is_game_active:
@@ -218,6 +232,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		_open_pause_menu()
 		get_viewport().set_input_as_handled()
 
+## Creates and displays the pause menu overlay. Pauses the game tree and
+## connects the menu's "resumed" signal to close it.
 func _open_pause_menu() -> void:
 	if pause_active:
 		return
@@ -230,6 +246,7 @@ func _open_pause_menu() -> void:
 	menu.resumed.connect(_on_pause_resumed)
 	_pause_overlay.add_child(menu)
 
+## Tears down the pause menu overlay and unpauses the game.
 func _close_pause_menu() -> void:
 	pause_active = false
 	_update_pause_state()
@@ -237,9 +254,12 @@ func _close_pause_menu() -> void:
 		_pause_overlay.queue_free()
 	_pause_overlay = null
 
+## Signal callback from the pause menu's "Resume" button.
 func _on_pause_resumed() -> void:
 	_close_pause_menu()
 
+## Initiates a screen shake effect with the given intensity and duration,
+## unless screen shake has been disabled in the settings.
 func _on_screen_shake(intensity: float, duration: float) -> void:
 	if not bool(SaveManager.get_setting("screen_shake", true)):
 		camera.offset = Vector2.ZERO
@@ -249,6 +269,9 @@ func _on_screen_shake(intensity: float, duration: float) -> void:
 	shake_duration = duration
 	shake_timer = duration
 
+## Reads visual preferences from SaveManager and shows/hides the CRT
+## scanline layer and distortion layer accordingly. Also clears any
+## active shake if the setting has been turned off.
 func _apply_visual_settings() -> void:
 	if is_instance_valid(_crt_layer):
 		_crt_layer.visible = bool(SaveManager.get_setting("crt_effect", true))
@@ -258,6 +281,9 @@ func _apply_visual_settings() -> void:
 		shake_timer = 0.0
 		camera.offset = Vector2.ZERO
 
+## Handles the game over flow: if the player has try-again stocks, shows
+## the try-again popup first; otherwise shows the final game over screen.
+## Guards against duplicate calls.
 func _on_game_over(final_score: int) -> void:
 	if game_over_shown:
 		return
@@ -278,6 +304,9 @@ func _on_game_over(final_score: int) -> void:
 	else:
 		_show_game_over(final_score)
 
+## Called when the player accepts the try-again offer. Restores lives,
+## grants invincibility, clears non-boss enemies and bullets from the
+## scene, and resumes spawning.
 func _on_try_again_accepted() -> void:
 	try_again_active = false
 	game_over_shown = false  # allow future deaths to trigger the popup again
@@ -295,11 +324,15 @@ func _on_try_again_accepted() -> void:
 	# Restart enemy spawning
 	enemy_spawner._on_try_again_accepted()
 
+## Called when the player declines the try-again offer or the countdown
+## expires. Proceeds to the true game over screen.
 func _on_try_again_declined() -> void:
 	try_again_active = false
 	_update_pause_state()
 	_show_game_over(_final_score_cache)
 
+## Displays the final game over screen with the player's score.
+## Pauses the tree and waits a brief delay before instantiating the screen.
 func _show_game_over(final_score: int) -> void:
 	if game_over_shown:
 		return
@@ -313,6 +346,10 @@ func _show_game_over(final_score: int) -> void:
 	overlay.add_child(game_over_screen)
 	game_over_screen.show_score(final_score)
 
+## Handles the stat allocation popup trigger. Defers showing it if an
+## elite upgrade popup is already active (so both can be shown side-by-side),
+## or waits one frame to check for simultaneous triggers before showing
+## it solo.
 func _on_allocation_triggered(points: int) -> void:
 	if allocation_active:
 		return
@@ -343,10 +380,15 @@ func _on_allocation_triggered(points: int) -> void:
 	overlay.add_child(popup)
 	popup.set_points(points)
 
+## Signal callback when the allocation popup is closed. Clears the active
+## flag and updates the pause state.
 func _on_allocation_closed() -> void:
 	allocation_active = false
 	_update_pause_state()
 
+## Handles the elite upgrade popup trigger. Pauses immediately, waits one
+## frame to check for a simultaneous allocation trigger, and either shows
+## both panels side-by-side or the elite popup solo.
 func _on_elite_upgrade_triggered() -> void:
 	if elite_upgrade_active:
 		return
@@ -372,11 +414,16 @@ func _on_elite_upgrade_triggered() -> void:
 	popup.upgrade_chosen.connect(_on_elite_upgrade_closed)
 	overlay.add_child(popup)
 
+## Signal callback when the elite upgrade popup is closed. Clears the
+## active flag and updates the pause state.
 func _on_elite_upgrade_closed() -> void:
 	elite_upgrade_active = false
 	_update_pause_state()
 
 ## Shows the elite upgrade and point allocation panels side by side.
+## Creates a shared overlay with an HBoxContainer holding both panels.
+## Each panel independently signals completion; the overlay is freed
+## only when both are done. Includes a fade-in animation.
 func _show_combined(alloc_points: int) -> void:
 	var overlay := CanvasLayer.new()
 	overlay.process_mode = Node.PROCESS_MODE_ALWAYS

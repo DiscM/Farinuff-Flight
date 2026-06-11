@@ -13,6 +13,7 @@ uniform bool apply_distortion = false;
 uniform float contrast : hint_range(0.0, 2.0) = 1.25;
 uniform float brightness : hint_range(0.0, 2.0) = 1.1;
 
+// Applies a barrel distortion effect to the given UV coordinates to simulate a curved CRT screen.
 vec2 barrel(vec2 uv) {
 	vec2 cc = uv - 0.5;
 	float dist = dot(cc, cc);
@@ -20,6 +21,7 @@ vec2 barrel(vec2 uv) {
 	return uv + cc * dist * (barrel_distortion + dist * 0.2);
 }
 
+// Computes the final color for the pixel, applying distortion, chromatic aberration, scanlines, vignette, contrast, and brightness.
 void fragment() {
 	vec2 uv = SCREEN_UV;
 	if (apply_distortion) {

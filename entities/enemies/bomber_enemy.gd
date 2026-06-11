@@ -9,6 +9,9 @@ var drop_interval: float = 2.0
 var drop_timer: float = 0.0
 var viewport_size: Vector2 = Vector2(720.0, 1024.0)
 
+## Sets stats for the bomber (2 HP, slow speed, 200 points, guaranteed orb),
+## randomizes which perpendicular direction it drifts initially, and
+## staggers the first bomb drop timer.
 func _ready() -> void:
 	max_health = 2
 	speed = 60.0
@@ -20,6 +23,9 @@ func _ready() -> void:
 	drift_dir = [-1.0, 1.0].pick_random()
 	drop_timer = randf_range(0.5, drop_interval)
 
+## Moves the bomber slowly along its travel direction while drifting
+## sideways perpendicular to it. Bounces off screen edges to stay visible.
+## Decrements the drop timer and calls _drop_bomb() when it reaches zero.
 func _move(delta: float) -> void:
 	# Slow drift along travel direction
 	position += spawn_direction * speed * GameManager.enemy_speed_multiplier * delta
@@ -49,6 +55,8 @@ func _move(delta: float) -> void:
 		drop_timer = drop_interval
 		_drop_bomb()
 
+## Spawns a neon-green enemy bullet below the bomber's current position,
+## traveling downward at a randomized speed.
 func _drop_bomb() -> void:
 	var bomb: Area2D = ENEMY_BULLET_SCENE.instantiate()
 	bomb.global_position = global_position + Vector2(0, 16)

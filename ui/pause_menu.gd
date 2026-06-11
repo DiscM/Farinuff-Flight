@@ -10,6 +10,9 @@ var _dev_panel: PanelContainer = null
 var _dev_slot: VBoxContainer = null
 var _settings_menu: Node = null
 
+## Sizes the control to fill the viewport, builds the UI layout, and
+## plays the fade-in animation. Runs in PROCESS_MODE_ALWAYS so it
+## functions while the tree is paused.
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	# Explicitly size to the full viewport
@@ -19,11 +22,15 @@ func _ready() -> void:
 	_build_ui()
 	_animate_in()
 
+## Handles the ESC key to resume gameplay and close the pause menu.
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.keycode == KEY_ESCAPE and event.pressed and not event.echo:
 		get_viewport().set_input_as_handled()
 		resumed.emit()
 
+## Constructs the full pause menu UI: dark overlay background, scrollable
+## center column with title, resume/retry/settings/menu buttons, a dev
+## tools toggle, and the hidden dev panel slot.
 func _build_ui() -> void:
 	var vp_size := get_viewport_rect().size
 
@@ -95,6 +102,8 @@ func _build_ui() -> void:
 	bot_space.custom_minimum_size = Vector2(0, 30)
 	outer.add_child(bot_space)
 
+## Helper: creates a centered, styled button with the given label text,
+## color, callback, and width.
 func _make_btn(label: String, col: Color, callback: Callable, width: float) -> Button:
 	var btn := Button.new()
 	btn.text = label
@@ -107,10 +116,14 @@ func _make_btn(label: String, col: Color, callback: Callable, width: float) -> B
 
 # ── Actions ────────────────────────────────────────────────────────────────────
 
+## Emits the resumed signal and frees the pause overlay.
 func _on_resume() -> void:
 	resumed.emit()
 	get_parent().queue_free()
 
+## Toggles the dev tools panel visibility. Lazily instantiates the dev
+## menu the first time it's opened, and connects its force_close signal
+## to resume the game.
 func _on_dev_tools() -> void:
 	if _dev_slot == null:
 		return
@@ -123,14 +136,17 @@ func _on_dev_tools() -> void:
 			_dev_panel.force_close.connect(_on_resume)
 			_dev_slot.add_child(_dev_panel)
 
+## Unpauses the game and reloads the game scene for a fresh retry.
 func _on_retry() -> void:
 	get_tree().paused = false
 	get_tree().change_scene_to_file("res://scenes/game.tscn")
 
+## Unpauses the game and returns to the main menu.
 func _on_menu() -> void:
 	get_tree().paused = false
 	get_tree().change_scene_to_file("res://ui/main_menu.tscn")
 
+## Opens the settings menu as a modal child. Prevents duplicate instances.
 func _on_settings() -> void:
 	if is_instance_valid(_settings_menu):
 		return
@@ -140,6 +156,7 @@ func _on_settings() -> void:
 
 # ── Animation ──────────────────────────────────────────────────────────────────
 
+## Plays a quick fade-in and scale-up entrance animation for the pause menu.
 func _animate_in() -> void:
 	modulate.a = 0.0
 	scale = Vector2(0.95, 0.95)

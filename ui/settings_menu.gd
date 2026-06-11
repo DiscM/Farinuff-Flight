@@ -5,11 +5,16 @@ signal closed
 
 var volume_label: Label
 
+## Sets up the settings panel as a process-always full-rect control and
+## builds the UI contents.
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	_build_ui()
 
+## Constructs the settings panel UI: dark overlay background, centered
+## panel with volume slider, toggle switches for screen shake/CRT/distortion,
+## a save-note label, and a close button.
 func _build_ui() -> void:
 	var bg := ColorRect.new()
 	bg.color = Color(0.0, 0.0, 0.06, 0.9)
@@ -75,6 +80,9 @@ func _build_ui() -> void:
 	close_button.pressed.connect(_on_close_pressed)
 	column.add_child(close_button)
 
+## Helper: creates a CheckButton toggle with a label, initialized from
+## the persisted setting value. Connects its toggled signal to persist
+## changes via SaveManager.
 func _make_toggle(label_text: String, setting_key: String) -> CheckButton:
 	var toggle := CheckButton.new()
 	toggle.text = label_text
@@ -83,20 +91,27 @@ func _make_toggle(label_text: String, setting_key: String) -> CheckButton:
 	toggle.toggled.connect(_on_toggle_changed.bind(setting_key))
 	return toggle
 
+## Called when the volume slider value changes. Persists the new value
+## via SaveManager and refreshes the percentage label.
 func _on_volume_changed(value: float) -> void:
 	SaveManager.update_setting("master_volume", value)
 	_refresh_volume_label(value)
 
+## Updates the volume label to display the current percentage (0–100%).
 func _refresh_volume_label(value: float) -> void:
 	volume_label.text = "Master Volume: %d%%" % int(round(value * 100.0))
 
+## Called when any toggle switch changes. Persists the new boolean value
+## under the given setting key via SaveManager.
 func _on_toggle_changed(enabled: bool, setting_key: String) -> void:
 	SaveManager.update_setting(setting_key, enabled)
 
+## Emits the closed signal and frees this settings panel.
 func _on_close_pressed() -> void:
 	closed.emit()
 	queue_free()
 
+## Handles ESC key to close the settings panel.
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.keycode == KEY_ESCAPE and event.pressed and not event.echo:
 		get_viewport().set_input_as_handled()

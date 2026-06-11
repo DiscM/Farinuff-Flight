@@ -22,9 +22,14 @@ const PLANET_SCENES = [
 
 var current_planet: Control
 
+## Spawns a random planet on creation.
 func _ready() -> void:
 	_spawn_planet()
 
+## Loads and instantiates a PixelPlanets scene (random type if type_index < 0),
+## duplicates its materials to prevent shared-material palette overwrites,
+## randomizes the seed and colors, centers it on this node's local origin,
+## and sets a random rotation speed.
 func _spawn_planet() -> void:
 	if current_planet:
 		current_planet.queue_free()
@@ -62,6 +67,7 @@ func _spawn_planet() -> void:
 
 ## PixelPlanets scenes share materials by default; local copies prevent later spawns
 ## from overwriting palettes and shader seeds on planets already on screen.
+## Recursively duplicates materials on all CanvasItem descendants.
 func _make_materials_local(node: Node) -> void:
 	if node is CanvasItem:
 		var canvas_item := node as CanvasItem

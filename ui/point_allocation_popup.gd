@@ -24,11 +24,15 @@ var health_btn: Button
 var speed_btn: Button
 var confirm_btn: Button
 
+## Builds the allocation UI and plays the entrance animation.
+## Runs in PROCESS_MODE_ALWAYS so it works while the game is paused.
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_build_ui()
 	_animate_in()
 
+## Sets the number of points available to allocate and refreshes the UI
+## to reflect the new count.
 func set_points(p: int) -> void:
 	points_remaining = p
 	if points_label:
@@ -36,6 +40,11 @@ func set_points(p: int) -> void:
 
 # ── UI Construction ──────────────────────────────────────────────
 
+## Constructs the allocation popup UI: optional dark overlay background
+## (skipped in panel_only mode), title, points remaining label, three
+## stat rows (Fire Rate / Health / Speed) each with a level display and
+## "+" button, and a confirm button that enables only when all points
+## have been spent.
 func _build_ui() -> void:
 	if not panel_only:
 		# Dark overlay background (fullscreen)
@@ -102,6 +111,9 @@ func _build_ui() -> void:
 
 	_refresh_ui()
 
+## Helper: creates a horizontal row with a stat name label, current level
+## display, and a "+" button for the given stat. Stores references to the
+## label and button for later updates.
 func _add_stat_row(parent: VBoxContainer, label_text: String, stat_id: String, color: Color) -> void:
 	var row := HBoxContainer.new()
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -147,6 +159,9 @@ func _add_stat_row(parent: VBoxContainer, label_text: String, stat_id: String, c
 
 # ── Interaction ──────────────────────────────────────────────────
 
+## Called when a stat's "+" button is pressed. Decrements the remaining
+## points, increments the chosen stat's temporary allocation, and refreshes
+## the UI to reflect the new state.
 func _on_plus_pressed(stat_id: String) -> void:
 	if points_remaining <= 0:
 		return
@@ -160,6 +175,9 @@ func _on_plus_pressed(stat_id: String) -> void:
 			alloc_speed += 1
 	_refresh_ui()
 
+## Called when the "CONFIRM" button is pressed. Applies all temporarily
+## allocated points to GameManager's stat system, emits allocation_done,
+## and frees the popup (unless in panel_only mode).
 func _on_confirm() -> void:
 	# Apply all allocated points
 	for i in range(alloc_fire_rate):
@@ -174,6 +192,9 @@ func _on_confirm() -> void:
 	if not panel_only:
 		get_parent().queue_free()
 
+## Updates all UI elements: points remaining label, stat level displays
+## (showing the sum of existing + pending allocations), button disabled
+## states, and the confirm button (only enabled when all points are spent).
 func _refresh_ui() -> void:
 	points_label.text = "Points remaining: " + str(points_remaining)
 
@@ -194,6 +215,7 @@ func _refresh_ui() -> void:
 	# Enable confirm only when all points spent
 	confirm_btn.disabled = points_remaining > 0
 
+## Plays a fade-in entrance animation.
 func _animate_in() -> void:
 	modulate.a = 0.0
 	var tween := create_tween()

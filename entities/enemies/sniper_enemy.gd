@@ -10,6 +10,8 @@ var shoot_timer: float = 0.0
 var holding: bool = false
 var has_withdrawn: bool = false
 
+## Sets stats for the sniper enemy (3 HP, moderate speed, 260 points,
+## guaranteed 2-value orb) and randomizes the first shot delay.
 func _ready() -> void:
 	max_health = 3
 	speed = 145.0
@@ -19,6 +21,10 @@ func _ready() -> void:
 	super._ready()
 	shoot_timer = randf_range(0.6, 1.2)
 
+## Three-phase movement: enters the screen along spawn_direction until it
+## reaches 115px depth, then holds position while oscillating perpendicular
+## and firing aimed shots at the player every 1.55s. After 6 seconds of
+## holding, withdraws at high speed along its original travel direction.
 func _move(delta: float) -> void:
 	if not holding:
 		var movement_speed := 210.0 if has_withdrawn else speed
@@ -41,6 +47,8 @@ func _move(delta: float) -> void:
 			holding = false
 			has_withdrawn = true
 
+## Fires a single high-speed bullet aimed directly at the player's
+## current position. The bullet is colored neon cyan for visibility.
 func _fire_aimed_shot() -> void:
 	var players := get_tree().get_nodes_in_group("player")
 	if players.is_empty():

@@ -52,6 +52,10 @@ var tempest_phase_transition_pending: bool = false
 var max_boss_health: int = 0
 var _dying: bool = false
 
+## Configures the boss based on its type (regular, elite, or tempest core),
+## builds the attack sequence, initializes movement state, creates the
+## telegraph crosshair marker, and emits the boss_spawned signal to set up
+## the HUD health bar.
 func _ready() -> void:
 	# Bosses should scale a little more gently than standard enemies because
 	# their phase mechanics already extend fight length.
@@ -111,6 +115,8 @@ func _ready() -> void:
 	SignalBus.boss_spawned.emit(health, max_boss_health, boss_title)
 
 
+## Configures the Tempest Core boss (Wave 20): sets high HP, points,
+## orb value, variant type, title, and bullet color.
 func _configure_tempest_core() -> void:
 	max_health = 300
 	points = 12000
@@ -120,6 +126,9 @@ func _configure_tempest_core() -> void:
 	bullet_color = Color(0.2, 2.0, 3.0, 1.0)
 
 
+## Selects the regular boss variant based on the current wave's encounter
+## index (cycling through ASSAULT, BULWARK, TEMPEST), setting appropriate
+## HP, title, and bullet color for each variant.
 func _configure_regular_variant() -> void:
 	var encounter_index := floori(float(GameManager.current_wave) / 5.0)
 	match encounter_index % 3:
@@ -139,6 +148,8 @@ func _configure_regular_variant() -> void:
 			max_health = 52
 			bullet_color = Color(0.2, 2.0, 3.0, 1.0)
 
+## Builds the ordered list of attack patterns the boss will cycle through,
+## tailored to the boss type: tempest core, elite, or regular variant.
 func _build_attack_sequence() -> void:
 	if is_tempest_core:
 		attack_sequence = [
@@ -174,6 +185,10 @@ func _build_attack_sequence() -> void:
 			]
 
 
+## Transitions the Tempest Core boss to a new phase. Clears existing sections
+## and warning markers, spawns new phase-specific sections with unique HP/color/orbit
+## parameters, configures the attack sequence and timers for the phase, tints the
+## core sprite, and announces the phase change to the HUD.
 func _start_tempest_phase(next_phase: TempestPhase, announce: bool = true) -> void:
 	tempest_phase = next_phase
 	attack_index = 0
@@ -242,6 +257,10 @@ func _start_tempest_phase(next_phase: TempestPhase, announce: bool = true) -> vo
 		SignalBus.boss_spawned.emit(health, max_boss_health, boss_title)
 
 
+## Creates and attaches a TempestSection child node to the boss at the given
+## local position, with the specified HP, collision size, color, and optional
+## orbit parameters. Connects the section's destroyed signal to handle phase
+## transitions.
 func _spawn_tempest_section(section_name: String, local_position: Vector2, hp: int, size: Vector2, color: Color, orbit_radius: float = 0.0, orbit_offset: float = 0.0) -> void:
 	var section = TEMPEST_SECTION_SCRIPT.new()
 	add_child(section)
@@ -253,6 +272,7 @@ func _spawn_tempest_section(section_name: String, local_position: Vector2, hp: i
 	tempest_sections.append(section)
 
 
+## Frees all existing tempest sections and clears the tracking array.
 func _clear_tempest_sections() -> void:
 	for section in tempest_sections:
 		if is_instance_valid(section):
@@ -260,6 +280,7 @@ func _clear_tempest_sections() -> void:
 	tempest_sections.clear()
 
 
+## Frees all active storm-strike warning markers and clears the tracking array.
 func _clear_tempest_warnings() -> void:
 	for marker in tempest_warning_markers:
 		if is_instance_valid(marker):
@@ -267,6 +288,9 @@ func _clear_tempest_warnings() -> void:
 	tempest_warning_markers.clear()
 
 
+## Called when a tempest section is destroyed. Removes it from the tracking
+## array, spawns a visual burst effect, and triggers the next phase transition
+## when all sections of the current phase are destroyed.
 func _on_tempest_section_destroyed(section: Area2D) -> void:
 	tempest_sections.erase(section)
 	_spawn_section_burst(section.global_position)
@@ -280,6 +304,8 @@ func _on_tempest_section_destroyed(section: Area2D) -> void:
 		_queue_tempest_phase_transition(TempestPhase.EXPOSED)
 
 
+## Queues a deferred tempest phase transition, guarding against duplicate
+## transitions and transitions during the death sequence.
 func _queue_tempest_phase_transition(next_phase: TempestPhase) -> void:
 	if tempest_phase_transition_pending or _dying:
 		return
@@ -287,6 +313,8 @@ func _queue_tempest_phase_transition(next_phase: TempestPhase) -> void:
 	_complete_tempest_phase_transition.call_deferred(tempest_phase, next_phase)
 
 
+## Completes a deferred phase transition, verifying that the boss is still
+## alive and hasn't already moved to a different phase before applying.
 func _complete_tempest_phase_transition(previous_phase: TempestPhase, next_phase: TempestPhase) -> void:
 	tempest_phase_transition_pending = false
 	if _dying or tempest_phase != previous_phase:
@@ -294,6 +322,8 @@ func _complete_tempest_phase_transition(previous_phase: TempestPhase, next_phase
 	_start_tempest_phase(next_phase)
 
 
+## Creates an expanding ring visual effect at the given position when a
+## tempest section is destroyed, providing clear feedback to the player.
 func _spawn_section_burst(burst_position: Vector2) -> void:
 	var ring := Sprite2D.new()
 	var image := Image.create(48, 48, false, Image.FORMAT_RGBA8)
@@ -313,6 +343,10 @@ func _spawn_section_burst(burst_position: Vector2) -> void:
 
 # ---- Movement --------------------------------------------------------
 
+## Handles all per-frame boss movement. During telegraph phases, updates the
+## spinning crosshair marker. Otherwise, executes the current movement phase
+## and picks a new one when the timer expires. Also advances the attack timer
+## independently and fires tempest section/special attacks if applicable.
 func _move(delta: float) -> void:
 	if is_telegraphing:
 		telegraph_timer -= delta
@@ -352,6 +386,9 @@ func _move(delta: float) -> void:
 	SignalBus.boss_health_changed.emit(health)
 
 
+## Updates tempest-specific systems each frame: orbits sections around the
+## core (BARRIER and CONDUITS phases), and manages the special storm-strike
+## attack timer with phase-appropriate cooldowns.
 func _update_tempest_systems(delta: float) -> void:
 	var orbit_speed := 0.0
 	if tempest_phase == TempestPhase.BARRIER:
@@ -386,6 +423,9 @@ func _update_tempest_systems(delta: float) -> void:
 				tempest_special_attack_timer = 1.15
 
 
+## Begins a storm strike attack: places a pulsing crosshair warning marker
+## at the player's current position, then fires a concentrated lane of
+## bullets toward that position after a brief telegraph delay.
 func _begin_tempest_storm_strike() -> void:
 	var players := get_tree().get_nodes_in_group("player")
 	if players.is_empty():
@@ -423,6 +463,9 @@ func _begin_tempest_storm_strike() -> void:
 	tween.tween_callback(marker.queue_free)
 
 
+## Fires the actual storm strike: a fan of bullets aimed at the telegraphed
+## target position. Lane count increases in later phases for higher difficulty.
+## In EXPOSED/OVERLOAD phases, also fires a supplementary radial burst.
 func _release_tempest_storm_strike(target_position: Vector2, lane_count: int) -> void:
 	if _dying:
 		return
@@ -433,6 +476,10 @@ func _release_tempest_storm_strike(target_position: Vector2, lane_count: int) ->
 	if tempest_phase >= TempestPhase.EXPOSED:
 		_fire_radial(10 if tempest_phase == TempestPhase.EXPOSED else 14)
 
+## Executes the current movement phase: HOVER (sway at target), DASH (quick
+## snap to a new position), STRAFE (circle-strafe around upper screen), or
+## DIVE (rush toward lower screen). Each phase uses lerp-based movement with
+## phase-appropriate speeds.
 func _execute_move(delta: float) -> void:
 	match move_phase:
 		MovePhase.HOVER:
@@ -474,6 +521,10 @@ func _execute_move(delta: float) -> void:
 			# Rush toward the lower screen then pull back up
 			position = position.lerp(move_target, delta * 6.0)
 
+## Selects the next movement phase randomly (avoiding repeating the current
+## phase), calculates the target position for the new phase, and starts the
+## telegraph period where a crosshair marker shows the player where the boss
+## is heading.
 func _pick_next_move_phase() -> void:
 	# Weighted random selection — avoid picking the same phase twice in a row
 	var options: Array = [MovePhase.HOVER, MovePhase.DASH, MovePhase.STRAFE, MovePhase.DIVE]
@@ -515,6 +566,8 @@ func _pick_next_move_phase() -> void:
 
 # ---- Attacks ---------------------------------------------------------
 
+## Returns the delay in seconds before the next attack, varying by boss
+## type, current attack pattern, and tempest phase for escalating pressure.
 func _get_attack_delay() -> float:
 	if is_tempest_core:
 		if tempest_phase == TempestPhase.BARRIER:
@@ -538,6 +591,8 @@ func _get_attack_delay() -> float:
 		_:
 			return 1.4 if is_elite else 1.8
 
+## Dispatches to the appropriate attack function based on the current
+## position in the attack_sequence array.
 func _fire_current_pattern() -> void:
 	match attack_sequence[attack_index]:
 		AttackPattern.AIMED:   _fire_aimed()
@@ -553,6 +608,9 @@ func _fire_current_pattern() -> void:
 		AttackPattern.CROSS:   _fire_cross()
 		AttackPattern.SWEEP:   _fire_sweep()
 
+## Fires a tight spread of bullets aimed at the player's current position.
+## The spread count increases for elite and tempest core variants,
+## rewarding players who dodge laterally.
 func _fire_aimed() -> void:
 	## Tight spread aimed at the player — rewards player Rear Gun by shooting from below.
 	var players := get_tree().get_nodes_in_group("player")
@@ -567,12 +625,16 @@ func _fire_aimed() -> void:
 		var off := (float(i) - float(count - 1) / 2.0) * 0.18
 		_spawn_bullet(base_dir.rotated(off), 420.0)
 
+## Fires a full 360° burst of evenly-spaced bullets, forcing the player
+## to find gaps in the ring.
 func _fire_radial(count: int) -> void:
 	## Full 360° burst — forces the player to dodge in all directions.
 	for i in range(count):
 		var angle := (TAU / count) * i
 		_spawn_bullet(Vector2(cos(angle), sin(angle)), 300.0)
 
+## Fires a wide downward cone of bullets, punishing players who sit
+## directly below the boss. Count scales with boss type and phase.
 func _fire_shotgun() -> void:
 	## Wide downward cone — punishes players who sit directly below.
 	var count := 7 if is_elite else 5
@@ -582,6 +644,9 @@ func _fire_shotgun() -> void:
 		var off := (float(i) - float(count - 1) / 2.0) * 0.28
 		_spawn_bullet(Vector2.DOWN.rotated(off), 360.0)
 
+## Fires one tick of a rotating spiral pattern. Multiple arms rotate
+## together, covering a wide area over successive ticks. Arm count
+## increases for elite and tempest core variants.
 func _fire_spiral_tick() -> void:
 	## Rotating spiral — covers a wide area over successive ticks.
 	spiral_angle += TAU / 8.0
@@ -592,6 +657,8 @@ func _fire_spiral_tick() -> void:
 		var angle := spiral_angle + (TAU / arms) * i
 		_spawn_bullet(Vector2(cos(angle), sin(angle)), 280.0)
 
+## Fires a cross pattern: 4 cardinal directions for regular bosses,
+## 8 (including diagonals) for elite, and 12 for late-phase tempest core.
 func _fire_cross() -> void:
 	## Cardinal + diagonal shots — 4-way for regular, 8-way for elite.
 	var count := 8 if is_elite else 4
@@ -601,6 +668,9 @@ func _fire_cross() -> void:
 		var angle := (TAU / count) * i
 		_spawn_bullet(Vector2(cos(angle), sin(angle)), 320.0)
 
+## Fires a rotating fan of bullets that sweeps back and forth, creating
+## moving safe gaps instead of a static burst. Shot count and rotation
+## speed scale with boss type.
 func _fire_sweep() -> void:
 	## A rotating fan creates moving safe gaps instead of a static burst.
 	spiral_angle += 0.34 if is_elite else 0.48
@@ -613,10 +683,15 @@ func _fire_sweep() -> void:
 		var offset := (float(i) - float(shot_count - 1) / 2.0) * 0.22
 		_spawn_bullet(base_direction.rotated(offset), 350.0)
 
+## Spawns a single enemy bullet from the boss's current global position
+## in the given direction at the given speed.
 func _spawn_bullet(dir: Vector2, spd: float) -> void:
 	_spawn_bullet_from(global_position, dir, spd)
 
 
+## Spawns a single enemy bullet from an arbitrary origin position (used by
+## tempest sections firing from their own positions). Adds slight speed
+## randomization for visual variety.
 func _spawn_bullet_from(origin: Vector2, dir: Vector2, spd: float) -> void:
 	var bullet: Area2D = ENEMY_BULLET_SCENE.instantiate()
 	bullet.global_position = origin
@@ -627,6 +702,9 @@ func _spawn_bullet_from(origin: Vector2, dir: Vector2, spd: float) -> void:
 	get_tree().current_scene.call_deferred("add_child", bullet)
 
 
+## Fires aimed shots from each active tempest section toward the player.
+## Shot patterns vary by phase: single shots in BARRIER, triple fan in
+## ARMAMENTS, and tangential pairs in CONDUITS.
 func _fire_tempest_sections() -> void:
 	var players := get_tree().get_nodes_in_group("player")
 	if players.is_empty():
@@ -649,6 +727,10 @@ func _fire_tempest_sections() -> void:
 	tempest_section_attack_timer = 0.9 if tempest_phase == TempestPhase.BARRIER else (0.64 if tempest_phase == TempestPhase.CONDUITS else 0.48)
 
 
+## Override: boss damage handling with tempest-specific logic. When the core
+## is shielded (damage_multiplier 0), shows a visual "immune" flash.
+## Partial damage is applied during CONDUITS phase. Triggers the OVERLOAD
+## phase when health drops below 42%.
 func take_damage(amount: int) -> void:
 	if _dying:
 		return
@@ -669,6 +751,11 @@ func take_damage(amount: int) -> void:
 		_start_tempest_phase(TempestPhase.OVERLOAD)
 
 
+## Override: boss death sequence. Guards against re-entry from multiple
+## simultaneous hits. Immediately hides the boss and disables collision,
+## cleans up the telegraph marker, tempest sections, and warnings, spawns
+## death rewards (orb + explosion), emits boss_died, and deferred-frees
+## the node.
 func _die() -> void:
 	# Guard against re-entry (e.g. multiple bullets hitting on the same frame)
 	if _dying:
@@ -709,6 +796,8 @@ func _die() -> void:
 	call_deferred("queue_free")
 
 ## Override: player collision deals fixed damage instead of instant death.
+## Bosses take 10 damage from player ram and standard bullet damage from
+## player projectiles (1 + bonus_damage).
 func _on_area_entered(area: Area2D) -> void:
 	if _dying or is_queued_for_deletion():
 		return

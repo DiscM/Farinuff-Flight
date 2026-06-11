@@ -7,6 +7,9 @@ extends Area2D
 
 var bob_time: float = 0.0
 
+## Initializes the orb: adds to the "xp_orbs" group, connects collision,
+## attaches a screen-exit notifier, sets the color based on value tier,
+## and plays a pop-in scale animation.
 func _ready() -> void:
 	add_to_group("xp_orbs")
 	area_entered.connect(_on_area_entered)
@@ -22,6 +25,8 @@ func _ready() -> void:
 	var tween := create_tween()
 	tween.tween_property(self, "scale", Vector2.ONE, 0.2).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
 
+## Updates the orb's sprite color based on its value tier:
+## 1 = light blue, 2 = purple, 3+ = red.
 func _update_color() -> void:
 	var base_col: Color
 	var edge_col: Color
@@ -39,12 +44,15 @@ func _update_color() -> void:
 	if $Sprite2D.has_method("generate_texture"):
 		$Sprite2D.generate_texture(base_col, edge_col)
 
+## Drifts the orb downward and applies a gentle horizontal sine-wave bob
+## for a floating visual effect.
 func _physics_process(delta: float) -> void:
 	position.y += drift_speed * delta
 	# Floating bob effect
 	bob_time += delta
 	position.x += sin(bob_time * 3.0) * 0.4
 
+## Handles collision with the player — triggers collection.
 func _on_area_entered(area: Area2D) -> void:
 	if is_queued_for_deletion():
 		return
@@ -52,15 +60,21 @@ func _on_area_entered(area: Area2D) -> void:
 	if area.is_in_group("player"):
 		_collect()
 
+## Emits the xp_orb_collected signal with this orb's value, spawns a
+## particle collection effect, and frees the node.
 func _collect() -> void:
 	SignalBus.xp_orb_collected.emit(orb_value)
 	_spawn_collect_effect()
 	queue_free()
 
+## Frees the orb when it exits the bottom of the screen (only if it has
+## actually fallen below the viewport, not just spawned off-screen at top).
 func _on_screen_exited() -> void:
 	if global_position.y > 0:
 		queue_free()
 
+## Spawns a brief CPU particle burst at the orb's position using a color
+## matching its value tier, providing satisfying collection feedback.
 func _spawn_collect_effect() -> void:
 	var particles := CPUParticles2D.new()
 	particles.global_position = global_position

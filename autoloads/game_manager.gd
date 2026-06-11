@@ -119,6 +119,8 @@ var recent_player_damage_times: Array[float] = []
 var orbs_collected: int = 0
 var orbs_per_heart: int = 12
 
+## Initializes the game manager: seeds the RNG, loads the persisted high score,
+## and connects to all relevant signals from the SignalBus.
 func _ready() -> void:
 	randomize()
 	high_score = SaveManager.high_score
@@ -130,6 +132,9 @@ func _ready() -> void:
 
 # --- Score & Combo ---
 
+## Called when an enemy is killed. Increments the combo counter,
+## multiplies the kill points by the current combo, adds the result
+## to the score, and emits score/combo change signals.
 func _on_enemy_killed(points: int, _position: Vector2) -> void:
 	combo += 1
 	var multiplied_points := points * combo
@@ -137,6 +142,9 @@ func _on_enemy_killed(points: int, _position: Vector2) -> void:
 	SignalBus.score_changed.emit(score)
 	SignalBus.combo_changed.emit(combo)
 
+## Called when the boss dies. Clears the boss_active flag, triggers
+## an elite upgrade selection if this was a Wave-10 boss and upgrades
+## are still available, then advances to the next wave.
 func _on_boss_died(_points: int) -> void:
 	boss_active = false
 	# Emit elite upgrade trigger FIRST so the game pauses before wave advances + spawning restarts.
@@ -148,6 +156,10 @@ func _on_boss_died(_points: int) -> void:
 
 # --- Orb Meter ---
 
+## Called when an XP orb is collected. Accumulates orb value into the
+## meter; each time the meter fills, the player gains +1 life and the
+## remainder carries over. Also tracks per-wave orb progress and
+## triggers a wave advance when the threshold is met (unless a boss is active).
 func _on_orb_collected(value: int) -> void:
 	orbs_collected += value
 	# If we gained more than enough for a heart, carry over the remainder
@@ -164,6 +176,8 @@ func _on_orb_collected(value: int) -> void:
 # --- Point Allocation ---
 
 ## Called by the allocation popup when the player invests a point.
+## Increments the chosen stat level and applies the corresponding bonus.
+## [param stat_name]: One of "fire_rate", "health", or "speed".
 func apply_stat_point(stat_name: String) -> void:
 	match stat_name:
 		"fire_rate":
@@ -179,6 +193,9 @@ func apply_stat_point(stat_name: String) -> void:
 
 # --- Player hit ---
 
+## Called when the player takes a hit. Resets the combo to 0, deducts
+## a life, records the damage timestamp for screen-shake logic, and
+## triggers game over if lives reach 0 (saving a new high score if earned).
 func _on_player_hit() -> void:
 	combo = 0
 	SignalBus.combo_changed.emit(combo)
@@ -193,6 +210,9 @@ func _on_player_hit() -> void:
 			SaveManager.record_high_score(high_score)
 		SignalBus.game_over.emit(score)
 
+## Tracks recent damage timestamps and triggers a screen shake when
+## the player takes multiple hits within a short window. Clears the
+## timestamp buffer after a shake fires to avoid continuous shaking.
 func _record_player_damage_for_shake() -> void:
 	var now := Time.get_ticks_msec() / 1000.0
 	for i in range(recent_player_damage_times.size() - 1, -1, -1):
@@ -205,6 +225,10 @@ func _record_player_damage_for_shake() -> void:
 
 # --- Waves ---
 
+## Advances the game to the next wave. Emits a wave_cleared signal for
+## the just-finished wave, increments the wave counter, recalculates
+## orb thresholds and enemy speed scaling, sets boss_active for every
+## 5th wave, and triggers a stat point allocation every 5 waves.
 func _advance_wave() -> void:
 	var cleared_wave := current_wave
 	SignalBus.wave_cleared.emit(cleared_wave)
@@ -219,12 +243,18 @@ func _advance_wave() -> void:
 	if cleared_wave % 5 == 0:
 		SignalBus.allocation_triggered.emit(allocation_points_per_milestone)
 
+## Returns the current enemy spawn interval in seconds, decreasing as
+## waves progress but clamped to a minimum floor for playability.
 func get_spawn_interval() -> float:
 	var interval := base_spawn_interval - float(current_wave - 1) * 0.045
 	return maxf(interval, min_spawn_interval)
 
 # --- Restart ---
 
+## Resets all game state to initial values for a new run. Clears score,
+## combo, lives, waves, stat allocations, orb meter, damage history,
+## try-again stocks, and chosen upgrades, then emits signals to refresh
+## the HUD.
 func _on_game_restarted() -> void:
 	score = 0
 	combo = 0
@@ -253,6 +283,8 @@ func _on_game_restarted() -> void:
 	SignalBus.lives_changed.emit(lives)
 	SignalBus.wave_started.emit(current_wave)
 
+## Entry point for starting a new game. Delegates to _on_game_restarted()
+## to reset all state and also syncs the orb meter HUD.
 func start_game() -> void:
 	_on_game_restarted()
 	SignalBus.orb_meter_changed.emit(orbs_collected, orbs_per_heart)

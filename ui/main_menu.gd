@@ -4,14 +4,19 @@ extends Control
 const SETTINGS_MENU_SCENE := preload("res://ui/settings_menu.tscn")
 var _settings_menu: Node = null
 
+## Ensures the mouse cursor is visible and connects the Play and Settings
+## buttons to their handlers.
 func _ready() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	$VBoxContainer/PlayButton.pressed.connect(_on_play_pressed)
 	$VBoxContainer/SettingsButton.pressed.connect(_on_settings_pressed)
 
+## Transitions to the game scene to start a new run.
 func _on_play_pressed() -> void:
 	get_tree().change_scene_to_file("res://scenes/game.tscn")
 
+## Opens the settings menu as a modal overlay. Prevents opening multiple
+## instances by checking for an existing one.
 func _on_settings_pressed() -> void:
 	if is_instance_valid(_settings_menu):
 		return

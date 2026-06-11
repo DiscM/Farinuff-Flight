@@ -10,6 +10,8 @@ var zigzag: bool = false
 var zigzag_stacks: int = 1
 var _zigzag_time: float = 0.0
 
+## Sets up a screen-exit notifier for auto-cleanup and connects the
+## collision handler to damage enemies on contact.
 func _ready() -> void:
 	# Auto-delete when leaving the screen
 	var notifier := VisibleOnScreenNotifier2D.new()
@@ -18,6 +20,10 @@ func _ready() -> void:
 	# Damage enemies on contact
 	area_entered.connect(_on_area_entered)
 
+## Moves the bullet along its direction each physics frame. If zigzag is
+## enabled, also applies a perpendicular sine-wave oscillation whose
+## frequency and amplitude scale with zigzag_stacks. Speed is reduced
+## 10% per stack (capped at 5 stacks = –50%).
 func _physics_process(delta: float) -> void:
 	# Bullet speed reduced 10% per zigzag stack (max 5 stacks = -50%)
 	var speed_mult := 1.0 - mini(zigzag_stacks, 5) * 0.1
@@ -29,6 +35,9 @@ func _physics_process(delta: float) -> void:
 		var perp := Vector2(-direction.y, direction.x)
 		position += perp * sin(_zigzag_time) * amp * delta
 
+## Handles collision with enemies and tempest sections. Deals 1 + bonus
+## damage, triggers an explosion if the explosive flag is set, and
+## frees the bullet unless it has piercing (which lets it pass through).
 func _on_area_entered(area: Area2D) -> void:
 	if area.is_in_group("enemies") or area.is_in_group("tempest_sections"):
 		var dmg := 1 + GameManager.bonus_damage
@@ -40,6 +49,9 @@ func _on_area_entered(area: Area2D) -> void:
 		if not piercing:
 			call_deferred("queue_free")
 
+## Deals area damage to all enemies within an 80px blast radius and spawns
+## a particle burst visual effect at the bullet's position. Used when the
+## explosive upgrade is active.
 func _explode() -> void:
 	# Deal area damage to all enemies within blast radius
 	var blast_radius := 80.0

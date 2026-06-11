@@ -15,9 +15,14 @@ extends Node2D
 var _stars: Array[Dictionary] = []   # [{pos, size, alpha}]
 var _nebulae: Array[Dictionary] = [] # [{pos, radius, color}]
 
+## Triggers the one-time procedural generation of star and nebula data.
 func _ready() -> void:
 	_generate()
 
+## Randomly generates star positions, sizes, and alpha values within the
+## repeat_size region. If show_nebulae is enabled, also generates soft
+## colored circles with randomized positions, radii, and semi-transparent
+## tints derived from the base_color.
 func _generate() -> void:
 	_stars.clear()
 	_nebulae.clear()
@@ -43,6 +48,9 @@ func _generate() -> void:
 				"color": col,
 			})
 
+## Draws the pre-generated nebulae (as filled circles behind everything)
+## and stars (as small rects or circles depending on size) using the
+## baked data from _generate(). Called automatically by the engine.
 func _draw() -> void:
 	# Nebulae first so stars render on top
 	for neb in _nebulae:

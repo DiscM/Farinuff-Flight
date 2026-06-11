@@ -103,6 +103,10 @@ const DRIFT_ACCEL_BASE: float = 2.4
 @export var acceleration: float = 12.0   # how fast we reach top speed
 @export var drag: float = 14.0          # how fast we decelerate (higher = tighter/snappier stop)
 
+## Initializes the player: adds to the "player" group, configures all
+## timers (shoot, invincibility, rapid fire, spread shot, magnet) as
+## one-shot timers with appropriate callbacks, connects collision and
+## power-up signals, and sets up the aim reticle.
 func _ready() -> void:
 	add_to_group("player")
 	# viewport_rect will be refreshed each frame
@@ -134,6 +138,8 @@ func _ready() -> void:
 	# Initialize reticle
 	_setup_reticle()
 
+## Creates the aim reticle node with a crosshair sprite, positioned
+## 60px above the player. Hidden by default until free-aim input is used.
 func _setup_reticle() -> void:
 	reticle = Node2D.new()
 	add_child(reticle)
@@ -148,6 +154,8 @@ func _setup_reticle() -> void:
 	reticle.visible = false # hide until free aim is used
 
 
+## Returns the size of a single animation frame from the sprite sheet,
+## accounting for hframes/vframes. Falls back to 48×48 if no texture is set.
 func _get_sprite_frame_size() -> Vector2:
 	if not is_instance_valid(sprite) or sprite.texture == null:
 		return Vector2(48.0, 48.0)
@@ -155,6 +163,12 @@ func _get_sprite_frame_size() -> Vector2:
 	var frame_h := sprite.texture.get_size().y / float(max(sprite.vframes, 1))
 	return Vector2(frame_w, frame_h)
 
+## Main per-frame update. Handles: directional input with momentum-based
+## movement (lerp acceleration/drag), boost dashing, post-boost drift with
+## braking logic, viewport clamping, free-aim targeting (controller stick
+## and mouse), auto-fire with rate modifiers, magnet attraction, orbital
+## weapon rotation, drone escort updates, shield burst cooldowns, and
+## overclock timing.
 func _physics_process(delta: float) -> void:
 	if not GameManager.is_game_active:
 		return
@@ -280,6 +294,11 @@ func _physics_process(delta: float) -> void:
 	if has_magnet_field and not has_magnet:
 		_attract_powerups_fast(delta)
 
+## Manages the boost state machine: during a boost, decrements the duration
+## timer, deflects nearby projectiles, checks for chain boost triggers,
+## accumulates drift speed bonus, spawns afterimages, and ends the boost
+## when duration/distance expires. After boosting, handles the chain window
+## and drift speed decay.
 func _update_boost(delta: float) -> void:
 	if is_boosting:
 		boost_duration_timer -= delta
@@ -333,6 +352,9 @@ func _update_boost(delta: float) -> void:
 			_begin_boost()
 
 
+## Initiates a boost dash: sets the boost direction from current velocity
+## (or UP if stationary), resets the distance budget and reflected count,
+## and clears the chain window timer.
 func _begin_boost() -> void:
 	is_boosting = true
 	boost_duration_timer = BOOST_DURATION
@@ -343,6 +365,9 @@ func _begin_boost() -> void:
 	afterimage_spawn_timer = 0.0 # spawn immediately
 
 
+## Adjusts the boost direction toward the player's input direction,
+## allowing mid-boost steering. The steering weight is frame-rate
+## independent via delta multiplication.
 func _steer_boost(input_dir: Vector2, delta: float) -> void:
 	if input_dir.is_zero_approx():
 		return
@@ -350,6 +375,8 @@ func _steer_boost(input_dir: Vector2, delta: float) -> void:
 	boost_direction = boost_direction.lerp(input_dir.normalized(), steering_weight).normalized()
 
 
+## Scans all enemy bullets within BOOST_DEFLECT_RADIUS and attempts to
+## deflect each one. Called every frame during an active boost.
 func _deflect_nearby_projectiles() -> void:
 	for projectile in get_tree().get_nodes_in_group("enemy_bullets"):
 		if not is_instance_valid(projectile):
@@ -359,24 +386,36 @@ func _deflect_nearby_projectiles() -> void:
 		_try_deflect_projectile(projectile)
 
 
+## Attempts to deflect a single enemy bullet by calling its deflect()
+## method, passing the player's position and velocity. If successful,
+## registers the reflection for chain boost tracking.
 func _try_deflect_projectile(projectile: Area2D) -> void:
 	if projectile.has_method("deflect") and projectile.deflect(global_position, velocity):
 		register_boost_reflection()
 
 
+## Increments the boost reflection counter (only tracked while actively
+## boosting). Used to determine chain boost eligibility.
 func register_boost_reflection() -> void:
 	if is_boosting:
 		boost_reflected_projectiles += 1
 
 
+## Returns true if the player has deflected enough projectiles during
+## the current boost to earn a chain boost (instant follow-up dash).
 func _has_boost_chain() -> bool:
 	return boost_reflected_projectiles >= BOOST_CHAIN_REFLECT_THRESHOLD
 
 
+## Returns true if the player is currently able to deflect incoming
+## projectiles — either during an active boost or within the chain window.
 func can_deflect_projectiles() -> bool:
 	return is_boosting or boost_chain_window_timer > 0.0
 
 
+## Calculates the boost cooldown based on how many projectiles were
+## reflected. Base cooldown is reduced per reflection, with a minimum
+## floor to prevent zero cooldowns.
 func _get_boost_cooldown() -> float:
 	if boost_reflected_projectiles <= 0:
 		return BOOST_COOLDOWN
@@ -387,6 +426,9 @@ func _get_boost_cooldown() -> float:
 	)
 
 
+## Creates a translucent ghost copy of the player sprite at the current
+## position, parented into the AfterimageContainer to avoid star-field
+## flicker. The ghost fades out and shrinks over 0.35 seconds.
 func _spawn_afterimage() -> void:
 	var af := Sprite2D.new()
 	# Use current sprite configuration
@@ -411,6 +453,9 @@ func _spawn_afterimage() -> void:
 	tween.parallel().tween_property(af, "scale", scale * sprite.scale * 0.8, 0.35)
 	tween.tween_callback(af.queue_free)
 
+## Updates the aim direction based on controller right stick or mouse
+## position. The reticle becomes visible and the ship rotates to face
+## the aim direction once free-aim input is detected.
 func _update_aiming(_delta: float) -> void:
 	# 1. Controller Right Stick
 	var joy_dir := Vector2(
@@ -434,6 +479,9 @@ func _update_aiming(_delta: float) -> void:
 		reticle.visible = true
 		rotation = last_aim_direction.angle() + PI/2.0
 
+## Fires bullets in the current aim direction. Handles spread shot (3-way
+## fan), twin cannons (+2 parallel bullets), and rear gunner (mirror of
+## forward pattern aimed backward). Starts the shoot cooldown timer.
 func _fire() -> void:
 	can_shoot = false
 	shoot_timer.start()
@@ -472,6 +520,10 @@ func _fire() -> void:
 				_spawn_bullet(back_dir, side_offset * 14, true)
 				_spawn_bullet(back_dir, side_offset * -14, true)
 
+## Instantiates and configures a single player bullet. Applies auto-aim
+## nudge toward nearest enemy (skipped for rear bullets), positions the
+## bullet at the ship's barrel, and applies all active modifiers: bullet
+## scale, piercing, explosive, and zigzag.
 func _spawn_bullet(dir: Vector2, offset: Vector2 = Vector2.ZERO, skip_auto_aim: bool = false) -> void:
 	var bullet: Area2D = BULLET_SCENE.instantiate()
 	# Auto-aim: nudge direction toward nearest enemy (skipped for rear-facing bullets)
@@ -509,6 +561,7 @@ func _spawn_bullet(dir: Vector2, offset: Vector2 = Vector2.ZERO, skip_auto_aim: 
 		bullet.zigzag_stacks = zigzag_stacks
 	get_tree().current_scene.add_child(bullet)
 
+## Re-enables shooting after the fire rate cooldown timer expires.
 func _on_shoot_timer_timeout() -> void:
 	can_shoot = true
 
@@ -516,6 +569,9 @@ func _on_shoot_timer_timeout() -> void:
 
 var respawn_invincibility: float = 3.0
 
+## Handles collision with enemies and enemy bullets. Ignores hits during
+## invincibility or god mode. Enemy contact grants longer invincibility
+## (3s) than bullet hits (2s). Attempts projectile deflection if boosting.
 func _on_area_entered(area: Area2D) -> void:
 	if not GameManager.is_game_active:
 		return
@@ -531,6 +587,10 @@ func _on_area_entered(area: Area2D) -> void:
 		respawn_invincibility = 2.0
 		_take_hit()
 
+## Processes a damage hit. If a shield is active, consumes it instead of
+## taking damage and grants brief invincibility. Otherwise, emits the
+## player_hit signal (which triggers life loss in GameManager) and grants
+## invincibility if the player still has lives.
 func _take_hit() -> void:
 	if has_shield:
 		has_shield = false
@@ -543,6 +603,9 @@ func _take_hit() -> void:
 	if GameManager.lives > 0:
 		_start_invincibility(1.5)
 
+## Activates temporary invincibility for the given duration. Starts the
+## invincibility timer and plays a repeating alpha blink animation on the
+## sprite to visually indicate the immune state.
 func _start_invincibility(duration: float = 1.5) -> void:
 	is_invincible = true
 	invincibility_timer.wait_time = duration
@@ -554,6 +617,7 @@ func _start_invincibility(duration: float = 1.5) -> void:
 	tween.tween_property(sprite, "modulate:a", 0.2, 0.12)
 	tween.tween_property(sprite, "modulate:a", 1.0, 0.12)
 
+## Ends the invincibility period and restores full sprite opacity.
 func _on_invincibility_ended() -> void:
 	is_invincible = false
 	sprite.modulate.a = 1.0
@@ -561,6 +625,7 @@ func _on_invincibility_ended() -> void:
 # --- Power-ups ---
 # Power-up types: 0=SCALE_UP, 1=RAPID_FIRE, 2=SHIELD, 3=SPREAD_SHOT, 4=MAGNET, 5=NUKE
 
+## Routes a collected power-up to the appropriate handler based on its type.
 func _on_power_up_collected(type: int, _pos: Vector2) -> void:
 	match type:
 		0:  # SCALE_UP
@@ -576,6 +641,8 @@ func _on_power_up_collected(type: int, _pos: Vector2) -> void:
 		5:  # NUKE
 			_apply_nuke()
 
+## Increments the bullet scale level (up to 3), increasing the visual size
+## and hitbox of all fired bullets. Plays a brief cyan flash on the sprite.
 func _apply_scale_up() -> void:
 	if bullet_scale_level < 3:
 		bullet_scale_level += 1
@@ -585,37 +652,52 @@ func _apply_scale_up() -> void:
 		tween.tween_property(sprite, "modulate", Color(0.2, 0.8, 1.0), 0.08)
 		tween.tween_property(sprite, "modulate", Color.WHITE, 0.2)
 
+## Activates rapid fire: reduces fire rate to 40% of base for 8 seconds.
+## Restarts the timer if already active (extending the duration).
 func _apply_rapid_fire() -> void:
 	has_rapid_fire = true
 	shoot_timer.wait_time = base_fire_rate * 0.4
 	rapid_fire_timer.start()
 
+## Deactivates the rapid fire power-up and restores the base fire rate.
 func _on_rapid_fire_ended() -> void:
 	has_rapid_fire = false
 	shoot_timer.wait_time = base_fire_rate
 
+## Activates the shield: absorbs one hit before the player takes damage.
+## Shows the shield visual indicator.
 func _apply_shield() -> void:
 	has_shield = true
 	shield_sprite.visible = true
 
+## Activates the temporary spread shot power-up for 8 seconds: fires a
+## 3-way fan of bullets instead of a single shot.
 func _apply_spread_shot() -> void:
 	has_spread_shot = true
 	spread_shot_timer.start()
 
+## Deactivates the temporary spread shot power-up when its timer expires.
 func _on_spread_shot_ended() -> void:
 	has_spread_shot = false
 
+## Activates the magnet power-up for 10 seconds: attracts nearby
+## power-ups and XP orbs toward the player.
 func _apply_magnet() -> void:
 	has_magnet = true
 	magnet_timer.start()
 
+## Deactivates the magnet power-up when its timer expires.
 func _on_magnet_ended() -> void:
 	has_magnet = false
 
+## Activates a nuke: instantly kills all enemies and destroys all tempest
+## sections on screen.
 func _apply_nuke() -> void:
 	get_tree().call_group("enemies", "take_damage", 9999)
 	get_tree().call_group("tempest_sections", "take_damage", 9999)
 
+## Pulls all power-ups and XP orbs toward the player at 350 px/s.
+## Used by the temporary magnet power-up.
 func _attract_powerups(delta: float) -> void:
 	var powerups := get_tree().get_nodes_in_group("powerups")
 	for pu in powerups:
@@ -629,6 +711,9 @@ func _attract_powerups(delta: float) -> void:
 			var dir: Vector2 = (global_position - orb.global_position).normalized()
 			orb.global_position += dir * 350.0 * delta
 
+## Resets all player state to defaults for a new game: clears all power-ups,
+## RPG upgrades, elite upgrades, free aim, boost state, and drift bonuses.
+## Removes orbital and drone child nodes.
 func reset_state() -> void:
 	current_scale_level = 0
 	bullet_scale_level = 0
@@ -681,11 +766,12 @@ func reset_state() -> void:
 	post_boost_slide_timer = 0.0
 	sprite.modulate = Color.WHITE
 
-## Called by level-up popup for shield upgrade
+## Called by level-up popup for shield upgrade.
 func grant_shield() -> void:
 	_apply_shield()
 
-## Called by level-up popup for extended magnet upgrade
+## Called by level-up popup for extended magnet upgrade (15s duration
+## instead of the default 10s).
 func grant_magnet_extended() -> void:
 	has_magnet = true
 	magnet_timer.wait_time = 15.0
@@ -693,24 +779,34 @@ func grant_magnet_extended() -> void:
 
 # --- RPG Permanent Upgrades ---
 
+## Grants the rear gun upgrade: fires bullets backward as well as forward.
 func grant_rear_gun() -> void:
 	has_rear_gun = true
 
+## Grants the piercing upgrade: bullets pass through enemies instead of
+## being destroyed on contact.
 func grant_piercing() -> void:
 	has_piercing = true
 
+## Grants the explosive rounds upgrade: bullets deal area damage on impact.
 func grant_explosive_rounds() -> void:
 	has_explosive_rounds = true
 
+## Grants one zigzag stack (up to 10): bullets oscillate perpendicular to
+## their travel direction with increasing frequency and amplitude per stack.
 func grant_zigzag() -> void:
 	zigzag_stacks = mini(zigzag_stacks + 1, 10)
 
+## Grants the orbital weapon upgrade: spawns 3 orbiting projectile nodes
+## around the player that damage enemies on contact.
 func grant_orbitals() -> void:
 	if has_orbitals:
 		return  # Already active
 	has_orbitals = true
 	_spawn_orbitals()
 
+## Creates 3 orbital Area2D nodes with small glowing sprites, collision
+## shapes, and damage-on-contact handlers, then adds them to the scene.
 func _spawn_orbitals() -> void:
 	for node in orbital_nodes:
 		if is_instance_valid(node):
@@ -746,6 +842,8 @@ func _spawn_orbitals() -> void:
 		get_tree().current_scene.add_child(orb_node)
 		orbital_nodes.append(orb_node)
 
+## Rotates all orbital nodes around the player at a fixed radius and
+## evenly spaced angles.
 func _update_orbitals(delta: float) -> void:
 	orbital_angle += delta * 3.0  # rotation speed
 	var radius := 60.0
@@ -755,10 +853,13 @@ func _update_orbitals(delta: float) -> void:
 			var angle := orbital_angle + (TAU / count) * i
 			orbital_nodes[i].global_position = global_position + Vector2(cos(angle), sin(angle)) * radius
 
+## Handles orbital collision: deals 1 + bonus damage to enemies and
+## tempest sections.
 func _on_orbital_hit(area: Area2D, _orb: Area2D) -> void:
 	if area.is_in_group("enemies") or area.is_in_group("tempest_sections"):
 		area.take_damage(1 + GameManager.bonus_damage)
 
+## Removes all orbital nodes from the scene and clears the tracking array.
 func _remove_orbitals() -> void:
 	has_orbitals = false
 	orbital_angle = 0.0
@@ -769,51 +870,64 @@ func _remove_orbitals() -> void:
 
 # --- Elite Upgrades ---
 
+## Grants twin cannons: fires 2 additional parallel bullets alongside
+## the main shot (stacks with spread shot for 5 total).
 func grant_twin_cannons() -> void:
 	has_twin_cannons = true
 
+## Grants auto-aim: bullets nudge 35% toward the nearest enemy within
+## 500px (skipped for rear-facing bullets).
 func grant_auto_aim() -> void:
 	has_auto_aim = true
 
+## Grants the afterburner upgrade: permanently increases base speed by
+## 20% and acceleration by 15%.
 func grant_afterburner() -> void:
 	has_afterburner = true
 	speed = speed * 1.20
 	acceleration = acceleration * 1.15
 
+## Grants hull plating: immediately adds +1 life and updates the HUD.
 func grant_hull_plating() -> void:
 	GameManager.lives += 1
 	SignalBus.lives_changed.emit(GameManager.lives)
 
 # --- New Elite Upgrades ---
 
+## Grants permanent 3-way spread shot. Stacks with twin_cannons (→ 5
+## bullets), auto_aim, piercing, explosive, and zigzag modifiers.
 func grant_spread_shot_elite() -> void:
-	## Permanent 3-way spread. Stacks with twin_cannons (→ 5 bullets), auto_aim, piercing, explosive, zigzag.
 	has_spread_shot_elite = true
 
+## Grants periodic shield burst: destroys all enemy bullets within 160px
+## and damages nearby enemies every 10 seconds. Independent of fire upgrades.
 func grant_shield_burst() -> void:
-	## Periodic bullet-clearing shockwave every 10 s. Independent of all fire upgrades.
 	has_shield_burst = true
 	shield_burst_cooldown = SHIELD_BURST_PERIOD  # first burst after first full cycle
 
+## Grants permanent magnetic pull on orbs and power-ups at 500 px/s
+## (faster than the temporary magnet power-up's 350 px/s).
 func grant_magnet_field() -> void:
-	## Permanent magnetic pull on orbs/powerups — faster than the temp powerup.
 	has_magnet_field = true
 
+## Grants overclock: triples fire rate for 2.5s every 16s. Stacks with
+## rapid-fire powerups and other bullet modifiers.
 func grant_overclock() -> void:
-	## Triple fire rate for 2.5 s every 16 s. Stacks with rapid-fire powerups.
-	## Also stacks with twin_cannons and spread_shot (more bullets per burst).
 	has_overclock = true
 	overclock_cooldown = 3.0  # first overclock triggers soon after upgrade
 
+## Grants a permanent rear-facing cannon that fires backward with each
+## shot. Inherits piercing, explosive, and zigzag from _spawn_bullet.
+## Auto-aim is intentionally skipped for rear bullets.
 func grant_rear_gunner() -> void:
-	## Backward-facing cannon. Inherits piercing, explosive, zigzag from _spawn_bullet.
-	## Auto-aim is intentionally skipped so it doesn't curve bullets away from threats above.
 	has_rear_gunner = true
 
 # --- Shield Burst implementation ---
 
+## Executes the shield burst ability: destroys all enemy bullets within
+## a 160px radius, deals 1 + bonus damage to nearby enemies and tempest
+## sections, and spawns an expanding ring visual effect.
 func _trigger_shield_burst() -> void:
-	## Destroy all enemy bullets within a large radius; deal 1 damage to nearby enemies.
 	var burst_radius := 160.0
 	# Destroy nearby enemy bullets
 	for b in get_tree().get_nodes_in_group("enemy_bullets"):
@@ -827,6 +941,8 @@ func _trigger_shield_burst() -> void:
 	# Visual flash ring
 	_spawn_burst_ring(burst_radius)
 
+## Creates an expanding cyan ring visual effect at the player's position,
+## scaling outward and fading over 0.35 seconds. Used by shield burst.
 func _spawn_burst_ring(radius: float) -> void:
 	var ring := Node2D.new()
 	ring.global_position = global_position
@@ -847,14 +963,17 @@ func _spawn_burst_ring(radius: float) -> void:
 	spr.texture = ImageTexture.create_from_image(img)
 	ring.add_child(spr)
 
+## Plays a brief yellow flash on the player sprite to indicate overclock
+## activation.
 func _flash_overclock() -> void:
-	## Brief visual cue when Overclock activates.
 	var tween := create_tween()
 	tween.tween_property(sprite, "modulate", Color(1.0, 0.7, 0.0), 0.05)
 	tween.tween_property(sprite, "modulate", Color.WHITE, 0.25)
 
+## Pulls all power-ups and XP orbs toward the player at 500 px/s.
+## Used by the permanent magnet field upgrade (faster than the temporary
+## magnet's 350 px/s pull speed).
 func _attract_powerups_fast(delta: float) -> void:
-	## Faster pull than the temp magnet powerup (500 px/s vs 350 px/s).
 	var powerups := get_tree().get_nodes_in_group("powerups")
 	for pu in powerups:
 		if is_instance_valid(pu):
@@ -867,12 +986,18 @@ func _attract_powerups_fast(delta: float) -> void:
 			orb.global_position += dir * 500.0 * delta
 
 
+## Grants the drone escort upgrade: spawns a combat drone that hovers
+## near the player and auto-fires at the nearest enemy. Only one drone
+## can be active at a time.
 func grant_drone_escort() -> void:
 	if has_drone:
 		return
 	has_drone = true
 	_spawn_drone()
 
+## Creates the drone Area2D node with a green circle sprite, a ▶ label,
+## collision shape, and contact damage handler. Adds it to the scene
+## as a top-level node (not parented to the player).
 func _spawn_drone() -> void:
 	if is_instance_valid(drone_node):
 		drone_node.queue_free()
@@ -907,6 +1032,9 @@ func _spawn_drone() -> void:
 	drone_node.area_entered.connect(_on_drone_hit)
 	get_tree().current_scene.add_child(drone_node)
 
+## Updates the drone each frame: lerps toward a hover position offset
+## from the player, and auto-fires a bullet at the nearest enemy on a
+## cooldown timer.
 func _update_drone(delta: float) -> void:
 
 	if not is_instance_valid(drone_node):
@@ -920,6 +1048,9 @@ func _update_drone(delta: float) -> void:
 		drone_shoot_timer = DRONE_FIRE_RATE
 		_drone_fire()
 
+## Fires a single bullet from the drone aimed at the nearest enemy.
+## Falls back to firing upward if no enemies are present. Inherits
+## the piercing modifier if the player has it.
 func _drone_fire() -> void:
 	var enemies := get_tree().get_nodes_in_group("enemies")
 	var best_dist := INF
@@ -940,10 +1071,13 @@ func _drone_fire() -> void:
 		bullet.piercing = true
 	get_tree().current_scene.add_child(bullet)
 
+## Handles drone body collision: deals 1 + bonus damage to enemies and
+## tempest sections on contact.
 func _on_drone_hit(area: Area2D) -> void:
 	if area.is_in_group("enemies") or area.is_in_group("tempest_sections"):
 		area.take_damage(1 + GameManager.bonus_damage)
 
+## Removes the drone from the scene and resets its state.
 func _remove_drone() -> void:
 	has_drone = false
 	drone_shoot_timer = 0.0

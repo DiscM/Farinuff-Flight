@@ -5,11 +5,16 @@ extends Control
 signal try_again_accepted
 signal try_again_declined
 
+## Builds the try-again UI and plays the entrance animation.
+## Runs in PROCESS_MODE_ALWAYS so it works while the game is paused.
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_build_ui()
 	_animate_in()
 
+## Constructs the try-again popup UI: dark overlay, "YOU DIED" title,
+## remaining stock icons, "TRY AGAIN" and "Give Up" buttons, and a
+## countdown timer label that auto-declines after 10 seconds.
 func _build_ui() -> void:
 	# Dark overlay
 	var bg := ColorRect.new()
@@ -84,6 +89,8 @@ func _build_ui() -> void:
 	vbox.add_child(timer_lbl)
 	_start_countdown(timer_lbl)
 
+## Returns a string of star emoji icons representing the remaining stock
+## count, or a dash if none remain.
 func _stock_icons(n: int) -> String:
 	var out := ""
 	for i in range(n):
@@ -95,6 +102,8 @@ func _stock_icons(n: int) -> String:
 var _countdown: float = 10.0
 var _action_taken: bool = false
 
+## Initializes the 10-second auto-decline countdown and stores a reference
+## to the countdown label for per-frame updates.
 func _start_countdown(lbl: Label) -> void:
 	_countdown = 10.0
 	lbl.text = "Auto-decline in 10 s…"
@@ -102,6 +111,9 @@ func _start_countdown(lbl: Label) -> void:
 	# We'll drive the countdown in _process instead
 	set_meta("timer_label", lbl)
 
+## Decrements the countdown timer each frame. Triggers auto-decline when
+## the timer reaches 0. Shows a warning indicator and turns the label red
+## in the last 3 seconds.
 func _process(delta: float) -> void:
 	if _action_taken:
 		return
@@ -116,6 +128,9 @@ func _process(delta: float) -> void:
 
 # ── Actions ────────────────────────────────────────────────────────────────────
 
+## Called when the player presses "TRY AGAIN". Spends one stock, restores
+## 3 lives, re-activates the game, emits try_again_accepted, and closes
+## the popup.
 func _on_try_again() -> void:
 	_action_taken = true
 	GameManager.try_again_stocks -= 1
@@ -127,6 +142,8 @@ func _on_try_again() -> void:
 	get_parent().queue_free()
 
 
+## Called when the player presses "Give Up" or the countdown expires.
+## Emits try_again_declined to proceed to the true game over screen.
 func _on_give_up() -> void:
 	_action_taken = true
 	try_again_declined.emit()
@@ -134,6 +151,7 @@ func _on_give_up() -> void:
 
 # ── Animation ──────────────────────────────────────────────────────────────────
 
+## Plays a fade-in entrance animation for the popup.
 func _animate_in() -> void:
 	modulate.a = 0.0
 	var tween := create_tween()

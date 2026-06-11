@@ -18,12 +18,16 @@ var panel_only: bool = false
 
 # ── Setup ──────────────────────────────────────────────────────────────────────
 
+## Picks 3 random upgrades from the available pool, builds the card-based
+## UI, and plays the entrance animation.
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_pick_upgrades()
 	_build_ui()
 	_animate_in()
 
+## Selects up to 3 upgrades from ALL_UPGRADES, excluding any that have
+## already been chosen in this run. Shuffles the pool for random selection.
 func _pick_upgrades() -> void:
 	# Exclude upgrades that were chosen in previous Wave-10 events this run.
 	var pool: Array[Dictionary] = []
@@ -35,6 +39,9 @@ func _pick_upgrades() -> void:
 
 # ── UI ─────────────────────────────────────────────────────────────────────────
 
+## Constructs the elite upgrade UI: optional dark overlay, title/subtitle
+## labels, and a horizontal row of upgrade cards — each showing an icon,
+## name, description, and a SELECT button.
 func _build_ui() -> void:
 	if not panel_only:
 		# Full-screen dark overlay
@@ -82,6 +89,9 @@ func _build_ui() -> void:
 	for upg in chosen_upgrades:
 		cards_row.add_child(_make_card(upg))
 
+## Creates a single upgrade card panel: styled border in the upgrade's color,
+## icon, name, description, and a SELECT button. Registers hover effects for
+## the glow animation.
 func _make_card(upg: Dictionary) -> PanelContainer:
 	var card := PanelContainer.new()
 	card.custom_minimum_size = Vector2(192, 260)
@@ -152,12 +162,15 @@ func _make_card(upg: Dictionary) -> PanelContainer:
 
 	return card
 
+## Animates a subtle background glow and slight scale-up when the mouse
+## hovers over an upgrade card.
 func _on_card_hover(card: PanelContainer, style: StyleBoxFlat, color: Color) -> void:
 	var tween := card.create_tween()
 	tween.tween_method(func(c: Color): style.bg_color = c,
 		style.bg_color, Color(color.r * 0.15, color.g * 0.15, color.b * 0.15), 0.12)
 	tween.parallel().tween_property(card, "scale", Vector2(1.04, 1.04), 0.1).set_ease(Tween.EASE_OUT)
 
+## Reverts the card's background and scale when the mouse leaves.
 func _on_card_unhover(card: PanelContainer, style: StyleBoxFlat) -> void:
 	var tween := card.create_tween()
 	tween.tween_method(func(c: Color): style.bg_color = c,
@@ -166,6 +179,10 @@ func _on_card_unhover(card: PanelContainer, style: StyleBoxFlat) -> void:
 
 # ── Interaction ────────────────────────────────────────────────────────────────
 
+## Called when a card's SELECT button is pressed. Locks selection to prevent
+## double-picks, shows visual feedback on the chosen/unchosen cards, waits
+## briefly, records the upgrade as chosen in GameManager, applies it to the
+## player, emits upgrade_chosen, and cleans up the popup.
 func _on_upgrade_selected(upgrade_id: String) -> void:
 	if selection_locked:
 		return
@@ -203,6 +220,10 @@ func _on_upgrade_selected(upgrade_id: String) -> void:
 	if not panel_only:
 		get_parent().queue_free()
 
+## Provides visual feedback after selection: highlights the chosen card
+## (white border, scale pulse, tinted background), fades out unchosen cards,
+## disables all SELECT buttons, and updates the subtitle to show the
+## installed upgrade name.
 func _show_selection_feedback(upgrade_id: String, upgrade: Dictionary) -> void:
 	var selected_color: Color = upgrade.get("color", Color(0.3, 1.0, 0.6))
 	if confirmation_label:
@@ -227,6 +248,7 @@ func _show_selection_feedback(upgrade_id: String, upgrade: Dictionary) -> void:
 
 # ── Animation ──────────────────────────────────────────────────────────────────
 
+## Plays a fade-in and slide-up entrance animation for the popup.
 func _animate_in() -> void:
 	modulate.a = 0.0
 	var tween := create_tween()

@@ -27,6 +27,8 @@ const TYPE_LABELS: Dictionary = {
 	Type.NUKE: "NK",
 }
 
+## Initializes the power-up: adds to the "powerups" group, connects collision,
+## attaches a screen-exit notifier, and applies the type-specific color and label.
 func _ready() -> void:
 	add_to_group("powerups")
 	area_entered.connect(_on_area_entered)
@@ -38,12 +40,15 @@ func _ready() -> void:
 	# Set sprite color based on type
 	_setup_visuals()
 
+## Drifts the power-up downward and applies a gentle horizontal bob.
 func _physics_process(delta: float) -> void:
 	position.y += drift_speed * delta
 	# Floating bob effect
 	bob_time += delta
 	position.x += sin(bob_time * 2.5) * 0.5
 
+## Handles collision: collected by a player bullet hit (destroys the bullet)
+## or by direct player contact.
 func _on_area_entered(area: Area2D) -> void:
 	if is_queued_for_deletion():
 		return
@@ -55,15 +60,20 @@ func _on_area_entered(area: Area2D) -> void:
 	elif area.is_in_group("player"):
 		_collect()
 
+## Emits the power_up_collected signal with this power-up's type and position,
+## spawns a collection particle effect, and frees the node.
 func _collect() -> void:
 	SignalBus.power_up_collected.emit(type, global_position)
 	_spawn_collect_effect()
 	queue_free()
 
+## Frees the power-up when it exits the bottom of the screen.
 func _on_screen_exited() -> void:
 	if global_position.y > 0:
 		queue_free()
 
+## Applies the type-specific color tint to the sprite and sets the
+## corresponding abbreviation label (e.g. "RF" for Rapid Fire).
 func _setup_visuals() -> void:
 	# The sprite child will have its modulate set
 	var spr := $Sprite2D
@@ -73,6 +83,8 @@ func _setup_visuals() -> void:
 	if lbl:
 		lbl.text = TYPE_LABELS.get(type, "?")
 
+## Spawns a brief CPU particle burst at the power-up's position using
+## the type's assigned color for satisfying collection feedback.
 func _spawn_collect_effect() -> void:
 	# Quick particle burst
 	var particles := CPUParticles2D.new()

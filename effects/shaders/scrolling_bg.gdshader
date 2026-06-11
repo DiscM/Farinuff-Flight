@@ -4,12 +4,14 @@ shader_type canvas_item;
 uniform float scroll_speed : hint_range(0.01, 0.5) = 0.04;
 uniform float u_time = 0.0;
 
+// Generates a pseudo-random value based on 2D coordinates.
 float hash(vec2 p) {
 	p = fract(p * vec2(234.34, 435.345));
 	p += dot(p, p + 34.23);
 	return fract(p.x * p.y);
 }
 
+// Generates smooth value noise from a 2D position.
 float noise(vec2 p) {
 	vec2 i = floor(p);
 	vec2 f = fract(p);
@@ -21,6 +23,7 @@ float noise(vec2 p) {
 	);
 }
 
+// Calculates Fractional Brownian Motion by combining multiple octaves of noise.
 float fbm(vec2 p) {
 	float v = 0.0;
 	float amp = 0.5;
@@ -32,6 +35,7 @@ float fbm(vec2 p) {
 	return v;
 }
 
+// Computes the final color for each pixel, creating parallax stars and nebula effects.
 void fragment() {
 	vec2 uv = UV;
 	float time = u_time * scroll_speed;

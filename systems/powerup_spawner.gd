@@ -10,28 +10,38 @@ var margin: float = 60.0
 var min_interval: float = 8.0
 var max_interval: float = 15.0
 
+## Reads the viewport width and configures the spawn timer as a one-shot
+## timer that triggers power-up spawns at randomized intervals.
 func _ready() -> void:
 	viewport_width = get_viewport().get_visible_rect().size.x
 	spawn_timer.one_shot = true
 	spawn_timer.timeout.connect(_on_spawn_timer_timeout)
 	SignalBus.game_over.connect(_on_game_over)
 
+## Starts power-up spawning by scheduling the first timer.
 func start_spawning() -> void:
 	_restart_timer()
 
+## Stops power-up spawning by halting the timer.
 func stop_spawning() -> void:
 	spawn_timer.stop()
 
+## Restarts the spawn timer with a random wait time between min_interval
+## and max_interval seconds.
 func _restart_timer() -> void:
 	spawn_timer.wait_time = randf_range(min_interval, max_interval)
 	spawn_timer.start()
 
+## Called on each timer tick. Spawns a power-up if the game is active,
+## then restarts the timer for the next spawn.
 func _on_spawn_timer_timeout() -> void:
 	if not GameManager.is_game_active:
 		return
 	_spawn_powerup()
 	_restart_timer()
 
+## Instantiates a power-up at a random X position along the top of the
+## screen with a random type (0–5), and adds it to the current scene.
 func _spawn_powerup() -> void:
 	var pu: Area2D = POWER_UP_SCENE.instantiate()
 	pu.position = Vector2(
@@ -43,5 +53,6 @@ func _spawn_powerup() -> void:
 	pu.type = type_index
 	get_tree().current_scene.add_child(pu)
 
+## Called on game over. Stops all power-up spawning.
 func _on_game_over(_score: int) -> void:
 	stop_spawning()

@@ -15,6 +15,8 @@ extends CanvasLayer
 var orb_bar: ProgressBar
 var orb_label: Label
 
+## Connects all HUD-relevant signals from the SignalBus, hides the wave
+## banner and boss bar initially, and builds the orb meter UI.
 func _ready() -> void:
 	SignalBus.score_changed.connect(_on_score_changed)
 	SignalBus.combo_changed.connect(_on_combo_changed)
@@ -30,15 +32,19 @@ func _ready() -> void:
 	boss_bar_container.visible = false
 	_build_orb_meter()
 
+## Forces a full refresh of all HUD elements from GameManager's current state.
 func update_all() -> void:
 	_on_score_changed(GameManager.score)
 	_on_combo_changed(GameManager.combo)
 	_on_lives_changed(GameManager.lives)
 	_on_wave_started(GameManager.current_wave)
 
+## Updates the score display text.
 func _on_score_changed(new_score: int) -> void:
 	score_label.text = "SCORE: " + str(new_score)
 
+## Updates the combo display. Shows the combo label with a scale pulse
+## animation when combo > 1; hides it otherwise.
 func _on_combo_changed(new_combo: int) -> void:
 	if new_combo > 1:
 		combo_label.text = "×" + str(new_combo) + " COMBO"
@@ -50,6 +56,8 @@ func _on_combo_changed(new_combo: int) -> void:
 	else:
 		combo_label.visible = false
 
+## Rebuilds the lives display by clearing all heart icons and creating
+## one red ♥ label per remaining life.
 func _on_lives_changed(new_lives: int) -> void:
 	# Re-draw lives icons
 	for child in lives_container.get_children():
@@ -61,6 +69,9 @@ func _on_lives_changed(new_lives: int) -> void:
 		heart.add_theme_font_size_override("font_size", 22)
 		lives_container.add_child(heart)
 
+## Updates the wave label and shows a temporary banner announcing the new
+## wave. Boss waves (every 5th) and elite waves (every 10th) get special
+## colored banners. The banner fades out after 1.8 seconds.
 func _on_wave_started(wave_number: int) -> void:
 	wave_label.text = "WAVE " + str(wave_number)
 	var is_boss_wave := (wave_number % 5 == 0)
@@ -81,6 +92,7 @@ func _on_wave_started(wave_number: int) -> void:
 	tween.tween_property(wave_banner, "modulate:a", 0.0, 0.5)
 	tween.tween_callback(func(): wave_banner.visible = false)
 
+## Shows a green "WAVE X CLEARED!" banner that fades out after 1.2 seconds.
 func _on_wave_cleared(wave_number: int) -> void:
 	wave_banner.text = "WAVE " + str(wave_number) + " CLEARED!"
 	wave_banner.modulate = Color(0.3, 1.0, 0.5)
@@ -97,6 +109,9 @@ func _on_wave_cleared(wave_number: int) -> void:
 
 # --- Boss ---
 
+## Initializes the boss health bar: sets max/current values, displays the
+## boss name with an appropriate color, shows the container, and plays a
+## pulsing entrance animation.
 func _on_boss_spawned(health: int, max_health: int, boss_name: String) -> void:
 	boss_health_bar.max_value = max_health
 	boss_health_bar.value = health
@@ -112,9 +127,11 @@ func _on_boss_spawned(health: int, max_health: int, boss_name: String) -> void:
 	tween.tween_property(boss_bar_container, "modulate:a", 0.3, 0.15)
 	tween.tween_property(boss_bar_container, "modulate:a", 1.0, 0.15)
 
+## Updates the boss health bar value each frame during a boss fight.
 func _on_boss_health_changed(health: int) -> void:
 	boss_health_bar.value = health
 
+## Fades out the boss health bar when the boss is defeated, then hides it.
 func _on_boss_died(_points: int) -> void:
 	var tween := create_tween()
 	tween.tween_property(boss_bar_container, "modulate:a", 0.0, 0.4)
@@ -125,6 +142,8 @@ func _on_boss_died(_points: int) -> void:
 
 # --- Power-ups ---
 
+## Shows a brief color-coded text indicator when a power-up is collected
+## (e.g. "RAPID FIRE!"), then fades it out after 1.5 seconds.
 func _on_power_up_collected(type: int, _pos: Vector2) -> void:
 	# Show brief indicator
 	var indicator := Label.new()
@@ -149,6 +168,8 @@ func _on_power_up_collected(type: int, _pos: Vector2) -> void:
 
 # --- Orb Meter ---
 
+## Constructs the orb meter UI programmatically: a diamond icon, progress
+## bar, and fraction label anchored at the bottom-left of the screen.
 func _build_orb_meter() -> void:
 	var container := MarginContainer.new()
 	container.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
@@ -181,6 +202,9 @@ func _build_orb_meter() -> void:
 	orb_label.add_theme_font_size_override("font_size", 13)
 	hbox.add_child(orb_label)
 
+## Updates the orb meter progress bar and label. Plays a green flash when
+## a heart is restored (meter resets to 0) or a scale pulse on regular
+## orb collection.
 func _on_orb_meter_changed(current: int, max_orbs: int) -> void:
 	orb_bar.max_value = max_orbs
 	orb_bar.value = current

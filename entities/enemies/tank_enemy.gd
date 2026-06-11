@@ -7,6 +7,8 @@ var shoot_timer: float = 0.0
 var shoot_interval: float = 2.5   # seconds between bursts
 var bullet_count: int = 8         # bullets per burst, evenly spread 360°
 
+## Sets stats for the tank enemy (15 HP, slow, 300 points, guaranteed 3-value orb)
+## and randomizes the first shot timer so multiple tanks don't fire simultaneously.
 func _ready() -> void:
 	max_health = 15
 	speed = 80.0
@@ -17,6 +19,8 @@ func _ready() -> void:
 	# Stagger first shot so not all tanks fire at once
 	shoot_timer = randf_range(0.5, shoot_interval)
 
+## Moves using the base straight-line movement, then decrements the shoot
+## timer and fires a radial burst when it reaches zero.
 func _move(delta: float) -> void:
 	super._move(delta)
 	shoot_timer -= delta
@@ -24,6 +28,9 @@ func _move(delta: float) -> void:
 		shoot_timer = shoot_interval
 		_fire_radial_burst()
 
+## Fires a 360° burst of enemy bullets evenly spaced around the tank.
+## Alternates speed between even and odd bullets for visual variety, and
+## colors them neon purple for high contrast against the background.
 func _fire_radial_burst() -> void:
 	for i in range(bullet_count):
 		var angle := (TAU / bullet_count) * i

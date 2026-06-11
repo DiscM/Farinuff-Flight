@@ -8,6 +8,8 @@ extends Sprite2D
 var _time: float = 0.0
 
 
+## Called when the node enters the scene tree for the first time.
+## Initializes frame count/hframes alignment and starts or stops processing based on configuration.
 func _ready() -> void:
 	if frame_count <= 1 and hframes > 1:
 		frame_count = hframes
@@ -17,6 +19,7 @@ func _ready() -> void:
 	set_process(fps > 0.0 and frame_count > 1)
 
 
+## Called every frame. Updates the current frame based on elapsed time, FPS, and loop settings.
 func _process(delta: float) -> void:
 	if fps <= 0.0 or frame_count <= 1:
 		return

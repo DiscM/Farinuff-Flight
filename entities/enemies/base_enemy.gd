@@ -17,6 +17,9 @@ var health: int
 ## The normalized direction this enemy travels. Set by the spawner before adding to scene.
 var spawn_direction: Vector2 = Vector2.DOWN
 
+## Initializes the enemy: adds to the "enemies" group, scales max_health by
+## wave progression, sets current health, connects collision handling, attaches
+## a screen-exit notifier, and starts a looping squash-and-stretch tween on the sprite.
 func _ready() -> void:
 	add_to_group("enemies")
 	# Scale from the full accumulated percentage so low-HP ships do not gain 1 HP every wave.
@@ -36,14 +39,20 @@ func _ready() -> void:
 		tw.tween_property(sprite, "scale", Vector2(1.05, 0.95), 0.6).set_trans(Tween.TRANS_SINE)
 		tw.tween_property(sprite, "scale", Vector2(0.95, 1.05), 0.6).set_trans(Tween.TRANS_SINE)
 
+## Called every physics frame. Delegates to _move() if the game is active.
 func _physics_process(delta: float) -> void:
 	if not GameManager.is_game_active:
 		return
 	_move(delta)
 
+## Default movement: moves straight along spawn_direction at speed,
+## scaled by the global enemy_speed_multiplier. Override in subclasses
+## for custom movement patterns.
 func _move(delta: float) -> void:
 	position += spawn_direction * speed * GameManager.enemy_speed_multiplier * delta
 
+## Reduces health by the given amount. Plays a white flash hit effect
+## if the enemy survives; calls _die() if health drops to 0 or below.
 func take_damage(amount: int) -> void:
 	health -= amount
 	# Flash white on hit
@@ -54,6 +63,9 @@ func take_damage(amount: int) -> void:
 	else:
 		_die()
 
+## Handles enemy death: emits the kill signal with points and position,
+## spawns an XP orb (60% chance, or guaranteed), spawns an explosion
+## effect, and frees the node (all deferred to avoid mid-signal issues).
 func _die() -> void:
 	if is_queued_for_deletion():
 		return
@@ -71,6 +83,9 @@ func _die() -> void:
 	get_tree().current_scene.call_deferred("add_child", explosion)
 	call_deferred("queue_free")
 
+## Handles collisions with other Area2D nodes. If the collider is the
+## player, the enemy self-destructs via _die(). If it's a player bullet
+## (collision layer 4), takes 1 damage.
 func _on_area_entered(area: Area2D) -> void:
 	if is_queued_for_deletion():
 		return
@@ -81,6 +96,9 @@ func _on_area_entered(area: Area2D) -> void:
 		# Bullet hit — take 1 damage; the bullet handles its own queue_free
 		take_damage(1)
 
+## Called when the enemy leaves the visible screen. Only frees the enemy
+## if it has moved past the edge it was heading toward (prevents premature
+## cleanup when enemies spawn just off-screen).
 func _on_screen_exited() -> void:
 	# Free once the enemy has moved past the edge it's heading toward
 	var vp := get_viewport_rect()
