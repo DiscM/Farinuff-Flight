@@ -54,7 +54,10 @@ func _on_area_entered(area: Area2D) -> void:
 		return
 	# Collected by bullet hit
 	if area.collision_layer & 4:  # player_bullets layer
-		area.queue_free()  # destroy the bullet
+		if area.has_method("despawn"):
+			area.despawn()
+		else:
+			area.queue_free()
 		_collect()
 	# Collected by direct player contact
 	elif area.is_in_group("player"):

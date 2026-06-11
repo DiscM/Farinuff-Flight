@@ -79,9 +79,9 @@ func _die() -> void:
 		orb.orb_value = orb_value
 		scene_root.call_deferred("add_child", orb)
 	# Spawn explosion effect
-	var explosion := EXPLOSION_SCENE.instantiate()
-	explosion.global_position = global_position
-	scene_root.call_deferred("add_child", explosion)
+	var explosion = ObjectPool.acquire(EXPLOSION_SCENE, scene_root)
+	if explosion != null and explosion.has_method("play_at"):
+		explosion.play_at(global_position)
 	call_deferred("queue_free")
 
 ## Handles collisions with other Area2D nodes. If the collider is the

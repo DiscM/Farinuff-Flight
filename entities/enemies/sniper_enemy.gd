@@ -54,11 +54,10 @@ func _fire_aimed_shot() -> void:
 	if player == null:
 		return
 	var direction := (player.global_position - global_position).normalized()
-	var bullet: Area2D = ENEMY_BULLET_SCENE.instantiate()
-	bullet.global_position = global_position
-	bullet.add_to_group("enemy_bullets")
-	bullet.set_meta("direction", direction)
-	bullet.set_meta("custom_speed", randf_range(430.0, 500.0))
-	bullet.set_meta("bullet_color", Color(0.2, 1.8, 2.8, 1.0))
 	var scene_root := get_tree().current_scene
-	scene_root.add_child(bullet)
+	if scene_root == null:
+		return
+	var bullet = ObjectPool.acquire(ENEMY_BULLET_SCENE, scene_root)
+	if bullet == null:
+		return
+	bullet.pool_activate(global_position, direction, randf_range(430.0, 500.0), Color(0.2, 1.8, 2.8, 1.0))

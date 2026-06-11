@@ -4,17 +4,16 @@ extends Area2D
 @export var speed: float = 400.0
 static var _visibility_ring_texture: Texture2D
 const PLAYER_PROJECTILE_COLOR := Color(0.2, 1.0, 0.6, 1.0)
+const DEFAULT_BULLET_COLOR := Color(3.0, 0.8, 0.1, 1.0)
 var direction: Vector2 = Vector2.DOWN
 var _visibility_ring: Sprite2D
 var _pulse_time: float = 0.0
 var is_deflected: bool = false
+var _is_despawning: bool = false
 @onready var sprite: Sprite2D = $Sprite2D
 
-## Initializes the bullet: reads direction, speed, and color overrides from
-## metadata (set by spawning enemies), configures high z_index for visibility,
-## creates a pulsing visibility ring outline, and sets up screen-exit cleanup.
+## Initializes the bullet: sets up the visibility ring and screen exit cleanup.
 func _ready() -> void:
-	# Tank radial bullets set direction/speed via metadata before add_child
 	if has_meta("direction"):
 		direction = get_meta("direction")
 	if has_meta("custom_speed"):
@@ -23,16 +22,57 @@ func _ready() -> void:
 	if has_meta("bullet_color"):
 		sprite.modulate = get_meta("bullet_color")
 	else:
-		sprite.modulate = Color(3.0, 0.8, 0.1, 1.0) # Default orange/red
+		sprite.modulate = DEFAULT_BULLET_COLOR
 
-	# Keep hostile shots above bright enemy art and add a color-independent outline.
 	z_index = 24
 	_create_visibility_ring()
 
 	var notifier := VisibleOnScreenNotifier2D.new()
 	add_child(notifier)
-	notifier.screen_exited.connect(queue_free)
+	notifier.screen_exited.connect(_on_screen_exited)
 	area_entered.connect(_on_area_entered)
+
+## Reuses the enemy bullet from the pool with fresh spawn values.
+func pool_activate(spawn_position: Vector2, new_direction: Vector2 = Vector2.DOWN, new_speed: float = 400.0, bullet_color: Color = DEFAULT_BULLET_COLOR) -> void:
+	_is_despawning = false
+	global_position = spawn_position
+	direction = new_direction.normalized() if not new_direction.is_zero_approx() else Vector2.DOWN
+	speed = new_speed
+	is_deflected = false
+	_pulse_time = 0.0
+	z_index = 24
+	sprite.modulate = bullet_color
+	if is_instance_valid(_visibility_ring):
+		_visibility_ring.modulate = bullet_color
+		_visibility_ring.scale = Vector2.ONE
+	collision_layer = 8
+	collision_mask = 1
+	monitoring = true
+	monitorable = true
+	visible = true
+	process_mode = Node.PROCESS_MODE_INHERIT
+	set_physics_process(true)
+	add_to_group("enemy_bullets")
+
+## Returns the enemy bullet to the pool after disabling its collision and
+## physics so it can be safely reused later.
+func despawn() -> void:
+	if _is_despawning:
+		return
+	_is_despawning = true
+	_deactivate_for_pool()
+	ObjectPool.release_deferred(self)
+
+## Disables the bullet so the pooled node can be stored off-screen.
+func _deactivate_for_pool() -> void:
+	remove_from_group("enemy_bullets")
+	visible = false
+	monitoring = false
+	monitorable = false
+	collision_layer = 0
+	collision_mask = 0
+	set_physics_process(false)
+	process_mode = Node.PROCESS_MODE_DISABLED
 
 ## Moves the bullet along its direction and animates a subtle pulse on the
 ## visibility ring for readability against busy backgrounds.
@@ -45,14 +85,13 @@ func _physics_process(delta: float) -> void:
 		_visibility_ring.scale = Vector2.ONE * base_scale * lerpf(0.98, 1.07, pulse)
 		_visibility_ring.modulate.a = lerpf(0.86, 1.0, pulse)
 
-
 ## Deflects the bullet when hit by a boosting player. Reverses its direction
 ## (biased toward the deflector's velocity), increases speed, changes collision
 ## layers so it damages enemies instead of the player, and recolors it green
 ## to indicate it's now friendly. Returns true on success, false if already
 ## deflected.
 func deflect(deflector_position: Vector2, deflector_velocity: Vector2) -> bool:
-	if is_deflected:
+	if is_deflected or _is_despawning:
 		return false
 	is_deflected = true
 	var reflected_direction := (global_position - deflector_position).normalized()
@@ -63,7 +102,6 @@ func deflect(deflector_position: Vector2, deflector_velocity: Vector2) -> bool:
 	direction = reflected_direction
 	speed = maxf(speed * 1.35, 560.0)
 	remove_from_group("enemy_bullets")
-	# Detect enemies from this script only, avoiding duplicate player-bullet damage.
 	collision_layer = 0
 	collision_mask = 2
 	sprite.modulate = PLAYER_PROJECTILE_COLOR
@@ -72,10 +110,8 @@ func deflect(deflector_position: Vector2, deflector_velocity: Vector2) -> bool:
 		_visibility_ring.scale = Vector2.ONE * 1.18
 	return true
 
-
 ## Creates a static visibility ring texture (shared across all instances for
 ## performance) consisting of a dark outline ring and a bright inner ring.
-## Attaches it as a child Sprite2D drawn behind the bullet sprite.
 func _create_visibility_ring() -> void:
 	if _visibility_ring_texture == null:
 		var image_size := 34
@@ -98,16 +134,17 @@ func _create_visibility_ring() -> void:
 	_visibility_ring.z_index = -1
 	add_child(_visibility_ring)
 
-
-## Handles collision: if deflected, damages enemies on contact and self-destructs.
-## If not deflected and touching the player, checks whether the player can
-## deflect (is boosting), attempts deflection, and self-destructs if the player
-## can't deflect.
+## Handles collision: if deflected, damages enemies on contact and returns
+## the bullet to the pool. If not deflected and touching the player, checks
+## whether the player can deflect (is boosting), attempts deflection, and
+## returns the bullet to the pool if the player can't deflect.
 func _on_area_entered(area: Area2D) -> void:
+	if _is_despawning:
+		return
 	if is_deflected:
 		if area.is_in_group("enemies") or area.is_in_group("tempest_sections"):
 			area.take_damage(1 + GameManager.bonus_damage)
-			queue_free()
+			despawn()
 		return
 	if area.is_in_group("player"):
 		var can_be_deflected := bool(area.get("is_boosting"))
@@ -117,4 +154,8 @@ func _on_area_entered(area: Area2D) -> void:
 			if deflect(area.global_position, area.velocity) and area.has_method("register_boost_reflection"):
 				area.register_boost_reflection()
 			return
-		queue_free()
+		despawn()
+
+## Returns the bullet to the pool when it leaves the screen.
+func _on_screen_exited() -> void:
+	despawn()

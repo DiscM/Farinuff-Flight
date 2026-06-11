@@ -5,18 +5,19 @@ extends CanvasLayer
 @onready var combo_label: Label = $MarginContainer/TopBar/ComboLabel
 @onready var wave_label: Label = $MarginContainer/TopBar/WaveLabel
 @onready var lives_container: HBoxContainer = $MarginContainer/TopBar/LivesContainer
-@onready var wave_banner: Label = $WaveBanner
 @onready var power_up_container: HBoxContainer = $MarginContainer2/PowerUpContainer
 @onready var boss_bar_container: MarginContainer = $BossBarContainer
 @onready var boss_name_label: Label = $BossBarContainer/VBox/BossNameLabel
 @onready var boss_health_bar: ProgressBar = $BossBarContainer/VBox/BossHealthBar
 
 # Orb meter (built in code)
+const MAX_VISIBLE_HEARTS: int = 10
+
 var orb_bar: ProgressBar
 var orb_label: Label
 
-## Connects all HUD-relevant signals from the SignalBus, hides the wave
-## banner and boss bar initially, and builds the orb meter UI.
+## Connects all HUD-relevant signals from the SignalBus, hides the boss
+## bar initially, and builds the orb meter UI.
 func _ready() -> void:
 	SignalBus.score_changed.connect(_on_score_changed)
 	SignalBus.combo_changed.connect(_on_combo_changed)
@@ -28,7 +29,6 @@ func _ready() -> void:
 	SignalBus.boss_health_changed.connect(_on_boss_health_changed)
 	SignalBus.boss_died.connect(_on_boss_died)
 	SignalBus.orb_meter_changed.connect(_on_orb_meter_changed)
-	wave_banner.visible = false
 	boss_bar_container.visible = false
 	_build_orb_meter()
 
@@ -56,55 +56,34 @@ func _on_combo_changed(new_combo: int) -> void:
 	else:
 		combo_label.visible = false
 
-## Rebuilds the lives display by clearing all heart icons and creating
-## one red ♥ label per remaining life.
+## Rebuilds the lives display with up to 10 visible hearts and an overflow
+## count for any health above that cap.
 func _on_lives_changed(new_lives: int) -> void:
 	# Re-draw lives icons
 	for child in lives_container.get_children():
 		child.queue_free()
-	for i in range(new_lives):
+	var visible_hearts := clampi(new_lives, 0, MAX_VISIBLE_HEARTS)
+	for i in range(visible_hearts):
 		var heart := Label.new()
 		heart.text = "♥"
 		heart.add_theme_color_override("font_color", Color(1.0, 0.3, 0.35))
 		heart.add_theme_font_size_override("font_size", 22)
 		lives_container.add_child(heart)
+	if new_lives > MAX_VISIBLE_HEARTS:
+		var overflow_label := Label.new()
+		overflow_label.text = "+" + str(new_lives - MAX_VISIBLE_HEARTS)
+		overflow_label.add_theme_color_override("font_color", Color(1.0, 0.55, 0.6))
+		overflow_label.add_theme_font_size_override("font_size", 18)
+		lives_container.add_child(overflow_label)
 
-## Updates the wave label and shows a temporary banner announcing the new
-## wave. Boss waves (every 5th) and elite waves (every 10th) get special
-## colored banners. The banner fades out after 1.8 seconds.
+## Updates the persistent top-bar wave label.
 func _on_wave_started(wave_number: int) -> void:
 	wave_label.text = "WAVE " + str(wave_number)
-	var is_boss_wave := (wave_number % 5 == 0)
-	var is_elite_wave := (wave_number % 10 == 0)
-	if is_boss_wave:
-		if wave_number == 20:
-			wave_banner.text = "TEMPEST CORE INCOMING!"
-		else:
-			wave_banner.text = "ELITE BOSS!" if is_elite_wave else "BOSS INCOMING!"
-		wave_banner.modulate = Color(1.0, 0.15, 0.4) if is_elite_wave else Color(1.0, 0.5, 0.1)
-	else:
-		wave_banner.text = "— WAVE " + str(wave_number) + " —"
-		wave_banner.modulate = Color.WHITE
-	wave_banner.visible = true
-	wave_banner.modulate.a = 1.0
-	var tween := create_tween()
-	tween.tween_interval(1.8)
-	tween.tween_property(wave_banner, "modulate:a", 0.0, 0.5)
-	tween.tween_callback(func(): wave_banner.visible = false)
 
-## Shows a green "WAVE X CLEARED!" banner that fades out after 1.2 seconds.
-func _on_wave_cleared(wave_number: int) -> void:
-	wave_banner.text = "WAVE " + str(wave_number) + " CLEARED!"
-	wave_banner.modulate = Color(0.3, 1.0, 0.5)
-	wave_banner.visible = true
-	wave_banner.modulate.a = 1.0
-	var tween := create_tween()
-	tween.tween_interval(1.2)
-	tween.tween_property(wave_banner, "modulate:a", 0.0, 0.5)
-	tween.tween_callback(func():
-		wave_banner.visible = false
-		wave_banner.modulate = Color.WHITE
-	)
+## Wave clears are handled by GameManager progression; the HUD keeps this
+## callback connected so future non-banner feedback can be added in one place.
+func _on_wave_cleared(_wave_number: int) -> void:
+	pass
 
 
 # --- Boss ---

@@ -551,30 +551,22 @@ func _fire() -> void:
 ## bullet at the ship's barrel, and applies all active modifiers: bullet
 ## scale, piercing, explosive, and zigzag.
 func _spawn_bullet(dir: Vector2, offset: Vector2 = Vector2.ZERO, skip_auto_aim: bool = false, auto_aim_dir: Vector2 = Vector2.ZERO) -> void:
-	var bullet: Area2D = BULLET_SCENE.instantiate()
+	var scene_root := get_tree().current_scene
+	if scene_root == null:
+		return
+	var bullet = ObjectPool.acquire(BULLET_SCENE, scene_root)
+	if bullet == null:
+		return
 	# Auto-aim: nudge direction toward nearest enemy (skipped for rear-facing bullets)
 	if has_auto_aim and not skip_auto_aim and not auto_aim_dir.is_zero_approx():
 		dir = dir.lerp(auto_aim_dir, 0.35).normalized()
-	bullet.direction = dir
 	# Offset along the barrel/direction
 	var dist_offset = dir * 0.5 * sprite_frame_size.y * scale.y * sprite.scale.y
-	bullet.global_position = global_position + dist_offset + offset
 	# Apply bullet scale upgrade
+	var bs := 1.0
 	if bullet_scale_level > 0:
-		var bs := 1.0 + bullet_scale_level * 0.5
-		bullet.scale = Vector2(bs, bs)
-	# Apply piercing
-	if has_piercing:
-		bullet.piercing = true
-	# Apply explosive rounds
-	if has_explosive_rounds:
-		bullet.explosive = true
-	# Apply zigzag
-	if zigzag_stacks > 0:
-		bullet.zigzag = true
-		bullet.zigzag_stacks = zigzag_stacks
-	var scene_root := get_tree().current_scene
-	scene_root.add_child(bullet)
+		bs = 1.0 + bullet_scale_level * 0.5
+	bullet.pool_activate(global_position + dist_offset + offset, dir, bs, has_piercing, has_explosive_rounds, zigzag_stacks)
 
 ## Re-enables shooting after the fire rate cooldown timer expires.
 func _on_shoot_timer_timeout() -> void:
@@ -959,7 +951,10 @@ func _trigger_shield_burst() -> void:
 	# Destroy nearby enemy bullets
 	for b in tree.get_nodes_in_group("enemy_bullets"):
 		if is_instance_valid(b) and global_position.distance_squared_to(b.global_position) < burst_radius_sq:
-			b.queue_free()
+			if b.has_method("despawn"):
+				b.despawn()
+			else:
+				b.queue_free()
 	# Damage enemies and exposed boss systems caught in the burst.
 	for e in tree.get_nodes_in_group("enemies"):
 		if is_instance_valid(e) and global_position.distance_squared_to(e.global_position) < burst_radius_sq:
@@ -1101,13 +1096,13 @@ func _drone_fire() -> void:
 	var dir := _get_nearest_enemy_direction(drone_node.global_position)
 	if dir.is_zero_approx():
 		dir = Vector2.UP
-	var bullet: Area2D = BULLET_SCENE.instantiate()
-	bullet.direction = dir
-	bullet.global_position = drone_node.global_position
-	if has_piercing:
-		bullet.piercing = true
 	var scene_root := get_tree().current_scene
-	scene_root.add_child(bullet)
+	if scene_root == null:
+		return
+	var bullet = ObjectPool.acquire(BULLET_SCENE, scene_root)
+	if bullet == null:
+		return
+	bullet.pool_activate(drone_node.global_position, dir, 1.0, has_piercing)
 
 ## Handles drone body collision: deals 1 + bonus damage to enemies and
 ## tempest sections on contact.

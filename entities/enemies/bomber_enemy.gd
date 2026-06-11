@@ -58,10 +58,10 @@ func _move(delta: float) -> void:
 ## Spawns a neon-green enemy bullet below the bomber's current position,
 ## traveling downward at a randomized speed.
 func _drop_bomb() -> void:
-	var bomb: Area2D = ENEMY_BULLET_SCENE.instantiate()
-	bomb.global_position = global_position + Vector2(0, 16)
-	bomb.add_to_group("enemy_bullets")
-	bomb.set_meta("custom_speed", randf_range(300.0, 400.0))
-	bomb.set_meta("bullet_color", Color(0.2, 3.0, 0.2, 1.0)) # High contrast neon green
 	var scene_root := get_tree().current_scene
-	scene_root.add_child(bomb)
+	if scene_root == null:
+		return
+	var bomb = ObjectPool.acquire(ENEMY_BULLET_SCENE, scene_root)
+	if bomb == null:
+		return
+	bomb.pool_activate(global_position + Vector2(0, 16), Vector2.DOWN, randf_range(300.0, 400.0), Color(0.2, 3.0, 0.2, 1.0))

@@ -718,14 +718,13 @@ func _spawn_bullet(dir: Vector2, spd: float) -> void:
 ## tempest sections firing from their own positions). Adds slight speed
 ## randomization for visual variety.
 func _spawn_bullet_from(origin: Vector2, dir: Vector2, spd: float) -> void:
-	var bullet: Area2D = ENEMY_BULLET_SCENE.instantiate()
-	bullet.global_position = origin
-	bullet.add_to_group("enemy_bullets")
-	bullet.set_meta("direction", dir)
-	bullet.set_meta("custom_speed", spd * randf_range(0.92, 1.08))
-	bullet.set_meta("bullet_color", bullet_color)
 	var scene_root := get_tree().current_scene
-	scene_root.call_deferred("add_child", bullet)
+	if scene_root == null:
+		return
+	var bullet = ObjectPool.acquire(ENEMY_BULLET_SCENE, scene_root)
+	if bullet == null:
+		return
+	bullet.pool_activate(origin, dir, spd * randf_range(0.92, 1.08), bullet_color)
 
 
 ## Fires aimed shots from each active tempest section toward the player.
@@ -811,9 +810,9 @@ func _die() -> void:
 		orb.global_position = global_position
 		orb.orb_value = orb_value
 		scene_root.call_deferred("add_child", orb)
-	var explosion := EXPLOSION_SCENE.instantiate()
-	explosion.global_position = global_position
-	scene_root.call_deferred("add_child", explosion)
+	var explosion = ObjectPool.acquire(EXPLOSION_SCENE, scene_root)
+	if explosion != null and explosion.has_method("play_at"):
+		explosion.play_at(global_position)
 
 	# Emit the boss signal AFTER hiding, so the pause triggered by elite upgrade
 	# doesn't block any remaining cleanup.

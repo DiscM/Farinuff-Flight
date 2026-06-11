@@ -46,6 +46,8 @@ func set_points(p: int) -> void:
 ## "+" button, and a confirm button that enables only when all points
 ## have been spent.
 func _build_ui() -> void:
+	var compact_layout := panel_only
+
 	if not panel_only:
 		# Dark overlay background (fullscreen)
 		var bg := ColorRect.new()
@@ -64,8 +66,8 @@ func _build_ui() -> void:
 		vbox.offset_right = 220
 		vbox.offset_top = -240
 		vbox.offset_bottom = 240
-	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	vbox.add_theme_constant_override("separation", 14)
+	vbox.alignment = BoxContainer.ALIGNMENT_BEGIN if compact_layout else BoxContainer.ALIGNMENT_CENTER
+	vbox.add_theme_constant_override("separation", 12 if compact_layout else 14)
 	add_child(vbox)
 
 	# Title
@@ -73,19 +75,19 @@ func _build_ui() -> void:
 	title.text = "⚙  UPGRADE YOUR SHIP  ⚙"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
-	title.add_theme_font_size_override("font_size", 30)
+	title.add_theme_font_size_override("font_size", 26 if compact_layout else 30)
 	vbox.add_child(title)
 
 	# Subtitle / points
 	points_label = Label.new()
 	points_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	points_label.add_theme_color_override("font_color", Color(0.7, 0.8, 1.0))
-	points_label.add_theme_font_size_override("font_size", 18)
+	points_label.add_theme_font_size_override("font_size", 16 if compact_layout else 18)
 	vbox.add_child(points_label)
 
 	# Spacer
 	var spacer := Control.new()
-	spacer.custom_minimum_size = Vector2(0, 10)
+	spacer.custom_minimum_size = Vector2(0, 6 if compact_layout else 10)
 	vbox.add_child(spacer)
 
 	# Stat rows
@@ -95,15 +97,15 @@ func _build_ui() -> void:
 
 	# Spacer
 	var spacer2 := Control.new()
-	spacer2.custom_minimum_size = Vector2(0, 10)
+	spacer2.custom_minimum_size = Vector2(0, 6 if compact_layout else 10)
 	vbox.add_child(spacer2)
 
 	# Confirm button
 	confirm_btn = Button.new()
 	confirm_btn.text = "CONFIRM"
-	confirm_btn.custom_minimum_size = Vector2(200, 50)
+	confirm_btn.custom_minimum_size = Vector2(180 if compact_layout else 200, 46 if compact_layout else 50)
 	confirm_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	confirm_btn.add_theme_font_size_override("font_size", 20)
+	confirm_btn.add_theme_font_size_override("font_size", 18 if compact_layout else 20)
 	confirm_btn.add_theme_color_override("font_color", Color(0.3, 1.0, 0.5))
 	confirm_btn.disabled = true
 	confirm_btn.pressed.connect(_on_confirm)
@@ -117,30 +119,30 @@ func _build_ui() -> void:
 func _add_stat_row(parent: VBoxContainer, label_text: String, stat_id: String, color: Color) -> void:
 	var row := HBoxContainer.new()
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	row.add_theme_constant_override("separation", 12)
+	row.add_theme_constant_override("separation", 10 if panel_only else 12)
 	parent.add_child(row)
 
 	# Stat name
 	var name_label := Label.new()
 	name_label.text = label_text
-	name_label.custom_minimum_size = Vector2(220, 0)
+	name_label.custom_minimum_size = Vector2(180 if panel_only else 220, 0)
 	name_label.add_theme_color_override("font_color", color)
-	name_label.add_theme_font_size_override("font_size", 18)
+	name_label.add_theme_font_size_override("font_size", 17 if panel_only else 18)
 	row.add_child(name_label)
 
 	# Current level display
 	var level_lbl := Label.new()
-	level_lbl.custom_minimum_size = Vector2(50, 0)
+	level_lbl.custom_minimum_size = Vector2(44 if panel_only else 50, 0)
 	level_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	level_lbl.add_theme_color_override("font_color", Color(0.9, 0.95, 1.0))
-	level_lbl.add_theme_font_size_override("font_size", 18)
+	level_lbl.add_theme_font_size_override("font_size", 17 if panel_only else 18)
 	row.add_child(level_lbl)
 
 	# + button
 	var btn := Button.new()
 	btn.text = "  +  "
-	btn.custom_minimum_size = Vector2(50, 40)
-	btn.add_theme_font_size_override("font_size", 22)
+	btn.custom_minimum_size = Vector2(46 if panel_only else 50, 38 if panel_only else 40)
+	btn.add_theme_font_size_override("font_size", 20 if panel_only else 22)
 	btn.add_theme_color_override("font_color", color)
 	btn.pressed.connect(_on_plus_pressed.bind(stat_id))
 	row.add_child(btn)

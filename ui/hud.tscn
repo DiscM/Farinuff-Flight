@@ -76,28 +76,6 @@ layout_mode = 2
 size_flags_horizontal = 10
 theme_override_constants/separation = 4
 
-[node name="WaveBanner" type="Label" parent="."]
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -200
-offset_top = -200
-offset_right = 200
-offset_bottom = -160
-grow_horizontal = 2
-grow_vertical = 2
-text = "— WAVE 1 —"
-horizontal_alignment = 1
-vertical_alignment = 1
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_font_sizes/font_size = 36
-
-
-
-
-
 [node name="MarginContainer2" type="MarginContainer" parent="."]
 anchors_preset = 12
 anchor_top = 1.0

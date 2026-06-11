@@ -441,18 +441,29 @@ func _show_combined(alloc_points: int) -> void:
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	root.add_child(bg)
 
-	# Side-by-side HBox
+	# Keep the combined UI away from the top HUD and give each panel
+	# room to breathe instead of stretching both across the whole screen.
+	var safe_frame := MarginContainer.new()
+	safe_frame.set_anchors_preset(Control.PRESET_FULL_RECT)
+	safe_frame.set_offsets_preset(Control.PRESET_FULL_RECT)
+	safe_frame.add_theme_constant_override("margin_left", 56)
+	safe_frame.add_theme_constant_override("margin_right", 56)
+	safe_frame.add_theme_constant_override("margin_top", 132)
+	safe_frame.add_theme_constant_override("margin_bottom", 40)
+	root.add_child(safe_frame)
+
 	var hbox := HBoxContainer.new()
-	hbox.set_anchors_preset(Control.PRESET_FULL_RECT)
-	hbox.set_offsets_preset(Control.PRESET_FULL_RECT)
 	hbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	hbox.add_theme_constant_override("separation", 24)
-	root.add_child(hbox)
+	hbox.add_theme_constant_override("separation", 56)
+	hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	safe_frame.add_child(hbox)
 
 	# Left: elite upgrade panel
 	var elite_panel := ELITE_UPGRADE_SCENE.instantiate()
 	elite_panel.panel_only = true
-	elite_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	elite_panel.custom_minimum_size = Vector2(560, 0)
+	elite_panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	elite_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	hbox.add_child(elite_panel)
 	elite_panel.upgrade_chosen.connect(func():
@@ -464,7 +475,8 @@ func _show_combined(alloc_points: int) -> void:
 	# Right: allocation panel
 	var alloc_panel := POINT_ALLOCATION_SCENE.instantiate()
 	alloc_panel.panel_only = true
-	alloc_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	alloc_panel.custom_minimum_size = Vector2(410, 0)
+	alloc_panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	alloc_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	hbox.add_child(alloc_panel)
 	alloc_panel.allocation_done.connect(func():

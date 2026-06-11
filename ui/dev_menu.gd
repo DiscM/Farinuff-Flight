@@ -63,7 +63,7 @@ func _on_add_orbs() -> void:
 func _on_clear_enemies() -> void:
 	get_tree().call_group("enemies", "take_damage", 9999)
 	get_tree().call_group("tempest_sections", "take_damage", 9999)
-	get_tree().call_group("enemy_bullets", "queue_free")
+	get_tree().call_group("enemy_bullets", "despawn")
 
 ## Forces the game to wave 10 and spawns an elite boss, closing the
 ## pause menu first so the boss fight begins immediately.

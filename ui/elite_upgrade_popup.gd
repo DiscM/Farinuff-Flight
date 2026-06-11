@@ -43,6 +43,8 @@ func _pick_upgrades() -> void:
 ## labels, and a horizontal row of upgrade cards — each showing an icon,
 ## name, description, and a SELECT button.
 func _build_ui() -> void:
+	var compact_layout := panel_only
+
 	if not panel_only:
 		# Full-screen dark overlay
 		var bg := ColorRect.new()
@@ -54,8 +56,8 @@ func _build_ui() -> void:
 	var outer := VBoxContainer.new()
 	outer.set_anchors_preset(Control.PRESET_FULL_RECT)
 	outer.set_offsets_preset(Control.PRESET_FULL_RECT)
-	outer.alignment = BoxContainer.ALIGNMENT_CENTER
-	outer.add_theme_constant_override("separation", 24)
+	outer.alignment = BoxContainer.ALIGNMENT_BEGIN if compact_layout else BoxContainer.ALIGNMENT_CENTER
+	outer.add_theme_constant_override("separation", 12 if compact_layout else 24)
 	add_child(outer)
 
 	# Title banner
@@ -68,14 +70,14 @@ func _build_ui() -> void:
 	title.text = "✦  SHIP TRANSFORMATION  ✦"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_color_override("font_color", Color(1.0, 0.92, 0.3))
-	title.add_theme_font_size_override("font_size", 34)
+	title.add_theme_font_size_override("font_size", 26 if compact_layout else 34)
 	outer.add_child(title)
 
 	var subtitle := Label.new()
 	subtitle.text = "Choose one permanent upgrade for your ship"
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	subtitle.add_theme_color_override("font_color", Color(0.65, 0.75, 1.0))
-	subtitle.add_theme_font_size_override("font_size", 16)
+	subtitle.add_theme_font_size_override("font_size", 13 if compact_layout else 16)
 	outer.add_child(subtitle)
 	confirmation_label = subtitle
 
@@ -83,7 +85,7 @@ func _build_ui() -> void:
 	var cards_row := HBoxContainer.new()
 	cards_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	cards_row.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	cards_row.add_theme_constant_override("separation", 28)
+	cards_row.add_theme_constant_override("separation", 14 if compact_layout else 28)
 	outer.add_child(cards_row)
 
 	for upg in chosen_upgrades:
@@ -94,7 +96,7 @@ func _build_ui() -> void:
 ## the glow animation.
 func _make_card(upg: Dictionary) -> PanelContainer:
 	var card := PanelContainer.new()
-	card.custom_minimum_size = Vector2(192, 260)
+	card.custom_minimum_size = Vector2(168, 214) if panel_only else Vector2(192, 260)
 
 	# Stylebox for the card background
 	var style := StyleBoxFlat.new()
@@ -102,19 +104,19 @@ func _make_card(upg: Dictionary) -> PanelContainer:
 	style.border_color = upg["color"]
 	style.set_border_width_all(2)
 	style.set_corner_radius_all(14)
-	style.set_content_margin_all(18)
+	style.set_content_margin_all(12 if panel_only else 18)
 	card.add_theme_stylebox_override("panel", style)
 
 	var inner := VBoxContainer.new()
 	inner.alignment = BoxContainer.ALIGNMENT_CENTER
-	inner.add_theme_constant_override("separation", 10)
+	inner.add_theme_constant_override("separation", 6 if panel_only else 10)
 	card.add_child(inner)
 
 	# Icon
 	var icon_lbl := Label.new()
 	icon_lbl.text = upg["icon"]
 	icon_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	icon_lbl.add_theme_font_size_override("font_size", 48)
+	icon_lbl.add_theme_font_size_override("font_size", 36 if panel_only else 48)
 	inner.add_child(icon_lbl)
 
 	# Name
@@ -122,7 +124,7 @@ func _make_card(upg: Dictionary) -> PanelContainer:
 	name_lbl.text = upg["name"]
 	name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_lbl.add_theme_color_override("font_color", upg["color"])
-	name_lbl.add_theme_font_size_override("font_size", 20)
+	name_lbl.add_theme_font_size_override("font_size", 16 if panel_only else 20)
 	name_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	inner.add_child(name_lbl)
 
@@ -136,21 +138,23 @@ func _make_card(upg: Dictionary) -> PanelContainer:
 	desc_lbl.text = upg["description"]
 	desc_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	desc_lbl.add_theme_color_override("font_color", Color(0.8, 0.88, 1.0))
-	desc_lbl.add_theme_font_size_override("font_size", 14)
+	desc_lbl.add_theme_font_size_override("font_size", 11 if panel_only else 14)
 	desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	desc_lbl.size_flags_vertical = Control.SIZE_EXPAND_FILL if panel_only else Control.SIZE_FILL
 	inner.add_child(desc_lbl)
 
 	# Spacer
 	var sp := Control.new()
-	sp.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	sp.custom_minimum_size = Vector2(0, 2 if panel_only else 0)
+	sp.size_flags_vertical = Control.SIZE_FILL if panel_only else Control.SIZE_EXPAND_FILL
 	inner.add_child(sp)
 
 	# Select button
 	var btn := Button.new()
 	btn.text = "SELECT"
-	btn.add_theme_font_size_override("font_size", 17)
+	btn.add_theme_font_size_override("font_size", 14 if panel_only else 17)
 	btn.add_theme_color_override("font_color", upg["color"])
-	btn.custom_minimum_size = Vector2(0, 42)
+	btn.custom_minimum_size = Vector2(0, 34 if panel_only else 42)
 	btn.pressed.connect(_on_upgrade_selected.bind(upg["id"]))
 	inner.add_child(btn)
 	card.set_meta("select_button", btn)
