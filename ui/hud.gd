@@ -127,7 +127,7 @@ func _on_boss_spawned(health: int, max_health: int, boss_name: String) -> void:
 	tween.tween_property(boss_bar_container, "modulate:a", 0.3, 0.15)
 	tween.tween_property(boss_bar_container, "modulate:a", 1.0, 0.15)
 
-## Updates the boss health bar value each frame during a boss fight.
+## Updates the boss health bar value whenever the boss takes damage.
 func _on_boss_health_changed(health: int) -> void:
 	boss_health_bar.value = health
 

@@ -8,6 +8,7 @@ var direction: Vector2 = Vector2.DOWN
 var _visibility_ring: Sprite2D
 var _pulse_time: float = 0.0
 var is_deflected: bool = false
+@onready var sprite: Sprite2D = $Sprite2D
 
 ## Initializes the bullet: reads direction, speed, and color overrides from
 ## metadata (set by spawning enemies), configures high z_index for visibility,
@@ -20,9 +21,9 @@ func _ready() -> void:
 		speed = get_meta("custom_speed")
 
 	if has_meta("bullet_color"):
-		$Sprite2D.modulate = get_meta("bullet_color")
+		sprite.modulate = get_meta("bullet_color")
 	else:
-		$Sprite2D.modulate = Color(3.0, 0.8, 0.1, 1.0) # Default orange/red
+		sprite.modulate = Color(3.0, 0.8, 0.1, 1.0) # Default orange/red
 
 	# Keep hostile shots above bright enemy art and add a color-independent outline.
 	z_index = 24
@@ -65,7 +66,7 @@ func deflect(deflector_position: Vector2, deflector_velocity: Vector2) -> bool:
 	# Detect enemies from this script only, avoiding duplicate player-bullet damage.
 	collision_layer = 0
 	collision_mask = 2
-	$Sprite2D.modulate = PLAYER_PROJECTILE_COLOR
+	sprite.modulate = PLAYER_PROJECTILE_COLOR
 	if is_instance_valid(_visibility_ring):
 		_visibility_ring.modulate = PLAYER_PROJECTILE_COLOR
 		_visibility_ring.scale = Vector2.ONE * 1.18

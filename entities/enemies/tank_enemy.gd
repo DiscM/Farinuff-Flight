@@ -32,6 +32,7 @@ func _move(delta: float) -> void:
 ## Alternates speed between even and odd bullets for visual variety, and
 ## colors them neon purple for high contrast against the background.
 func _fire_radial_burst() -> void:
+	var scene_root := get_tree().current_scene
 	for i in range(bullet_count):
 		var angle := (TAU / bullet_count) * i
 		var dir := Vector2(sin(angle), cos(angle))
@@ -44,5 +45,4 @@ func _fire_radial_burst() -> void:
 		bullet.set_meta("direction", dir)
 		bullet.set_meta("custom_speed", shot_speed)
 		bullet.set_meta("bullet_color", Color(2.0, 0.2, 3.0, 1.0)) # High contrast neon purple
-		get_tree().current_scene.add_child(bullet)
-
+		scene_root.add_child(bullet)

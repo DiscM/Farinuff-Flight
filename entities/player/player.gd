@@ -2,6 +2,7 @@ extends Area2D
 ## Player ship — handles movement, shooting, power-ups, and taking damage.
 
 const BULLET_SCENE := preload("res://entities/bullets/bullet.tscn")
+const RETICLE_TEXTURE := preload("res://assets/ui/cursor_crosshair.png")
 
 @export var speed: float = 280.0
 @export var base_fire_rate: float = 0.22  # seconds between shots
@@ -61,6 +62,7 @@ const OVERCLOCK_COOLDOWN: float = 16.0
 
 var can_shoot: bool = true
 var viewport_rect: Rect2
+var sprite_frame_size: Vector2 = Vector2(48.0, 48.0)
 var velocity: Vector2 = Vector2.ZERO
 
 # --- Free Aim ---
@@ -88,6 +90,7 @@ const BOOST_REFLECT_COOLDOWN_MIN: float = 0.10
 const BOOST_CHAIN_REFLECT_THRESHOLD: int = 3
 const BOOST_CHAIN_WINDOW: float = 0.18
 const BOOST_DEFLECT_RADIUS: float = 74.0
+const BOOST_DEFLECT_RADIUS_SQ: float = BOOST_DEFLECT_RADIUS * BOOST_DEFLECT_RADIUS
 const POST_BOOST_SLIDE_DURATION: float = 0.4
 
 # --- Drift Params ---
@@ -134,6 +137,7 @@ func _ready() -> void:
 	area_entered.connect(_on_area_entered)
 	SignalBus.power_up_collected.connect(_on_power_up_collected)
 	shield_sprite.visible = false
+	sprite_frame_size = _get_sprite_frame_size()
 
 	# Initialize reticle
 	_setup_reticle()
@@ -146,7 +150,7 @@ func _setup_reticle() -> void:
 
 	# Crosshair reticle using the themed cursor asset
 	var dot := Sprite2D.new()
-	dot.texture = load("res://assets/ui/cursor_crosshair.png")
+	dot.texture = RETICLE_TEXTURE
 	dot.scale = Vector2(0.375, 0.375)  # scale 64px asset down to ~24px
 	dot.modulate = Color(0.38, 0.88, 1.0, 0.9)  # neon cyan tint to match HUD
 	reticle.add_child(dot)
@@ -231,7 +235,6 @@ func _physics_process(delta: float) -> void:
 	viewport_rect = get_viewport().get_visible_rect()
 
 	# Clamp to viewport using the displayed frame size, not the full strip texture.
-	var sprite_frame_size := _get_sprite_frame_size()
 	var half_w: float = 0.5 * sprite_frame_size.x * scale.x * sprite.scale.x
 	var half_h: float = 0.5 * sprite_frame_size.y * scale.y * sprite.scale.y
 	position.x = clampf(position.x, half_w, viewport_rect.size.x - half_w)
@@ -378,10 +381,11 @@ func _steer_boost(input_dir: Vector2, delta: float) -> void:
 ## Scans all enemy bullets within BOOST_DEFLECT_RADIUS and attempts to
 ## deflect each one. Called every frame during an active boost.
 func _deflect_nearby_projectiles() -> void:
-	for projectile in get_tree().get_nodes_in_group("enemy_bullets"):
+	var tree := get_tree()
+	for projectile in tree.get_nodes_in_group("enemy_bullets"):
 		if not is_instance_valid(projectile):
 			continue
-		if global_position.distance_squared_to(projectile.global_position) > BOOST_DEFLECT_RADIUS * BOOST_DEFLECT_RADIUS:
+		if global_position.distance_squared_to(projectile.global_position) > BOOST_DEFLECT_RADIUS_SQ:
 			continue
 		_try_deflect_projectile(projectile)
 
@@ -444,14 +448,31 @@ func _spawn_afterimage() -> void:
 
 	# Parent into the dedicated AfterimageContainer so adding/removing these sprites
 	# doesn't mutate the root scene tree and invalidate star-field draw calls (flicker fix).
-	var containers := get_tree().get_nodes_in_group("afterimage_container")
-	var parent: Node = containers[0] if not containers.is_empty() else get_tree().current_scene
+	var parent: Node = get_tree().get_first_node_in_group("afterimage_container")
+	if parent == null:
+		parent = get_tree().current_scene
 	parent.add_child(af)
 
 	var tween := af.create_tween()
 	tween.tween_property(af, "modulate:a", 0.0, 0.35).set_ease(Tween.EASE_OUT)
 	tween.parallel().tween_property(af, "scale", scale * sprite.scale * 0.8, 0.35)
 	tween.tween_callback(af.queue_free)
+
+## Returns a direction vector toward the nearest enemy within the optional
+## max_distance. Returns Vector2.ZERO when no valid target is found.
+func _get_nearest_enemy_direction(origin: Vector2, max_distance: float = INF) -> Vector2:
+	var enemies := get_tree().get_nodes_in_group("enemies")
+	var best_dist := max_distance
+	var best_enemy: Node2D = null
+	for e in enemies:
+		if is_instance_valid(e):
+			var d: float = origin.distance_to(e.global_position)
+			if d < best_dist:
+				best_dist = d
+				best_enemy = e
+	if best_enemy:
+		return (best_enemy.global_position - origin).normalized()
+	return Vector2.ZERO
 
 ## Updates the aim direction based on controller right stick or mouse
 ## position. The reticle becomes visible and the ship rotates to face
@@ -489,60 +510,49 @@ func _fire() -> void:
 	# Main fire direction
 	var aim_dir = last_aim_direction
 	var side_offset = aim_dir.rotated(PI/2.0) # perpendicular vector for parallel bullets
+	var auto_aim_dir := _get_nearest_enemy_direction(global_position, 500.0) if has_auto_aim else Vector2.ZERO
 
 	if has_spread_shot or has_spread_shot_elite:
-		_spawn_bullet(aim_dir)
-		_spawn_bullet(aim_dir.rotated(deg_to_rad(-25)))
-		_spawn_bullet(aim_dir.rotated(deg_to_rad(25)))
+		_spawn_bullet(aim_dir, Vector2.ZERO, false, auto_aim_dir)
+		_spawn_bullet(aim_dir.rotated(deg_to_rad(-25)), Vector2.ZERO, false, auto_aim_dir)
+		_spawn_bullet(aim_dir.rotated(deg_to_rad(25)), Vector2.ZERO, false, auto_aim_dir)
 		if has_twin_cannons:
 			# Twin cannons add 2 parallel bullets
-			_spawn_bullet(aim_dir.rotated(deg_to_rad(-12)), side_offset * -18)
-			_spawn_bullet(aim_dir.rotated(deg_to_rad(12)), side_offset * 18)
+			_spawn_bullet(aim_dir.rotated(deg_to_rad(-12)), side_offset * -18, false, auto_aim_dir)
+			_spawn_bullet(aim_dir.rotated(deg_to_rad(12)), side_offset * 18, false, auto_aim_dir)
 	else:
-		_spawn_bullet(aim_dir)
+		_spawn_bullet(aim_dir, Vector2.ZERO, false, auto_aim_dir)
 		if has_twin_cannons:
-			_spawn_bullet(aim_dir, side_offset * -14)
-			_spawn_bullet(aim_dir, side_offset * 14)
+			_spawn_bullet(aim_dir, side_offset * -14, false, auto_aim_dir)
+			_spawn_bullet(aim_dir, side_offset * 14, false, auto_aim_dir)
 
 	# Rear gunner logic
 	if has_rear_gun or has_rear_gunner:
 		var back_dir = -aim_dir
 		if has_spread_shot or has_spread_shot_elite:
-			_spawn_bullet(back_dir, Vector2.ZERO, true)
-			_spawn_bullet(back_dir.rotated(deg_to_rad(-25)), Vector2.ZERO, true)
-			_spawn_bullet(back_dir.rotated(deg_to_rad(25)), Vector2.ZERO, true)
+			_spawn_bullet(back_dir, Vector2.ZERO, true, auto_aim_dir)
+			_spawn_bullet(back_dir.rotated(deg_to_rad(-25)), Vector2.ZERO, true, auto_aim_dir)
+			_spawn_bullet(back_dir.rotated(deg_to_rad(25)), Vector2.ZERO, true, auto_aim_dir)
 			if has_twin_cannons:
-				_spawn_bullet(back_dir.rotated(deg_to_rad(-12)), side_offset * 18, true)
-				_spawn_bullet(back_dir.rotated(deg_to_rad(12)), side_offset * -18, true)
+				_spawn_bullet(back_dir.rotated(deg_to_rad(-12)), side_offset * 18, true, auto_aim_dir)
+				_spawn_bullet(back_dir.rotated(deg_to_rad(12)), side_offset * -18, true, auto_aim_dir)
 		else:
-			_spawn_bullet(back_dir, Vector2.ZERO, true)
+			_spawn_bullet(back_dir, Vector2.ZERO, true, auto_aim_dir)
 			if has_twin_cannons:
-				_spawn_bullet(back_dir, side_offset * 14, true)
-				_spawn_bullet(back_dir, side_offset * -14, true)
+				_spawn_bullet(back_dir, side_offset * 14, true, auto_aim_dir)
+				_spawn_bullet(back_dir, side_offset * -14, true, auto_aim_dir)
 
 ## Instantiates and configures a single player bullet. Applies auto-aim
 ## nudge toward nearest enemy (skipped for rear bullets), positions the
 ## bullet at the ship's barrel, and applies all active modifiers: bullet
 ## scale, piercing, explosive, and zigzag.
-func _spawn_bullet(dir: Vector2, offset: Vector2 = Vector2.ZERO, skip_auto_aim: bool = false) -> void:
+func _spawn_bullet(dir: Vector2, offset: Vector2 = Vector2.ZERO, skip_auto_aim: bool = false, auto_aim_dir: Vector2 = Vector2.ZERO) -> void:
 	var bullet: Area2D = BULLET_SCENE.instantiate()
 	# Auto-aim: nudge direction toward nearest enemy (skipped for rear-facing bullets)
-	if has_auto_aim and not skip_auto_aim:
-		var enemies := get_tree().get_nodes_in_group("enemies")
-		var best_dist := INF
-		var best_enemy: Node2D = null
-		for e in enemies:
-			if is_instance_valid(e):
-				var d: float = global_position.distance_to(e.global_position)
-				if d < best_dist:
-					best_dist = d
-					best_enemy = e
-		if best_enemy and best_dist < 500.0:
-			var aim_dir := (best_enemy.global_position - global_position).normalized()
-			dir = dir.lerp(aim_dir, 0.35).normalized()
+	if has_auto_aim and not skip_auto_aim and not auto_aim_dir.is_zero_approx():
+		dir = dir.lerp(auto_aim_dir, 0.35).normalized()
 	bullet.direction = dir
 	# Offset along the barrel/direction
-	var sprite_frame_size := _get_sprite_frame_size()
 	var dist_offset = dir * 0.5 * sprite_frame_size.y * scale.y * sprite.scale.y
 	bullet.global_position = global_position + dist_offset + offset
 	# Apply bullet scale upgrade
@@ -559,7 +569,8 @@ func _spawn_bullet(dir: Vector2, offset: Vector2 = Vector2.ZERO, skip_auto_aim: 
 	if zigzag_stacks > 0:
 		bullet.zigzag = true
 		bullet.zigzag_stacks = zigzag_stacks
-	get_tree().current_scene.add_child(bullet)
+	var scene_root := get_tree().current_scene
+	scene_root.add_child(bullet)
 
 ## Re-enables shooting after the fire rate cooldown timer expires.
 func _on_shoot_timer_timeout() -> void:
@@ -699,13 +710,14 @@ func _apply_nuke() -> void:
 ## Pulls all power-ups and XP orbs toward the player at 350 px/s.
 ## Used by the temporary magnet power-up.
 func _attract_powerups(delta: float) -> void:
-	var powerups := get_tree().get_nodes_in_group("powerups")
+	var tree := get_tree()
+	var powerups := tree.get_nodes_in_group("powerups")
 	for pu in powerups:
 		if is_instance_valid(pu):
 			var dir: Vector2 = (global_position - pu.global_position).normalized()
 			pu.global_position += dir * 350.0 * delta
 	# Also attract XP orbs
-	var orbs := get_tree().get_nodes_in_group("xp_orbs")
+	var orbs := tree.get_nodes_in_group("xp_orbs")
 	for orb in orbs:
 		if is_instance_valid(orb):
 			var dir: Vector2 = (global_position - orb.global_position).normalized()
@@ -812,6 +824,7 @@ func _spawn_orbitals() -> void:
 		if is_instance_valid(node):
 			node.queue_free()
 	orbital_nodes.clear()
+	var scene_root := get_tree().current_scene
 	var count := 3
 	for i in range(count):
 		var orb_node := Area2D.new()
@@ -839,7 +852,7 @@ func _spawn_orbitals() -> void:
 		orb_node.add_child(shape)
 		# Damage on contact
 		orb_node.area_entered.connect(_on_orbital_hit.bind(orb_node))
-		get_tree().current_scene.add_child(orb_node)
+		scene_root.add_child(orb_node)
 		orbital_nodes.append(orb_node)
 
 ## Rotates all orbital nodes around the player at a fixed radius and
@@ -929,15 +942,20 @@ func grant_rear_gunner() -> void:
 ## sections, and spawns an expanding ring visual effect.
 func _trigger_shield_burst() -> void:
 	var burst_radius := 160.0
+	var burst_radius_sq := burst_radius * burst_radius
+	var damage := 1 + GameManager.bonus_damage
+	var tree := get_tree()
 	# Destroy nearby enemy bullets
-	for b in get_tree().get_nodes_in_group("enemy_bullets"):
-		if is_instance_valid(b) and global_position.distance_to(b.global_position) < burst_radius:
+	for b in tree.get_nodes_in_group("enemy_bullets"):
+		if is_instance_valid(b) and global_position.distance_squared_to(b.global_position) < burst_radius_sq:
 			b.queue_free()
 	# Damage enemies and exposed boss systems caught in the burst.
-	var targets := get_tree().get_nodes_in_group("enemies") + get_tree().get_nodes_in_group("tempest_sections")
-	for e in targets:
-		if is_instance_valid(e) and global_position.distance_to(e.global_position) < burst_radius:
-			e.take_damage(1 + GameManager.bonus_damage)
+	for e in tree.get_nodes_in_group("enemies"):
+		if is_instance_valid(e) and global_position.distance_squared_to(e.global_position) < burst_radius_sq:
+			e.take_damage(damage)
+	for section in tree.get_nodes_in_group("tempest_sections"):
+		if is_instance_valid(section) and global_position.distance_squared_to(section.global_position) < burst_radius_sq:
+			section.take_damage(damage)
 	# Visual flash ring
 	_spawn_burst_ring(burst_radius)
 
@@ -946,7 +964,8 @@ func _trigger_shield_burst() -> void:
 func _spawn_burst_ring(radius: float) -> void:
 	var ring := Node2D.new()
 	ring.global_position = global_position
-	get_tree().current_scene.add_child(ring)
+	var scene_root := get_tree().current_scene
+	scene_root.add_child(ring)
 	var tween := ring.create_tween()
 	tween.tween_property(ring, "scale", Vector2(radius / 40.0, radius / 40.0), 0.35)\
 		.from(Vector2.ONE).set_ease(Tween.EASE_OUT)
@@ -974,12 +993,13 @@ func _flash_overclock() -> void:
 ## Used by the permanent magnet field upgrade (faster than the temporary
 ## magnet's 350 px/s pull speed).
 func _attract_powerups_fast(delta: float) -> void:
-	var powerups := get_tree().get_nodes_in_group("powerups")
+	var tree := get_tree()
+	var powerups := tree.get_nodes_in_group("powerups")
 	for pu in powerups:
 		if is_instance_valid(pu):
 			var dir: Vector2 = (global_position - pu.global_position).normalized()
 			pu.global_position += dir * 500.0 * delta
-	var orbs := get_tree().get_nodes_in_group("xp_orbs")
+	var orbs := tree.get_nodes_in_group("xp_orbs")
 	for orb in orbs:
 		if is_instance_valid(orb):
 			var dir: Vector2 = (global_position - orb.global_position).normalized()
@@ -1030,7 +1050,8 @@ func _spawn_drone() -> void:
 	col.shape = circ
 	drone_node.add_child(col)
 	drone_node.area_entered.connect(_on_drone_hit)
-	get_tree().current_scene.add_child(drone_node)
+	var scene_root := get_tree().current_scene
+	scene_root.add_child(drone_node)
 
 ## Updates the drone each frame: lerps toward a hover position offset
 ## from the player, and auto-fires a bullet at the nearest enemy on a
@@ -1052,24 +1073,16 @@ func _update_drone(delta: float) -> void:
 ## Falls back to firing upward if no enemies are present. Inherits
 ## the piercing modifier if the player has it.
 func _drone_fire() -> void:
-	var enemies := get_tree().get_nodes_in_group("enemies")
-	var best_dist := INF
-	var best_enemy: Node2D = null
-	for e in enemies:
-		if is_instance_valid(e):
-			var d: float = drone_node.global_position.distance_to(e.global_position)
-			if d < best_dist:
-				best_dist = d
-				best_enemy = e
-	var dir := Vector2.UP
-	if best_enemy:
-		dir = (best_enemy.global_position - drone_node.global_position).normalized()
+	var dir := _get_nearest_enemy_direction(drone_node.global_position)
+	if dir.is_zero_approx():
+		dir = Vector2.UP
 	var bullet: Area2D = BULLET_SCENE.instantiate()
 	bullet.direction = dir
 	bullet.global_position = drone_node.global_position
 	if has_piercing:
 		bullet.piercing = true
-	get_tree().current_scene.add_child(bullet)
+	var scene_root := get_tree().current_scene
+	scene_root.add_child(bullet)
 
 ## Handles drone body collision: deals 1 + bonus damage to enemies and
 ## tempest sections on contact.

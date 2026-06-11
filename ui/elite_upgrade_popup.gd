@@ -199,9 +199,8 @@ func _on_upgrade_selected(upgrade_id: String) -> void:
 	GameManager.chosen_upgrade_ids.append(upgrade_id)
 
 	# Apply to player
-	var players := get_tree().get_nodes_in_group("player")
-	if not players.is_empty():
-		var player := players[0]
+	var player = get_tree().get_first_node_in_group("player")
+	if player:
 		match upgrade_id:
 			"twin_cannons":      player.grant_twin_cannons()
 			"auto_aim":          player.grant_auto_aim()

@@ -63,4 +63,5 @@ func _drop_bomb() -> void:
 	bomb.add_to_group("enemy_bullets")
 	bomb.set_meta("custom_speed", randf_range(300.0, 400.0))
 	bomb.set_meta("bullet_color", Color(0.2, 3.0, 0.2, 1.0)) # High contrast neon green
-	get_tree().current_scene.add_child(bomb)
+	var scene_root := get_tree().current_scene
+	scene_root.add_child(bomb)

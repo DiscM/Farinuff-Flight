@@ -50,10 +50,9 @@ func _move(delta: float) -> void:
 ## Fires a single high-speed bullet aimed directly at the player's
 ## current position. The bullet is colored neon cyan for visibility.
 func _fire_aimed_shot() -> void:
-	var players := get_tree().get_nodes_in_group("player")
-	if players.is_empty():
+	var player := get_tree().get_first_node_in_group("player") as Node2D
+	if player == null:
 		return
-	var player := players[0] as Node2D
 	var direction := (player.global_position - global_position).normalized()
 	var bullet: Area2D = ENEMY_BULLET_SCENE.instantiate()
 	bullet.global_position = global_position
@@ -61,4 +60,5 @@ func _fire_aimed_shot() -> void:
 	bullet.set_meta("direction", direction)
 	bullet.set_meta("custom_speed", randf_range(430.0, 500.0))
 	bullet.set_meta("bullet_color", Color(0.2, 1.8, 2.8, 1.0))
-	get_tree().current_scene.add_child(bullet)
+	var scene_root := get_tree().current_scene
+	scene_root.add_child(bullet)

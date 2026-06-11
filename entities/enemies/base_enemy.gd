@@ -12,10 +12,12 @@ var health_scale_multiplier: float = 1.0
 const HEALTH_SCALE_PER_WAVE: float = 0.045
 
 const XP_ORB_SCENE := preload("res://entities/collectibles/xp_orb.tscn")
+const EXPLOSION_SCENE := preload("res://effects/explosion.tscn")
 
 var health: int
 ## The normalized direction this enemy travels. Set by the spawner before adding to scene.
 var spawn_direction: Vector2 = Vector2.DOWN
+@onready var sprite: Sprite2D = $Sprite2D
 
 ## Initializes the enemy: adds to the "enemies" group, scales max_health by
 ## wave progression, sets current health, connects collision handling, attaches
@@ -32,7 +34,6 @@ func _ready() -> void:
 	notifier.screen_exited.connect(_on_screen_exited)
 
 	# Dynamic procedural tween animation for "breathing" or wobble
-	var sprite := get_node_or_null("Sprite2D")
 	if sprite:
 		var tw := create_tween().set_loops()
 		# Slight squash and stretch
@@ -70,17 +71,17 @@ func _die() -> void:
 	if is_queued_for_deletion():
 		return
 	SignalBus.enemy_killed.emit(points, global_position)
+	var scene_root := get_tree().current_scene
 	# Spawn XP orb (60% chance, but guaranteed if guaranteed_orb is true)
 	if guaranteed_orb or randf() < 0.6:
 		var orb: Area2D = XP_ORB_SCENE.instantiate()
 		orb.global_position = global_position
 		orb.orb_value = orb_value
-		get_tree().current_scene.call_deferred("add_child", orb)
+		scene_root.call_deferred("add_child", orb)
 	# Spawn explosion effect
-	var explosion_scene := preload("res://effects/explosion.tscn")
-	var explosion := explosion_scene.instantiate()
+	var explosion := EXPLOSION_SCENE.instantiate()
 	explosion.global_position = global_position
-	get_tree().current_scene.call_deferred("add_child", explosion)
+	scene_root.call_deferred("add_child", explosion)
 	call_deferred("queue_free")
 
 ## Handles collisions with other Area2D nodes. If the collider is the
@@ -92,7 +93,7 @@ func _on_area_entered(area: Area2D) -> void:
 	if area.is_in_group("player"):
 		# Ram into player — self-destruct without emitting kill points
 		_die()
-	elif area.collision_layer & 4:  # layer 3 = player_bullets (bitmask 4)
+	elif area.collision_layer & 4 != 0:  # layer 3 = player_bullets (bitmask 4)
 		# Bullet hit — take 1 damage; the bullet handles its own queue_free
 		take_damage(1)
 

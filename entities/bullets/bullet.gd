@@ -54,13 +54,14 @@ func _on_area_entered(area: Area2D) -> void:
 ## explosive upgrade is active.
 func _explode() -> void:
 	# Deal area damage to all enemies within blast radius
-	var blast_radius := 80.0
-	var targets := get_tree().get_nodes_in_group("enemies") + get_tree().get_nodes_in_group("tempest_sections")
-	for enemy in targets:
-		if is_instance_valid(enemy) and enemy != self:
-			var dist: float = global_position.distance_to(enemy.global_position)
-			if dist < blast_radius:
-				enemy.take_damage(1 + GameManager.bonus_damage)
+	var blast_radius_sq := 80.0 * 80.0
+	var damage := 1 + GameManager.bonus_damage
+	for enemy in get_tree().get_nodes_in_group("enemies"):
+		if is_instance_valid(enemy) and global_position.distance_squared_to(enemy.global_position) < blast_radius_sq:
+			enemy.take_damage(damage)
+	for section in get_tree().get_nodes_in_group("tempest_sections"):
+		if is_instance_valid(section) and global_position.distance_squared_to(section.global_position) < blast_radius_sq:
+			section.take_damage(damage)
 
 	# Visual: explosion ring
 	var ring := CPUParticles2D.new()
@@ -78,5 +79,6 @@ func _explode() -> void:
 	ring.scale_amount_min = 2.0
 	ring.scale_amount_max = 5.0
 	ring.color = Color(1.0, 0.6, 0.15, 0.9)
-	get_tree().current_scene.call_deferred("add_child", ring)
+	var scene_root := get_tree().current_scene
+	scene_root.call_deferred("add_child", ring)
 	get_tree().create_timer(0.5).timeout.connect(ring.queue_free)

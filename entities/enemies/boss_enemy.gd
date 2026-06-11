@@ -1,11 +1,13 @@
 extends BaseEnemy
 class_name BossEnemy
 ## Boss enemy — actively moves around the screen in phases, cycles through unique attack patterns.
-## Regular (every 5th wave): 200 HP. Elite (every 10th wave): 500 HP.
+## Regular bosses appear every 5th wave with archetype-specific base HP.
+## Elite bosses appear every 10th wave with 125 HP, and the Wave 20 Tempest Core is a special encounter.
 
 const ENEMY_BULLET_SCENE := preload("res://entities/bullets/enemy_bullet.tscn")
 const TEMPEST_SECTION_SCRIPT := preload("res://entities/enemies/tempest_section.gd")
 const TEMPEST_CORE_TEXTURE := preload("res://assets/sprites/generated/tempest_core_idle_strip.png")
+const EXPLOSION_SCENE := preload("res://effects/explosion.tscn")
 const BOSS_HEALTH_SCALE_MULTIPLIER: float = 0.7
 
 var is_elite: bool = false
@@ -79,7 +81,6 @@ func _ready() -> void:
 	max_boss_health = health
 
 	if is_tempest_core:
-		var sprite := get_node_or_null("Sprite2D") as Sprite2D
 		if sprite:
 			sprite.texture = TEMPEST_CORE_TEXTURE
 
@@ -110,7 +111,8 @@ func _ready() -> void:
 	
 	telegraph_marker.texture = ImageTexture.create_from_image(img)
 	telegraph_marker.visible = false
-	get_tree().current_scene.call_deferred("add_child", telegraph_marker)
+	var scene_root := get_tree().current_scene
+	scene_root.call_deferred("add_child", telegraph_marker)
 
 	SignalBus.boss_spawned.emit(health, max_boss_health, boss_title)
 
@@ -195,7 +197,6 @@ func _start_tempest_phase(next_phase: TempestPhase, announce: bool = true) -> vo
 	_clear_tempest_sections()
 	_clear_tempest_warnings()
 	# Keep active shots alive across phase swaps; they already self-clean on exit.
-	var sprite := get_node_or_null("Sprite2D") as Sprite2D
 
 	match tempest_phase:
 		TempestPhase.BARRIER:
@@ -335,7 +336,8 @@ func _spawn_section_burst(burst_position: Vector2) -> void:
 				image.set_pixel(x, y, Color(0.4, 0.95, 1.0, 0.9))
 	ring.texture = ImageTexture.create_from_image(image)
 	ring.global_position = burst_position
-	get_tree().current_scene.add_child(ring)
+	var scene_root := get_tree().current_scene
+	scene_root.add_child(ring)
 	var tween := ring.create_tween()
 	tween.tween_property(ring, "scale", Vector2(2.0, 2.0), 0.24)
 	tween.parallel().tween_property(ring, "modulate:a", 0.0, 0.24)
@@ -383,8 +385,6 @@ func _move(delta: float) -> void:
 	if is_tempest_core:
 		_update_tempest_systems(delta)
 
-	SignalBus.boss_health_changed.emit(health)
-
 
 ## Updates tempest-specific systems each frame: orbits sections around the
 ## core (BARRIER and CONDUITS phases), and manages the special storm-strike
@@ -427,10 +427,10 @@ func _update_tempest_systems(delta: float) -> void:
 ## at the player's current position, then fires a concentrated lane of
 ## bullets toward that position after a brief telegraph delay.
 func _begin_tempest_storm_strike() -> void:
-	var players := get_tree().get_nodes_in_group("player")
-	if players.is_empty():
+	var player := get_tree().get_first_node_in_group("player") as Node2D
+	if player == null:
 		return
-	var target_position: Vector2 = players[0].global_position
+	var target_position: Vector2 = player.global_position
 	var marker := Sprite2D.new()
 	var image := Image.create(84, 84, false, Image.FORMAT_RGBA8)
 	image.fill(Color.TRANSPARENT)
@@ -444,7 +444,8 @@ func _begin_tempest_storm_strike() -> void:
 	marker.texture = ImageTexture.create_from_image(image)
 	marker.global_position = target_position
 	marker.z_index = 6
-	get_tree().current_scene.add_child(marker)
+	var scene_root := get_tree().current_scene
+	scene_root.add_child(marker)
 	tempest_warning_markers.append(marker)
 
 	var lane_count := 5
@@ -613,10 +614,10 @@ func _fire_current_pattern() -> void:
 ## rewarding players who dodge laterally.
 func _fire_aimed() -> void:
 	## Tight spread aimed at the player — rewards player Rear Gun by shooting from below.
-	var players := get_tree().get_nodes_in_group("player")
-	if players.is_empty():
+	var player := get_tree().get_first_node_in_group("player") as Node2D
+	if player == null:
 		return
-	var player_pos: Vector2 = players[0].global_position
+	var player_pos: Vector2 = player.global_position
 	var base_dir := (player_pos - global_position).normalized()
 	var count := 5 if is_elite else 3
 	if is_tempest_core:
@@ -699,17 +700,18 @@ func _spawn_bullet_from(origin: Vector2, dir: Vector2, spd: float) -> void:
 	bullet.set_meta("direction", dir)
 	bullet.set_meta("custom_speed", spd * randf_range(0.92, 1.08))
 	bullet.set_meta("bullet_color", bullet_color)
-	get_tree().current_scene.call_deferred("add_child", bullet)
+	var scene_root := get_tree().current_scene
+	scene_root.call_deferred("add_child", bullet)
 
 
 ## Fires aimed shots from each active tempest section toward the player.
 ## Shot patterns vary by phase: single shots in BARRIER, triple fan in
 ## ARMAMENTS, and tangential pairs in CONDUITS.
 func _fire_tempest_sections() -> void:
-	var players := get_tree().get_nodes_in_group("player")
-	if players.is_empty():
+	var player := get_tree().get_first_node_in_group("player") as Node2D
+	if player == null:
 		return
-	var player_position: Vector2 = players[0].global_position
+	var player_position: Vector2 = player.global_position
 	for section in tempest_sections:
 		if not is_instance_valid(section):
 			continue
@@ -735,7 +737,6 @@ func take_damage(amount: int) -> void:
 	if _dying:
 		return
 	if is_tempest_core and tempest_damage_multiplier <= 0.0:
-		var sprite := get_node_or_null("Sprite2D") as Sprite2D
 		if sprite:
 			var tween := create_tween()
 			tween.tween_property(sprite, "modulate", Color(0.5, 1.5, 2.0), 0.04)
@@ -746,6 +747,8 @@ func take_damage(amount: int) -> void:
 		super.take_damage(reduced_damage)
 	else:
 		super.take_damage(amount)
+	if health > 0:
+		SignalBus.boss_health_changed.emit(health)
 	if is_tempest_core and health > 0 and not tempest_overload_triggered and health <= int(max_boss_health * 0.42):
 		tempest_overload_triggered = true
 		_start_tempest_phase(TempestPhase.OVERLOAD)
@@ -778,15 +781,15 @@ func _die() -> void:
 
 	# Spawn death orbs and explosion (mirrors base_enemy._die() without queue_free)
 	SignalBus.enemy_killed.emit(points, global_position)
+	var scene_root := get_tree().current_scene
 	if guaranteed_orb or randf() < 0.6:
 		var orb: Area2D = XP_ORB_SCENE.instantiate()
 		orb.global_position = global_position
 		orb.orb_value = orb_value
-		get_tree().current_scene.call_deferred("add_child", orb)
-	var explosion_scene := preload("res://effects/explosion.tscn")
-	var explosion := explosion_scene.instantiate()
+		scene_root.call_deferred("add_child", orb)
+	var explosion := EXPLOSION_SCENE.instantiate()
 	explosion.global_position = global_position
-	get_tree().current_scene.call_deferred("add_child", explosion)
+	scene_root.call_deferred("add_child", explosion)
 
 	# Emit the boss signal AFTER hiding, so the pause triggered by elite upgrade
 	# doesn't block any remaining cleanup.
@@ -803,5 +806,5 @@ func _on_area_entered(area: Area2D) -> void:
 		return
 	if area.is_in_group("player"):
 		take_damage(10)
-	elif area.collision_layer & 4:
+	elif area.collision_layer & 4 != 0:
 		take_damage(1 + GameManager.bonus_damage)

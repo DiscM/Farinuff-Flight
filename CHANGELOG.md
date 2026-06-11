@@ -40,16 +40,16 @@ All notable changes to this project will be documented in this file.
 - **Elite Upgrade Uniqueness:** Boss upgrade choices are now tracked—once selected, an upgrade is permanently removed from all future Wave 10 pools during the current run.
 - **Developer Testing Menu:** Added an embedded Dev Tools panel to the pause menu for quick testing (add orbs, clear enemies, spawn bosses, trigger UI popups, god mode, full power).
 ### Changed
-- **Orb-Based Wave Progression:** The wave progression system has been entirely overhauled. Waves are no longer cleared by a flat "enemies killed" metric. They are now cleared by the total value of XP Orbs collected (`10 + Wave * 1.20`), directly incentivizing players to assassinate high-value targets.
+- **Orb-Based Wave Progression:** The wave progression system has been entirely overhauled. Waves are no longer cleared by a flat "enemies killed" metric. They are now cleared by the total value of XP Orbs collected (`10 + Wave * 1.30`), directly incentivizing players to assassinate high-value targets.
 - **Economy & HP Rebalance:** 
-  - The HP bar now correctly respects orb values (10 accumulated value = 1 Extra Life).
+  - The HP bar now correctly respects orb values (12 accumulated value = 1 Extra Life).
   - Tank Enemy orb value raised from `2` \-\> `3`.
   - Bomber Enemy orb value solidified to `2`.
   - Regular Boss orb value raised from `3` \-\> `5`.
   - Elite Boss orb value raised from `3` \-\> `10` (yielding an entire extra life upon pickup).
 - **Player Movement Scaling:** Increased the player ship's base `speed` (from 280 to 420) and `acceleration` (from 8 to 12) so it can comfortably keep pace with escalating enemy speeds.
 - **HUD Safepoints:** Pulled the top and bottom UI elements inward by 25 pixels to prevent the new CRT screen-bending shader from distorting vital text and healthbars.
-- **Boss Base Health Buffs:** Raised Regular Boss health from 40 to 50, and Elite Boss health from 100 to 125 to add a stronger challenge gap.
+- **Boss Base Health Buffs:** Raised Elite Boss health to 125 and rebalanced regular boss archetypes upward to support the new boss variants.
 - **Enemy Scaling Trimmed:** Halved the procedural wave-by-wave speed and spawn-interval acceleration of standard enemies to keep ultra-late game playable.
 - **Boss Telegraph Consistency:** Reworked boss movement logic so bosses accurately dash to the exact telegraphed spot before beginning their Hover swaying or Strafe orbiting patterns.
 ### Fixed

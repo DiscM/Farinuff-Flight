@@ -51,7 +51,8 @@ func _spawn_powerup() -> void:
 	# Random type
 	var type_index := randi_range(0, 5)
 	pu.type = type_index
-	get_tree().current_scene.add_child(pu)
+	var scene_root := get_tree().current_scene
+	scene_root.add_child(pu)
 
 ## Called on game over. Stops all power-up spawning.
 func _on_game_over(_score: int) -> void:

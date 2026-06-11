@@ -48,7 +48,7 @@ const ALL_UPGRADES: Array[Dictionary] = [
 		"id": "afterburner",
 		"name": "Afterburner",
 		"icon": "🚀",
-		"description": "+25% speed and snappier\nmaneuverability.",
+		"description": "+20% speed and +15% acceleration.\nSnappier maneuverability.",
 		"color": Color(1.0, 0.45, 0.15),
 	},
 	# ── New Wave-10 Upgrades ────────────────────────────────────────────────────

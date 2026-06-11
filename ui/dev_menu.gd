@@ -100,20 +100,18 @@ func _on_add_lives() -> void:
 ## Toggles invincibility (god mode) on the player. Tints the sprite
 ## yellow when active.
 func _on_toggle_god_mode() -> void:
-	var players := get_tree().get_nodes_in_group("player")
-	if not players.is_empty():
-		var p := players[0]
-		p.dev_god_mode = not p.dev_god_mode
-		p.sprite.modulate = Color(1.2, 1.2, 0.2) if p.dev_god_mode else Color.WHITE
+	var player = get_tree().get_first_node_in_group("player")
+	if player:
+		player.dev_god_mode = not player.dev_god_mode
+		player.sprite.modulate = Color(1.2, 1.2, 0.2) if player.dev_god_mode else Color.WHITE
 
 ## Grants the player a suite of powerful upgrades: rapid fire, spread shot,
 ## orbitals, piercing, and explosive rounds.
 func _on_full_power() -> void:
-	var players := get_tree().get_nodes_in_group("player")
-	if not players.is_empty():
-		var p := players[0]
-		p._apply_rapid_fire()
-		p._apply_spread_shot()
-		p.grant_orbitals()
-		p.grant_piercing()
-		p.grant_explosive_rounds()
+	var player = get_tree().get_first_node_in_group("player")
+	if player:
+		player._apply_rapid_fire()
+		player._apply_spread_shot()
+		player.grant_orbitals()
+		player.grant_piercing()
+		player.grant_explosive_rounds()

@@ -54,6 +54,7 @@ func _on_spawn_timer_timeout() -> void:
 func _spawn_enemy() -> void:
 	var scene: PackedScene = _pick_enemy_scene()
 	var enemy: BaseEnemy = scene.instantiate() as BaseEnemy
+	var scene_root := get_tree().current_scene
 
 	# Pick a random side: 0=top, 1=bottom, 2=left, 3=right
 	var side := randi() % 4
@@ -70,7 +71,7 @@ func _spawn_enemy() -> void:
 		3: # Right
 			enemy.position = Vector2(viewport_width + 40.0, randf_range(margin, viewport_height - margin))
 			enemy.spawn_direction = Vector2.LEFT
-	get_tree().current_scene.add_child(enemy)
+	scene_root.add_child(enemy)
 
 ## Selects an enemy type based on the current wave using weighted random
 ## rolls. Early waves favor basic and fast enemies; later waves increase
@@ -128,7 +129,8 @@ func _spawn_boss(wave_number: int) -> void:
 	boss.position = Vector2(viewport_width / 2.0, -80.0)
 	boss.is_elite = (wave_number % 10 == 0)
 	boss.is_tempest_core = (wave_number == 20)
-	get_tree().current_scene.add_child(boss)
+	var scene_root := get_tree().current_scene
+	scene_root.add_child(boss)
 
 ## Called when a boss is defeated. Resumes regular enemy spawning if the
 ## game is still active.
