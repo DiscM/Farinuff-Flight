@@ -1,6 +1,9 @@
-[gd_scene load_steps=2 format=3 uid="uid://i1xv8y2r7bk0g"]
+[gd_scene load_steps=5 format=3 uid="uid://i1xv8y2r7bk0g"]
 
 [ext_resource type="Script" path="res://ui/main_menu.gd" id="1_menu"]
+[ext_resource type="Texture2D" path="res://assets/Game UI collection FREE version/PNG/Borders/Blue/Group 4 copy.png" id="2_panel"]
+[ext_resource type="Texture2D" path="res://assets/Game UI collection FREE version/PNG/Button with border/Yellow/1x/Asset 8.png" id="3_button_yellow"]
+[ext_resource type="Texture2D" path="res://assets/Game UI collection FREE version/PNG/Button with border/Blue/1x/Asset 8.png" id="4_button_blue"]
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3
@@ -18,64 +21,159 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.03, 0.03, 0.08, 1)
+color = Color(0.015, 0.025, 0.075, 1)
 
-[node name="VBoxContainer" type="VBoxContainer" parent="."]
+[node name="StarWash" type="ColorRect" parent="."]
 layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -180
-offset_top = -185
-offset_right = 180
-offset_bottom = 185
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 30
-alignment = 1
+mouse_filter = 2
+color = Color(0.02, 0.12, 0.22, 0.22)
 
-[node name="Title" type="Label" parent="VBoxContainer"]
+[node name="LeftDock" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 18.0
+offset_top = -330.0
+offset_right = 236.0
+offset_bottom = 330.0
+grow_vertical = 2
+
+[node name="DockFrame" type="TextureRect" parent="LeftDock"]
+layout_mode = 0
+offset_left = -6.0
+offset_top = -18.0
+offset_right = 244.0
+offset_bottom = 678.0
+mouse_filter = 2
+texture = ExtResource("2_panel")
+expand_mode = 1
+stretch_mode = 5
+modulate = Color(1, 1, 1, 0.88)
+
+[node name="TitlePlaque" type="PanelContainer" parent="LeftDock"]
+layout_mode = 0
+offset_left = 20.0
+offset_top = 34.0
+offset_right = 214.0
+offset_bottom = 112.0
+
+[node name="Title" type="Label" parent="LeftDock/TitlePlaque"]
 layout_mode = 2
-text = "SPACE SHOOTER"
+text = "SPACE
+SHOOTER"
 horizontal_alignment = 1
-theme_override_colors/font_color = Color(0.3, 0.85, 1, 1)
-theme_override_font_sizes/font_size = 46
+vertical_alignment = 1
+autowrap_mode = 3
+clip_text = true
+theme_override_colors/font_color = Color(0.9, 0.98, 1, 1)
+theme_override_font_sizes/font_size = 30
 
-[node name="Subtitle" type="Label" parent="VBoxContainer"]
+[node name="SubtitlePlaque" type="PanelContainer" parent="LeftDock"]
+layout_mode = 0
+offset_left = 22.0
+offset_top = 126.0
+offset_right = 212.0
+offset_bottom = 188.0
+
+[node name="Subtitle" type="Label" parent="LeftDock/SubtitlePlaque"]
 layout_mode = 2
-text = "Defend the galaxy"
+text = "MISSION SELECT
+STARBOARD COMMAND"
 horizontal_alignment = 1
-theme_override_colors/font_color = Color(0.5, 0.6, 0.8, 1)
-theme_override_font_sizes/font_size = 18
+vertical_alignment = 1
+autowrap_mode = 3
+clip_text = true
+theme_override_colors/font_color = Color(1, 0.94, 0.64, 1)
+theme_override_font_sizes/font_size = 13
 
-[node name="Spacer" type="Control" parent="VBoxContainer"]
-layout_mode = 2
-custom_minimum_size = Vector2(0, 20)
+[node name="MenuButtons" type="VBoxContainer" parent="LeftDock"]
+layout_mode = 0
+offset_left = 22.0
+offset_top = 232.0
+offset_right = 216.0
+offset_bottom = 468.0
+theme_override_constants/separation = 18
 
-[node name="PlayButton" type="Button" parent="VBoxContainer"]
+[node name="PlayWrap" type="Control" parent="LeftDock/MenuButtons"]
+custom_minimum_size = Vector2(194, 48)
 layout_mode = 2
-custom_minimum_size = Vector2(200, 50)
-size_flags_horizontal = 4
-text = "▶  PLAY"
-theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_hover_color = Color(0.3, 1, 0.6, 1)
-theme_override_font_sizes/font_size = 24
 
-[node name="SettingsButton" type="Button" parent="VBoxContainer"]
+[node name="PlayTexture" type="TextureRect" parent="LeftDock/MenuButtons/PlayWrap"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("3_button_yellow")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="PlayButton" type="Button" parent="LeftDock/MenuButtons/PlayWrap"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 6.0
+offset_right = -14.0
+offset_bottom = -6.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "START RUN"
+alignment = 0
+
+[node name="SettingsWrap" type="Control" parent="LeftDock/MenuButtons"]
+custom_minimum_size = Vector2(194, 48)
 layout_mode = 2
-custom_minimum_size = Vector2(200, 46)
-size_flags_horizontal = 4
+
+[node name="SettingsTexture" type="TextureRect" parent="LeftDock/MenuButtons/SettingsWrap"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+texture = ExtResource("4_button_blue")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="SettingsButton" type="Button" parent="LeftDock/MenuButtons/SettingsWrap"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 6.0
+offset_right = -14.0
+offset_bottom = -6.0
+grow_horizontal = 2
+grow_vertical = 2
 text = "SETTINGS"
-theme_override_colors/font_color = Color(0.7, 0.9, 1, 1)
-theme_override_colors/font_hover_color = Color(0.3, 1, 0.6, 1)
-theme_override_font_sizes/font_size = 20
+alignment = 0
 
-[node name="Controls" type="Label" parent="VBoxContainer"]
+[node name="ControlsPlaque" type="PanelContainer" parent="LeftDock"]
+layout_mode = 0
+offset_left = 18.0
+offset_top = 540.0
+offset_right = 218.0
+offset_bottom = 610.0
+
+[node name="Controls" type="Label" parent="LeftDock/ControlsPlaque"]
 layout_mode = 2
-text = "WASD / Arrows — Move
-Space — Shoot"
+text = "MOVE  WASD / ARROWS
+SHOOT SPACE  BOOST SHIFT"
 horizontal_alignment = 1
-theme_override_colors/font_color = Color(0.4, 0.45, 0.55, 1)
-theme_override_font_sizes/font_size = 14
+vertical_alignment = 1
+autowrap_mode = 3
+clip_text = true
+theme_override_colors/font_color = Color(0.8, 1, 0.87, 1)
+theme_override_font_sizes/font_size = 12

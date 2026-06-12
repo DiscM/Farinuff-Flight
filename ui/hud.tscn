@@ -5,90 +5,215 @@
 [node name="HUD" type="CanvasLayer"]
 script = ExtResource("1_hud")
 
-[node name="MarginContainer" type="MarginContainer" parent="."]
-anchors_preset = 10
-anchor_right = 1.0
-offset_bottom = 40.0
-grow_horizontal = 2
-theme_override_constants/margin_left = 40
-theme_override_constants/margin_top = 36
-theme_override_constants/margin_right = 40
+[node name="LeftDock" type="Control" parent="."]
+anchors_preset = 4
+anchor_top = 0.5
+anchor_bottom = 0.5
+offset_left = 10.0
+offset_top = -324.0
+offset_right = 156.0
+offset_bottom = -216.0
+grow_vertical = 2
 
-[node name="BossBarContainer" type="MarginContainer" parent="."]
-visible = false
+[node name="PanelStack" type="VBoxContainer" parent="LeftDock"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 8
+
+[node name="ScorePanel" type="PanelContainer" parent="LeftDock/PanelStack"]
+custom_minimum_size = Vector2(146, 32)
+layout_mode = 2
+
+[node name="ScoreLabel" type="Label" parent="LeftDock/PanelStack/ScorePanel"]
+layout_mode = 2
+text = "SCORE 0"
+horizontal_alignment = 1
+vertical_alignment = 1
+clip_text = true
+theme_override_colors/font_color = Color(0.9, 0.98, 1, 1)
+theme_override_font_sizes/font_size = 12
+
+[node name="WavePanel" type="PanelContainer" parent="LeftDock/PanelStack"]
+custom_minimum_size = Vector2(146, 30)
+layout_mode = 2
+
+[node name="WaveLabel" type="Label" parent="LeftDock/PanelStack/WavePanel"]
+layout_mode = 2
+text = "WAVE 1"
+horizontal_alignment = 1
+vertical_alignment = 1
+clip_text = true
+theme_override_colors/font_color = Color(0.78, 0.95, 1, 1)
+theme_override_font_sizes/font_size = 11
+
+[node name="ComboPanel" type="PanelContainer" parent="LeftDock/PanelStack"]
+custom_minimum_size = Vector2(146, 30)
+layout_mode = 2
+
+[node name="ComboLabel" type="Label" parent="LeftDock/PanelStack/ComboPanel"]
+layout_mode = 2
+text = "MULTIPLIER x1"
+horizontal_alignment = 1
+vertical_alignment = 1
+clip_text = true
+theme_override_colors/font_color = Color(1, 0.9, 0.34, 1)
+theme_override_font_sizes/font_size = 11
+
+[node name="BossDock" type="Control" parent="."]
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -180
-offset_top = 36
-offset_right = 180
-offset_bottom = 80
+offset_left = -210.0
+offset_top = 18.0
+offset_right = 210.0
+offset_bottom = 76.0
 grow_horizontal = 2
-theme_override_constants/margin_left = 8
-theme_override_constants/margin_right = 8
 
-[node name="VBox" type="VBoxContainer" parent="BossBarContainer"]
+[node name="BossBarContainer" type="PanelContainer" parent="BossDock"]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="BossVBox" type="VBoxContainer" parent="BossDock/BossBarContainer"]
 layout_mode = 2
 theme_override_constants/separation = 2
 
-[node name="BossNameLabel" type="Label" parent="BossBarContainer/VBox"]
+[node name="BossClassLabel" type="Label" parent="BossDock/BossBarContainer/BossVBox"]
 layout_mode = 2
-text = "⚠  BOSS"
+text = "ELITE BOSS"
 horizontal_alignment = 1
-theme_override_colors/font_color = Color(1, 0.2, 0.5, 1)
-theme_override_font_sizes/font_size = 14
+vertical_alignment = 1
+clip_text = true
+theme_override_colors/font_color = Color(1, 0.72, 0.84, 1)
+theme_override_font_sizes/font_size = 8
 
-[node name="BossHealthBar" type="ProgressBar" parent="BossBarContainer/VBox"]
+[node name="BossNameLabel" type="Label" parent="BossDock/BossBarContainer/BossVBox"]
 layout_mode = 2
-custom_minimum_size = Vector2(0, 14)
+text = "VOID HARBINGER"
+horizontal_alignment = 1
+vertical_alignment = 1
+clip_text = true
+theme_override_colors/font_color = Color(0.9, 0.98, 1, 1)
+theme_override_font_sizes/font_size = 11
+
+[node name="BossHealthBar" type="ProgressBar" parent="BossDock/BossBarContainer/BossVBox"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 8)
 max_value = 100.0
 value = 100.0
 show_percentage = false
 
-[node name="TopBar" type="HBoxContainer" parent="MarginContainer"]
-layout_mode = 2
+[node name="RightDock" type="Control" parent="."]
+anchors_preset = 6
+anchor_left = 1.0
+anchor_top = 0.5
+anchor_right = 1.0
+anchor_bottom = 0.5
+offset_left = -188.0
+offset_top = -324.0
+offset_right = -10.0
+offset_bottom = -172.0
+grow_horizontal = 0
+grow_vertical = 2
 
-[node name="ScoreLabel" type="Label" parent="MarginContainer/TopBar"]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "SCORE: 0"
-theme_override_colors/font_color = Color(0.9, 0.95, 1, 1)
-theme_override_font_sizes/font_size = 20
-
-[node name="ComboLabel" type="Label" parent="MarginContainer/TopBar"]
-layout_mode = 2
-size_flags_horizontal = 3
-text = ""
-horizontal_alignment = 1
-theme_override_colors/font_color = Color(1, 0.85, 0.2, 1)
-theme_override_font_sizes/font_size = 20
-
-[node name="WaveLabel" type="Label" parent="MarginContainer/TopBar"]
-layout_mode = 2
-size_flags_horizontal = 3
-text = "WAVE 1"
-horizontal_alignment = 1
-theme_override_colors/font_color = Color(0.7, 0.8, 1, 1)
-theme_override_font_sizes/font_size = 18
-
-[node name="LivesContainer" type="HBoxContainer" parent="MarginContainer/TopBar"]
-layout_mode = 2
-size_flags_horizontal = 10
-theme_override_constants/separation = 4
-
-[node name="MarginContainer2" type="MarginContainer" parent="."]
-anchors_preset = 12
-anchor_top = 1.0
+[node name="PanelStack" type="VBoxContainer" parent="RightDock"]
+layout_mode = 1
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_top = -76.0
 grow_horizontal = 2
-grow_vertical = 0
-theme_override_constants/margin_left = 40
-theme_override_constants/margin_bottom = 36
-theme_override_constants/margin_right = 40
+grow_vertical = 2
+theme_override_constants/separation = 8
 
-[node name="PowerUpContainer" type="HBoxContainer" parent="MarginContainer2"]
+[node name="LivesPanel" type="PanelContainer" parent="RightDock/PanelStack"]
+custom_minimum_size = Vector2(178, 32)
+layout_mode = 2
+
+[node name="LivesRow" type="HBoxContainer" parent="RightDock/PanelStack/LivesPanel"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="LivesTitle" type="Label" parent="RightDock/PanelStack/LivesPanel/LivesRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(36, 0)
+text = "LIVES"
+vertical_alignment = 1
+theme_override_colors/font_color = Color(0.78, 1, 0.86, 1)
+theme_override_font_sizes/font_size = 9
+
+[node name="LivesContainer" type="HBoxContainer" parent="RightDock/PanelStack/LivesPanel/LivesRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 1
+
+[node name="LivesCountLabel" type="Label" parent="RightDock/PanelStack/LivesPanel/LivesRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(24, 0)
+text = "3"
+horizontal_alignment = 2
+vertical_alignment = 1
+theme_override_colors/font_color = Color(0.9, 0.98, 1, 1)
+theme_override_font_sizes/font_size = 9
+
+[node name="OrbPanel" type="PanelContainer" parent="RightDock/PanelStack"]
+custom_minimum_size = Vector2(178, 32)
+layout_mode = 2
+
+[node name="OrbRow" type="HBoxContainer" parent="RightDock/PanelStack/OrbPanel"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="OrbTitle" type="Label" parent="RightDock/PanelStack/OrbPanel/OrbRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(28, 0)
+text = "ORB"
+vertical_alignment = 1
+theme_override_colors/font_color = Color(0.78, 0.95, 1, 1)
+theme_override_font_sizes/font_size = 9
+
+[node name="OrbBar" type="ProgressBar" parent="RightDock/PanelStack/OrbPanel/OrbRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(72, 8)
+size_flags_horizontal = 3
+size_flags_vertical = 4
+max_value = 10.0
+show_percentage = false
+
+[node name="OrbLabel" type="Label" parent="RightDock/PanelStack/OrbPanel/OrbRow"]
+layout_mode = 2
+custom_minimum_size = Vector2(34, 0)
+text = "0/10"
+horizontal_alignment = 2
+vertical_alignment = 1
+theme_override_colors/font_color = Color(0.65, 0.92, 1, 1)
+theme_override_font_sizes/font_size = 8
+
+[node name="PowerUpPanel" type="PanelContainer" parent="RightDock/PanelStack"]
+custom_minimum_size = Vector2(178, 54)
+layout_mode = 2
+
+[node name="PowerUpVBox" type="VBoxContainer" parent="RightDock/PanelStack/PowerUpPanel"]
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="PowerUpTitle" type="Label" parent="RightDock/PanelStack/PowerUpPanel/PowerUpVBox"]
+layout_mode = 2
+text = "ACTIVE EFFECTS"
+horizontal_alignment = 1
+vertical_alignment = 1
+clip_text = true
+theme_override_colors/font_color = Color(1, 0.9, 0.52, 1)
+theme_override_font_sizes/font_size = 7
+
+[node name="PowerUpContainer" type="HBoxContainer" parent="RightDock/PanelStack/PowerUpPanel/PowerUpVBox"]
 layout_mode = 2
 alignment = 1
-theme_override_constants/separation = 20
+theme_override_constants/separation = 3

@@ -6,6 +6,11 @@ signal resumed
 
 const DEV_MENU_SCENE := preload("res://ui/dev_menu.tscn")
 const SETTINGS_MENU_SCENE := preload("res://ui/settings_menu.tscn")
+const NeonUI := preload("res://ui/neon_ui.gd")
+const DOCK_TEXTURE := preload("res://assets/Game UI collection FREE version/PNG/Borders/Yellow/New folder/Group 4 copy.png")
+const BUTTON_BLUE_TEXTURE := preload("res://assets/Game UI collection FREE version/PNG/Button with border/Blue/1x/Asset 8.png")
+const BUTTON_YELLOW_TEXTURE := preload("res://assets/Game UI collection FREE version/PNG/Button with border/Yellow/1x/Asset 8.png")
+
 var _dev_panel: PanelContainer = null
 var _dev_slot: VBoxContainer = null
 var _settings_menu: Node = null
@@ -28,91 +33,79 @@ func _unhandled_input(event: InputEvent) -> void:
 		get_viewport().set_input_as_handled()
 		resumed.emit()
 
-## Constructs the full pause menu UI: dark overlay background, scrollable
-## center column with title, resume/retry/settings/menu buttons, a dev
-## tools toggle, and the hidden dev panel slot.
+## Constructs the full pause menu UI as a left-aligned dock matching the
+## approved mockup, with every text run contained by a plaque or button.
 func _build_ui() -> void:
 	var vp_size := get_viewport_rect().size
 
-	# Full-screen semi-transparent overlay
 	var bg := ColorRect.new()
-	bg.color = Color(0.0, 0.0, 0.08, 0.82)
+	bg.color = Color(0.0, 0.0, 0.02, 0.82)
 	bg.position = Vector2.ZERO
 	bg.size = vp_size
 	add_child(bg)
 
-	# ScrollContainer fills the screen so everything is scrollable if needed
-	var scroll := ScrollContainer.new()
-	scroll.position = Vector2.ZERO
-	scroll.size = vp_size
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll.process_mode = Node.PROCESS_MODE_ALWAYS
-	add_child(scroll)
+	var dock := Control.new()
+	dock.name = "LeftDock"
+	dock.position = Vector2(18.0, maxf((vp_size.y - 660.0) * 0.5, 12.0))
+	dock.size = Vector2(236.0, minf(660.0, vp_size.y - 24.0))
+	add_child(dock)
 
-	# Main vertical column, centered horizontally
-	var outer := VBoxContainer.new()
-	outer.custom_minimum_size = Vector2(vp_size.x, 0)
-	outer.alignment = BoxContainer.ALIGNMENT_CENTER
-	outer.add_theme_constant_override("separation", 14)
-	scroll.add_child(outer)
+	var frame := TextureRect.new()
+	frame.name = "DockFrame"
+	frame.texture = DOCK_TEXTURE
+	frame.position = Vector2(-6.0, -18.0)
+	frame.size = Vector2(250.0, dock.size.y + 36.0)
+	frame.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	frame.stretch_mode = TextureRect.STRETCH_SCALE
+	frame.modulate = Color(1, 1, 1, 0.9)
+	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	dock.add_child(frame)
 
-	# Top spacer to push content to vertical center
-	var top_space := Control.new()
-	top_space.custom_minimum_size = Vector2(0, maxf(vp_size.y * 0.12, 40))
-	outer.add_child(top_space)
+	var button_column := VBoxContainer.new()
+	button_column.name = "MenuButtons"
+	button_column.position = Vector2(22, 178)
+	button_column.size = Vector2(194, 328)
+	button_column.add_theme_constant_override("separation", 18)
+	dock.add_child(button_column)
 
-	# Title
-	var title := Label.new()
-	title.text = "⏸  PAUSED"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_color_override("font_color", Color(1.0, 0.92, 0.3))
-	title.add_theme_font_size_override("font_size", 36)
-	outer.add_child(title)
+	button_column.add_child(_make_btn("ResumeWrap", "RESUME", NeonUI.YELLOW, _on_resume, true))
+	button_column.add_child(_make_btn("RetryWrap", "RESTART RUN", NeonUI.CYAN, _on_retry))
+	button_column.add_child(_make_btn("SettingsWrap", "OPTIONS", NeonUI.CYAN, _on_settings))
+	button_column.add_child(_make_btn("MenuWrap", "MAIN MENU", NeonUI.CYAN, _on_menu))
+	button_column.add_child(_make_btn("DevWrap", "DEV TOOLS", NeonUI.GREEN, _on_dev_tools))
 
-	var div := HSeparator.new()
-	div.add_theme_color_override("color", Color(1.0, 0.92, 0.3, 0.35))
-	outer.add_child(div)
-
-	# Spacer
-	var sp := Control.new()
-	sp.custom_minimum_size = Vector2(0, 6)
-	outer.add_child(sp)
-
-	# Buttons — scale to 80% of viewport width, capped at 300px
-	var btn_w := minf(vp_size.x * 0.8, 300.0)
-	outer.add_child(_make_btn("▶  Resume",     Color(0.3, 1.0, 0.5),  _on_resume,    btn_w))
-	outer.add_child(_make_btn("🔄  Retry",     Color(0.4, 0.82, 1.0), _on_retry,     btn_w))
-	outer.add_child(_make_btn("Settings",        Color(0.7, 0.9, 1.0),  _on_settings,  btn_w))
-	outer.add_child(_make_btn("🏠  Main Menu", Color(1.0, 0.5, 0.5),  _on_menu,      btn_w))
-
-	var dev_separator := HSeparator.new()
-	dev_separator.add_theme_color_override("color", Color(0.3, 0.8, 0.3, 0.3))
-	outer.add_child(dev_separator)
-
-	outer.add_child(_make_btn("🛠  Dev Tools ▼", Color(0.3, 0.9, 0.4), _on_dev_tools, btn_w))
-
-	# Container that holds the dev panel, hidden by default
 	_dev_slot = VBoxContainer.new()
+	_dev_slot.name = "DevSlot"
+	_dev_slot.position = Vector2(270.0, 110.0)
+	_dev_slot.size = Vector2(minf(vp_size.x - 300.0, 380.0), vp_size.y - 220.0)
 	_dev_slot.visible = false
 	_dev_slot.alignment = BoxContainer.ALIGNMENT_CENTER
-	outer.add_child(_dev_slot)
-
-	# Bottom spacer
-	var bot_space := Control.new()
-	bot_space.custom_minimum_size = Vector2(0, 30)
-	outer.add_child(bot_space)
+	add_child(_dev_slot)
 
 ## Helper: creates a centered, styled button with the given label text,
 ## color, callback, and width.
-func _make_btn(label: String, col: Color, callback: Callable, width: float) -> Button:
-	var btn := Button.new()
-	btn.text = label
-	btn.custom_minimum_size = Vector2(width, 48)
-	btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	btn.add_theme_font_size_override("font_size", 20)
-	btn.add_theme_color_override("font_color", col)
+func _make_btn(name: String, label: String, accent: Color, callback: Callable, hot: bool = false) -> Control:
+	var wrap := Control.new()
+	wrap.name = name
+	wrap.custom_minimum_size = Vector2(194, 48)
+
+	var texture := TextureRect.new()
+	texture.texture = BUTTON_YELLOW_TEXTURE if hot else BUTTON_BLUE_TEXTURE
+	texture.set_anchors_preset(Control.PRESET_FULL_RECT)
+	texture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	texture.stretch_mode = TextureRect.STRETCH_SCALE
+	texture.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	wrap.add_child(texture)
+
+	var btn := NeonUI.make_button("Button", label, accent, Vector2(0, 0))
+	btn.set_anchors_preset(Control.PRESET_FULL_RECT)
+	btn.offset_left = 16
+	btn.offset_top = 6
+	btn.offset_right = -14
+	btn.offset_bottom = -6
 	btn.pressed.connect(callback)
-	return btn
+	wrap.add_child(btn)
+	return wrap
 
 # ── Actions ────────────────────────────────────────────────────────────────────
 

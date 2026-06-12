@@ -214,6 +214,13 @@ func _spawn_background_planet(y_pos: float) -> void:
 ## try-again screen) into a single paused state for the scene tree.
 func _update_pause_state() -> void:
 	get_tree().paused = pause_active or allocation_active or elite_upgrade_active or try_again_active
+	_sync_hud_visibility()
+
+## Keeps the gameplay HUD out of modal upgrade/allocation screens so it
+## cannot overlap the card UI, while leaving pause/game-over behavior alone.
+func _sync_hud_visibility() -> void:
+	if is_instance_valid(hud):
+		hud.visible = not (allocation_active or elite_upgrade_active)
 
 var _pause_overlay: CanvasLayer = null
 
@@ -354,6 +361,7 @@ func _on_allocation_triggered(points: int) -> void:
 	if allocation_active:
 		return
 	allocation_active = true
+	_sync_hud_visibility()
 
 	# If the elite upgrade is already active (Wave 10), defer and show side-by-side
 	if elite_upgrade_active:
@@ -393,6 +401,7 @@ func _on_elite_upgrade_triggered() -> void:
 	if elite_upgrade_active:
 		return
 	elite_upgrade_active = true
+	_sync_hud_visibility()
 
 	# Pause immediately
 	get_tree().paused = true
