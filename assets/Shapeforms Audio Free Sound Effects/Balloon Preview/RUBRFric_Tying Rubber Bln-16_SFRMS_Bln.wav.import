@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://bcigjrrgopx04"
+path="res://.godot/imported/RUBRFric_Tying Rubber Bln-16_SFRMS_Bln.wav-ac4183544d62a93493e658d361e841e9.sample"
+
+[deps]
+
+source_file="res://assets/Shapeforms Audio Free Sound Effects/Balloon Preview/RUBRFric_Tying Rubber Bln-16_SFRMS_Bln.wav"
+dest_files=["res://.godot/imported/RUBRFric_Tying Rubber Bln-16_SFRMS_Bln.wav-ac4183544d62a93493e658d361e841e9.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

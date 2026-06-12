@@ -144,6 +144,7 @@ func _on_area_entered(area: Area2D) -> void:
 	if is_deflected:
 		if area.is_in_group("enemies") or area.is_in_group("tempest_sections"):
 			area.take_damage(1 + GameManager.bonus_damage)
+			AudioManager.play_hit_marker()
 			despawn()
 		return
 	if area.is_in_group("player"):
@@ -152,6 +153,7 @@ func _on_area_entered(area: Area2D) -> void:
 			can_be_deflected = area.can_deflect_projectiles()
 		if can_be_deflected:
 			if deflect(area.global_position, area.velocity) and area.has_method("register_boost_reflection"):
+				AudioManager.play_deflect()
 				area.register_boost_reflection()
 			return
 		despawn()

@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://dwdqele01pv45"
+path="res://.godot/imported/LOOP_01.wav-c50f1f8b8403efeb880bbe3f2c007f6b.sample"
+
+[deps]
+
+source_file="res://assets/Shapeforms Audio Free Sound Effects/Cassette Preview/AUDIO/LOOP_01.wav"
+dest_files=["res://.godot/imported/LOOP_01.wav-c50f1f8b8403efeb880bbe3f2c007f6b.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

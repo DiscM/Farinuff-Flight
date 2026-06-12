@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://w7xbnhiy6yca"
+path="res://.godot/imported/ONE_SHOT_SPACE_TEAR.wav-bdb4cccb68778d1efdc9f40da55421bf.sample"
+
+[deps]
+
+source_file="res://assets/Shapeforms Audio Free Sound Effects/Dystopia – Ambience and Drone Preview/AUDIO/ONE_SHOT_SPACE_TEAR.wav"
+dest_files=["res://.godot/imported/ONE_SHOT_SPACE_TEAR.wav-bdb4cccb68778d1efdc9f40da55421bf.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

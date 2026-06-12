@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://ceeo6th8su0yu"
+path="res://.godot/imported/REMOVE_CASSETTE_07.wav-fb6991aeeb8b7c4db650604f740482cc.sample"
+
+[deps]
+
+source_file="res://assets/Shapeforms Audio Free Sound Effects/Cassette Preview/AUDIO/REMOVE_CASSETTE_07.wav"
+dest_files=["res://.godot/imported/REMOVE_CASSETTE_07.wav-fb6991aeeb8b7c4db650604f740482cc.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

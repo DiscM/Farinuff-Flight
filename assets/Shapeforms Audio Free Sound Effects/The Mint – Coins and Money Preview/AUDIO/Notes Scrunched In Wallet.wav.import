@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://3fjagncmkcm"
+path="res://.godot/imported/Notes Scrunched In Wallet.wav-fa761ea6ba21c6ebcd07dfdc7bb519bf.sample"
+
+[deps]
+
+source_file="res://assets/Shapeforms Audio Free Sound Effects/The Mint – Coins and Money Preview/AUDIO/Notes Scrunched In Wallet.wav"
+dest_files=["res://.godot/imported/Notes Scrunched In Wallet.wav-fa761ea6ba21c6ebcd07dfdc7bb519bf.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

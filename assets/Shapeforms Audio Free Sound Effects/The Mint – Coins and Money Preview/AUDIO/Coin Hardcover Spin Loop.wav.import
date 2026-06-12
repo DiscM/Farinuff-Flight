@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://c4yfayseq7vq8"
+path="res://.godot/imported/Coin Hardcover Spin Loop.wav-9e1265b47281c462eefcf8ea01d19403.sample"
+
+[deps]
+
+source_file="res://assets/Shapeforms Audio Free Sound Effects/The Mint – Coins and Money Preview/AUDIO/Coin Hardcover Spin Loop.wav"
+dest_files=["res://.godot/imported/Coin Hardcover Spin Loop.wav-9e1265b47281c462eefcf8ea01d19403.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

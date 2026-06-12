@@ -63,6 +63,7 @@ func _on_area_entered(area: Area2D) -> void:
 ## Emits the xp_orb_collected signal with this orb's value, spawns a
 ## particle collection effect, and frees the node.
 func _collect() -> void:
+	AudioManager.play_xp_orb()
 	SignalBus.xp_orb_collected.emit(orb_value)
 	_spawn_collect_effect()
 	queue_free()

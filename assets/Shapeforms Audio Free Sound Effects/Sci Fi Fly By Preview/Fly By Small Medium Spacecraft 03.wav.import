@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://73c85cd4xgtj"
+path="res://.godot/imported/Fly By Small Medium Spacecraft 03.wav-19c5167a4d8f03b3a1a5d6c5a39d930d.sample"
+
+[deps]
+
+source_file="res://assets/Shapeforms Audio Free Sound Effects/Sci Fi Fly By Preview/Fly By Small Medium Spacecraft 03.wav"
+dest_files=["res://.godot/imported/Fly By Small Medium Spacecraft 03.wav-19c5167a4d8f03b3a1a5d6c5a39d930d.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

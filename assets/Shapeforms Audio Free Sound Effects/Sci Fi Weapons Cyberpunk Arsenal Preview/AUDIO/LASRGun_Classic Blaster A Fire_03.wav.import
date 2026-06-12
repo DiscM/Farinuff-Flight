@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://b2itfu2gw8170"
+path="res://.godot/imported/LASRGun_Classic Blaster A Fire_03.wav-435c2d6412f6467f2bab335344a3209e.sample"
+
+[deps]
+
+source_file="res://assets/Shapeforms Audio Free Sound Effects/Sci Fi Weapons Cyberpunk Arsenal Preview/AUDIO/LASRGun_Classic Blaster A Fire_03.wav"
+dest_files=["res://.godot/imported/LASRGun_Classic Blaster A Fire_03.wav-435c2d6412f6467f2bab335344a3209e.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

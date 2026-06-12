@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://37cu3ljy7y4m"
+path="res://.godot/imported/Arcane Wind Chime Gust.wav-690d88d7b7516a720f82ee97e82cc191.sample"
+
+[deps]
+
+source_file="res://assets/Shapeforms Audio Free Sound Effects/Arcane Activations Preview/AUDIO/Arcane Wind Chime Gust.wav"
+dest_files=["res://.godot/imported/Arcane Wind Chime Gust.wav-690d88d7b7516a720f82ee97e82cc191.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

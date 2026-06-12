@@ -3,6 +3,7 @@ extends Area2D
 
 const BULLET_SCENE := preload("res://entities/bullets/bullet.tscn")
 const RETICLE_TEXTURE := preload("res://assets/ui/cursor_crosshair.png")
+const PIXEL_EFFECT_SCENE := preload("res://effects/pixel_sprite_effect.tscn")
 
 @export var speed: float = 280.0
 @export var base_fire_rate: float = 0.22  # seconds between shots
@@ -370,6 +371,8 @@ func _begin_boost() -> void:
 	boost_direction = velocity.normalized() if velocity.length() > 1.0 else Vector2.UP
 	boost_distance_remaining = BOOST_DISTANCE
 	afterimage_spawn_timer = 0.0 # spawn immediately
+	_spawn_warp_effect(global_position, boost_direction)
+	AudioManager.play_boost()
 
 
 ## Adjusts the boost direction toward the player's input direction,
@@ -566,7 +569,8 @@ func _spawn_bullet(dir: Vector2, offset: Vector2 = Vector2.ZERO, skip_auto_aim: 
 	var bs := 1.0
 	if bullet_scale_level > 0:
 		bs = 1.0 + bullet_scale_level * 0.5
-	bullet.pool_activate(global_position + dist_offset + offset, dir, bs, has_piercing, has_explosive_rounds, zigzag_stacks)
+	var spawn_position: Vector2 = global_position + dist_offset + offset
+	bullet.pool_activate(spawn_position, dir, bs, has_piercing, has_explosive_rounds, zigzag_stacks)
 
 ## Re-enables shooting after the fire rate cooldown timer expires.
 func _on_shoot_timer_timeout() -> void:
@@ -602,9 +606,11 @@ func _take_hit() -> void:
 	if has_shield:
 		has_shield = false
 		shield_sprite.visible = false
+		AudioManager.play_shield()
 		_start_invincibility(1.5)
 		return
 
+	AudioManager.play_player_hit()
 	SignalBus.player_hit.emit()
 	# Only grant invincibility if the player still has lives left after the hit
 	if GameManager.lives > 0:
@@ -633,7 +639,9 @@ func _on_invincibility_ended() -> void:
 # Power-up types: 0=SCALE_UP, 1=RAPID_FIRE, 2=SHIELD, 3=SPREAD_SHOT, 4=MAGNET, 5=NUKE
 
 ## Routes a collected power-up to the appropriate handler based on its type.
-func _on_power_up_collected(type: int, _pos: Vector2) -> void:
+func _on_power_up_collected(type: int, pos: Vector2) -> void:
+	_spawn_sparkle_effect(pos)
+	AudioManager.play_powerup()
 	match type:
 		0:  # SCALE_UP
 			_apply_scale_up()
@@ -944,6 +952,7 @@ func grant_rear_gunner() -> void:
 ## a 160px radius, deals 1 + bonus damage to nearby enemies and tempest
 ## sections, and spawns an expanding ring visual effect.
 func _trigger_shield_burst() -> void:
+	AudioManager.play_shield()
 	var burst_radius := 160.0
 	var burst_radius_sq := burst_radius * burst_radius
 	var damage := 1 + GameManager.bonus_damage
@@ -1001,6 +1010,24 @@ func _flash_overclock() -> void:
 	var tween := create_tween()
 	tween.tween_property(sprite, "modulate", Color(1.0, 0.7, 0.0), 0.05)
 	tween.tween_property(sprite, "modulate", Color.WHITE, 0.25)
+	_spawn_sparkle_effect(global_position)
+	AudioManager.play_powerup()
+
+func _spawn_warp_effect(effect_position: Vector2, direction: Vector2) -> void:
+	var effect := _acquire_pixel_effect()
+	if effect != null and effect.has_method("play_warp_at"):
+		effect.play_warp_at(effect_position, direction)
+
+func _spawn_sparkle_effect(effect_position: Vector2) -> void:
+	var effect := _acquire_pixel_effect()
+	if effect != null and effect.has_method("play_sparkle_at"):
+		effect.play_sparkle_at(effect_position)
+
+func _acquire_pixel_effect() -> Node:
+	var scene_root := get_tree().current_scene
+	if scene_root == null:
+		return null
+	return ObjectPool.acquire(PIXEL_EFFECT_SCENE, scene_root)
 
 ## Pulls all power-ups and XP orbs toward the player at 500 px/s.
 ## Used by the permanent magnet field upgrade (faster than the temporary

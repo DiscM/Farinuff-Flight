@@ -82,6 +82,8 @@ func _on_area_entered(area: Area2D) -> void:
 
 		if explosive:
 			_explode()
+		else:
+			_play_impact()
 
 		if not piercing:
 			despawn()
@@ -104,6 +106,15 @@ func _explode() -> void:
 	var explosion := ObjectPool.acquire(EXPLOSION_SCENE, scene_root)
 	if explosion != null and explosion.has_method("play_at"):
 		explosion.play_at(global_position, true)
+
+## Spawns a short pixel spark for standard bullet hits.
+func _play_impact() -> void:
+	var scene_root := get_tree().current_scene
+	if scene_root == null:
+		return
+	var impact := ObjectPool.acquire(EXPLOSION_SCENE, scene_root)
+	if impact != null and impact.has_method("play_impact_at"):
+		impact.play_impact_at(global_position)
 
 ## Frees the bullet when it leaves the screen.
 func _on_screen_exited() -> void:

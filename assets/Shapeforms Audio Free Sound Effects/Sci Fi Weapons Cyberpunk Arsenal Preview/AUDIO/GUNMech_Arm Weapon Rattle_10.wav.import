@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://bmff0f1t1afbm"
+path="res://.godot/imported/GUNMech_Arm Weapon Rattle_10.wav-70e38b5067c5189efac749355207d0f7.sample"
+
+[deps]
+
+source_file="res://assets/Shapeforms Audio Free Sound Effects/Sci Fi Weapons Cyberpunk Arsenal Preview/AUDIO/GUNMech_Arm Weapon Rattle_10.wav"
+dest_files=["res://.godot/imported/GUNMech_Arm Weapon Rattle_10.wav-70e38b5067c5189efac749355207d0f7.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2

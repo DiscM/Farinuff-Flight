@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://c87uk6lnjrp35"
+path="res://.godot/imported/TAPE_NOISE_01.wav-eb0a9736688ae484a9fb47dc6fcdd3dd.sample"
+
+[deps]
+
+source_file="res://assets/Shapeforms Audio Free Sound Effects/Cassette Preview/AUDIO/TAPE_NOISE_01.wav"
+dest_files=["res://.godot/imported/TAPE_NOISE_01.wav-eb0a9736688ae484a9fb47dc6fcdd3dd.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2
