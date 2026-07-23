@@ -1,7 +1,6 @@
 extends CanvasLayer
 ## HUD — displays score, combo, lives, wave, orb meter, and active power-up indicators.
 
-const NeonUI := preload("res://ui/neon_ui.gd")
 const HUD_PANEL_ALPHA := 0.08
 const HUD_PANEL_DARK_ALPHA := 0.12
 

@@ -1,0 +1,4 @@
+[submodule "effects/shaders/PixelPlanets"]
+	path = effects/shaders/PixelPlanets
+	url = https://github.com/Deep-Fold/PixelPlanets.git
+	ignore = untracked

@@ -2,7 +2,6 @@ extends Control
 ## Main Menu — title screen with Play button.
 
 const SETTINGS_MENU_SCENE := preload("res://ui/settings_menu.tscn")
-const NeonUI := preload("res://ui/neon_ui.gd")
 
 var _settings_menu: Node = null
 

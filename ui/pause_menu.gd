@@ -6,7 +6,6 @@ signal resumed
 
 const DEV_MENU_SCENE := preload("res://ui/dev_menu.tscn")
 const SETTINGS_MENU_SCENE := preload("res://ui/settings_menu.tscn")
-const NeonUI := preload("res://ui/neon_ui.gd")
 const DOCK_TEXTURE := preload("res://assets/Game UI collection FREE version/PNG/Borders/Yellow/New folder/Group 4 copy.png")
 const BUTTON_BLUE_TEXTURE := preload("res://assets/Game UI collection FREE version/PNG/Button with border/Blue/1x/Asset 8.png")
 const BUTTON_YELLOW_TEXTURE := preload("res://assets/Game UI collection FREE version/PNG/Button with border/Yellow/1x/Asset 8.png")
@@ -15,15 +14,11 @@ var _dev_panel: PanelContainer = null
 var _dev_slot: VBoxContainer = null
 var _settings_menu: Node = null
 
-## Sizes the control to fill the viewport, builds the UI layout, and
-## plays the fade-in animation. Runs in PROCESS_MODE_ALWAYS so it
-## functions while the tree is paused.
+## Builds the UI layout and plays the fade-in animation. The scene's full-rect
+## anchors fill the viewport. Runs in PROCESS_MODE_ALWAYS so it functions while
+## the tree is paused.
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	# Explicitly size to the full viewport
-	var vp_size := get_viewport_rect().size
-	position = Vector2.ZERO
-	size = vp_size
 	_build_ui()
 	_animate_in()
 
@@ -84,10 +79,10 @@ func _build_ui() -> void:
 
 ## Helper: creates a centered, styled button with the given label text,
 ## color, callback, and width.
-func _make_btn(name: String, label: String, accent: Color, callback: Callable, hot: bool = false) -> Control:
-	var wrap := Control.new()
-	wrap.name = name
-	wrap.custom_minimum_size = Vector2(194, 48)
+func _make_btn(control_name: String, label: String, accent: Color, callback: Callable, hot: bool = false) -> Control:
+	var button_wrapper := Control.new()
+	button_wrapper.name = control_name
+	button_wrapper.custom_minimum_size = Vector2(194, 48)
 
 	var texture := TextureRect.new()
 	texture.texture = BUTTON_YELLOW_TEXTURE if hot else BUTTON_BLUE_TEXTURE
@@ -95,7 +90,7 @@ func _make_btn(name: String, label: String, accent: Color, callback: Callable, h
 	texture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	texture.stretch_mode = TextureRect.STRETCH_SCALE
 	texture.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	wrap.add_child(texture)
+	button_wrapper.add_child(texture)
 
 	var btn := NeonUI.make_button("Button", label, accent, Vector2(0, 0))
 	btn.set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -104,8 +99,8 @@ func _make_btn(name: String, label: String, accent: Color, callback: Callable, h
 	btn.offset_right = -14
 	btn.offset_bottom = -6
 	btn.pressed.connect(callback)
-	wrap.add_child(btn)
-	return wrap
+	button_wrapper.add_child(btn)
+	return button_wrapper
 
 # ── Actions ────────────────────────────────────────────────────────────────────
 

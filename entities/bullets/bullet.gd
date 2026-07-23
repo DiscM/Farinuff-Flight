@@ -45,18 +45,18 @@ func despawn() -> void:
 	if _is_despawning:
 		return
 	_is_despawning = true
-	_deactivate_for_pool()
-	ObjectPool.release_deferred(self)
-
-## Disables the bullet so the pooled node can be safely stored off-screen.
-func _deactivate_for_pool() -> void:
 	visible = false
+	call_deferred("_deactivate_for_pool")
+
+## Disables and releases the bullet after the current physics query finishes.
+func _deactivate_for_pool() -> void:
 	monitoring = false
 	monitorable = false
 	collision_layer = 0
 	collision_mask = 0
 	set_physics_process(false)
 	process_mode = Node.PROCESS_MODE_DISABLED
+	ObjectPool.release(self)
 
 ## Moves the bullet along its direction each physics frame. If zigzag is
 ## enabled, also applies a perpendicular sine-wave oscillation whose
@@ -76,6 +76,8 @@ func _physics_process(delta: float) -> void:
 ## damage, triggers an explosion if the explosive flag is set, and
 ## returns the bullet to the pool unless it has piercing.
 func _on_area_entered(area: Area2D) -> void:
+	if _is_despawning:
+		return
 	if area.is_in_group("enemies") or area.is_in_group("tempest_sections"):
 		var dmg := 1 + GameManager.bonus_damage
 		area.take_damage(dmg)

@@ -107,8 +107,6 @@ var _action_taken: bool = false
 func _start_countdown(lbl: Label) -> void:
 	_countdown = 10.0
 	lbl.text = "Auto-decline in 10 s…"
-	var t := get_tree().create_timer(0.0, false, false, true)  # process while paused
-	# We'll drive the countdown in _process instead
 	set_meta("timer_label", lbl)
 
 ## Decrements the countdown timer each frame. Triggers auto-decline when

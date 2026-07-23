@@ -60,19 +60,19 @@ func despawn() -> void:
 	if _is_despawning:
 		return
 	_is_despawning = true
-	_deactivate_for_pool()
-	ObjectPool.release_deferred(self)
+	visible = false
+	call_deferred("_deactivate_for_pool")
 
-## Disables the bullet so the pooled node can be stored off-screen.
+## Disables and releases the bullet after the current physics query finishes.
 func _deactivate_for_pool() -> void:
 	remove_from_group("enemy_bullets")
-	visible = false
 	monitoring = false
 	monitorable = false
 	collision_layer = 0
 	collision_mask = 0
 	set_physics_process(false)
 	process_mode = Node.PROCESS_MODE_DISABLED
+	ObjectPool.release(self)
 
 ## Moves the bullet along its direction and animates a subtle pulse on the
 ## visibility ring for readability against busy backgrounds.
