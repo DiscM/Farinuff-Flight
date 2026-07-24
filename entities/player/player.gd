@@ -4,6 +4,7 @@ extends Area2D
 const BULLET_SCENE := preload("res://entities/bullets/bullet.tscn")
 const RETICLE_TEXTURE := preload("res://assets/ui/cursor_crosshair.png")
 const PIXEL_EFFECT_SCENE := preload("res://effects/pixel_sprite_effect.tscn")
+const DRONE_VISUAL_SCRIPT := preload("res://entities/player/drone_visual.gd")
 
 @export var speed: float = 280.0
 @export var base_fire_rate: float = 0.22  # seconds between shots
@@ -17,6 +18,11 @@ var has_spread_shot: bool = false
 var has_magnet: bool = false
 var is_invincible: bool = false
 var dev_god_mode: bool = false
+var dev_rapid_fire: bool = false
+var dev_spread_shot: bool = false
+var dev_orbitals: bool = false
+var dev_piercing: bool = false
+var dev_explosive_rounds: bool = false
 
 # RPG permanent upgrades (persist for the run)
 var has_rear_gun: bool = false
@@ -31,14 +37,15 @@ var orbital_nodes: Array[Node2D] = []
 var has_twin_cannons: bool = false
 var has_auto_aim: bool = false
 var has_drone: bool = false
+var has_hull_plating: bool = false
 var has_afterburner: bool = false
+var active_elite_upgrade_ids: Array[String] = []
 var drone_node: Area2D = null
 var drone_shoot_timer: float = 0.0
 const DRONE_FIRE_RATE: float = 0.65
 
 static var _orbital_texture: Texture2D
 static var _burst_ring_texture: Texture2D
-static var _drone_texture: Texture2D
 
 # New elite upgrades
 var has_spread_shot_elite: bool = false   # Permanent 3-way spread (stacks with twin_cannons → 5 shots)
@@ -64,6 +71,9 @@ const OVERCLOCK_COOLDOWN: float = 16.0
 @onready var sprite: Sprite2D = $Sprite2D
 @onready var collision_shape: CollisionShape2D = $CollisionShape2D
 @onready var shield_sprite: Sprite2D = $ShieldSprite
+@onready var upgrade_visuals_back: ShipUpgradeVisuals = $UpgradeVisualsBack
+@onready var upgrade_visuals_front: ShipUpgradeVisuals = $UpgradeVisualsFront
+@onready var afterimage_cache: ShipAfterimageCache = $AfterimageCache
 
 var can_shoot: bool = true
 var viewport_rect: Rect2
@@ -110,6 +120,8 @@ const DRIFT_ACCEL_BASE: float = 2.4
 # Movement feel
 @export var acceleration: float = 12.0   # how fast we reach top speed
 @export var drag: float = 14.0          # how fast we decelerate (higher = tighter/snappier stop)
+var _base_speed_without_afterburner: float
+var _base_acceleration_without_afterburner: float
 
 ## Initializes the player: adds to the "player" group, configures all
 ## timers (shoot, invincibility, rapid fire, spread shot, magnet) as
@@ -118,6 +130,8 @@ const DRIFT_ACCEL_BASE: float = 2.4
 func _ready() -> void:
 	add_to_group("player")
 	# viewport_rect will be refreshed each frame
+	_base_speed_without_afterburner = speed
+	_base_acceleration_without_afterburner = acceleration
 
 	shoot_timer.wait_time = base_fire_rate
 	shoot_timer.one_shot = true
@@ -143,6 +157,7 @@ func _ready() -> void:
 	SignalBus.power_up_collected.connect(_on_power_up_collected)
 	shield_sprite.visible = false
 	sprite_frame_size = _get_sprite_frame_size()
+	_sync_upgrade_visuals()
 
 	# Initialize reticle
 	_setup_reticle()
@@ -255,9 +270,9 @@ func _physics_process(delta: float) -> void:
 	if Input.is_action_pressed("shoot") and can_shoot:
 		# Apply fire-rate bonus from leveling
 		var effective_rate: float
-		if has_rapid_fire or overclock_active:
+		if _rapid_fire_active() or overclock_active:
 			var rate_factor := 0.4
-			if has_rapid_fire and overclock_active:
+			if _rapid_fire_active() and overclock_active:
 				rate_factor = 0.15  # stacking: rapid fire + overclock = ultra fast
 			effective_rate = base_fire_rate * rate_factor * maxf(1.0 - GameManager.bonus_fire_rate_pct, 0.15)
 		else:
@@ -270,7 +285,7 @@ func _physics_process(delta: float) -> void:
 		_attract_powerups(delta)
 
 	# --- Orbitals ---
-	if has_orbitals:
+	if _orbitals_active():
 		_update_orbitals(delta)
 
 	# --- Drone ---
@@ -301,6 +316,8 @@ func _physics_process(delta: float) -> void:
 	# --- Permanent magnet field ---
 	if has_magnet_field and not has_magnet:
 		_attract_powerups_fast(delta)
+
+	_update_upgrade_visual_runtime()
 
 ## Manages the boost state machine: during a boost, decrements the duration
 ## timer, deflects nearby projectiles, checks for chain boost triggers,
@@ -437,16 +454,16 @@ func _get_boost_cooldown() -> float:
 	)
 
 
-## Creates a translucent ghost copy of the player sprite at the current
-## position, parented into the AfterimageContainer to avoid star-field
-## flicker. The ghost fades out and shrinks over 0.35 seconds.
+## Creates one translucent composite ghost containing the base sprite and
+## every installed ship-mounted elite module. Transient flashes and the
+## independent drone are intentionally omitted.
 func _spawn_afterimage() -> void:
+	if afterimage_cache.texture == null:
+		return
 	var af := Sprite2D.new()
-	# Use current sprite configuration
-	af.texture = sprite.texture
-	af.hframes = sprite.hframes
-	af.vframes = sprite.vframes
-	af.frame = sprite.frame
+	af.texture = afterimage_cache.texture
+	af.hframes = 4
+	af.frame = clampi(sprite.frame, 0, 3)
 	af.global_position = global_position
 	af.rotation = rotation
 	af.scale = scale * sprite.scale
@@ -514,46 +531,70 @@ func _fire() -> void:
 	can_shoot = false
 	shoot_timer.start()
 
-	# Main fire direction
-	var aim_dir = last_aim_direction
-	var side_offset = aim_dir.rotated(PI/2.0) # perpendicular vector for parallel bullets
+	var aim_dir := last_aim_direction
 	var auto_aim_dir := _get_nearest_enemy_direction(global_position, 500.0) if has_auto_aim else Vector2.ZERO
+	var center_anchor := upgrade_visuals_front.get_player_local_muzzle("center")
+	var spread_active := _spread_shot_active()
 
-	if has_spread_shot or has_spread_shot_elite:
-		_spawn_bullet(aim_dir, Vector2.ZERO, false, auto_aim_dir)
-		_spawn_bullet(aim_dir.rotated(deg_to_rad(-25)), Vector2.ZERO, false, auto_aim_dir)
-		_spawn_bullet(aim_dir.rotated(deg_to_rad(25)), Vector2.ZERO, false, auto_aim_dir)
+	if spread_active:
+		var left_spread_anchor := upgrade_visuals_front.get_player_local_muzzle("spread_left") if has_spread_shot_elite else center_anchor
+		var right_spread_anchor := upgrade_visuals_front.get_player_local_muzzle("spread_right") if has_spread_shot_elite else center_anchor
+		_spawn_bullet(aim_dir, center_anchor, false, auto_aim_dir)
+		_spawn_bullet(aim_dir.rotated(deg_to_rad(-25)), left_spread_anchor, false, auto_aim_dir)
+		_spawn_bullet(aim_dir.rotated(deg_to_rad(25)), right_spread_anchor, false, auto_aim_dir)
 		if has_twin_cannons:
-			# Twin cannons add 2 parallel bullets
-			_spawn_bullet(aim_dir.rotated(deg_to_rad(-12)), side_offset * -18, false, auto_aim_dir)
-			_spawn_bullet(aim_dir.rotated(deg_to_rad(12)), side_offset * 18, false, auto_aim_dir)
+			_spawn_bullet(
+				aim_dir.rotated(deg_to_rad(-12)),
+				upgrade_visuals_front.get_player_local_muzzle("twin_left"),
+				false,
+				auto_aim_dir
+			)
+			_spawn_bullet(
+				aim_dir.rotated(deg_to_rad(12)),
+				upgrade_visuals_front.get_player_local_muzzle("twin_right"),
+				false,
+				auto_aim_dir
+			)
 	else:
-		_spawn_bullet(aim_dir, Vector2.ZERO, false, auto_aim_dir)
+		_spawn_bullet(aim_dir, center_anchor, false, auto_aim_dir)
 		if has_twin_cannons:
-			_spawn_bullet(aim_dir, side_offset * -14, false, auto_aim_dir)
-			_spawn_bullet(aim_dir, side_offset * 14, false, auto_aim_dir)
+			_spawn_bullet(aim_dir, upgrade_visuals_front.get_player_local_muzzle("twin_left"), false, auto_aim_dir)
+			_spawn_bullet(aim_dir, upgrade_visuals_front.get_player_local_muzzle("twin_right"), false, auto_aim_dir)
 
 	# Rear gunner logic
 	if has_rear_gun or has_rear_gunner:
-		var back_dir = -aim_dir
-		if has_spread_shot or has_spread_shot_elite:
-			_spawn_bullet(back_dir, Vector2.ZERO, true, auto_aim_dir)
-			_spawn_bullet(back_dir.rotated(deg_to_rad(-25)), Vector2.ZERO, true, auto_aim_dir)
-			_spawn_bullet(back_dir.rotated(deg_to_rad(25)), Vector2.ZERO, true, auto_aim_dir)
+		var back_dir := -aim_dir
+		var rear_anchor := upgrade_visuals_front.get_player_local_muzzle("rear")
+		if spread_active:
+			_spawn_bullet(back_dir, rear_anchor, true, auto_aim_dir)
+			_spawn_bullet(back_dir.rotated(deg_to_rad(-25)), rear_anchor, true, auto_aim_dir)
+			_spawn_bullet(back_dir.rotated(deg_to_rad(25)), rear_anchor, true, auto_aim_dir)
 			if has_twin_cannons:
-				_spawn_bullet(back_dir.rotated(deg_to_rad(-12)), side_offset * 18, true, auto_aim_dir)
-				_spawn_bullet(back_dir.rotated(deg_to_rad(12)), side_offset * -18, true, auto_aim_dir)
+				_spawn_bullet(back_dir.rotated(deg_to_rad(-12)), rear_anchor, true, auto_aim_dir)
+				_spawn_bullet(back_dir.rotated(deg_to_rad(12)), rear_anchor, true, auto_aim_dir)
 		else:
-			_spawn_bullet(back_dir, Vector2.ZERO, true, auto_aim_dir)
+			_spawn_bullet(back_dir, rear_anchor, true, auto_aim_dir)
 			if has_twin_cannons:
-				_spawn_bullet(back_dir, side_offset * 14, true, auto_aim_dir)
-				_spawn_bullet(back_dir, side_offset * -14, true, auto_aim_dir)
+				_spawn_bullet(back_dir, rear_anchor, true, auto_aim_dir)
+				_spawn_bullet(back_dir, rear_anchor, true, auto_aim_dir)
+
+	if has_twin_cannons:
+		upgrade_visuals_front.trigger_muzzle("twin_cannons")
+	if has_spread_shot_elite:
+		upgrade_visuals_front.trigger_muzzle("spread_shot_elite")
+	if has_rear_gunner:
+		upgrade_visuals_front.trigger_muzzle("rear_gunner")
 
 ## Instantiates and configures a single player bullet. Applies auto-aim
 ## nudge toward nearest enemy (skipped for rear bullets), positions the
 ## bullet at the ship's barrel, and applies all active modifiers: bullet
 ## scale, piercing, explosive, and zigzag.
-func _spawn_bullet(dir: Vector2, offset: Vector2 = Vector2.ZERO, skip_auto_aim: bool = false, auto_aim_dir: Vector2 = Vector2.ZERO) -> void:
+func _spawn_bullet(
+	dir: Vector2,
+	local_muzzle: Vector2 = Vector2(0.0, -35.0),
+	skip_auto_aim: bool = false,
+	auto_aim_dir: Vector2 = Vector2.ZERO
+) -> void:
 	var scene_root := get_tree().current_scene
 	if scene_root == null:
 		return
@@ -563,14 +604,19 @@ func _spawn_bullet(dir: Vector2, offset: Vector2 = Vector2.ZERO, skip_auto_aim: 
 	# Auto-aim: nudge direction toward nearest enemy (skipped for rear-facing bullets)
 	if has_auto_aim and not skip_auto_aim and not auto_aim_dir.is_zero_approx():
 		dir = dir.lerp(auto_aim_dir, 0.35).normalized()
-	# Offset along the barrel/direction
-	var dist_offset = dir * 0.5 * sprite_frame_size.y * scale.y * sprite.scale.y
 	# Apply bullet scale upgrade
 	var bs := 1.0
 	if bullet_scale_level > 0:
 		bs = 1.0 + bullet_scale_level * 0.5
-	var spawn_position: Vector2 = global_position + dist_offset + offset
-	bullet.pool_activate(spawn_position, dir, bs, has_piercing, has_explosive_rounds, zigzag_stacks)
+	var spawn_position := to_global(local_muzzle) + dir * 3.0
+	bullet.pool_activate(
+		spawn_position,
+		dir,
+		bs,
+		_piercing_active(),
+		_explosive_rounds_active(),
+		zigzag_stacks
+	)
 
 ## Re-enables shooting after the fire rate cooldown timer expires.
 func _on_shoot_timer_timeout() -> void:
@@ -727,6 +773,229 @@ func _attract_powerups(delta: float) -> void:
 			var dir: Vector2 = (global_position - orb.global_position).normalized()
 			orb.global_position += dir * 350.0 * delta
 
+
+# --- Canonical upgrade state ---
+
+func get_active_elite_upgrade_ids() -> Array[String]:
+	return active_elite_upgrade_ids.duplicate()
+
+
+func is_elite_upgrade_enabled(upgrade_id: String) -> bool:
+	return active_elite_upgrade_ids.has(upgrade_id)
+
+
+func set_elite_upgrade_enabled(upgrade_id: String, enabled: bool, grant_one_time_reward: bool = false) -> void:
+	var was_enabled := active_elite_upgrade_ids.has(upgrade_id)
+	if was_enabled == enabled:
+		return
+
+	if enabled:
+		active_elite_upgrade_ids.append(upgrade_id)
+	else:
+		active_elite_upgrade_ids.erase(upgrade_id)
+
+	match upgrade_id:
+		"twin_cannons":
+			has_twin_cannons = enabled
+		"auto_aim":
+			has_auto_aim = enabled
+		"drone_escort":
+			if enabled:
+				has_drone = true
+				_spawn_drone()
+			else:
+				_remove_drone()
+		"hull_plating":
+			has_hull_plating = enabled
+			if enabled and grant_one_time_reward:
+				GameManager.lives += 1
+				SignalBus.lives_changed.emit(GameManager.lives)
+		"afterburner":
+			has_afterburner = enabled
+			_apply_afterburner_stats()
+		"spread_shot_elite":
+			has_spread_shot_elite = enabled
+		"shield_burst":
+			has_shield_burst = enabled
+			shield_burst_cooldown = SHIELD_BURST_PERIOD if enabled else 0.0
+		"magnet_field":
+			has_magnet_field = enabled
+		"overclock":
+			has_overclock = enabled
+			overclock_active = false
+			overclock_timer = 0.0
+			overclock_cooldown = 3.0 if enabled else 0.0
+		"rear_gunner":
+			has_rear_gunner = enabled
+		_:
+			if enabled:
+				active_elite_upgrade_ids.erase(upgrade_id)
+			return
+
+	_sync_upgrade_visuals()
+
+
+func clear_elite_upgrades() -> void:
+	var installed := active_elite_upgrade_ids.duplicate()
+	for id in installed:
+		set_elite_upgrade_enabled(id, false)
+
+
+func install_elite_upgrade(upgrade_id: String, grant_one_time_reward: bool = true) -> void:
+	set_elite_upgrade_enabled(upgrade_id, true, grant_one_time_reward)
+	_set_installation_progress(0.0, upgrade_id)
+
+	var install_tween := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	install_tween.tween_method(
+		_set_installation_progress.bind(upgrade_id),
+		0.0,
+		1.0,
+		0.4
+	).set_ease(Tween.EASE_OUT)
+	await install_tween.finished
+
+	var pulse_tween := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	pulse_tween.tween_method(_set_installation_pulse.bind(upgrade_id), 1.0, 0.0, 0.16)
+	await pulse_tween.finished
+	upgrade_visuals_back.finish_installation()
+	upgrade_visuals_front.finish_installation()
+	var drone_visual := _get_drone_visual()
+	if drone_visual != null:
+		drone_visual.finish_installation()
+
+
+func _set_installation_progress(progress: float, upgrade_id: String) -> void:
+	upgrade_visuals_back.set_installation(upgrade_id, progress)
+	upgrade_visuals_front.set_installation(upgrade_id, progress)
+	if upgrade_id == "drone_escort":
+		var drone_visual := _get_drone_visual()
+		if drone_visual != null:
+			drone_visual.set_installation(progress)
+
+
+func _set_installation_pulse(pulse: float, upgrade_id: String) -> void:
+	upgrade_visuals_back.set_installation(upgrade_id, 1.0, pulse)
+	upgrade_visuals_front.set_installation(upgrade_id, 1.0, pulse)
+	if upgrade_id == "drone_escort":
+		var drone_visual := _get_drone_visual()
+		if drone_visual != null:
+			drone_visual.set_installation(1.0, pulse)
+
+
+func _get_drone_visual() -> DroneVisual:
+	if not is_instance_valid(drone_node):
+		return null
+	for child in drone_node.get_children():
+		if child is DroneVisual:
+			return child as DroneVisual
+	return null
+
+
+func set_visual_debug(flag: String, enabled: bool) -> void:
+	upgrade_visuals_front.set_debug_flag(flag, enabled)
+
+
+func set_dev_god_mode(enabled: bool) -> void:
+	dev_god_mode = enabled
+	sprite.modulate = Color(1.2, 1.2, 0.2) if enabled else Color.WHITE
+
+
+func set_dev_power_override(power_id: String, enabled: bool) -> void:
+	match power_id:
+		"rapid_fire":
+			dev_rapid_fire = enabled
+		"spread_shot":
+			dev_spread_shot = enabled
+		"orbitals":
+			dev_orbitals = enabled
+			if _orbitals_active():
+				_ensure_orbitals()
+			else:
+				_clear_orbital_nodes()
+		"piercing":
+			dev_piercing = enabled
+		"explosive_rounds":
+			dev_explosive_rounds = enabled
+
+
+func get_dev_power_override(power_id: String) -> bool:
+	match power_id:
+		"rapid_fire":
+			return dev_rapid_fire
+		"spread_shot":
+			return dev_spread_shot
+		"orbitals":
+			return dev_orbitals
+		"piercing":
+			return dev_piercing
+		"explosive_rounds":
+			return dev_explosive_rounds
+	return false
+
+
+func _rapid_fire_active() -> bool:
+	return has_rapid_fire or dev_rapid_fire
+
+
+func _spread_shot_active() -> bool:
+	return has_spread_shot or dev_spread_shot or has_spread_shot_elite
+
+
+func _orbitals_active() -> bool:
+	return has_orbitals or dev_orbitals
+
+
+func _piercing_active() -> bool:
+	return has_piercing or dev_piercing
+
+
+func _explosive_rounds_active() -> bool:
+	return has_explosive_rounds or dev_explosive_rounds
+
+
+func _apply_afterburner_stats() -> void:
+	speed = _base_speed_without_afterburner * (1.20 if has_afterburner else 1.0)
+	acceleration = _base_acceleration_without_afterburner * (1.15 if has_afterburner else 1.0)
+
+
+func _sync_upgrade_visuals() -> void:
+	if is_instance_valid(upgrade_visuals_back):
+		upgrade_visuals_back.set_active_upgrades(active_elite_upgrade_ids)
+	if is_instance_valid(upgrade_visuals_front):
+		upgrade_visuals_front.set_active_upgrades(active_elite_upgrade_ids)
+	if is_instance_valid(afterimage_cache):
+		afterimage_cache.rebuild(sprite.texture, active_elite_upgrade_ids)
+
+
+func _update_upgrade_visual_runtime() -> void:
+	if not is_instance_valid(upgrade_visuals_front):
+		return
+	var auto_dir := _get_nearest_enemy_direction(global_position, 500.0) if has_auto_aim else Vector2.ZERO
+	var local_auto_angle := 0.0
+	if not auto_dir.is_zero_approx():
+		local_auto_angle = auto_dir.rotated(-rotation).angle() + PI / 2.0
+	var shield_charge := 0.0
+	if has_shield_burst:
+		shield_charge = 1.0 - clampf(shield_burst_cooldown / SHIELD_BURST_PERIOD, 0.0, 1.0)
+	var magnet_active := has_magnet_field and (
+		not get_tree().get_nodes_in_group("xp_orbs").is_empty()
+		or not get_tree().get_nodes_in_group("powerups").is_empty()
+	)
+	var state := {
+		"afterburner_boost": has_afterburner and is_boosting,
+		"overclock_active": has_overclock and overclock_active,
+		"overclock_phase": (
+			1.0 - clampf(overclock_timer / OVERCLOCK_DURATION, 0.0, 1.0)
+			if has_overclock and overclock_active else 0.0
+		),
+		"shield_charge": shield_charge,
+		"magnet_active": magnet_active,
+		"auto_aim_angle": local_auto_angle,
+		"auto_aim_locked": not auto_dir.is_zero_approx(),
+	}
+	upgrade_visuals_back.set_runtime_state(state)
+	upgrade_visuals_front.set_runtime_state(state)
+
 ## Resets all player state to defaults for a new game: clears all power-ups,
 ## RPG upgrades, elite upgrades, free aim, boost state, and drift bonuses.
 ## Removes orbital and drone child nodes.
@@ -738,6 +1007,12 @@ func reset_state() -> void:
 	has_spread_shot = false
 	has_magnet = false
 	is_invincible = false
+	dev_rapid_fire = false
+	dev_spread_shot = false
+	dev_orbitals = false
+	dev_piercing = false
+	dev_explosive_rounds = false
+	dev_god_mode = false
 	scale = Vector2.ONE
 	shoot_timer.wait_time = base_fire_rate
 	shield_sprite.visible = false
@@ -747,11 +1022,14 @@ func reset_state() -> void:
 	has_piercing = false
 	has_explosive_rounds = false
 	zigzag_stacks = 0
-	_remove_orbitals()
+	_clear_orbital_nodes()
 	# Reset elite upgrades
+	clear_elite_upgrades()
 	has_twin_cannons = false
 	has_auto_aim = false
+	has_hull_plating = false
 	has_afterburner = false
+	_apply_afterburner_stats()
 	_remove_drone()
 	# Reset new elite upgrades
 	has_spread_shot_elite = false
@@ -763,6 +1041,8 @@ func reset_state() -> void:
 	overclock_cooldown = 0.0
 	overclock_timer = 0.0
 	has_rear_gunner = false
+	active_elite_upgrade_ids.clear()
+	_sync_upgrade_visuals()
 
 	# Reset free aim
 	last_aim_direction = Vector2.UP
@@ -819,6 +1099,12 @@ func grant_orbitals() -> void:
 	if has_orbitals:
 		return  # Already active
 	has_orbitals = true
+	_ensure_orbitals()
+
+
+func _ensure_orbitals() -> void:
+	if not orbital_nodes.is_empty():
+		return
 	_spawn_orbitals()
 
 ## Creates 3 orbital Area2D nodes with small glowing sprites, collision
@@ -886,6 +1172,11 @@ func _on_orbital_hit(area: Area2D, _orb: Area2D) -> void:
 ## Removes all orbital nodes from the scene and clears the tracking array.
 func _remove_orbitals() -> void:
 	has_orbitals = false
+	if not dev_orbitals:
+		_clear_orbital_nodes()
+
+
+func _clear_orbital_nodes() -> void:
 	orbital_angle = 0.0
 	for node in orbital_nodes:
 		if is_instance_valid(node):
@@ -897,54 +1188,49 @@ func _remove_orbitals() -> void:
 ## Grants twin cannons: fires 2 additional parallel bullets alongside
 ## the main shot (stacks with spread shot for 5 total).
 func grant_twin_cannons() -> void:
-	has_twin_cannons = true
+	set_elite_upgrade_enabled("twin_cannons", true)
 
 ## Grants auto-aim: bullets nudge 35% toward the nearest enemy within
 ## 500px (skipped for rear-facing bullets).
 func grant_auto_aim() -> void:
-	has_auto_aim = true
+	set_elite_upgrade_enabled("auto_aim", true)
 
 ## Grants the afterburner upgrade: permanently increases base speed by
 ## 20% and acceleration by 15%.
 func grant_afterburner() -> void:
-	has_afterburner = true
-	speed = speed * 1.20
-	acceleration = acceleration * 1.15
+	set_elite_upgrade_enabled("afterburner", true)
 
 ## Grants hull plating: immediately adds +1 life and updates the HUD.
 func grant_hull_plating() -> void:
-	GameManager.lives += 1
-	SignalBus.lives_changed.emit(GameManager.lives)
+	set_elite_upgrade_enabled("hull_plating", true, true)
 
 # --- New Elite Upgrades ---
 
 ## Grants permanent 3-way spread shot. Stacks with twin_cannons (→ 5
 ## bullets), auto_aim, piercing, explosive, and zigzag modifiers.
 func grant_spread_shot_elite() -> void:
-	has_spread_shot_elite = true
+	set_elite_upgrade_enabled("spread_shot_elite", true)
 
 ## Grants periodic shield burst: destroys all enemy bullets within 160px
 ## and damages nearby enemies every 10 seconds. Independent of fire upgrades.
 func grant_shield_burst() -> void:
-	has_shield_burst = true
-	shield_burst_cooldown = SHIELD_BURST_PERIOD  # first burst after first full cycle
+	set_elite_upgrade_enabled("shield_burst", true)
 
 ## Grants permanent magnetic pull on orbs and power-ups at 500 px/s
 ## (faster than the temporary magnet power-up's 350 px/s).
 func grant_magnet_field() -> void:
-	has_magnet_field = true
+	set_elite_upgrade_enabled("magnet_field", true)
 
 ## Grants overclock: triples fire rate for 2.5s every 16s. Stacks with
 ## rapid-fire powerups and other bullet modifiers.
 func grant_overclock() -> void:
-	has_overclock = true
-	overclock_cooldown = 3.0  # first overclock triggers soon after upgrade
+	set_elite_upgrade_enabled("overclock", true)
 
 ## Grants a permanent rear-facing cannon that fires backward with each
 ## shot. Inherits piercing, explosive, and zigzag from _spawn_bullet.
 ## Auto-aim is intentionally skipped for rear bullets.
 func grant_rear_gunner() -> void:
-	has_rear_gunner = true
+	set_elite_upgrade_enabled("rear_gunner", true)
 
 # --- Shield Burst implementation ---
 
@@ -1050,31 +1336,25 @@ func _attract_powerups_fast(delta: float) -> void:
 ## near the player and auto-fires at the nearest enemy. Only one drone
 ## can be active at a time.
 func grant_drone_escort() -> void:
-	if has_drone:
-		return
-	has_drone = true
-	_spawn_drone()
+	set_elite_upgrade_enabled("drone_escort", true)
 
-## Creates the drone Area2D node with a green circle sprite, a ▶ label,
+## Creates the drone Area2D node with a small procedural fighter visual,
 ## collision shape, and contact damage handler. Adds it to the scene
 ## as a top-level node (not parented to the player).
 func _spawn_drone() -> void:
 	if is_instance_valid(drone_node):
 		drone_node.queue_free()
+	var scene_root := get_tree().current_scene
+	if scene_root == null:
+		drone_node = null
+		return
 	drone_node = Area2D.new()
 	drone_node.collision_layer = 4   # player_bullets
 	drone_node.collision_mask = 2    # enemies
 	drone_node.add_to_group("player_orbitals")
-	# Sprite
-	var spr := Sprite2D.new()
-	spr.texture = _get_drone_texture()
-	drone_node.add_child(spr)
-	# Label
-	var lbl := Label.new()
-	lbl.text = "▶"
-	lbl.position = Vector2(-6, -8)
-	lbl.add_theme_font_size_override("font_size", 10)
-	drone_node.add_child(lbl)
+	drone_node.add_to_group("drone_escort")
+	var visual := DRONE_VISUAL_SCRIPT.new() as DroneVisual
+	drone_node.add_child(visual)
 	# Collision
 	var col := CollisionShape2D.new()
 	var circ := CircleShape2D.new()
@@ -1082,23 +1362,7 @@ func _spawn_drone() -> void:
 	col.shape = circ
 	drone_node.add_child(col)
 	drone_node.area_entered.connect(_on_drone_hit)
-	var scene_root := get_tree().current_scene
 	scene_root.add_child(drone_node)
-
-## Returns the cached drone texture so the escort ship can spawn without
-## regenerating its radial glow each time the upgrade is granted.
-func _get_drone_texture() -> Texture2D:
-	if _drone_texture == null:
-		var img := Image.create(16, 16, false, Image.FORMAT_RGBA8)
-		img.fill(Color.TRANSPARENT)
-		for py in range(16):
-			for px in range(16):
-				var d := Vector2(float(px) - 7.5, float(py) - 7.5).length()
-				if d < 7.5:
-					var t := d / 7.5
-					img.set_pixel(px, py, Color(0.3, 1.0, 0.6, 1.0 - t * 0.5))
-		_drone_texture = ImageTexture.create_from_image(img)
-	return _drone_texture
 
 ## Updates the drone each frame: lerps toward a hover position offset
 ## from the player, and auto-fires a bullet at the nearest enemy on a
@@ -1110,6 +1374,7 @@ func _update_drone(delta: float) -> void:
 	# Hover to the right of the player
 	var target_pos := global_position + Vector2(50, -20)
 	drone_node.global_position = drone_node.global_position.lerp(target_pos, delta * 6.0)
+	drone_node.rotation = sin(Time.get_ticks_msec() * 0.004) * 0.08
 	# Auto-fire at nearest enemy
 	drone_shoot_timer -= delta
 	if drone_shoot_timer <= 0.0:
@@ -1129,7 +1394,7 @@ func _drone_fire() -> void:
 	var bullet = ObjectPool.acquire(BULLET_SCENE, scene_root)
 	if bullet == null:
 		return
-	bullet.pool_activate(drone_node.global_position, dir, 1.0, has_piercing)
+	bullet.pool_activate(drone_node.global_position, dir, 1.0, _piercing_active())
 
 ## Handles drone body collision: deals 1 + bonus damage to enemies and
 ## tempest sections on contact.

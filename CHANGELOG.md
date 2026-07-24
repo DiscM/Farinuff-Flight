@@ -5,6 +5,8 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased] - 2026-05-24
 
 ### Added
+- **Visual Elite Upgrades:** All ten elite upgrades now add cumulative, procedural ship hardware with synchronized front/rear layers, functional lighting, real weapon muzzle origins, installation reveals, card previews, and cached composite boost trails.
+- **Visual Upgrade Developer Controls:** Expanded Dev Tools with scrollable sections, reversible elite and power-state toggles, Grant All/Clear All actions, and overlays for the visual envelope, attachment anchors, muzzle origins, and collision capsule.
 - **Persistent Settings and Save Data:** Added automatic persistence for high scores and player preferences in `user://save_data.json`, including master volume, screen shake, CRT scanlines, and distortion settings.
 - **Settings Menus:** Added an in-game settings overlay accessible from both the title screen and pause menu; visual options update during active runs.
 - **Sniper Enemy:** Added a ranged enemy archetype that enters the playfield, holds a lateral firing lane, aims high-speed shots at the player, and then withdraws.

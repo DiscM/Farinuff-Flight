@@ -4,6 +4,8 @@ extends Control
 
 signal upgrade_chosen
 
+const SHIP_PREVIEW_SCRIPT := preload("res://entities/player/ship_upgrade_preview.gd")
+
 # ── Upgrade Definitions ────────────────────────────────────────────────────────
 
 # (Upgrades moved to GameManager to allow for global completion checks)
@@ -112,12 +114,14 @@ func _make_card(upg: Dictionary) -> PanelContainer:
 	inner.add_theme_constant_override("separation", 6 if panel_only else 10)
 	card.add_child(inner)
 
-	# Icon
-	var icon_lbl := Label.new()
-	icon_lbl.text = upg["icon"]
-	icon_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	icon_lbl.add_theme_font_size_override("font_size", 36 if panel_only else 48)
-	inner.add_child(icon_lbl)
+	# Current-build preview with the candidate module highlighted.
+	var preview := SHIP_PREVIEW_SCRIPT.new() as ShipUpgradePreview
+	var player := get_tree().get_first_node_in_group("player")
+	var current_upgrades: Array[String] = []
+	if player != null and player.has_method("get_active_elite_upgrade_ids"):
+		current_upgrades = player.get_active_elite_upgrade_ids()
+	preview.configure(current_upgrades, str(upg["id"]))
+	inner.add_child(preview)
 
 	# Name
 	var name_lbl := Label.new()
@@ -197,31 +201,42 @@ func _on_upgrade_selected(upgrade_id: String) -> void:
 			selected_upgrade = upgrade
 			break
 	_show_selection_feedback(upgrade_id, selected_upgrade)
-	await get_tree().create_timer(0.38, true, false, true).timeout
+	await get_tree().create_timer(0.30, true, false, true).timeout
 
 	# Record as chosen so it won't appear in future Wave-10 upgrade pools.
-	GameManager.chosen_upgrade_ids.append(upgrade_id)
+	if not GameManager.chosen_upgrade_ids.has(upgrade_id):
+		GameManager.chosen_upgrade_ids.append(upgrade_id)
 
-	# Apply to player
+	# Fade the selection UI away, then install the module on the actual
+	# paused gameplay ship before resuming.
 	var player = get_tree().get_first_node_in_group("player")
-	if player:
-		match upgrade_id:
-			"twin_cannons":      player.grant_twin_cannons()
-			"auto_aim":          player.grant_auto_aim()
-			"drone_escort":      player.grant_drone_escort()
-			"hull_plating":      player.grant_hull_plating()
-			"afterburner":       player.grant_afterburner()
-			"spread_shot_elite": player.grant_spread_shot_elite()
-			"shield_burst":      player.grant_shield_burst()
-			"magnet_field":      player.grant_magnet_field()
-			"overclock":         player.grant_overclock()
-			"rear_gunner":       player.grant_rear_gunner()
+	var installation_cover := _get_installation_cover()
+	var fade := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	fade.tween_property(installation_cover, "modulate:a", 0.0, 0.18).set_ease(Tween.EASE_IN)
+	await fade.finished
+	if player != null and player.has_method("install_elite_upgrade"):
+		await player.install_elite_upgrade(upgrade_id, true)
+	if panel_only:
+		var restore := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+		restore.tween_property(installation_cover, "modulate:a", 1.0, 0.15).set_ease(Tween.EASE_OUT)
+		await restore.finished
 
 	upgrade_chosen.emit()
 	# game.gd owns the pause state — it unpauses when it receives upgrade_chosen.
 	# In panel_only mode the parent is a shared HBoxContainer; game.gd cleans up the overlay.
 	if not panel_only:
 		get_parent().queue_free()
+
+
+func _get_installation_cover() -> CanvasItem:
+	if not panel_only:
+		return self
+	var ancestor := get_parent()
+	while ancestor != null:
+		if ancestor is Control and ancestor.get_parent() is CanvasLayer:
+			return ancestor as CanvasItem
+		ancestor = ancestor.get_parent()
+	return self
 
 ## Provides visual feedback after selection: highlights the chosen card
 ## (white border, scale pulse, tinted background), fades out unchosen cards,

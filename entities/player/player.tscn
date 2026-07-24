@@ -1,8 +1,10 @@
-[gd_scene load_steps=6 format=3 uid="uid://bpv3rwt1k4f2i"]
+[gd_scene load_steps=8 format=3 uid="uid://bpv3rwt1k4f2i"]
 
 [ext_resource type="Script" uid="uid://7ln60ie1rip4" path="res://entities/player/player.gd" id="1_player"]
 [ext_resource type="Script" path="res://assets/sprites/generated/strip_animator.gd" id="2_strip_animator"]
 [ext_resource type="Texture2D" path="res://assets/sprites/generated/player_idle_strip.png" id="3_player_strip"]
+[ext_resource type="Script" path="res://entities/player/ship_upgrade_visuals.gd" id="4_upgrade_visuals"]
+[ext_resource type="Script" path="res://entities/player/ship_afterimage_cache.gd" id="5_afterimage_cache"]
 
 [sub_resource type="GDScript" id="GDScript_shield"]
 script/source = "extends Sprite2D
@@ -31,12 +33,23 @@ height = 44.0
 collision_mask = 26
 script = ExtResource("1_player")
 
+[node name="UpgradeVisualsBack" type="Node2D" parent="."]
+script = ExtResource("4_upgrade_visuals")
+visual_layer = 0
+
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=127688907]
 script = ExtResource("2_strip_animator")
 texture = ExtResource("3_player_strip")
 hframes = 4
 fps = 8.0
 scale = Vector2(0.706, 0.706)
+
+[node name="UpgradeVisualsFront" type="Node2D" parent="."]
+script = ExtResource("4_upgrade_visuals")
+visual_layer = 1
+
+[node name="AfterimageCache" type="Node" parent="."]
+script = ExtResource("5_afterimage_cache")
 
 [node name="ShieldSprite" type="Sprite2D" parent="." unique_id=1052076704]
 visible = false
