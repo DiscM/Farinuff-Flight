@@ -1,12 +1,13 @@
 63f7b34db8d8cdea90c76aacccf841ec
-::res://::1784850207
+::res://::1784929928
 animation_skills.md::TextFile::-1::1781148770::0::1::::<><><>0<>0<><>::
-CHANGELOG.md::TextFile::-1::1781165634::0::1::::<><><>0<>0<><>::
+CHANGELOG.md::TextFile::-1::1784928175::0::1::::<><><>0<>0<><>::
 export_presets.cfg::TextFile::-1::1781148770::0::1::::<><><>0<>0<><>::
 GAME_DESIGN.md::TextFile::-1::1781148769::0::1::::<><><>0<>0<><>::
 icon.svg::CompressedTexture2D::8477374368353171080::1781148770::1781149951::1::::<><><>0<>0<>29546cb631e22340ea556ccab8b209a8<>res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex::
 README.md::TextFile::-1::1781148769::0::1::::<><><>0<>0<><>::
 skills.md::TextFile::-1::1781148770::0::1::::<><><>0<>0<><>::
+VISUAL_UPGRADE_IMPLEMENTATION.md::TextFile::-1::1784928402::0::1::::<><><>0<>0<><>::
 ::res://assets/::1781234888
 ::res://assets/Game UI collection FREE version/::1781234533
 Buttons copy.svg::CompressedTexture2D::2225680320972553710::1645654536::1781232023::1::::<><><>0<>0<>0aec524a56ecd9df21bc8466406a8e37<>res://.godot/imported/Buttons copy.svg-957414aea1b4d9d7ab404bb37cc68176.ctex::
@@ -5836,9 +5837,14 @@ sniper_enemy.tscn::PackedScene::-1::1781148770::0::1::::<><><>0<>0<><>::res://en
 tank_enemy.gd::GDScript::5741692442174512813::1781204476::0::1::::<>BaseEnemy<><>0<>0<><>::
 tank_enemy.tscn::PackedScene::3363490489594425::1781148770::0::1::::<><><>0<>0<><>::res://entities/enemies/tank_enemy.gd<>res://assets/sprites/generated/strip_animator.gd<>res://assets/sprites/generated/tank_enemy_idle_strip.png
 tempest_section.gd::GDScript::1946423271925880030::1781150777::0::1::::TempestSection<>Area2D<><>0<>0<><>::
-::res://entities/player/::1781148770
-player.gd::GDScript::2269597157888062947::1781236217::0::1::::<>Area2D<><>0<>0<><>::
-player.tscn::PackedScene::3484336891453504314::1781148770::0::1::::<><><>0<>0<><>::uid://7ln60ie1rip4::::res://entities/player/player.gd<>res://assets/sprites/generated/strip_animator.gd<>res://assets/sprites/generated/player_idle_strip.png
+::res://entities/player/::1784927986
+drone_visual.gd::GDScript::6047600409824407924::1784928369::0::1::::DroneVisual<>Node2D<><>0<>0<><>::
+player.gd::GDScript::2269597157888062947::1784928369::0::1::::<>Area2D<><>0<>0<><>::
+player.tscn::PackedScene::3484336891453504314::1784927939::0::1::::<><><>0<>0<><>::uid://7ln60ie1rip4::::res://entities/player/player.gd<>res://assets/sprites/generated/strip_animator.gd<>res://assets/sprites/generated/player_idle_strip.png<>res://entities/player/ship_upgrade_visuals.gd<>res://entities/player/ship_afterimage_cache.gd
+ship_afterimage.gd::GDScript::3840559897241229970::1784927850::0::1::::ShipAfterimage<>Node2D<><>0<>0<><>::
+ship_afterimage_cache.gd::GDScript::2263401241069540409::1784928070::0::1::::ShipAfterimageCache<>Node<><>0<>0<><>::
+ship_upgrade_preview.gd::GDScript::1515146352591748612::1784927607::0::1::::ShipUpgradePreview<>Control<><>0<>0<><>::
+ship_upgrade_visuals.gd::GDScript::3165473964512726169::1784928379::0::1::::ShipUpgradeVisuals<>Node2D<><>0<>0<><>::
 ::res://entities/powerups/::1781148770
 power_up.gd::GDScript::5276629014624626264::1781204482::0::1::::<>Area2D<><>0<>0<><>::
 power_up.tscn::PackedScene::5061265943830679215::1781202490::0::1::::<><><>0<>0<><>::res://entities/powerups/power_up.gd<>res://assets/sprites/generated/powerup_draw.gd
@@ -5922,11 +5928,14 @@ game.tscn::PackedScene::7435801010327280422::1781148770::0::1::::<><><>0<>0<><>:
 ::res://systems/::1781148770
 enemy_spawner.gd::GDScript::3124693263110894807::1781201515::0::1::::<>Node<><>0<>0<><>::
 powerup_spawner.gd::GDScript::1460401266976329602::1781201520::0::1::::<>Node<><>0<>0<><>::
+::res://tests/::1784927857
+visual_upgrade_smoke.gd::GDScript::897830525597910367::1784928242::0::1::::<>Node<><>0<>0<><>::
+visual_upgrade_smoke.tscn::PackedScene::-1::1784927664::0::1::::<><><>0<>0<><>::res://tests/visual_upgrade_smoke.gd
 ::res://tools/::1781148770
-::res://ui/::1781232892
-dev_menu.gd::GDScript::152362777473384317::1781204482::0::1::::<>PanelContainer<><>0<>0<><>::
+::res://ui/::1784927489
+dev_menu.gd::GDScript::152362777473384317::1784928211::0::1::::<>PanelContainer<><>0<>0<><>::
 dev_menu.tscn::PackedScene::-1::1781148770::0::1::::<><><>0<>0<><>::res://ui/dev_menu.gd
-elite_upgrade_popup.gd::GDScript::4760008941652056126::1781205974::0::1::::<>Control<><>0<>0<><>::
+elite_upgrade_popup.gd::GDScript::4760008941652056126::1784927980::0::1::::<>Control<><>0<>0<><>::
 elite_upgrade_popup.tscn::PackedScene::-1::1781148770::0::1::::<><><>0<>0<><>::res://ui/elite_upgrade_popup.gd
 game_over.gd::GDScript::5293172013872024286::1781151174::0::1::::<>Control<><>0<>0<><>::
 game_over.tscn::PackedScene::4977083771886601735::1781148770::0::1::::<><><>0<>0<><>::res://ui/game_over.gd
