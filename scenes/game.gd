@@ -477,8 +477,7 @@ func _show_combined(alloc_points: int) -> void:
 	hbox.add_child(elite_panel)
 	elite_panel.upgrade_chosen.connect(func():
 		_on_elite_upgrade_closed()
-		if not allocation_active:
-			overlay.queue_free()
+		_try_close_combined_overlay(overlay)
 	)
 
 	# Right: allocation panel
@@ -490,8 +489,7 @@ func _show_combined(alloc_points: int) -> void:
 	hbox.add_child(alloc_panel)
 	alloc_panel.allocation_done.connect(func():
 		_on_allocation_closed()
-		if not elite_upgrade_active:
-			overlay.queue_free()
+		_try_close_combined_overlay(overlay)
 	)
 	alloc_panel.set_points(alloc_points)
 
@@ -499,3 +497,10 @@ func _show_combined(alloc_points: int) -> void:
 	root.modulate.a = 0.0
 	var tween := root.create_tween()
 	tween.tween_property(root, "modulate:a", 1.0, 0.35).set_ease(Tween.EASE_OUT)
+
+
+## Closes the shared milestone screen only after both panels have reached
+## their static completed states.
+func _try_close_combined_overlay(overlay: CanvasLayer) -> void:
+	if not elite_upgrade_active and not allocation_active:
+		overlay.queue_free()

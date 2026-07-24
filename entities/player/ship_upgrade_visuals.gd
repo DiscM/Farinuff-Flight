@@ -83,9 +83,6 @@ var _runtime_state := {
 	"auto_aim_angle": 0.0,
 	"auto_aim_locked": false,
 }
-var _installation_id := ""
-var _installation_progress := 1.0
-var _installation_pulse := 0.0
 var _auto_aim_acquisition_pulse := 0.0
 var _debug_flags := {
 	"envelope": false,
@@ -171,20 +168,6 @@ func trigger_muzzle(module_id: String) -> void:
 	queue_redraw()
 
 
-func set_installation(upgrade_id: String, progress: float, pulse: float = 0.0) -> void:
-	_installation_id = upgrade_id
-	_installation_progress = clampf(progress, 0.0, 1.0)
-	_installation_pulse = clampf(pulse, 0.0, 1.0)
-	queue_redraw()
-
-
-func finish_installation() -> void:
-	_installation_id = ""
-	_installation_progress = 1.0
-	_installation_pulse = 0.0
-	queue_redraw()
-
-
 func set_debug_flag(flag: String, enabled: bool) -> void:
 	if not _debug_flags.has(flag):
 		return
@@ -195,9 +178,6 @@ func set_debug_flag(flag: String, enabled: bool) -> void:
 func _draw() -> void:
 	var state := _runtime_state.duplicate()
 	state["muzzle_timers"] = _muzzle_timers
-	state["installation_id"] = _installation_id
-	state["installation_progress"] = _installation_progress
-	state["installation_pulse"] = _installation_pulse
 	state["auto_aim_acquisition_pulse"] = _auto_aim_acquisition_pulse
 	draw_upgrade_layer(self, _active_upgrades, visual_layer, state)
 	if visual_layer == VisualLayer.FRONT:
@@ -242,13 +222,10 @@ static func draw_drone(
 	canvas: CanvasItem,
 	offset: Vector2 = Vector2.ZERO,
 	alpha: float = 1.0,
-	fill_factor: float = 1.0,
-	outline_pulse: float = 0.0
+	highlighted: bool = false
 ) -> void:
 	var color := get_color("drone_escort")
-	var outline := OUTLINE
-	if outline_pulse > 0.0:
-		outline = color.lightened(clampf(outline_pulse, 0.0, 1.0) * 0.35)
+	var outline := color.lightened(0.35) if highlighted else OUTLINE
 	var body: Array[Vector2] = _offset_points([
 		Vector2(0, -8), Vector2(4, -1), Vector2(3, 6),
 		Vector2(0, 8), Vector2(-3, 6), Vector2(-4, -1),
@@ -259,16 +236,16 @@ static func draw_drone(
 	var right_wing: Array[Vector2] = _offset_points([
 		Vector2(4, 0), Vector2(8, 3), Vector2(4, 5), Vector2(1, 2),
 	], offset)
-	_poly(canvas, left_wing, Color(0.42, 0.48, 0.58), outline, alpha, fill_factor)
-	_poly(canvas, right_wing, Color(0.42, 0.48, 0.58), outline, alpha, fill_factor)
-	_poly(canvas, body, Color(0.78, 0.84, 0.90), outline, alpha, fill_factor)
-	_circle(canvas, offset + Vector2(0, 1), 2.0, color, alpha * 0.8 * fill_factor)
+	_poly(canvas, left_wing, Color(0.42, 0.48, 0.58), alpha, outline)
+	_poly(canvas, right_wing, Color(0.42, 0.48, 0.58), alpha, outline)
+	_poly(canvas, body, Color(0.78, 0.84, 0.90), alpha, outline)
+	_circle(canvas, offset + Vector2(0, 1), 2.0, color, alpha * 0.8)
 	_line(
 		canvas,
 		[offset + Vector2(0, 5), offset + Vector2(0, 9)],
 		color,
 		1.5,
-		alpha * 0.75 * fill_factor
+		alpha * 0.75
 	)
 
 
@@ -277,8 +254,7 @@ static func draw_drone_preview(canvas: CanvasItem, alpha: float = 1.0, highlight
 		canvas,
 		Vector2(47.0, -14.0),
 		alpha,
-		1.0,
-		1.0 if highlighted else 0.0
+		highlighted
 	)
 
 
@@ -299,45 +275,35 @@ static func draw_upgrade_layer(
 		elif highlight_id != "" and id == highlight_id:
 			alpha = 1.0
 
-		var fill_factor := 1.0
-		var outline_override := Color.TRANSPARENT
-		if str(state.get("installation_id", "")) == id:
-			fill_factor = float(state.get("installation_progress", 1.0))
-			outline_override = get_color(id).lightened(float(state.get("installation_pulse", 0.0)) * 0.4)
-
 		match id:
 			"hull_plating":
 				if layer == VisualLayer.FRONT:
-					_draw_hull_plating(canvas, alpha, fill_factor, outline_override)
+					_draw_hull_plating(canvas, alpha)
 			"afterburner":
 				if layer == VisualLayer.BACK:
 					_draw_afterburner(
 						canvas,
 						alpha,
-						fill_factor,
-						outline_override,
 						bool(state.get("afterburner_boost", false)),
 						not bool(state.get("omit_transients", false))
 					)
 			"magnet_field":
 				if layer == VisualLayer.FRONT:
-					_draw_magnet(canvas, alpha, fill_factor, outline_override, bool(state.get("magnet_active", false)))
+					_draw_magnet(canvas, alpha, bool(state.get("magnet_active", false)))
 			"shield_burst":
 				if layer == VisualLayer.FRONT:
-					_draw_shield_projectors(canvas, alpha, fill_factor, outline_override, float(state.get("shield_charge", 0.0)))
+					_draw_shield_projectors(canvas, alpha, float(state.get("shield_charge", 0.0)))
 			"twin_cannons":
 				if layer == VisualLayer.FRONT:
-					_draw_twin_cannons(canvas, alpha, fill_factor, outline_override, _flash_active(state, id))
+					_draw_twin_cannons(canvas, alpha, _flash_active(state, id))
 			"spread_shot_elite":
 				if layer == VisualLayer.FRONT:
-					_draw_spread_emitters(canvas, alpha, fill_factor, outline_override, _flash_active(state, id))
+					_draw_spread_emitters(canvas, alpha, _flash_active(state, id))
 			"overclock":
 				if layer == VisualLayer.FRONT:
 					_draw_overclock(
 						canvas,
 						alpha,
-						fill_factor,
-						outline_override,
 						bool(state.get("overclock_active", false)),
 						float(state.get("overclock_phase", 0.0))
 					)
@@ -346,15 +312,13 @@ static func draw_upgrade_layer(
 					_draw_auto_aim(
 						canvas,
 						alpha,
-						fill_factor,
-						outline_override,
 						float(state.get("auto_aim_angle", 0.0)),
 						bool(state.get("auto_aim_locked", false)),
 						float(state.get("auto_aim_acquisition_pulse", 0.0))
 					)
 			"rear_gunner":
 				if layer == VisualLayer.FRONT:
-					_draw_rear_gunner(canvas, alpha, fill_factor, outline_override, _flash_active(state, id))
+					_draw_rear_gunner(canvas, alpha, _flash_active(state, id))
 
 
 static func _flash_active(state: Dictionary, id: String) -> bool:
@@ -362,26 +326,24 @@ static func _flash_active(state: Dictionary, id: String) -> bool:
 	return float(timers.get(id, 0.0)) > 0.0
 
 
-static func _draw_hull_plating(canvas: CanvasItem, alpha: float, fill: float, outline: Color) -> void:
+static func _draw_hull_plating(canvas: CanvasItem, alpha: float) -> void:
 	var seam := UPGRADE_COLORS["hull_plating"]
 	for side in [-1.0, 1.0]:
 		_poly(canvas, _mirror([
 			Vector2(9, -15), Vector2(15, -8), Vector2(14, 17),
 			Vector2(9, 27), Vector2(8, 17), Vector2(10, -2),
-		], side), DARK_METAL, outline, alpha, fill)
+		], side), DARK_METAL, alpha)
 		_line(canvas, _mirror([
 			Vector2(11, -10), Vector2(13, -5), Vector2(12, 15), Vector2(9, 22),
 		], side), seam, 1.1, alpha * 0.65)
 		_poly(canvas, _mirror([
 			Vector2(17, -5), Vector2(40, 3), Vector2(34, 8), Vector2(17, 2),
-		], side), Color(0.37, 0.41, 0.49), outline, alpha, fill)
+		], side), Color(0.37, 0.41, 0.49), alpha)
 
 
 static func _draw_afterburner(
 	canvas: CanvasItem,
 	alpha: float,
-	fill: float,
-	outline: Color,
 	boosted: bool,
 	include_exhaust: bool
 ) -> void:
@@ -392,38 +354,36 @@ static func _draw_afterburner(
 		_poly(canvas, [
 			Vector2(x - 4.0, 18), Vector2(x + 4.0, 18),
 			Vector2(x + 5.0, 31), Vector2(x - 5.0, 31),
-		], DARK_METAL, outline, alpha, fill)
+		], DARK_METAL, alpha)
 		if include_exhaust:
 			_poly(canvas, [
 				Vector2(x - 3.0, 29), Vector2(x + 3.0, 29), Vector2(x, 29 + flame_length),
-			], accent, accent.lightened(0.25), alpha * (0.85 if boosted else 0.55), fill)
-			_circle(canvas, Vector2(x, 29), 2.1, Color.WHITE, alpha * 0.65 * fill)
+			], accent, alpha * (0.85 if boosted else 0.55), accent.lightened(0.25))
+			_circle(canvas, Vector2(x, 29), 2.1, Color.WHITE, alpha * 0.65)
 
 
-static func _draw_twin_cannons(canvas: CanvasItem, alpha: float, fill: float, outline: Color, firing: bool) -> void:
+static func _draw_twin_cannons(canvas: CanvasItem, alpha: float, firing: bool) -> void:
 	var accent := UPGRADE_COLORS["twin_cannons"]
 	for side: float in [-1.0, 1.0]:
 		var x: float = 14.0 * side
 		_poly(canvas, [
 			Vector2(x - 4.0, -22), Vector2(x + 4.0, -22),
 			Vector2(x + 3.0, -10), Vector2(x - 3.0, -10),
-		], TITANIUM, outline, alpha, fill)
+		], TITANIUM, alpha)
 		_poly(canvas, [
 			Vector2(x - 2.0, -27), Vector2(x + 2.0, -27),
 			Vector2(x + 2.0, -20), Vector2(x - 2.0, -20),
-		], DARK_METAL, outline, alpha, fill)
+		], DARK_METAL, alpha)
 		_line(canvas, [Vector2(x - 2.0, -18), Vector2(x + 2.0, -18)], accent, 1.4, alpha * 0.75)
 		if firing:
 			_poly(canvas, [
 				Vector2(x - 3.0, -27), Vector2(x + 3.0, -27), Vector2(x, -34),
-			], accent.lightened(0.35), accent, alpha, 1.0)
+			], accent.lightened(0.35), alpha, accent)
 
 
 static func _draw_auto_aim(
 	canvas: CanvasItem,
 	alpha: float,
-	fill: float,
-	outline: Color,
 	target_angle: float,
 	locked: bool,
 	acquisition_pulse: float
@@ -432,13 +392,13 @@ static func _draw_auto_aim(
 	_poly(canvas, [
 		Vector2(-5, -34), Vector2(0, -38), Vector2(5, -34),
 		Vector2(4, -28), Vector2(0, -26), Vector2(-4, -28),
-	], accent.darkened(0.12), outline, alpha, fill)
+	], accent.darkened(0.12), alpha)
 	_line(canvas, [Vector2(-4, -36), Vector2(-8, -44)], TITANIUM, 1.4, alpha)
 	_line(canvas, [Vector2(4, -36), Vector2(8, -44)], TITANIUM, 1.4, alpha)
 	var indicator := Vector2(0, -5).rotated(target_angle)
 	_line(canvas, [Vector2(0, -32), Vector2(0, -32) + indicator], accent.lightened(0.3), 1.6, alpha)
 	if locked:
-		_circle(canvas, Vector2(0, -32), 3.2, accent, alpha * 0.25 * fill)
+		_circle(canvas, Vector2(0, -32), 3.2, accent, alpha * 0.25)
 	if acquisition_pulse > 0.0:
 		var pulse_progress := 1.0 - acquisition_pulse / 0.22
 		var pulse_radius := lerpf(4.0, 8.0, pulse_progress)
@@ -447,24 +407,22 @@ static func _draw_auto_aim(
 		canvas.draw_arc(Vector2(0, -32), pulse_radius, 0.0, TAU, 16, pulse_color, 1.2, true)
 
 
-static func _draw_spread_emitters(canvas: CanvasItem, alpha: float, fill: float, outline: Color, firing: bool) -> void:
+static func _draw_spread_emitters(canvas: CanvasItem, alpha: float, firing: bool) -> void:
 	var accent := UPGRADE_COLORS["spread_shot_elite"]
 	for side in [-1.0, 1.0]:
 		_poly(canvas, _mirror([
 			Vector2(43, 0), Vector2(49, -2), Vector2(51, 11), Vector2(47, 17), Vector2(44, 9),
-		], side), DARK_METAL, outline, alpha, fill)
+		], side), DARK_METAL, alpha)
 		_line(canvas, _mirror([Vector2(47, 1), Vector2(49, 11)], side), accent, 2.0, alpha * 0.8)
 		if firing:
 			_poly(canvas, _mirror([
 				Vector2(47, -1), Vector2(51, 0), Vector2(51, -8),
-			], side), accent.lightened(0.3), accent, alpha, 1.0)
+			], side), accent.lightened(0.3), alpha, accent)
 
 
 static func _draw_shield_projectors(
 	canvas: CanvasItem,
 	alpha: float,
-	fill: float,
-	outline: Color,
 	charge: float
 ) -> void:
 	var accent := UPGRADE_COLORS["shield_burst"]
@@ -473,13 +431,13 @@ static func _draw_shield_projectors(
 		_poly(canvas, _mirror([
 			Vector2(25, -9), Vector2(31, -6), Vector2(35, 3),
 			Vector2(33, 14), Vector2(29, 18), Vector2(30, 7), Vector2(27, -1),
-		], side), Color(0.25, 0.38, 0.48), outline, alpha, fill)
+		], side), Color(0.25, 0.38, 0.48), alpha)
 		_line(canvas, _mirror([
 			Vector2(29, -5), Vector2(33, 3), Vector2(31, 13),
 		], side), accent, 2.0, charge_alpha)
 
 
-static func _draw_magnet(canvas: CanvasItem, alpha: float, fill: float, outline: Color, active: bool) -> void:
+static func _draw_magnet(canvas: CanvasItem, alpha: float, active: bool) -> void:
 	var accent := UPGRADE_COLORS["magnet_field"]
 	for side in [-1.0, 1.0]:
 		for y in [12.0, 16.0, 20.0]:
@@ -488,15 +446,13 @@ static func _draw_magnet(canvas: CanvasItem, alpha: float, fill: float, outline:
 			Vector2(39, 13), Vector2(44, 15), Vector2(44, 23), Vector2(41, 25),
 		], side), accent, 1.7, alpha)
 	if active:
-		_circle(canvas, Vector2(-35, 8), 1.6, accent, alpha * 0.65 * fill)
-		_circle(canvas, Vector2(36, 25), 1.2, accent, alpha * 0.45 * fill)
+		_circle(canvas, Vector2(-35, 8), 1.6, accent, alpha * 0.65)
+		_circle(canvas, Vector2(36, 25), 1.2, accent, alpha * 0.45)
 
 
 static func _draw_overclock(
 	canvas: CanvasItem,
 	alpha: float,
-	fill: float,
-	outline: Color,
 	active: bool,
 	phase: float
 ) -> void:
@@ -507,32 +463,32 @@ static func _draw_overclock(
 		var segment_color := accent.lightened(0.18) if lit else accent.darkened(0.18)
 		_poly(canvas, [
 			Vector2(-7, y), Vector2(-3, y - 2), Vector2(-3, y + 3), Vector2(-7, y + 5),
-		], segment_color, outline, alpha, fill)
+		], segment_color, alpha)
 		_poly(canvas, [
 			Vector2(7, y), Vector2(3, y - 2), Vector2(3, y + 3), Vector2(7, y + 5),
-		], segment_color, outline, alpha, fill)
+		], segment_color, alpha)
 		segment_index += 1
 	var fin_x := 12.0 if active else 8.0
-	_poly(canvas, [Vector2(-5, 22), Vector2(-fin_x, 25), Vector2(-5, 28)], DARK_METAL, outline, alpha, fill)
-	_poly(canvas, [Vector2(5, 22), Vector2(fin_x, 25), Vector2(5, 28)], DARK_METAL, outline, alpha, fill)
+	_poly(canvas, [Vector2(-5, 22), Vector2(-fin_x, 25), Vector2(-5, 28)], DARK_METAL, alpha)
+	_poly(canvas, [Vector2(5, 22), Vector2(fin_x, 25), Vector2(5, 28)], DARK_METAL, alpha)
 	if active:
 		_line(canvas, [Vector2(-10, 7), Vector2(-5, 10), Vector2(-9, 14)], accent.lightened(0.35), 1.2, alpha)
 		_line(canvas, [Vector2(10, 15), Vector2(5, 18), Vector2(9, 21)], accent.lightened(0.35), 1.2, alpha)
 
 
-static func _draw_rear_gunner(canvas: CanvasItem, alpha: float, fill: float, outline: Color, firing: bool) -> void:
+static func _draw_rear_gunner(canvas: CanvasItem, alpha: float, firing: bool) -> void:
 	var accent := UPGRADE_COLORS["rear_gunner"]
 	_poly(canvas, [
 		Vector2(-6, 20), Vector2(6, 20), Vector2(5, 34), Vector2(-5, 34),
-	], DARK_METAL, outline, alpha, fill)
+	], DARK_METAL, alpha)
 	_poly(canvas, [
 		Vector2(-2.5, 31), Vector2(2.5, 31), Vector2(2.0, 45), Vector2(-2.0, 45),
-	], TITANIUM, outline, alpha, fill)
-	_circle(canvas, Vector2(0, 28), 2.0, accent, alpha * 0.8 * fill)
+	], TITANIUM, alpha)
+	_circle(canvas, Vector2(0, 28), 2.0, accent, alpha * 0.8)
 	if firing:
 		_poly(canvas, [
 			Vector2(-3, 45), Vector2(3, 45), Vector2(0, 51),
-		], accent.lightened(0.35), accent, alpha, 1.0)
+		], accent.lightened(0.35), alpha, accent)
 
 
 static func _draw_debug(canvas: CanvasItem, flags: Dictionary) -> void:
@@ -568,18 +524,16 @@ static func _poly(
 	canvas: CanvasItem,
 	points: Array[Vector2],
 	fill_color: Color,
-	outline_override: Color,
 	alpha: float,
-	fill_factor: float
+	outline_color: Color = OUTLINE
 ) -> void:
 	var packed := PackedVector2Array(points)
-	if fill_factor > 0.001:
-		var colored := fill_color
-		colored.a *= alpha * fill_factor
-		canvas.draw_colored_polygon(packed, colored)
+	var colored := fill_color
+	colored.a *= alpha
+	canvas.draw_colored_polygon(packed, colored)
 	var closed := PackedVector2Array(points)
 	closed.append(points[0])
-	var stroke := OUTLINE if outline_override == Color.TRANSPARENT else outline_override
+	var stroke := outline_color
 	stroke.a *= alpha
 	canvas.draw_polyline(closed, stroke, 1.35, true)
 

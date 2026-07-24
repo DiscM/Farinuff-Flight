@@ -1,6 +1,7 @@
 extends Control
 ## Elite upgrade popup — shown after the Wave 10 (elite) boss is defeated.
-## Presents 3 randomly selected ship transformation options; player picks one, then game resumes.
+## Presents 3 randomly selected ship transformations. Solo selection resumes
+## play; combined milestones wait for point allocation to finish as well.
 
 signal upgrade_chosen
 
@@ -42,7 +43,7 @@ func _pick_upgrades() -> void:
 # ── UI ─────────────────────────────────────────────────────────────────────────
 
 ## Constructs the elite upgrade UI: optional dark overlay, title/subtitle
-## labels, and a horizontal row of upgrade cards — each showing an icon,
+## labels, and a horizontal row of upgrade cards — each showing a ship preview,
 ## name, description, and a SELECT button.
 func _build_ui() -> void:
 	var compact_layout := panel_only
@@ -94,7 +95,7 @@ func _build_ui() -> void:
 		cards_row.add_child(_make_card(upg))
 
 ## Creates a single upgrade card panel: styled border in the upgrade's color,
-## icon, name, description, and a SELECT button. Registers hover effects for
+## preview, name, description, and a SELECT button. Registers hover effects for
 ## the glow animation.
 func _make_card(upg: Dictionary) -> PanelContainer:
 	var card := PanelContainer.new()
@@ -173,53 +174,62 @@ func _make_card(upg: Dictionary) -> PanelContainer:
 ## Animates a subtle background glow and slight scale-up when the mouse
 ## hovers over an upgrade card.
 func _on_card_hover(card: PanelContainer, style: StyleBoxFlat, color: Color) -> void:
+	if selection_locked:
+		return
+	_stop_card_tween(card)
 	var tween := card.create_tween()
+	card.set_meta("hover_tween", tween)
 	tween.tween_method(func(c: Color): style.bg_color = c,
 		style.bg_color, Color(color.r * 0.15, color.g * 0.15, color.b * 0.15), 0.12)
 	tween.parallel().tween_property(card, "scale", Vector2(1.04, 1.04), 0.1).set_ease(Tween.EASE_OUT)
 
 ## Reverts the card's background and scale when the mouse leaves.
 func _on_card_unhover(card: PanelContainer, style: StyleBoxFlat) -> void:
+	if selection_locked:
+		return
+	_stop_card_tween(card)
 	var tween := card.create_tween()
+	card.set_meta("hover_tween", tween)
 	tween.tween_method(func(c: Color): style.bg_color = c,
 		style.bg_color, Color(0.06, 0.06, 0.16), 0.12)
 	tween.parallel().tween_property(card, "scale", Vector2.ONE, 0.1).set_ease(Tween.EASE_OUT)
 
+
+func _stop_card_tween(card: PanelContainer) -> void:
+	if not card.has_meta("hover_tween"):
+		return
+	var tween: Tween = card.get_meta("hover_tween")
+	if tween != null and tween.is_valid():
+		tween.kill()
+
+
 # ── Interaction ────────────────────────────────────────────────────────────────
 
 ## Called when a card's SELECT button is pressed. Locks selection to prevent
-## double-picks, shows visual feedback on the chosen/unchosen cards, waits
-## briefly, records the upgrade as chosen in GameManager, applies it to the
-## player, emits upgrade_chosen, and cleans up the popup.
+## double-picks, immediately applies the upgrade, shows static card feedback
+## for 0.15 seconds, then signals completion without fading the panel.
 func _on_upgrade_selected(upgrade_id: String) -> void:
 	if selection_locked:
 		return
-	selection_locked = true
 	var selected_upgrade: Dictionary = {}
 	for upgrade in chosen_upgrades:
 		if upgrade["id"] == upgrade_id:
 			selected_upgrade = upgrade
 			break
-	_show_selection_feedback(upgrade_id, selected_upgrade)
-	await get_tree().create_timer(0.30, true, false, true).timeout
+	if selected_upgrade.is_empty():
+		return
+	selection_locked = true
 
 	# Record as chosen so it won't appear in future Wave-10 upgrade pools.
 	if not GameManager.chosen_upgrade_ids.has(upgrade_id):
 		GameManager.chosen_upgrade_ids.append(upgrade_id)
 
-	# Fade the selection UI away, then install the module on the actual
-	# paused gameplay ship before resuming.
 	var player = get_tree().get_first_node_in_group("player")
-	var installation_cover := _get_installation_cover()
-	var fade := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-	fade.tween_property(installation_cover, "modulate:a", 0.0, 0.18).set_ease(Tween.EASE_IN)
-	await fade.finished
-	if player != null and player.has_method("install_elite_upgrade"):
-		await player.install_elite_upgrade(upgrade_id, true)
-	if panel_only:
-		var restore := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-		restore.tween_property(installation_cover, "modulate:a", 1.0, 0.15).set_ease(Tween.EASE_OUT)
-		await restore.finished
+	if player != null and player.has_method("set_elite_upgrade_enabled"):
+		player.set_elite_upgrade_enabled(upgrade_id, true, true)
+
+	_show_selection_feedback(upgrade_id, selected_upgrade)
+	await get_tree().create_timer(0.15, true, false, true).timeout
 
 	upgrade_chosen.emit()
 	# game.gd owns the pause state — it unpauses when it receives upgrade_chosen.
@@ -228,41 +238,28 @@ func _on_upgrade_selected(upgrade_id: String) -> void:
 		get_parent().queue_free()
 
 
-func _get_installation_cover() -> CanvasItem:
-	if not panel_only:
-		return self
-	var ancestor := get_parent()
-	while ancestor != null:
-		if ancestor is Control and ancestor.get_parent() is CanvasLayer:
-			return ancestor as CanvasItem
-		ancestor = ancestor.get_parent()
-	return self
-
-## Provides visual feedback after selection: highlights the chosen card
-## (white border, scale pulse, tinted background), fades out unchosen cards,
-## disables all SELECT buttons, and updates the subtitle to show the
-## installed upgrade name.
+## Locks the completed elite panel in a static selected state while a combined
+## milestone screen waits for point allocation to finish.
 func _show_selection_feedback(upgrade_id: String, upgrade: Dictionary) -> void:
 	var selected_color: Color = upgrade.get("color", Color(0.3, 1.0, 0.6))
 	if confirmation_label:
-		confirmation_label.text = "INSTALLED: " + str(upgrade.get("name", "UPGRADE")).to_upper()
+		confirmation_label.text = "SELECTED: " + str(upgrade.get("name", "UPGRADE")).to_upper()
 		confirmation_label.add_theme_color_override("font_color", selected_color)
 	for id in cards_by_id:
 		var card := cards_by_id[id] as PanelContainer
+		_stop_card_tween(card)
+		card.scale = Vector2.ONE
 		var button := card.get_meta("select_button") as Button
 		button.disabled = true
 		if id == upgrade_id:
+			button.text = "SELECTED"
 			var style := card.get_theme_stylebox("panel") as StyleBoxFlat
 			if style:
 				style.bg_color = Color(selected_color.r * 0.18, selected_color.g * 0.18, selected_color.b * 0.18)
 				style.border_color = Color.WHITE
 				style.set_border_width_all(4)
-			var tween := card.create_tween()
-			tween.tween_property(card, "scale", Vector2(1.08, 1.08), 0.12).set_ease(Tween.EASE_OUT)
-			tween.tween_property(card, "scale", Vector2(1.03, 1.03), 0.16).set_ease(Tween.EASE_IN_OUT)
 		else:
-			var tween := card.create_tween()
-			tween.tween_property(card, "modulate:a", 0.25, 0.16)
+			card.modulate.a = 0.25
 
 # ── Animation ──────────────────────────────────────────────────────────────────
 

@@ -38,7 +38,6 @@ func _run() -> void:
 
 	_check_player_structure(player)
 	await _check_frame_synced_muzzles_and_visibility(player)
-	await _check_paused_installation(player)
 	_check_reversible_state(player)
 	await get_tree().process_frame
 	await _check_no_node_accumulation(player)
@@ -98,20 +97,6 @@ func _check_reversible_state(player: Node) -> void:
 			not player.get_active_elite_upgrade_ids().has(id),
 			"%s must be removable and idempotent when disabled twice" % id
 		)
-
-
-func _check_paused_installation(player: Node) -> void:
-	var started_at := Time.get_ticks_msec()
-	get_tree().paused = true
-	await player.install_elite_upgrade("twin_cannons", false)
-	get_tree().paused = false
-	var elapsed := float(Time.get_ticks_msec() - started_at) / 1000.0
-	_expect(player.is_elite_upgrade_enabled("twin_cannons"), "Paused installation must apply the upgrade")
-	_expect(
-		elapsed >= 0.48 and elapsed <= 0.9,
-		"Paused installation should complete its 0.4s reveal and restrained pulse"
-	)
-	player.set_elite_upgrade_enabled("twin_cannons", false, false)
 
 
 func _check_frame_synced_muzzles_and_visibility(player: Node) -> void:

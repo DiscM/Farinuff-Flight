@@ -841,56 +841,6 @@ func clear_elite_upgrades() -> void:
 		set_elite_upgrade_enabled(id, false)
 
 
-func install_elite_upgrade(upgrade_id: String, grant_one_time_reward: bool = true) -> void:
-	set_elite_upgrade_enabled(upgrade_id, true, grant_one_time_reward)
-	_set_installation_progress(0.0, upgrade_id)
-
-	var install_tween := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-	install_tween.tween_method(
-		_set_installation_progress.bind(upgrade_id),
-		0.0,
-		1.0,
-		0.4
-	).set_ease(Tween.EASE_OUT)
-	await install_tween.finished
-
-	var pulse_tween := create_tween().set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
-	pulse_tween.tween_method(_set_installation_pulse.bind(upgrade_id), 1.0, 0.0, 0.16)
-	await pulse_tween.finished
-	upgrade_visuals_back.finish_installation()
-	upgrade_visuals_front.finish_installation()
-	var drone_visual := _get_drone_visual()
-	if drone_visual != null:
-		drone_visual.finish_installation()
-
-
-func _set_installation_progress(progress: float, upgrade_id: String) -> void:
-	upgrade_visuals_back.set_installation(upgrade_id, progress)
-	upgrade_visuals_front.set_installation(upgrade_id, progress)
-	if upgrade_id == "drone_escort":
-		var drone_visual := _get_drone_visual()
-		if drone_visual != null:
-			drone_visual.set_installation(progress)
-
-
-func _set_installation_pulse(pulse: float, upgrade_id: String) -> void:
-	upgrade_visuals_back.set_installation(upgrade_id, 1.0, pulse)
-	upgrade_visuals_front.set_installation(upgrade_id, 1.0, pulse)
-	if upgrade_id == "drone_escort":
-		var drone_visual := _get_drone_visual()
-		if drone_visual != null:
-			drone_visual.set_installation(1.0, pulse)
-
-
-func _get_drone_visual() -> DroneVisual:
-	if not is_instance_valid(drone_node):
-		return null
-	for child in drone_node.get_children():
-		if child is DroneVisual:
-			return child as DroneVisual
-	return null
-
-
 func set_visual_debug(flag: String, enabled: bool) -> void:
 	upgrade_visuals_front.set_debug_flag(flag, enabled)
 

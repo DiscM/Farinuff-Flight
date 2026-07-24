@@ -16,7 +16,7 @@ The existing collision capsule remains unchanged. Permanent ship-mounted geometr
 
 ## Implementation Status — 2026-07-24
 
-The first production implementation is complete: canonical reversible elite state, both procedural ship layers, all ten visual designs, synchronized muzzle origins, paused installation, card previews, a state-keyed four-frame afterimage atlas, the expanded developer panel, and automated combination/runtime smoke coverage are in place.
+The first production implementation is complete: canonical reversible elite state, both procedural ship layers, all ten visual designs, synchronized muzzle origins, immediate selection feedback, card previews, a state-keyed four-frame afterimage atlas, the expanded developer panel, and automated combination/runtime smoke coverage are in place.
 
 The remaining release-validation work is a representative visual capture matrix, full-load frame profiling, and Compatibility export verification on Windows and Linux. Forward+ and global 2D MSAA remain separate backlog work.
 
@@ -40,8 +40,8 @@ The remaining release-validation work is a representative visual capture matrix,
 16. As a player, I want Overclock hardware to deploy during its active window, so that its temporary burst is unmistakable.
 17. As a player, I want Afterburner exhaust to strengthen during boosting, so that the mobility upgrade feels connected to movement.
 18. As a player, I want the Drone Escort to look like a small companion craft rather than a placeholder, so that it belongs to the ship's visual family.
-19. As a player, I want a selected module to materialize onto the actual paused ship, so that installation feels consequential.
-20. As a player, I want installation to preserve the normal camera scale, so that I do not lose spatial orientation.
+19. As a player, I want elite selection to apply immediately, so that the reward flow stays responsive.
+20. As a player, I want the combined milestone screen to wait for both elite selection and point allocation, so that neither decision is interrupted.
 21. As a player, I want upgrade cards to preview the candidate hardware on my current build, so that I can anticipate the cumulative result.
 22. As a player, I want the candidate module highlighted while existing modules are dimmed, so that the proposed change is obvious.
 23. As a player, I want boost afterimages to include installed hardware, so that the trail matches my ship's silhouette.
@@ -53,7 +53,7 @@ The remaining release-validation work is a representative visual capture matrix,
 29. As a developer, I want Grant All and Clear All controls, so that I can review both the fully upgraded and baseline states quickly.
 30. As a developer, I want overlays for the visual envelope, attachment anchors, muzzle origins, and collision capsule, so that alignment errors are easy to diagnose.
 31. As a developer, I want stateful developer controls to be reversible, so that repeated testing does not compound gameplay values.
-32. As a developer, I want one canonical visual definition per upgrade, so that gameplay, card previews, installation, debug views, and afterimages do not drift apart.
+32. As a developer, I want one canonical visual definition per upgrade, so that gameplay, card previews, debug views, and afterimages do not drift apart.
 33. As a developer, I want static module geometry to avoid per-frame rebuilding, so that cumulative visuals add negligible runtime cost.
 34. As a developer, I want the implementation to work under the current Compatibility renderer, so that the feature does not require a renderer migration.
 35. As a developer, I want Forward+ and 2D MSAA evaluated separately, so that renderer risk does not block the upgrade feature.
@@ -85,7 +85,7 @@ All modules use simple polygons, flat fills, thin dark outlines, and sparse illu
 - Normal run-selection history remains distinct from developer overrides so debug combinations do not pollute the upgrade-choice exclusion pool.
 - Enabling an already enabled upgrade must be idempotent.
 - Disabling and re-enabling an upgrade in developer tools must not compound one-time or multiplicative effects.
-- Hull Plating's normal installation grants one life once. Developer visualization toggles must not repeatedly add lives.
+- Hull Plating's normal selection grants one life once. Developer visualization toggles must not repeatedly add lives.
 - Afterburner must use deterministic derived modifiers or a reversible state application rather than repeatedly multiplying speed and acceleration.
 - Starting a new run clears visual state, transient module state, previews, and afterimage caches.
 
@@ -95,7 +95,7 @@ All modules use simple polygons, flat fills, thin dark outlines, and sparse illu
 - Add one composite procedural canvas layer behind the sprite and one in front.
 - The rear layer owns under-hull hardware and exhaust geometry. The front layer owns armor, weapon housings, sensors, projectors, coils, reactor hardware, and the raised rear turret.
 - A layer draws every active module assigned to that depth; do not create one persistent renderer per module.
-- Store canonical module geometry and anchors in shared visual definitions so the player, card previews, installation effect, debug overlays, and afterimage compositor use the same source data.
+- Store canonical module geometry and anchors in shared visual definitions so the player, card previews, debug overlays, and afterimage compositor use the same source data.
 - Static geometry rebuilds only after the active upgrade set changes.
 - Functional animations may update only the small subset of geometry or transforms that actually changes.
 - Do not use continuous SubViewports, per-module Viewports, per-frame texture generation, or per-frame geometry allocation.
@@ -136,16 +136,18 @@ All modules use simple polygons, flat fills, thin dark outlines, and sparse illu
 - Temporary Spread Shot without the elite upgrade does not permanently install elite emitter hardware.
 - Muzzle locations must follow ship rotation and the synchronized visual frame.
 
-### Installation sequence
+### Selection completion flow
 
-- Selecting an elite upgrade keeps gameplay paused.
-- The selected card receives its existing confirmation feedback.
-- The upgrade UI then fades away and reveals the actual gameplay ship in place.
-- The candidate module appears as an accent-colored wireframe at its canonical attachment point.
-- Over roughly `0.4` seconds, the wireframe resolves into the solid module and emits one restrained confirmation pulse.
-- The camera scale does not change.
-- Gameplay resumes only after installation completes.
-- Installation timing must continue while the scene tree is paused.
+- Selecting an elite upgrade applies its gameplay and visual state immediately.
+- The selected card becomes a static highlighted `SELECTED` state and the other cards dim.
+- All elite controls lock after selection.
+- Hold the completed elite state for at least `0.15` seconds so the choice registers.
+- Do not fade the popup or play a ship-focused materialization transition.
+- A solo elite popup closes immediately after the short confirmation.
+- On a combined milestone screen, the shared overlay remains open until elite selection and point allocation are both complete.
+- Whichever panel completes first remains visible and inert while waiting for the other.
+- Completed point allocation displays `ALLOCATED` and cannot apply its stat changes again.
+- When both decisions are complete, close the shared overlay immediately and resume gameplay.
 
 ### Upgrade-card previews
 
@@ -222,7 +224,7 @@ All modules use simple polygons, flat fills, thin dark outlines, and sparse illu
 4. Implement the ten static module shapes within the `104 × 96` envelope.
 5. Add functional module animations and inherited global visual state.
 6. Move projectile origins to their visible muzzle anchors without changing projectile behavior.
-7. Implement the paused wireframe-to-solid installation sequence.
+7. Implement immediate elite selection with static completed states and dual-panel completion gating.
 8. Replace card emoji primacy with current-build candidate previews.
 9. Add the flattened four-frame afterimage cache.
 10. Expand and reorganize developer tools with reversible state controls and visual overlays.
@@ -264,7 +266,9 @@ The repository currently has no automated test framework. Do not test private dr
 - Confirm visible wings and modules do not unexpectedly receive collision.
 - Confirm each muzzle flash and projectile originates from the matching hardware.
 - Confirm card previews show the current configuration dimly and only the candidate brightly.
-- Confirm installation runs while paused, uses the actual ship, takes approximately `0.4` seconds, and does not zoom the camera.
+- Confirm elite state applies immediately, card feedback remains visible for `0.15` seconds, and no exit fade occurs.
+- Confirm combined milestone panels remain visible and inert until both elite selection and point allocation finish.
+- Confirm repeated point confirmation cannot apply stats twice.
 - Confirm afterimages show the complete installed silhouette without the drone or transient effects.
 - Confirm developer checkboxes can produce arbitrary combinations and restore baseline state.
 
@@ -275,7 +279,7 @@ The repository currently has no automated test framework. Do not test private dr
 - Verify static module geometry does not continuously redraw or allocate.
 - Verify afterimage spawning does not create module-layer clones.
 - Verify popup previews stop processing after the popup closes.
-- Verify installation-time cache rebuilding produces no gameplay hitch after the game resumes.
+- Verify selection-time cache rebuilding produces no gameplay hitch after the game resumes.
 - Verify Windows and Linux Compatibility exports render the procedural geometry and antialiased outlines consistently.
 
 ## Acceptance Criteria
@@ -286,7 +290,8 @@ The repository currently has no automated test framework. Do not test private dr
 - The existing collision capsule and gameplay collision behavior are unchanged.
 - Weapon projectiles originate from their visible elite weapon hardware.
 - Upgrade cards preview the player's current build plus the highlighted candidate.
-- Installation materializes on the actual paused ship without camera zoom.
+- Elite selection applies immediately without a popup fade or ship materialization beat.
+- The combined milestone overlay closes only after both elite selection and point allocation complete.
 - Boost afterimages include installed hardware as a single composite ghost.
 - Ship-mounted modules inherit global ship visual states.
 - Developer tools support reversible individual elite configurations, Grant All, Clear All, and visual-debug overlays.
@@ -301,7 +306,7 @@ The repository currently has no automated test framework. Do not test private dr
 - Collision expansion or per-module hit detection.
 - Combo-specific module shapes or dynamic relocation.
 - Persistent module damage, breakage, or repair states.
-- Camera zoom during installation.
+- Ship-focused wireframe, drawing, or materialization transitions during selection.
 - Decorative idle animation unrelated to module function.
 - Replacing or redrawing the current base ship sprite.
 - Migrating the project to Forward+ as part of this feature.
@@ -316,4 +321,4 @@ The repository currently has no automated test framework. Do not test private dr
 - The `104 × 96` limit is the agreed permanent visual envelope, not a request to fill the entire area.
 - The escort drone remains an independent gameplay entity and does not require a docking clamp.
 - Generated mockups establish placement and density only. The current in-game sprite is the authoritative source for proportions, polygon complexity, palette, and finish.
-- The shared module-definition layer is the central architectural seam. Any implementation that separately redraws module geometry for gameplay, previews, installation, debug views, and afterimages risks visual drift and should be avoided.
+- The shared module-definition layer is the central architectural seam. Any implementation that separately redraws module geometry for gameplay, previews, debug views, and afterimages risks visual drift and should be avoided.

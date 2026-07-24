@@ -5,7 +5,7 @@ All notable changes to this project will be documented in this file.
 ## [Unreleased] - 2026-05-24
 
 ### Added
-- **Visual Elite Upgrades:** All ten elite upgrades now add cumulative, procedural ship hardware with synchronized front/rear layers, functional lighting, real weapon muzzle origins, installation reveals, card previews, and cached composite boost trails.
+- **Visual Elite Upgrades:** All ten elite upgrades now add cumulative, procedural ship hardware with synchronized front/rear layers, functional lighting, real weapon muzzle origins, card previews, and cached composite boost trails.
 - **Visual Upgrade Developer Controls:** Expanded Dev Tools with scrollable sections, reversible elite and power-state toggles, Grant All/Clear All actions, and overlays for the visual envelope, attachment anchors, muzzle origins, and collision capsule.
 - **Persistent Settings and Save Data:** Added automatic persistence for high scores and player preferences in `user://save_data.json`, including master volume, screen shake, CRT scanlines, and distortion settings.
 - **Settings Menus:** Added an in-game settings overlay accessible from both the title screen and pause menu; visual options update during active runs.
@@ -28,7 +28,7 @@ All notable changes to this project will be documented in this file.
 - **Background Planet Loading:** Corrected the asteroid resource path and removed an unavailable moon entry from random background selection.
 - **Background Planet Stability:** Planet shader materials are now localized per instance so spawning a new planet cannot change the palette or terrain seed of planets already visible.
 - **Background Flicker:** Removed animated full-screen CRT brightness and scanline movement that made hit-heavy moments read as background flashing.
-- **Elite Upgrade Feedback:** Selecting an elite transformation now highlights the chosen card and briefly confirms installation before play resumes.
+- **Milestone Upgrade Flow:** Elite choices apply immediately with a static `SELECTED` confirmation; combined elite/allocation screens remain locked open until both decisions are complete, without an exit fade or ship-drawing transition.
 - **Damage Screen Shake:** Enemy-hit effects no longer shake the whole scene; player damage now triggers a reduced shake only after losing two lives within five seconds.
 
 ## [Unreleased] - 2026-03-21

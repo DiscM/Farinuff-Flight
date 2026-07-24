@@ -13,6 +13,7 @@ var panel_only: bool = false
 var alloc_fire_rate: int = 0
 var alloc_health: int = 0
 var alloc_speed: int = 0
+var allocation_committed: bool = false
 
 # UI refs (built in _ready)
 var points_label: Label
@@ -165,7 +166,7 @@ func _add_stat_row(parent: VBoxContainer, label_text: String, stat_id: String, c
 ## points, increments the chosen stat's temporary allocation, and refreshes
 ## the UI to reflect the new state.
 func _on_plus_pressed(stat_id: String) -> void:
-	if points_remaining <= 0:
+	if allocation_committed or points_remaining <= 0:
 		return
 	points_remaining -= 1
 	match stat_id:
@@ -181,6 +182,10 @@ func _on_plus_pressed(stat_id: String) -> void:
 ## allocated points to GameManager's stat system, emits allocation_done,
 ## and frees the popup (unless in panel_only mode).
 func _on_confirm() -> void:
+	if allocation_committed or points_remaining > 0:
+		return
+	allocation_committed = true
+
 	# Apply all allocated points
 	for i in range(alloc_fire_rate):
 		GameManager.apply_stat_point("fire_rate")
@@ -189,10 +194,23 @@ func _on_confirm() -> void:
 	for i in range(alloc_speed):
 		GameManager.apply_stat_point("speed")
 
+	_show_completed_state()
 	allocation_done.emit()
 	# In panel_only mode the parent is a shared HBoxContainer; game.gd cleans up the overlay.
 	if not panel_only:
 		get_parent().queue_free()
+
+
+## Locks a completed panel while the combined milestone screen waits for the
+## elite selection. Repeated confirmation cannot apply the allocation again.
+func _show_completed_state() -> void:
+	points_label.text = "ALLOCATION COMPLETE"
+	points_label.add_theme_color_override("font_color", Color(0.3, 1.0, 0.5))
+	fire_rate_btn.disabled = true
+	health_btn.disabled = true
+	speed_btn.disabled = true
+	confirm_btn.text = "ALLOCATED"
+	confirm_btn.disabled = true
 
 ## Updates all UI elements: points remaining label, stat level displays
 ## (showing the sum of existing + pending allocations), button disabled
