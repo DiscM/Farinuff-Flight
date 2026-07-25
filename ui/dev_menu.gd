@@ -17,6 +17,7 @@ const ELITE_LABELS := {
 }
 
 var _elite_checks: Dictionary = {}
+var _enemy_state_label: Label
 
 
 func _ready() -> void:
@@ -59,7 +60,17 @@ func _ready() -> void:
 	_build_run_actions(content)
 	_build_player_state(content)
 	_build_elite_upgrades(content)
+	_build_enemy_evolution(content)
 	_build_visual_debug(content)
+	set_process(true)
+
+
+func _process(_delta: float) -> void:
+	if _enemy_state_label == null:
+		return
+	var spawner := get_tree().current_scene.get_node_or_null("EnemySpawner")
+	if spawner != null and spawner.has_method("get_debug_state"):
+		_enemy_state_label.text = spawner.get_debug_state()
 
 
 func _build_run_actions(parent: VBoxContainer) -> void:
@@ -122,6 +133,28 @@ func _build_visual_debug(parent: VBoxContainer) -> void:
 	]:
 		var flag: String = definition[0]
 		_add_check(parent, definition[1], false, _on_debug_toggled.bind(flag))
+
+
+func _build_enemy_evolution(parent: VBoxContainer) -> void:
+	_add_section(parent, "ENEMY EVOLUTION")
+	var generation_row := HBoxContainer.new()
+	parent.add_child(generation_row)
+	for generation in range(1, 5):
+		_add_button(generation_row, "GEN %d" % generation, _on_force_generation.bind(generation))
+	var spawn_row := HBoxContainer.new()
+	parent.add_child(spawn_row)
+	for kind in [&"basic", &"fast", &"tank", &"bomber", &"sniper"]:
+		_add_button(spawn_row, String(kind).capitalize(), _on_spawn_archetype.bind(kind))
+	_add_button(parent, "Trigger On-Screen Abilities", _on_trigger_enemy_abilities)
+	var boss_row := HBoxContainer.new()
+	parent.add_child(boss_row)
+	for variant in [&"assault", &"bulwark", &"tempest", &"harbinger", &"core"]:
+		_add_button(boss_row, String(variant).capitalize(), _on_spawn_boss_variant.bind(variant))
+	_enemy_state_label = Label.new()
+	_enemy_state_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_enemy_state_label.add_theme_font_size_override("font_size", 11)
+	_enemy_state_label.add_theme_color_override("font_color", Color(1.0, 0.72, 0.25))
+	parent.add_child(_enemy_state_label)
 
 
 func _add_section(parent: VBoxContainer, text: String) -> void:
@@ -246,3 +279,33 @@ func _on_point_allocation() -> void:
 func _on_add_lives() -> void:
 	GameManager.lives += 5
 	SignalBus.lives_changed.emit(GameManager.lives)
+
+
+func _get_enemy_spawner() -> Node:
+	return get_tree().current_scene.get_node_or_null("EnemySpawner")
+
+
+func _on_force_generation(generation: int) -> void:
+	GameManager.dev_enemy_generation_override = generation
+	var spawner := _get_enemy_spawner()
+	if spawner != null:
+		spawner.threat_director.set_generation(generation)
+
+
+func _on_spawn_archetype(kind: StringName) -> void:
+	var spawner := _get_enemy_spawner()
+	if spawner != null:
+		spawner.spawn_archetype(kind, GameManager.get_enemy_generation())
+
+
+func _on_trigger_enemy_abilities() -> void:
+	for enemy in get_tree().get_nodes_in_group("regular_enemies"):
+		if is_instance_valid(enemy) and enemy.has_method("dev_trigger_ability"):
+			enemy.dev_trigger_ability()
+
+
+func _on_spawn_boss_variant(variant: StringName) -> void:
+	force_close.emit()
+	var spawner := _get_enemy_spawner()
+	if spawner != null:
+		spawner.spawn_boss_variant(variant)

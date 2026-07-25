@@ -10,6 +10,7 @@ var current_wave: int = 1
 var is_game_active: bool = false
 var boss_active: bool = false
 var try_again_stocks: int = 2
+var dev_enemy_generation_override: int = 0
 
 # Upgrade IDs chosen so far this run — excluded from future pools.
 var chosen_upgrade_ids: Array[String] = []
@@ -235,13 +236,29 @@ func _advance_wave() -> void:
 	current_wave += 1
 	orbs_collected_this_wave = 0
 	orbs_needed_this_wave = int(10.0 + float(current_wave) * 1.30)
-	enemy_speed_multiplier = minf(1.0 + float(current_wave - 1) * 0.045, 2.20)
+	# Regular enemy stats are fixed by generation; only spawn cadence scales by wave.
+	enemy_speed_multiplier = 1.0
 	boss_active = (current_wave % 5 == 0)
 	SignalBus.wave_started.emit(current_wave)
 
 	# Trigger point allocation every 5 waves (after clearing wave 5, 10, 15…)
 	if cleared_wave % 5 == 0:
 		SignalBus.allocation_triggered.emit(allocation_points_per_milestone)
+	if current_wave == 6 or current_wave == 11 or current_wave == 16:
+		SignalBus.evolution_transition_pending.emit(
+			get_enemy_generation(),
+			get_enemy_generation_name(get_enemy_generation())
+		)
+
+
+func get_enemy_generation(wave_number: int = current_wave) -> int:
+	if dev_enemy_generation_override > 0:
+		return clampi(dev_enemy_generation_override, 1, 4)
+	return clampi(1 + floori(float(maxi(0, wave_number - 1)) / 5.0), 1, 4)
+
+
+func get_enemy_generation_name(generation: int) -> String:
+	return ["Standard", "Augmented", "Warform", "Apex"][clampi(generation, 1, 4) - 1]
 
 ## Returns the current enemy spawn interval in seconds, decreasing as
 ## waves progress but clamped to a minimum floor for playability.
@@ -275,6 +292,7 @@ func _on_game_restarted() -> void:
 	recent_player_damage_times.clear()
 	try_again_stocks = 2
 	chosen_upgrade_ids = []
+	dev_enemy_generation_override = 0
 
 	is_game_active = true
 	boss_active = false

@@ -33,12 +33,13 @@ func pool_activate(spawn_position: Vector2, new_direction: Vector2, scale_multip
 	zigzag = zigzag_stacks > 0
 	_zigzag_time = 0.0
 	collision_layer = 4
-	collision_mask = 22
+	collision_mask = 54
 	monitoring = true
 	monitorable = true
 	visible = true
 	process_mode = Node.PROCESS_MODE_INHERIT
 	set_physics_process(true)
+	add_to_group("player_bullets")
 
 ## Returns the bullet to the pool after disabling its collision and physics.
 func despawn() -> void:
@@ -50,6 +51,7 @@ func despawn() -> void:
 
 ## Disables and releases the bullet after the current physics query finishes.
 func _deactivate_for_pool() -> void:
+	remove_from_group("player_bullets")
 	monitoring = false
 	monitorable = false
 	collision_layer = 0
@@ -78,7 +80,10 @@ func _physics_process(delta: float) -> void:
 func _on_area_entered(area: Area2D) -> void:
 	if _is_despawning:
 		return
-	if area.is_in_group("enemies") or area.is_in_group("tempest_sections"):
+	if area.is_in_group("enemies") or area.is_in_group("tempest_sections") \
+			or area.is_in_group("enemy_armor") or area.is_in_group("hostile_ordnance"):
+		if not area.has_method("take_damage"):
+			return
 		var dmg := 1 + GameManager.bonus_damage
 		area.take_damage(dmg)
 
@@ -101,6 +106,13 @@ func _explode() -> void:
 	for section in get_tree().get_nodes_in_group("tempest_sections"):
 		if is_instance_valid(section) and global_position.distance_squared_to(section.global_position) < blast_radius_sq:
 			section.take_damage(damage)
+	for plate in get_tree().get_nodes_in_group("enemy_armor"):
+		if is_instance_valid(plate) and global_position.distance_squared_to(plate.global_position) < blast_radius_sq:
+			plate.take_damage(damage)
+	for ordnance in get_tree().get_nodes_in_group("hostile_ordnance"):
+		if is_instance_valid(ordnance) and ordnance.has_method("take_damage") \
+				and global_position.distance_squared_to(ordnance.global_position) < blast_radius_sq:
+			ordnance.take_damage(damage)
 
 	var scene_root := get_tree().current_scene
 	if scene_root == null:

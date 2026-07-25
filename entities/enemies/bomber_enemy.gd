@@ -2,20 +2,21 @@ extends BaseEnemy
 ## Bomber enemy — drifts perpendicular to its travel direction, drops bombs periodically.
 
 const ENEMY_BULLET_SCENE := preload("res://entities/bullets/enemy_bullet.tscn")
+const ENEMY_MINE_SCENE := preload("res://entities/enemies/enemy_mine.tscn")
 
 var drift_speed: float = 120.0
 var drift_dir: float = 1.0
 var drop_interval: float = 2.0
 var drop_timer: float = 0.0
 var viewport_size: Vector2 = Vector2(720.0, 1024.0)
+var mine_timer := 5.0
+var mine_count := 0
 
 ## Sets stats for the bomber (2 HP, slow speed, 200 points, guaranteed orb),
 ## randomizes which perpendicular direction it drifts initially, and
 ## staggers the first bomb drop timer.
 func _ready() -> void:
-	max_health = 2
-	speed = 60.0
-	points = 200
+	archetype_id = &"bomber"
 	orb_value = 2
 	guaranteed_orb = true
 	super._ready()
@@ -28,7 +29,7 @@ func _ready() -> void:
 ## Decrements the drop timer and calls _drop_bomb() when it reaches zero.
 func _move(delta: float) -> void:
 	# Slow drift along travel direction
-	position += spawn_direction * speed * GameManager.enemy_speed_multiplier * delta
+	position += spawn_direction * speed * delta
 
 	# Drift perpendicular to travel direction and bounce off screen edges
 	var perp := Vector2(-spawn_direction.y, spawn_direction.x)
@@ -54,6 +55,11 @@ func _move(delta: float) -> void:
 	if drop_timer <= 0:
 		drop_timer = drop_interval
 		_drop_bomb()
+	if generation >= 2:
+		mine_timer -= delta
+		if mine_timer <= 0.0 and can_begin_special():
+			mine_timer = 5.0
+			_try_drop_mine()
 
 ## Spawns a neon-green enemy bullet below the bomber's current position,
 ## traveling downward at a randomized speed.
@@ -64,4 +70,27 @@ func _drop_bomb() -> void:
 	var bomb = ObjectPool.acquire(ENEMY_BULLET_SCENE, scene_root)
 	if bomb == null:
 		return
-	bomb.pool_activate(global_position + Vector2(0, 16), Vector2.DOWN, randf_range(300.0, 400.0), Color(0.2, 3.0, 0.2, 1.0))
+	bomb.pool_activate(get_origin(&"Bay"), spawn_direction, randf_range(300.0, 400.0), Color(2.6, 0.25, 0.7, 1.0))
+
+
+func _try_drop_mine() -> void:
+	var cluster := generation >= 3 and (mine_count + 1) % 3 == 0
+	if not special_attack_coordinator.request_hazard(&"mine"):
+		return
+	if cluster and not special_attack_coordinator.request_hazard(&"cluster_mine"):
+		special_attack_coordinator.release_hazard(&"mine")
+		return
+	var scene_root := get_tree().current_scene
+	var mine = ObjectPool.acquire(ENEMY_MINE_SCENE, scene_root)
+	if mine == null:
+		special_attack_coordinator.release_hazard(&"mine")
+		if cluster:
+			special_attack_coordinator.release_hazard(&"cluster_mine")
+		return
+	mine_count += 1
+	mine.pool_activate(get_origin(&"Bay"), cluster, generation >= 4 and cluster, special_attack_coordinator)
+
+
+func dev_trigger_ability() -> void:
+	mine_timer = 0.0
+	visible_time = 1.0

@@ -22,6 +22,9 @@ var _final_score_cache: int = 0
 
 # Pending allocation: stored when elite and allocation trigger simultaneously
 var _pending_allocation_points: int = -1
+var _pending_evolution_generation: int = 0
+var _pending_evolution_name: String = ""
+var _evolution_banner_active: bool = false
 
 # Screen shake state
 var shake_intensity: float = 0.0
@@ -54,6 +57,7 @@ func _ready() -> void:
 	SignalBus.screen_shake.connect(_on_screen_shake)
 	SignalBus.allocation_triggered.connect(_on_allocation_triggered)
 	SignalBus.elite_upgrade_triggered.connect(_on_elite_upgrade_triggered)
+	SignalBus.evolution_transition_pending.connect(_on_evolution_transition_pending)
 	SaveManager.settings_changed.connect(_apply_visual_settings)
 
 	# Position player at bottom center
@@ -363,7 +367,7 @@ func _on_allocation_triggered(points: int) -> void:
 	allocation_active = true
 	_sync_hud_visibility()
 
-	# If the elite upgrade is already active (Wave 10), defer and show side-by-side
+	# At combined milestones, elite selection always resolves before allocation.
 	if elite_upgrade_active:
 		_pending_allocation_points = points
 		return
@@ -374,11 +378,14 @@ func _on_allocation_triggered(points: int) -> void:
 	_pending_allocation_points = points
 	await get_tree().process_frame
 	if elite_upgrade_active:
-		# Elite already handled — it will call _show_combined when it opens
+		# The elite completion callback will open allocation next.
 		return
 
-	# Solo allocation
 	_pending_allocation_points = -1
+	_show_allocation_popup(points)
+
+
+func _show_allocation_popup(points: int) -> void:
 	get_tree().paused = true
 	var overlay := CanvasLayer.new()
 	overlay.process_mode = Node.PROCESS_MODE_ALWAYS
@@ -393,6 +400,7 @@ func _on_allocation_triggered(points: int) -> void:
 func _on_allocation_closed() -> void:
 	allocation_active = false
 	_update_pause_state()
+	_maybe_show_evolution_banner()
 
 ## Handles the elite upgrade popup trigger. Pauses immediately, waits one
 ## frame to check for a simultaneous allocation trigger, and either shows
@@ -409,13 +417,6 @@ func _on_elite_upgrade_triggered() -> void:
 	# Wait one frame so allocation_triggered (emitted right after) can set its flag
 	await get_tree().process_frame
 
-	if _pending_allocation_points >= 0:
-		# Both active — show side by side
-		_show_combined(_pending_allocation_points)
-		_pending_allocation_points = -1
-		return
-
-	# Solo elite upgrade
 	var overlay := CanvasLayer.new()
 	overlay.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(overlay)
@@ -427,7 +428,13 @@ func _on_elite_upgrade_triggered() -> void:
 ## active flag and updates the pause state.
 func _on_elite_upgrade_closed() -> void:
 	elite_upgrade_active = false
+	if _pending_allocation_points >= 0:
+		var points := _pending_allocation_points
+		_pending_allocation_points = -1
+		_show_allocation_popup(points)
+		return
 	_update_pause_state()
+	_maybe_show_evolution_banner()
 
 ## Shows the elite upgrade and point allocation panels side by side.
 ## Creates a shared overlay with an HBoxContainer holding both panels.
@@ -504,3 +511,90 @@ func _show_combined(alloc_points: int) -> void:
 func _try_close_combined_overlay(overlay: CanvasLayer) -> void:
 	if not elite_upgrade_active and not allocation_active:
 		overlay.queue_free()
+		_maybe_show_evolution_banner()
+
+
+func _on_evolution_transition_pending(generation: int, generation_name: String) -> void:
+	_pending_evolution_generation = generation
+	_pending_evolution_name = generation_name
+	enemy_spawner.set_evolution_hold(true)
+	await get_tree().process_frame
+	_maybe_show_evolution_banner()
+
+
+func _maybe_show_evolution_banner() -> void:
+	if _pending_evolution_generation <= 0 or _evolution_banner_active:
+		return
+	if allocation_active or elite_upgrade_active or try_again_active or pause_active:
+		return
+	_show_evolution_banner()
+
+
+func _show_evolution_banner() -> void:
+	_evolution_banner_active = true
+	var generation := _pending_evolution_generation
+	var generation_name := _pending_evolution_name
+	_pending_evolution_generation = 0
+	_pending_evolution_name = ""
+
+	# Evolution is immediate and clean: no old projectiles or pressure cross the boundary.
+	get_tree().call_group("enemy_bullets", "despawn")
+	get_tree().call_group("hostile_ordnance", "clear_ordnance")
+	get_tree().call_group("rail_beams", "despawn")
+	enemy_spawner.clear_for_transition()
+
+	var overlay := CanvasLayer.new()
+	overlay.layer = 30
+	overlay.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(overlay)
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	overlay.add_child(center)
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(330, 116)
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.025, 0.015, 0.075, 0.94)
+	style.border_color = [
+		Color(0.45, 0.8, 1.0),
+		Color(1.0, 0.62, 0.12),
+		Color(1.0, 0.18, 0.16),
+		Color(1.0, 0.05, 0.75),
+	][generation - 1]
+	style.set_border_width_all(3)
+	style.set_corner_radius_all(8)
+	style.set_content_margin_all(16)
+	panel.add_theme_stylebox_override("panel", style)
+	center.add_child(panel)
+	var labels := VBoxContainer.new()
+	labels.alignment = BoxContainer.ALIGNMENT_CENTER
+	panel.add_child(labels)
+	var title := Label.new()
+	title.text = "HOSTILE EVOLUTION"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_size_override("font_size", 23)
+	title.add_theme_color_override("font_color", style.border_color)
+	labels.add_child(title)
+	var subtitle := Label.new()
+	subtitle.text = "GEN %s  //  %s" % [_roman_generation(generation), generation_name.to_upper()]
+	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	subtitle.add_theme_font_size_override("font_size", 17)
+	subtitle.add_theme_color_override("font_color", Color(0.92, 0.94, 1.0))
+	labels.add_child(subtitle)
+
+	panel.modulate.a = 0.0
+	panel.scale = Vector2(0.92, 0.92)
+	panel.pivot_offset = panel.custom_minimum_size * 0.5
+	var tween := panel.create_tween()
+	tween.tween_property(panel, "modulate:a", 1.0, 0.18)
+	tween.parallel().tween_property(panel, "scale", Vector2.ONE, 0.18).set_ease(Tween.EASE_OUT)
+	tween.tween_interval(1.12)
+	tween.tween_property(panel, "modulate:a", 0.0, 0.30)
+	await tween.finished
+	overlay.queue_free()
+	_evolution_banner_active = false
+	SignalBus.evolution_transition_finished.emit(generation)
+
+
+func _roman_generation(generation: int) -> String:
+	return ["I", "II", "III", "IV"][clampi(generation, 1, 4) - 1]

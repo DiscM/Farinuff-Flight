@@ -643,6 +643,18 @@ func _on_area_entered(area: Area2D) -> void:
 			return
 		respawn_invincibility = 2.0
 		_take_hit()
+	elif area.is_in_group("hostile_ordnance") or area.is_in_group("rail_beams"):
+		if is_boosting and area.is_in_group("hostile_ordnance") and area.has_method("clear_ordnance"):
+			area.clear_ordnance()
+			return
+		receive_hostile_hit(2.0)
+
+
+func receive_hostile_hit(invincibility_duration: float = 2.0) -> void:
+	if not GameManager.is_game_active or is_invincible or dev_god_mode:
+		return
+	respawn_invincibility = invincibility_duration
+	_take_hit()
 
 ## Processes a damage hit. If a shield is active, consumes it instead of
 ## taking damage and grants brief invincibility. Otherwise, emits the
@@ -756,6 +768,7 @@ func _on_magnet_ended() -> void:
 func _apply_nuke() -> void:
 	get_tree().call_group("enemies", "take_damage", 9999)
 	get_tree().call_group("tempest_sections", "take_damage", 9999)
+	get_tree().call_group("hostile_ordnance", "clear_ordnance")
 
 ## Pulls all power-ups and XP orbs toward the player at 350 px/s.
 ## Used by the temporary magnet power-up.
@@ -1200,6 +1213,10 @@ func _trigger_shield_burst() -> void:
 				b.despawn()
 			else:
 				b.queue_free()
+	for ordnance in tree.get_nodes_in_group("hostile_ordnance"):
+		if is_instance_valid(ordnance) and global_position.distance_squared_to(ordnance.global_position) < burst_radius_sq:
+			if ordnance.has_method("clear_ordnance"):
+				ordnance.clear_ordnance()
 	# Damage enemies and exposed boss systems caught in the burst.
 	for e in tree.get_nodes_in_group("enemies"):
 		if is_instance_valid(e) and global_position.distance_squared_to(e.global_position) < burst_radius_sq:

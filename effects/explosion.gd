@@ -157,6 +157,8 @@ func _on_release_timeout(token: int) -> void:
 ## safely stored in the pool.
 func _set_idle_state() -> void:
 	visible = false
+	scale = Vector2.ONE
+	modulate = Color.WHITE
 	process_mode = Node.PROCESS_MODE_DISABLED
 	set_process(false)
 	if is_instance_valid(_sprite_sheet):

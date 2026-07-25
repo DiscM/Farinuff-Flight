@@ -7,6 +7,11 @@ class_name BossEnemy
 const ENEMY_BULLET_SCENE := preload("res://entities/bullets/enemy_bullet.tscn")
 const TEMPEST_SECTION_SCRIPT := preload("res://entities/enemies/tempest_section.gd")
 const TEMPEST_CORE_TEXTURE := preload("res://assets/sprites/generated/tempest_core_idle_strip.png")
+const ASSAULT_TEXTURE := preload("res://assets/sprites/generated/boss_assault_idle_strip.png")
+const BULWARK_TEXTURE := preload("res://assets/sprites/generated/boss_bulwark_idle_strip.png")
+const TEMPEST_TEXTURE := preload("res://assets/sprites/generated/boss_tempest_idle_strip.png")
+const HARBINGER_TEXTURE := preload("res://assets/sprites/generated/boss_void_harbinger_idle_strip.png")
+const CORE_TEXTURE := preload("res://assets/sprites/generated/boss_tempest_core_idle_strip.png")
 const BOSS_HEALTH_SCALE_MULTIPLIER: float = 0.7
 
 static var _telegraph_marker_texture: Texture2D
@@ -17,6 +22,7 @@ var is_elite: bool = false
 var is_tempest_core: bool = false
 enum BossVariant { ASSAULT, BULWARK, TEMPEST }
 var boss_variant: BossVariant = BossVariant.ASSAULT
+var forced_variant: int = -1
 var boss_title: String = "BOSS: ASSAULT WING"
 var bullet_color: Color = Color(3.0, 0.2, 1.5, 1.0)
 
@@ -55,8 +61,6 @@ var tempest_overload_triggered: bool = false
 var tempest_phase_transition_pending: bool = false
 
 var max_boss_health: int = 0
-var _dying: bool = false
-
 ## Configures the boss based on its type (regular, elite, or tempest core),
 ## builds the attack sequence, initializes movement state, creates the
 ## telegraph crosshair marker, and emits the boss_spawned signal to set up
@@ -65,6 +69,8 @@ func _ready() -> void:
 	# Bosses should scale a little more gently than standard enemies because
 	# their phase mechanics already extend fight length.
 	health_scale_multiplier = BOSS_HEALTH_SCALE_MULTIPLIER
+	uses_wave_health_scaling = true
+	is_regular_enemy = false
 	if is_tempest_core:
 		_configure_tempest_core()
 	elif is_elite:
@@ -81,11 +87,8 @@ func _ready() -> void:
 	speed = 0.0
 
 	super._ready()
+	_apply_boss_visual()
 	max_boss_health = health
-
-	if is_tempest_core:
-		if sprite:
-			sprite.texture = TEMPEST_CORE_TEXTURE
 
 	viewport_size = get_viewport_rect().size
 	_build_attack_sequence()
@@ -136,7 +139,7 @@ func _configure_tempest_core() -> void:
 	orb_value = 18
 	boss_variant = BossVariant.TEMPEST
 	boss_title = "WAVE 20: TEMPEST CORE - SHIELD ARRAY"
-	bullet_color = Color(0.2, 2.0, 3.0, 1.0)
+	bullet_color = Color(2.4, 0.18, 2.8, 1.0)
 
 
 ## Selects the regular boss variant based on the current wave's encounter
@@ -144,7 +147,10 @@ func _configure_tempest_core() -> void:
 ## HP, title, and bullet color for each variant.
 func _configure_regular_variant() -> void:
 	var encounter_index := floori(float(GameManager.current_wave) / 5.0)
-	match encounter_index % 3:
+	var selected_variant := encounter_index % 3
+	if forced_variant >= 0:
+		selected_variant = [1, 2, 0][clampi(forced_variant, 0, 2)]
+	match selected_variant:
 		1:
 			boss_variant = BossVariant.ASSAULT
 			boss_title = "BOSS: ASSAULT WING"
@@ -157,9 +163,9 @@ func _configure_regular_variant() -> void:
 			bullet_color = Color(2.0, 0.4, 3.0, 1.0)
 		_:
 			boss_variant = BossVariant.TEMPEST
-			boss_title = "BOSS: VOID HARBINGER"
+			boss_title = "BOSS: TEMPEST FORK"
 			max_health = 52
-			bullet_color = Color(0.2, 2.0, 3.0, 1.0)
+			bullet_color = Color(2.8, 0.08, 1.9, 1.0)
 
 ## Builds the ordered list of attack patterns the boss will cycle through,
 ## tailored to the boss type: tempest core, elite, or regular variant.
@@ -711,7 +717,7 @@ func _fire_sweep() -> void:
 ## Spawns a single enemy bullet from the boss's current global position
 ## in the given direction at the given speed.
 func _spawn_bullet(dir: Vector2, spd: float) -> void:
-	_spawn_bullet_from(global_position, dir, spd)
+	_spawn_bullet_from(_get_boss_muzzle(), dir, spd)
 
 
 ## Spawns a single enemy bullet from an arbitrary origin position (used by
@@ -772,6 +778,7 @@ func take_damage(amount: int) -> void:
 		super.take_damage(amount)
 	if health > 0:
 		SignalBus.boss_health_changed.emit(health)
+		_update_damage_effects()
 	if is_tempest_core and health > 0 and not tempest_overload_triggered and health <= int(max_boss_health * 0.42):
 		tempest_overload_triggered = true
 		_start_tempest_phase(TempestPhase.OVERLOAD)
@@ -782,7 +789,7 @@ func take_damage(amount: int) -> void:
 ## cleans up the telegraph marker, tempest sections, and warnings, spawns
 ## death rewards (orb + explosion), emits boss_died, and deferred-frees
 ## the node.
-func _die() -> void:
+func _die(_award_rewards: bool = true) -> void:
 	# Guard against re-entry (e.g. multiple bullets hitting on the same frame)
 	if _dying:
 		return
@@ -821,13 +828,72 @@ func _die() -> void:
 	# Free the node — deferred so we're safely outside any signal handlers.
 	call_deferred("queue_free")
 
-## Override: player collision deals fixed damage instead of instant death.
-## Bosses take 10 damage from player ram and standard bullet damage from
-## player projectiles (1 + bonus_damage).
+## Player contact damages the player through its own collision handler but
+## never damages or destroys the boss. Player projectiles still deal damage.
 func _on_area_entered(area: Area2D) -> void:
 	if _dying or is_queued_for_deletion():
 		return
-	if area.is_in_group("player"):
-		take_damage(10)
-	elif area.collision_layer & 4 != 0:
+	if area.collision_layer & 4 != 0:
 		take_damage(1 + GameManager.bonus_damage)
+
+
+func _apply_boss_visual() -> void:
+	if sprite == null:
+		return
+	var visual_name := "Assault"
+	var shape_size := Vector2(76, 88)
+	if is_tempest_core:
+		visual_name = "TempestCore"
+		sprite.texture = CORE_TEXTURE
+		shape_size = Vector2(84, 80)
+	elif is_elite:
+		visual_name = "VoidHarbinger"
+		sprite.texture = HARBINGER_TEXTURE
+		shape_size = Vector2(88, 76)
+	else:
+		match boss_variant:
+			BossVariant.ASSAULT:
+				sprite.texture = ASSAULT_TEXTURE
+			BossVariant.BULWARK:
+				visual_name = "Bulwark"
+				sprite.texture = BULWARK_TEXTURE
+				shape_size = Vector2(96, 70)
+			BossVariant.TEMPEST:
+				visual_name = "Tempest"
+				sprite.texture = TEMPEST_TEXTURE
+				shape_size = Vector2(82, 82)
+	var variants := get_node_or_null("VisualRoot/VariantVisuals")
+	if variants != null:
+		for child in variants.get_children():
+			if child is CanvasItem:
+				(child as CanvasItem).visible = child.name == visual_name
+	var shape := RectangleShape2D.new()
+	shape.size = shape_size
+	collision_shape.shape = shape
+
+
+func _get_boss_muzzle() -> Vector2:
+	var variants := get_node_or_null("VisualRoot/VariantVisuals")
+	if variants == null:
+		return global_position
+	for variant in variants.get_children():
+		if variant is CanvasItem and (variant as CanvasItem).visible:
+			var marker := variant.get_node_or_null("Muzzle") as Marker2D
+			if marker != null:
+				return marker.global_position
+	return global_position
+
+
+func _update_damage_effects() -> void:
+	if max_boss_health <= 0:
+		return
+	var ratio := float(health) / float(max_boss_health)
+	var crack_one := get_node_or_null("VisualRoot/DamageEffects/CrackOne") as CanvasItem
+	var crack_two := get_node_or_null("VisualRoot/DamageEffects/CrackTwo") as CanvasItem
+	var smoke := get_node_or_null("VisualRoot/DamageEffects/Smoke") as CPUParticles2D
+	if crack_one != null:
+		crack_one.visible = ratio <= 0.67
+	if crack_two != null:
+		crack_two.visible = ratio <= 0.34
+	if smoke != null:
+		smoke.emitting = ratio <= 0.34

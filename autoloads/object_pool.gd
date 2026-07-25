@@ -49,8 +49,8 @@ func _take_from_pool(key: String) -> Node:
 	if key.is_empty():
 		return null
 	var bucket: Array = _available.get(key, [])
-	if bucket.is_empty():
-		return null
-	var node: Node = bucket.pop_back()
+	var node: Node = null
+	while not bucket.is_empty() and not is_instance_valid(node):
+		node = bucket.pop_back()
 	_available[key] = bucket
 	return node

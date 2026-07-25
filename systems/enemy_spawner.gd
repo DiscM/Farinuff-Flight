@@ -1,150 +1,232 @@
 extends Node
-## Spawns enemies at timed intervals based on current wave difficulty.
-## On every 5th wave, halts normal spawning and drops a boss instead.
-
-const ENEMY_SCENES: Array[PackedScene] = []
+## Generation-aware edge spawner governed by scene-local threat systems.
 
 var basic_enemy_scene: PackedScene = preload("res://entities/enemies/basic_enemy.tscn")
 var fast_enemy_scene: PackedScene = preload("res://entities/enemies/fast_enemy.tscn")
 var tank_enemy_scene: PackedScene = preload("res://entities/enemies/tank_enemy.tscn")
 var bomber_enemy_scene: PackedScene = preload("res://entities/enemies/bomber_enemy.tscn")
-var boss_enemy_scene: PackedScene = preload("res://entities/enemies/boss_enemy.tscn")
 var sniper_enemy_scene: PackedScene = preload("res://entities/enemies/sniper_enemy.tscn")
+var boss_enemy_scene: PackedScene = preload("res://entities/enemies/boss_enemy.tscn")
 
 @onready var spawn_timer: Timer = $SpawnTimer
+@onready var threat_director: ThreatDirector = $ThreatDirector
+@onready var special_attack_coordinator: SpecialAttackCoordinator = $SpecialAttackCoordinator
 
-var viewport_width: float = 720.0
-var viewport_height: float = 1024.0
-var margin: float = 40.0
+var viewport_width := 360.0
+var viewport_height := 720.0
+var edge_padding := 34.0
+var spawn_distance := 80.0
+var evolution_hold := false
+var grace_time := 0.0
 
-## Reads the viewport dimensions, sets the initial spawn interval from
-## GameManager, connects the spawn timer and all relevant game signals.
+
 func _ready() -> void:
-	viewport_width = get_viewport().get_visible_rect().size.x
-	viewport_height = get_viewport().get_visible_rect().size.y
+	var viewport_size := get_viewport().get_visible_rect().size
+	viewport_width = viewport_size.x
+	viewport_height = viewport_size.y
 	spawn_timer.wait_time = GameManager.get_spawn_interval()
 	spawn_timer.timeout.connect(_on_spawn_timer_timeout)
-
 	SignalBus.wave_started.connect(_on_wave_started)
 	SignalBus.game_over.connect(_on_game_over)
 	SignalBus.boss_died.connect(_on_boss_died)
+	SignalBus.evolution_transition_finished.connect(_on_evolution_transition_finished)
 
-## Starts the recurring spawn timer.
+
 func start_spawning() -> void:
-	spawn_timer.start()
+	if not evolution_hold:
+		spawn_timer.start()
 
-## Stops the recurring spawn timer.
+
 func stop_spawning() -> void:
 	spawn_timer.stop()
 
-## Called on each spawn timer tick. Spawns a regular enemy if the game is
-## active and no boss is currently fighting, then recalculates the spawn
-## interval for the next tick.
+
+func set_evolution_hold(enabled: bool) -> void:
+	evolution_hold = enabled
+	if enabled:
+		stop_spawning()
+	elif GameManager.is_game_active and not GameManager.boss_active:
+		start_spawning()
+
+
 func _on_spawn_timer_timeout() -> void:
-	if not GameManager.is_game_active:
+	if not GameManager.is_game_active or GameManager.boss_active or evolution_hold:
 		return
-	if GameManager.boss_active:
-		return  # Don't spawn regulars during boss fight
-	_spawn_enemy()
-	spawn_timer.wait_time = GameManager.get_spawn_interval()
+	var kind := _pick_archetype()
+	if threat_director.can_spawn(kind):
+		_spawn_enemy(kind)
+	var interval := GameManager.get_spawn_interval()
+	if grace_time > 0.0:
+		grace_time = maxf(0.0, grace_time - interval * 2.0)
+		interval *= 2.0
+		if grace_time <= 0.0:
+			special_attack_coordinator.major_attacks_enabled = true
+	spawn_timer.wait_time = interval
 
-## Picks a random enemy type via _pick_enemy_scene(), instantiates it,
-## places it just off-screen on a random edge (top/bottom/left/right),
-## and sets its spawn_direction to travel inward.
-func _spawn_enemy() -> void:
-	var scene: PackedScene = _pick_enemy_scene()
-	var enemy: BaseEnemy = scene.instantiate() as BaseEnemy
-	var scene_root := get_tree().current_scene
 
-	# Pick a random side: 0=top, 1=bottom, 2=left, 3=right
+func _spawn_enemy(kind: StringName) -> void:
+	var scene := _scene_for(kind)
+	var enemy := scene.instantiate() as BaseEnemy
+	if enemy == null:
+		return
+	enemy.generation = threat_director.generation
+	enemy.special_attack_coordinator = special_attack_coordinator
 	var side := randi() % 4
 	match side:
-		0: # Top
-			enemy.position = Vector2(randf_range(margin, viewport_width - margin), -40.0)
+		0:
+			enemy.position = Vector2(randf_range(edge_padding, viewport_width - edge_padding), -spawn_distance)
 			enemy.spawn_direction = Vector2.DOWN
-		1: # Bottom
-			enemy.position = Vector2(randf_range(margin, viewport_width - margin), viewport_height + 40.0)
+		1:
+			enemy.position = Vector2(randf_range(edge_padding, viewport_width - edge_padding), viewport_height + spawn_distance)
 			enemy.spawn_direction = Vector2.UP
-		2: # Left
-			enemy.position = Vector2(-40.0, randf_range(margin, viewport_height - margin))
+		2:
+			enemy.position = Vector2(-spawn_distance, randf_range(edge_padding, viewport_height - edge_padding))
 			enemy.spawn_direction = Vector2.RIGHT
-		3: # Right
-			enemy.position = Vector2(viewport_width + 40.0, randf_range(margin, viewport_height - margin))
+		3:
+			enemy.position = Vector2(viewport_width + spawn_distance, randf_range(edge_padding, viewport_height - edge_padding))
 			enemy.spawn_direction = Vector2.LEFT
-	scene_root.add_child(enemy)
+	get_tree().current_scene.add_child(enemy)
+	threat_director.record_spawn(kind)
 
-## Selects an enemy type based on the current wave using weighted random
-## rolls. Early waves favor basic and fast enemies; later waves increase
-## the probability of bombers, tanks, and snipers.
-func _pick_enemy_scene() -> PackedScene:
-	var wave := GameManager.current_wave
+
+func spawn_archetype(kind: StringName, generation_override: int = 0) -> void:
+	var previous := threat_director.generation
+	if generation_override > 0:
+		threat_director.set_generation(generation_override)
+	_spawn_enemy(kind)
+	threat_director.set_generation(previous)
+
+
+func spawn_boss_variant(variant: StringName) -> void:
+	stop_spawning()
+	_clear_regular_pressure()
+	var boss := boss_enemy_scene.instantiate() as BossEnemy
+	boss.position = Vector2(viewport_width / 2.0, -80.0)
+	match variant:
+		&"bulwark":
+			boss.forced_variant = BossEnemy.BossVariant.BULWARK
+		&"tempest":
+			boss.forced_variant = BossEnemy.BossVariant.TEMPEST
+		&"harbinger":
+			boss.is_elite = true
+		&"core":
+			boss.is_tempest_core = true
+		_:
+			boss.forced_variant = BossEnemy.BossVariant.ASSAULT
+	GameManager.boss_active = true
+	get_tree().current_scene.add_child(boss)
+
+
+func _pick_archetype() -> StringName:
+	if threat_director.needs_light_enemy():
+		return &"basic" if randf() < 0.56 else &"fast"
 	var roll := randf()
-
-	if wave <= 2:
-		if roll < 0.75:
-			return basic_enemy_scene
-		else:
-			return fast_enemy_scene
-	elif wave <= 5:
+	if GameManager.current_wave <= 2:
+		return &"basic" if roll < 0.75 else &"fast"
+	if GameManager.current_wave <= 5:
 		if roll < 0.34:
-			return basic_enemy_scene
-		elif roll < 0.58:
-			return fast_enemy_scene
-		elif roll < 0.76:
-			return bomber_enemy_scene
-		elif roll < 0.90:
-			return tank_enemy_scene
-		else:
-			return sniper_enemy_scene
-	else:
-		if roll < 0.18:
-			return basic_enemy_scene
-		elif roll < 0.36:
-			return fast_enemy_scene
-		elif roll < 0.57:
-			return bomber_enemy_scene
-		elif roll < 0.80:
-			return tank_enemy_scene
-		else:
-			return sniper_enemy_scene
+			return &"basic"
+		if roll < 0.58:
+			return &"fast"
+		if roll < 0.76:
+			return &"bomber"
+		if roll < 0.90:
+			return &"tank"
+		return &"sniper"
+	# Stable evolved mix: 28/22/18/14/18.
+	if roll < 0.28:
+		return &"basic"
+	if roll < 0.50:
+		return &"fast"
+	if roll < 0.68:
+		return &"bomber"
+	if roll < 0.82:
+		return &"tank"
+	return &"sniper"
 
-## Called when a new wave begins. Updates the spawn interval and spawns
-## a boss if the wave number is a multiple of 5.
+
+func _scene_for(kind: StringName) -> PackedScene:
+	match kind:
+		&"fast":
+			return fast_enemy_scene
+		&"tank":
+			return tank_enemy_scene
+		&"bomber":
+			return bomber_enemy_scene
+		&"sniper":
+			return sniper_enemy_scene
+		_:
+			return basic_enemy_scene
+
+
 func _on_wave_started(wave_number: int) -> void:
+	threat_director.set_generation(GameManager.get_enemy_generation(wave_number))
 	spawn_timer.wait_time = GameManager.get_spawn_interval()
+	if wave_number == 6 or wave_number == 11 or wave_number == 16:
+		set_evolution_hold(true)
+		grace_time = 8.0
+		special_attack_coordinator.major_attacks_enabled = false
+	else:
+		special_attack_coordinator.major_attacks_enabled = true
 	if wave_number % 5 == 0:
 		call_deferred("_spawn_boss", wave_number)
 
-## Stops regular spawning, clears all non-boss enemies from the scene,
-## and spawns a boss at the top center. Sets the boss as elite on every
-## 10th wave and as the Tempest Core on wave 20.
+
 func _spawn_boss(wave_number: int) -> void:
 	stop_spawning()
-	# Clear remaining regular enemies
-	for enemy in get_tree().get_nodes_in_group("enemies"):
-		if is_instance_valid(enemy) and not (enemy is BossEnemy):
-			enemy.call_deferred("queue_free")
-
-	var boss: BossEnemy = boss_enemy_scene.instantiate() as BossEnemy
+	_clear_regular_pressure()
+	var boss := boss_enemy_scene.instantiate() as BossEnemy
 	boss.position = Vector2(viewport_width / 2.0, -80.0)
-	boss.is_elite = (wave_number % 10 == 0)
-	boss.is_tempest_core = (wave_number == 20)
-	var scene_root := get_tree().current_scene
-	scene_root.add_child(boss)
+	boss.is_elite = wave_number % 10 == 0
+	boss.is_tempest_core = wave_number == 20
+	get_tree().current_scene.add_child(boss)
 
-## Called when a boss is defeated. Resumes regular enemy spawning if the
-## game is still active.
+
 func _on_boss_died(_points: int) -> void:
-	# Resume normal spawning for next wave
-	if GameManager.is_game_active:
+	if GameManager.is_game_active and not evolution_hold:
 		start_spawning()
 
-## Called when the game ends. Stops all enemy spawning.
+
+func _on_evolution_transition_finished(_generation: int) -> void:
+	set_evolution_hold(false)
+
+
 func _on_game_over(_score: int) -> void:
 	stop_spawning()
 
-## Called when the player accepts a try-again. Resumes regular spawning
-## unless a boss fight is still in progress.
+
 func _on_try_again_accepted() -> void:
-	if not GameManager.boss_active:
+	_clear_evolved_pressure()
+	if not GameManager.boss_active and not evolution_hold:
 		start_spawning()
+
+
+func clear_for_transition() -> void:
+	_clear_evolved_pressure()
+
+
+func _clear_regular_pressure() -> void:
+	for enemy in get_tree().get_nodes_in_group("regular_enemies"):
+		if is_instance_valid(enemy):
+			enemy.queue_free()
+	_clear_evolved_pressure()
+
+
+func _clear_evolved_pressure() -> void:
+	for enemy in get_tree().get_nodes_in_group("regular_enemies"):
+		if is_instance_valid(enemy):
+			enemy.suppress_death_effects = true
+	for pressure in get_tree().get_nodes_in_group("evolved_pressure"):
+		if not is_instance_valid(pressure):
+			continue
+		if pressure.has_method("despawn"):
+			pressure.despawn()
+		elif pressure.has_method("clear_ordnance"):
+			pressure.clear_ordnance()
+		else:
+			pressure.queue_free()
+	special_attack_coordinator.reset_pressure()
+
+
+func get_debug_state() -> String:
+	return threat_director.get_debug_state() + "\n" + special_attack_coordinator.get_debug_state()

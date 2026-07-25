@@ -17,8 +17,8 @@
       "scale": 0.8519
     },
     {
-      "name": "basic_enemy_idle",
-      "file": "basic_enemy_idle_strip.png",
+      "name": "basic_enemy_gen1_idle",
+      "file": "basic_enemy_gen1_idle_strip.png",
       "fps": 8,
       "frames": 4,
       "frame_size": 128,
@@ -26,8 +26,35 @@
       "scale": 0.7083
     },
     {
-      "name": "fast_enemy_idle",
-      "file": "fast_enemy_idle_strip.png",
+      "name": "basic_enemy_gen2_idle",
+      "file": "basic_enemy_gen2_idle_strip.png",
+      "fps": 8,
+      "frames": 4,
+      "frame_size": 128,
+      "target_extent": 74,
+      "scale": 0.7708
+    },
+    {
+      "name": "basic_enemy_gen3_idle",
+      "file": "basic_enemy_gen3_idle_strip.png",
+      "fps": 8,
+      "frames": 4,
+      "frame_size": 128,
+      "target_extent": 80,
+      "scale": 0.6452
+    },
+    {
+      "name": "basic_enemy_gen4_idle",
+      "file": "basic_enemy_gen4_idle_strip.png",
+      "fps": 8,
+      "frames": 4,
+      "frame_size": 128,
+      "target_extent": 85,
+      "scale": 0.6641
+    },
+    {
+      "name": "fast_enemy_gen1_idle",
+      "file": "fast_enemy_gen1_idle_strip.png",
       "fps": 10,
       "frames": 4,
       "frame_size": 128,
@@ -35,17 +62,35 @@
       "scale": 0.6882
     },
     {
-      "name": "sniper_enemy_idle",
-      "file": "sniper_enemy_idle_strip.png",
-      "fps": 8,
+      "name": "fast_enemy_gen2_idle",
+      "file": "fast_enemy_gen2_idle_strip.png",
+      "fps": 10,
       "frames": 4,
       "frame_size": 128,
-      "target_extent": 70,
-      "scale": 0.625
+      "target_extent": 69,
+      "scale": 0.6699
     },
     {
-      "name": "tank_enemy_idle",
-      "file": "tank_enemy_idle_strip.png",
+      "name": "fast_enemy_gen3_idle",
+      "file": "fast_enemy_gen3_idle_strip.png",
+      "fps": 10,
+      "frames": 4,
+      "frame_size": 128,
+      "target_extent": 75,
+      "scale": 0.6757
+    },
+    {
+      "name": "fast_enemy_gen4_idle",
+      "file": "fast_enemy_gen4_idle_strip.png",
+      "fps": 10,
+      "frames": 4,
+      "frame_size": 128,
+      "target_extent": 80,
+      "scale": 0.597
+    },
+    {
+      "name": "tank_enemy_gen1_idle",
+      "file": "tank_enemy_gen1_idle_strip.png",
       "fps": 7,
       "frames": 4,
       "frame_size": 128,
@@ -53,8 +98,35 @@
       "scale": 0.8333
     },
     {
-      "name": "bomber_enemy_idle",
-      "file": "bomber_enemy_idle_strip.png",
+      "name": "tank_enemy_gen2_idle",
+      "file": "tank_enemy_gen2_idle_strip.png",
+      "fps": 7,
+      "frames": 4,
+      "frame_size": 128,
+      "target_extent": 98,
+      "scale": 0.7481
+    },
+    {
+      "name": "tank_enemy_gen3_idle",
+      "file": "tank_enemy_gen3_idle_strip.png",
+      "fps": 7,
+      "frames": 4,
+      "frame_size": 128,
+      "target_extent": 105,
+      "scale": 0.7143
+    },
+    {
+      "name": "tank_enemy_gen4_idle",
+      "file": "tank_enemy_gen4_idle_strip.png",
+      "fps": 7,
+      "frames": 4,
+      "frame_size": 128,
+      "target_extent": 112,
+      "scale": 0.7568
+    },
+    {
+      "name": "bomber_enemy_gen1_idle",
+      "file": "bomber_enemy_gen1_idle_strip.png",
       "fps": 7,
       "frames": 4,
       "frame_size": 128,
@@ -62,22 +134,112 @@
       "scale": 0.8246
     },
     {
-      "name": "boss_enemy_idle",
-      "file": "boss_enemy_idle_strip.png",
-      "fps": 6,
+      "name": "bomber_enemy_gen2_idle",
+      "file": "bomber_enemy_gen2_idle_strip.png",
+      "fps": 7,
       "frames": 4,
       "frame_size": 128,
-      "target_extent": 114,
-      "scale": 0.6951
+      "target_extent": 101,
+      "scale": 0.6871
     },
     {
-      "name": "tempest_core_idle",
-      "file": "tempest_core_idle_strip.png",
+      "name": "bomber_enemy_gen3_idle",
+      "file": "bomber_enemy_gen3_idle_strip.png",
+      "fps": 7,
+      "frames": 4,
+      "frame_size": 128,
+      "target_extent": 110,
+      "scale": 0.7285
+    },
+    {
+      "name": "bomber_enemy_gen4_idle",
+      "file": "bomber_enemy_gen4_idle_strip.png",
+      "fps": 7,
+      "frames": 4,
+      "frame_size": 128,
+      "target_extent": 118,
+      "scale": 0.7613
+    },
+    {
+      "name": "sniper_enemy_gen1_idle",
+      "file": "sniper_enemy_gen1_idle_strip.png",
       "fps": 8,
       "frames": 4,
       "frame_size": 128,
-      "target_extent": 116,
-      "scale": 0.8593
+      "target_extent": 70,
+      "scale": 0.625
+    },
+    {
+      "name": "sniper_enemy_gen2_idle",
+      "file": "sniper_enemy_gen2_idle_strip.png",
+      "fps": 8,
+      "frames": 4,
+      "frame_size": 128,
+      "target_extent": 76,
+      "scale": 0.6333
+    },
+    {
+      "name": "sniper_enemy_gen3_idle",
+      "file": "sniper_enemy_gen3_idle_strip.png",
+      "fps": 8,
+      "frames": 4,
+      "frame_size": 128,
+      "target_extent": 82,
+      "scale": 0.5857
+    },
+    {
+      "name": "sniper_enemy_gen4_idle",
+      "file": "sniper_enemy_gen4_idle_strip.png",
+      "fps": 8,
+      "frames": 4,
+      "frame_size": 128,
+      "target_extent": 88,
+      "scale": 0.6111
+    },
+    {
+      "name": "boss_assault_idle",
+      "file": "boss_assault_idle_strip.png",
+      "fps": 7,
+      "frames": 4,
+      "frame_size": 128,
+      "target_extent": 118,
+      "scale": 0.7329
+    },
+    {
+      "name": "boss_bulwark_idle",
+      "file": "boss_bulwark_idle_strip.png",
+      "fps": 6,
+      "frames": 4,
+      "frame_size": 128,
+      "target_extent": 120,
+      "scale": 0.625
+    },
+    {
+      "name": "boss_tempest_idle",
+      "file": "boss_tempest_idle_strip.png",
+      "fps": 8,
+      "frames": 4,
+      "frame_size": 128,
+      "target_extent": 120,
+      "scale": 0.6977
+    },
+    {
+      "name": "boss_void_harbinger_idle",
+      "file": "boss_void_harbinger_idle_strip.png",
+      "fps": 7,
+      "frames": 4,
+      "frame_size": 128,
+      "target_extent": 120,
+      "scale": 0.7317
+    },
+    {
+      "name": "boss_tempest_core_idle",
+      "file": "boss_tempest_core_idle_strip.png",
+      "fps": 8,
+      "frames": 4,
+      "frame_size": 128,
+      "target_extent": 120,
+      "scale": 0.8889
     }
   ]
 }

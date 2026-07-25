@@ -105,7 +105,14 @@ The current enemy set includes:
 - Sniper enemy
 - Boss enemy
 
-Enemy spawn rates and enemy speed scale with wave progress. Snipers establish firing lanes and pressure movement with aimed shots. Bosses use multiple attack patterns and movement phases rather than just drifting forward.
+Regular enemies evolve immediately after the Wave 5, 10, and 15 boss milestones:
+
+- Gen I — Standard (Waves 1–5)
+- Gen II — Augmented (Waves 6–10)
+- Gen III — Warform (Waves 11–15)
+- Gen IV — Apex (Wave 16 onward)
+
+Each generation uses a distinct silhouette, fixed health/speed profile, score multiplier, and additional archetype behavior. A scene-local threat director reduces simultaneous enemy pressure as generations become more advanced, while a shared attack coordinator caps major telegraphs and deployed hazards. Spawn cadence still scales by wave; regular enemy health and speed do not scale between generation milestones.
 
 ### Boss Design
 
@@ -224,6 +231,7 @@ The items below are the most useful next steps based on the current build. These
 - Add more enemy archetypes and boss variants beyond the current sniper and archetype rotation.
 - Add more wave modifiers or encounter variety so later waves feel less structurally similar.
 - Add audio polish: music, hit sounds, pickup sounds, boss cues, and menu feedback.
+- Add dedicated evolution audio cues for transformation banners, charge/phase warnings, mine arming and detonation, armor breaks, rail charge/fire, and boss damage states.
 - Add accessibility improvements such as key rebinding, volume sliders, and clearer input prompts for controller users.
 - Add more distinct death, hit, and reward effects to make combat events easier to parse.
 

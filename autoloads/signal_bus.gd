@@ -47,6 +47,12 @@ signal wave_started(wave_number: int)
 @warning_ignore("unused_signal")
 ## Emitted when a wave's orb threshold is met or a boss is killed. Carries the cleared wave number.
 signal wave_cleared(wave_number: int)
+@warning_ignore("unused_signal")
+## Announces that a newly started wave changes the regular-enemy generation.
+signal evolution_transition_pending(generation: int, generation_name: String)
+@warning_ignore("unused_signal")
+## Emitted after the non-pausing evolution banner has completed.
+signal evolution_transition_finished(generation: int)
 
 # Score signals
 @warning_ignore("unused_signal")

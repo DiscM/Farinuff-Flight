@@ -1,22 +1,109 @@
-[gd_scene load_steps=6 format=3 uid="uid://cqwk2m8xh7y3a"]
+[gd_scene load_steps=16 format=3 uid="uid://cqwk2m8xh7y3a"]
 
-[ext_resource type="Script" path="res://entities/enemies/basic_enemy.gd" id="1_basic"]
-[ext_resource type="Script" path="res://assets/sprites/generated/strip_animator.gd" id="2_strip_animator"]
-[ext_resource type="Texture2D" path="res://assets/sprites/generated/basic_enemy_idle_strip.png" id="3_basic_strip"]
+[ext_resource type="Script" path="res://entities/enemies/basic_enemy.gd" id="1"]
+[ext_resource type="Script" path="res://assets/sprites/generated/strip_animator.gd" id="2"]
+[ext_resource type="Script" path="res://entities/enemies/enemy_evolution_controller.gd" id="3"]
+[ext_resource type="Script" path="res://entities/enemies/enemy_evolution_stage.gd" id="4"]
+[ext_resource type="Script" path="res://entities/enemies/enemy_ability.gd" id="5"]
+[ext_resource type="Texture2D" path="res://assets/sprites/generated/basic_enemy_gen1_idle_strip.png" id="6"]
+[ext_resource type="Texture2D" path="res://assets/sprites/generated/basic_enemy_gen2_idle_strip.png" id="7"]
+[ext_resource type="Texture2D" path="res://assets/sprites/generated/basic_enemy_gen3_idle_strip.png" id="8"]
+[ext_resource type="Texture2D" path="res://assets/sprites/generated/basic_enemy_gen4_idle_strip.png" id="9"]
 
-[sub_resource type="RectangleShape2D" id="RectangleShape2D_basic"]
+[sub_resource type="RectangleShape2D" id="shape1"]
+size = Vector2(26, 26)
+[sub_resource type="RectangleShape2D" id="shape2"]
 size = Vector2(28, 28)
+[sub_resource type="RectangleShape2D" id="shape3"]
+size = Vector2(30, 30)
+[sub_resource type="RectangleShape2D" id="shape4"]
+size = Vector2(32, 32)
 
 [node name="BasicEnemy" type="Area2D" groups=["enemies"]]
 collision_layer = 2
 collision_mask = 5
-script = ExtResource("1_basic")
+script = ExtResource("1")
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
-script = ExtResource("2_strip_animator")
-texture = ExtResource("3_basic_strip")
+[node name="VisualRoot" type="Node2D" parent="."]
+[node name="Sprite2D" type="Sprite2D" parent="VisualRoot"]
+script = ExtResource("2")
+texture = ExtResource("6")
 hframes = 4
 fps = 8.0
+[node name="Evolution" type="Node2D" parent="VisualRoot"]
+script = ExtResource("3")
+[node name="GenerationI" type="Node2D" parent="VisualRoot/Evolution"]
+script = ExtResource("4")
+generation = 1
+display_name = "Standard"
+texture = ExtResource("6")
+collision_shape = SubResource("shape1")
+max_health = 1
+move_speed = 150.0
+base_points = 100
+[node name="Origins" type="Node2D" parent="VisualRoot/Evolution/GenerationI"]
+[node name="FragmentLeft" type="Marker2D" parent="VisualRoot/Evolution/GenerationI/Origins"]
+position = Vector2(-9, 5)
+[node name="FragmentRight" type="Marker2D" parent="VisualRoot/Evolution/GenerationI/Origins"]
+position = Vector2(9, 5)
+[node name="GenerationII" type="Node2D" parent="VisualRoot/Evolution"]
+visible = false
+script = ExtResource("4")
+generation = 2
+display_name = "Augmented"
+texture = ExtResource("7")
+collision_shape = SubResource("shape2")
+max_health = 2
+move_speed = 160.0
+base_points = 100
+[node name="Origins" type="Node2D" parent="VisualRoot/Evolution/GenerationII"]
+[node name="FragmentLeft" type="Marker2D" parent="VisualRoot/Evolution/GenerationII/Origins"]
+position = Vector2(-10, 5)
+[node name="FragmentRight" type="Marker2D" parent="VisualRoot/Evolution/GenerationII/Origins"]
+position = Vector2(10, 5)
+[node name="GenerationIII" type="Node2D" parent="VisualRoot/Evolution"]
+visible = false
+script = ExtResource("4")
+generation = 3
+display_name = "Warform"
+texture = ExtResource("8")
+collision_shape = SubResource("shape3")
+max_health = 3
+move_speed = 170.0
+base_points = 100
+[node name="Origins" type="Node2D" parent="VisualRoot/Evolution/GenerationIII"]
+[node name="FragmentLeft" type="Marker2D" parent="VisualRoot/Evolution/GenerationIII/Origins"]
+position = Vector2(-11, 6)
+[node name="FragmentRight" type="Marker2D" parent="VisualRoot/Evolution/GenerationIII/Origins"]
+position = Vector2(11, 6)
+[node name="GenerationIV" type="Node2D" parent="VisualRoot/Evolution"]
+visible = false
+script = ExtResource("4")
+generation = 4
+display_name = "Apex"
+texture = ExtResource("9")
+collision_shape = SubResource("shape4")
+max_health = 4
+move_speed = 180.0
+base_points = 100
+[node name="Origins" type="Node2D" parent="VisualRoot/Evolution/GenerationIV"]
+[node name="FragmentLeft" type="Marker2D" parent="VisualRoot/Evolution/GenerationIV/Origins"]
+position = Vector2(-12, 7)
+[node name="FragmentRight" type="Marker2D" parent="VisualRoot/Evolution/GenerationIV/Origins"]
+position = Vector2(12, 7)
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="."]
-shape = SubResource("RectangleShape2D_basic")
+shape = SubResource("shape1")
+[node name="Abilities" type="Node" parent="."]
+[node name="Steering" type="Node" parent="Abilities"]
+script = ExtResource("5")
+ability_id = &"steering"
+minimum_generation = 2
+[node name="Charge" type="Node" parent="Abilities"]
+script = ExtResource("5")
+ability_id = &"charge"
+minimum_generation = 3
+[node name="FragmentRelease" type="Node" parent="Abilities"]
+script = ExtResource("5")
+ability_id = &"fragment_release"
+minimum_generation = 4

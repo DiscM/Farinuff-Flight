@@ -1,10 +1,12 @@
-[gd_scene load_steps=7 format=3 uid="uid://dd67s6bc4xvjy"]
+[gd_scene load_steps=9 format=3 uid="uid://dd67s6bc4xvjy"]
 
 [ext_resource type="Script" uid="uid://k78vdvgqtcv0" path="res://scenes/game.gd" id="1_game"]
 [ext_resource type="PackedScene" uid="uid://bpv3rwt1k4f2i" path="res://entities/player/player.tscn" id="2_player"]
 [ext_resource type="PackedScene" uid="uid://h0wu7x1q6aj9f" path="res://ui/hud.tscn" id="3_hud"]
 [ext_resource type="Script" uid="uid://bkrvihgx6kgex" path="res://systems/enemy_spawner.gd" id="4_espawner"]
 [ext_resource type="Script" uid="uid://u2ouinr3eduo" path="res://systems/powerup_spawner.gd" id="5_pspawner"]
+[ext_resource type="Script" path="res://systems/threat_director.gd" id="6_threat"]
+[ext_resource type="Script" path="res://systems/special_attack_coordinator.gd" id="7_special"]
 
 [node name="Game" type="Node2D" unique_id=173375341]
 script = ExtResource("1_game")
@@ -32,10 +34,15 @@ script = ExtResource("4_espawner")
 [node name="SpawnTimer" type="Timer" parent="EnemySpawner" unique_id=1293180693]
 wait_time = 1.5
 
+[node name="ThreatDirector" type="Node" parent="EnemySpawner"]
+script = ExtResource("6_threat")
+
+[node name="SpecialAttackCoordinator" type="Node" parent="EnemySpawner"]
+script = ExtResource("7_special")
+
 [node name="PowerUpSpawner" type="Node" parent="." unique_id=1389430957]
 script = ExtResource("5_pspawner")
 
 [node name="SpawnTimer" type="Timer" parent="PowerUpSpawner" unique_id=241860260]
 wait_time = 10.0
 one_shot = true
-
