@@ -9,8 +9,7 @@ const BASE_ROTATION := deg_to_rad(20.0)
 
 @onready var sprite: Sprite2D = $Sprite2D
 
-var _animation_time := 0.0
-var _hover_time := 0.0
+var _pulse_time := 0.0
 var _thrust_phase := 0.0
 var _rest_position := Vector2.ZERO
 var _display_scale := 2.5
@@ -22,21 +21,19 @@ var _motion_tween: Tween
 
 func _ready() -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	sprite.frame = 0
 	set_process(true)
 
 
 func _process(delta: float) -> void:
-	_animation_time += delta
+	_pulse_time += delta
 	_thrust_phase += delta * (15.0 if _exit_active else 9.0)
-	sprite.frame = int(_animation_time * 8.0) % 4
+	var pulse := 0.96 + sin(_pulse_time * 2.4) * 0.04
+	sprite.self_modulate = Color(pulse, pulse, pulse, 1.0)
 
 	if not _intro_active and not _exit_active:
-		_hover_time += delta
-		position = _rest_position + Vector2(
-			sin(_hover_time * 0.72) * 4.0,
-			sin(_hover_time * 1.16) * 5.0
-		)
-		rotation = BASE_ROTATION + sin(_hover_time * 0.63) * 0.012
+		position = _rest_position
+		rotation = BASE_ROTATION
 	queue_redraw()
 
 
@@ -98,7 +95,7 @@ func fly_out(viewport_size: Vector2) -> void:
 func _finish_intro() -> void:
 	_intro_active = false
 	_thrust_strength = 0.72
-	_hover_time = 0.0
+	_pulse_time = 0.0
 
 
 func _draw() -> void:
