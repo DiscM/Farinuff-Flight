@@ -1,9 +1,15 @@
-[gd_scene load_steps=5 format=3 uid="uid://i1xv8y2r7bk0g"]
+[gd_scene load_steps=7 format=3 uid="uid://i1xv8y2r7bk0g"]
 
 [ext_resource type="Script" path="res://ui/main_menu.gd" id="1_menu"]
-[ext_resource type="Texture2D" path="res://assets/Game UI collection FREE version/PNG/Borders/Blue/Group 4 copy.png" id="2_panel"]
-[ext_resource type="Texture2D" path="res://assets/Game UI collection FREE version/PNG/Button with border/Yellow/1x/Asset 8.png" id="3_button_yellow"]
-[ext_resource type="Texture2D" path="res://assets/Game UI collection FREE version/PNG/Button with border/Blue/1x/Asset 8.png" id="4_button_blue"]
+[ext_resource type="Script" path="res://ui/main_menu_backdrop.gd" id="2_backdrop"]
+[ext_resource type="Script" path="res://ui/main_menu_ship.gd" id="3_ship"]
+[ext_resource type="Texture2D" path="res://assets/sprites/generated/player_fully_upgraded_strip.png" id="4_ship_texture"]
+[ext_resource type="Shader" path="res://effects/shaders/crt_overlay.gdshader" id="5_crt"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_crt"]
+shader = ExtResource("5_crt")
+shader_parameter/scanline_count = 210.0
+shader_parameter/barrel_distortion = 0.05
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3
@@ -21,9 +27,10 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.015, 0.025, 0.075, 1)
+mouse_filter = 2
+color = Color(0.004, 0.008, 0.035, 1)
 
-[node name="StarWash" type="ColorRect" parent="."]
+[node name="Backdrop" type="Control" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -31,149 +38,201 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-color = Color(0.02, 0.12, 0.22, 0.22)
+script = ExtResource("2_backdrop")
 
-[node name="LeftDock" type="Control" parent="."]
+[node name="PlanetStage" type="Control" parent="."]
 layout_mode = 1
-anchors_preset = 4
-anchor_top = 0.5
-anchor_bottom = 0.5
-offset_left = 18.0
-offset_top = -330.0
-offset_right = 236.0
-offset_bottom = 330.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
 grow_vertical = 2
-
-[node name="DockFrame" type="TextureRect" parent="LeftDock"]
-layout_mode = 0
-offset_left = -6.0
-offset_top = -18.0
-offset_right = 244.0
-offset_bottom = 678.0
 mouse_filter = 2
-texture = ExtResource("2_panel")
-expand_mode = 1
-stretch_mode = 5
-modulate = Color(1, 1, 1, 0.88)
 
-[node name="TitlePlaque" type="PanelContainer" parent="LeftDock"]
+[node name="ShipStage" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="ShipRig" type="Node2D" parent="ShipStage"]
+script = ExtResource("3_ship")
+
+[node name="Sprite2D" type="Sprite2D" parent="ShipStage/ShipRig"]
+texture_filter = 1
+texture = ExtResource("4_ship_texture")
+hframes = 4
+
+[node name="CabinetLayout" type="Control" parent="."]
+custom_minimum_size = Vector2(760, 650)
 layout_mode = 0
-offset_left = 20.0
-offset_top = 34.0
-offset_right = 214.0
-offset_bottom = 112.0
+offset_right = 760.0
+offset_bottom = 650.0
+mouse_filter = 1
 
-[node name="Title" type="Label" parent="LeftDock/TitlePlaque"]
+[node name="Kicker" type="Label" parent="CabinetLayout"]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 6.0
+offset_right = 540.0
+offset_bottom = 40.0
+text = "ONE PILOT. NO WAY HOME."
+vertical_alignment = 1
+theme_override_colors/font_color = Color(0.94, 0.98, 1, 1)
+theme_override_font_sizes/font_size = 18
+
+[node name="FarinuffShadow" type="Label" parent="CabinetLayout"]
+layout_mode = 0
+offset_left = 18.0
+offset_top = 48.0
+offset_right = 728.0
+offset_bottom = 144.0
+mouse_filter = 2
+text = "FARINUFF"
+vertical_alignment = 1
+theme_override_colors/font_color = Color(0.22, 0.07, 0.43, 1)
+theme_override_colors/font_outline_color = Color(0.22, 0.07, 0.43, 1)
+theme_override_constants/outline_size = 5
+theme_override_font_sizes/font_size = 78
+
+[node name="Farinuff" type="Label" parent="CabinetLayout"]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 40.0
+offset_right = 720.0
+offset_bottom = 136.0
+mouse_filter = 2
+text = "FARINUFF"
+vertical_alignment = 1
+theme_override_colors/font_color = Color(0.93, 0.98, 1, 1)
+theme_override_colors/font_outline_color = Color(0.15, 0.93, 1, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 78
+
+[node name="FlightOffset" type="Label" parent="CabinetLayout"]
+layout_mode = 0
+offset_left = 94.0
+offset_top = 118.0
+offset_right = 744.0
+offset_bottom = 236.0
+mouse_filter = 2
+text = "FLIGHT"
+vertical_alignment = 1
+theme_override_colors/font_color = Color(0.003, 0.008, 0.03, 1)
+theme_override_colors/font_outline_color = Color(1, 0.16, 0.57, 1)
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/font_size = 104
+
+[node name="Flight" type="Label" parent="CabinetLayout"]
+layout_mode = 0
+offset_left = 86.0
+offset_top = 110.0
+offset_right = 736.0
+offset_bottom = 228.0
+mouse_filter = 2
+text = "FLIGHT"
+vertical_alignment = 1
+theme_override_colors/font_color = Color(0.005, 0.012, 0.04, 1)
+theme_override_colors/font_outline_color = Color(0.88, 0.98, 1, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 104
+
+[node name="Tagline" type="PanelContainer" parent="CabinetLayout"]
+layout_mode = 0
+offset_left = 314.0
+offset_top = 220.0
+offset_right = 708.0
+offset_bottom = 258.0
+rotation = -0.0349066
+
+[node name="Label" type="Label" parent="CabinetLayout/Tagline"]
 layout_mode = 2
-text = "SPACE
-SHOOTER"
+text = "A DEEP-SPACE SURVIVAL RUN"
 horizontal_alignment = 1
 vertical_alignment = 1
-autowrap_mode = 3
-clip_text = true
-theme_override_colors/font_color = Color(0.9, 0.98, 1, 1)
+theme_override_colors/font_color = Color(0.025, 0.025, 0.025, 1)
+theme_override_font_sizes/font_size = 16
+
+[node name="PlayReticle" type="Label" parent="CabinetLayout"]
+layout_mode = 0
+offset_left = 4.0
+offset_top = 330.0
+offset_right = 72.0
+offset_bottom = 398.0
+mouse_filter = 2
+text = "⊕"
+horizontal_alignment = 1
+vertical_alignment = 1
+theme_override_colors/font_color = Color(1, 0.86, 0.18, 1)
+theme_override_font_sizes/font_size = 42
+
+[node name="PlayButton" type="Button" parent="CabinetLayout"]
+custom_minimum_size = Vector2(390, 76)
+layout_mode = 0
+offset_left = 88.0
+offset_top = 322.0
+offset_right = 478.0
+offset_bottom = 398.0
+rotation = -0.0523599
+pivot_offset = Vector2(195, 38)
+focus_neighbor_bottom = NodePath("../SettingsButton")
+text = "START RUN"
 theme_override_font_sizes/font_size = 30
 
-[node name="SubtitlePlaque" type="PanelContainer" parent="LeftDock"]
+[node name="SettingsButton" type="Button" parent="CabinetLayout"]
+custom_minimum_size = Vector2(286, 58)
 layout_mode = 0
-offset_left = 22.0
-offset_top = 126.0
-offset_right = 212.0
-offset_bottom = 188.0
+offset_left = 206.0
+offset_top = 420.0
+offset_right = 492.0
+offset_bottom = 478.0
+rotation = -0.0523599
+pivot_offset = Vector2(143, 29)
+focus_neighbor_top = NodePath("../PlayButton")
+text = "SETTINGS"
+theme_override_font_sizes/font_size = 24
 
-[node name="Subtitle" type="Label" parent="LeftDock/SubtitlePlaque"]
-layout_mode = 2
-text = "MISSION SELECT
-STARBOARD COMMAND"
-horizontal_alignment = 1
+[node name="FooterRule" type="ColorRect" parent="CabinetLayout"]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 555.0
+offset_right = 484.0
+offset_bottom = 557.0
+mouse_filter = 2
+color = Color(1, 0.19, 0.37, 0.75)
+
+[node name="Controls" type="Label" parent="CabinetLayout"]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 518.0
+offset_right = 570.0
+offset_bottom = 552.0
+text = "MOVE   WASD / ARROWS      FIRE   SPACE      BOOST   SHIFT"
 vertical_alignment = 1
-autowrap_mode = 3
-clip_text = true
-theme_override_colors/font_color = Color(1, 0.94, 0.64, 1)
+theme_override_colors/font_color = Color(0.24, 0.92, 1, 1)
 theme_override_font_sizes/font_size = 13
 
-[node name="MenuButtons" type="VBoxContainer" parent="LeftDock"]
+[node name="Status" type="Label" parent="CabinetLayout"]
 layout_mode = 0
-offset_left = 22.0
-offset_top = 232.0
-offset_right = 216.0
-offset_bottom = 468.0
-theme_override_constants/separation = 18
-
-[node name="PlayWrap" type="Control" parent="LeftDock/MenuButtons"]
-custom_minimum_size = Vector2(194, 48)
-layout_mode = 2
-
-[node name="PlayTexture" type="TextureRect" parent="LeftDock/MenuButtons/PlayWrap"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-texture = ExtResource("3_button_yellow")
-expand_mode = 1
-stretch_mode = 5
-
-[node name="PlayButton" type="Button" parent="LeftDock/MenuButtons/PlayWrap"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 16.0
-offset_top = 6.0
-offset_right = -14.0
-offset_bottom = -6.0
-grow_horizontal = 2
-grow_vertical = 2
-text = "START RUN"
-alignment = 0
-
-[node name="SettingsWrap" type="Control" parent="LeftDock/MenuButtons"]
-custom_minimum_size = Vector2(194, 48)
-layout_mode = 2
-
-[node name="SettingsTexture" type="TextureRect" parent="LeftDock/MenuButtons/SettingsWrap"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-texture = ExtResource("4_button_blue")
-expand_mode = 1
-stretch_mode = 5
-
-[node name="SettingsButton" type="Button" parent="LeftDock/MenuButtons/SettingsWrap"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 16.0
-offset_top = 6.0
-offset_right = -14.0
-offset_bottom = -6.0
-grow_horizontal = 2
-grow_vertical = 2
-text = "SETTINGS"
-alignment = 0
-
-[node name="ControlsPlaque" type="PanelContainer" parent="LeftDock"]
-layout_mode = 0
-offset_left = 18.0
-offset_top = 540.0
-offset_right = 218.0
-offset_bottom = 610.0
-
-[node name="Controls" type="Label" parent="LeftDock/ControlsPlaque"]
-layout_mode = 2
-text = "MOVE  WASD / ARROWS
-SHOOT SPACE  BOOST SHIFT"
-horizontal_alignment = 1
+offset_left = 10.0
+offset_top = 566.0
+offset_right = 560.0
+offset_bottom = 602.0
+text = "BUILD  01.04      SIGNAL  LOCKED   ▂▄▆█"
 vertical_alignment = 1
-autowrap_mode = 3
-clip_text = true
-theme_override_colors/font_color = Color(0.8, 1, 0.87, 1)
-theme_override_font_sizes/font_size = 12
+theme_override_colors/font_color = Color(0.32, 1, 0.55, 1)
+theme_override_font_sizes/font_size = 13
+
+[node name="CRTOverlay" type="ColorRect" parent="."]
+material = SubResource("ShaderMaterial_crt")
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(1, 1, 1, 1)
