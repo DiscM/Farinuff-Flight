@@ -82,7 +82,9 @@ func fly_out(viewport_size: Vector2) -> void:
 	if is_instance_valid(_motion_tween):
 		_motion_tween.kill()
 
-	var exit_position := Vector2(viewport_size.x + 240.0, -220.0)
+	var flight_direction := Vector2.UP.rotated(rotation).normalized()
+	var exit_distance := viewport_size.length() + 180.0 * _display_scale
+	var exit_position := position + flight_direction * exit_distance
 	_motion_tween = create_tween()
 	_motion_tween.set_parallel(true)
 	_motion_tween.set_trans(Tween.TRANS_QUART)
