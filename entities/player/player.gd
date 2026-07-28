@@ -2,6 +2,7 @@ extends Area2D
 ## Player ship — handles movement, shooting, power-ups, and taking damage.
 
 const BULLET_SCENE := preload("res://entities/bullets/bullet.tscn")
+const ORBITAL_PROJECTILE_SHADER := preload("res://effects/shaders/projectiles/player_orbital.gdshader")
 const RETICLE_TEXTURE := preload("res://assets/ui/cursor_crosshair.png")
 const PIXEL_EFFECT_SCENE := preload("res://effects/pixel_sprite_effect.tscn")
 const DRONE_VISUAL_SCRIPT := preload("res://entities/player/drone_visual.gd")
@@ -1086,8 +1087,14 @@ func _spawn_orbitals() -> void:
 		orb_node.add_to_group("player_orbitals")
 		# Visual — small glowing circle
 		var spr := Sprite2D.new()
-		spr.modulate = Color(0.4, 1.0, 0.9)
+		spr.name = "Sprite2D"
+		var orbital_material := ShaderMaterial.new()
+		orbital_material.shader = ORBITAL_PROJECTILE_SHADER
+		orbital_material.set_shader_parameter(&"phase_offset", TAU * float(i) / float(count))
+		spr.material = orbital_material
+		spr.modulate = Color.WHITE
 		spr.texture = _get_orbital_texture()
+		spr.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		orb_node.add_child(spr)
 		# Collision
 		var shape := CollisionShape2D.new()
@@ -1104,13 +1111,13 @@ func _spawn_orbitals() -> void:
 ## projectiles. Lazily builds it once, then reuses it for every spawn.
 func _get_orbital_texture() -> Texture2D:
 	if _orbital_texture == null:
-		var img := Image.create(12, 12, false, Image.FORMAT_RGBA8)
+		var img := Image.create(24, 24, false, Image.FORMAT_RGBA8)
 		img.fill(Color.TRANSPARENT)
-		for y in range(12):
-			for x in range(12):
-				var dist := Vector2(float(x) - 6.0, float(y) - 6.0).length()
-				if dist < 5.0:
-					var t := dist / 5.0
+		for y in range(24):
+			for x in range(24):
+				var dist := Vector2(float(x) - 11.5, float(y) - 11.5).length()
+				if dist < 6.0:
+					var t := dist / 6.0
 					img.set_pixel(x, y, Color(1.0, 1.0, 1.0, 1.0 - t * 0.4))
 		_orbital_texture = ImageTexture.create_from_image(img)
 	return _orbital_texture
