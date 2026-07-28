@@ -204,6 +204,7 @@ Current bindings support:
 - Shoot: Space
 - Boost: Shift
 - Pause: Escape
+- Alt controls (Settings toggle): shoot with Left Mouse Button, boost with Space
 
 ## Current Strengths
 

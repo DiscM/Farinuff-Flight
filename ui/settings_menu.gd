@@ -24,9 +24,9 @@ func _build_ui() -> void:
 	var panel := PanelContainer.new()
 	panel.set_anchors_preset(Control.PRESET_CENTER)
 	panel.offset_left = -180.0
-	panel.offset_top = -220.0
+	panel.offset_top = -250.0
 	panel.offset_right = 180.0
-	panel.offset_bottom = 220.0
+	panel.offset_bottom = 250.0
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(0.04, 0.06, 0.15)
 	style.border_color = Color(0.2, 0.75, 1.0, 0.8)
@@ -64,6 +64,7 @@ func _build_ui() -> void:
 	column.add_child(_make_toggle("Screen shake", "screen_shake"))
 	column.add_child(_make_toggle("CRT scanline effect", "crt_effect"))
 	column.add_child(_make_toggle("Screen distortion", "screen_distortion"))
+	column.add_child(_make_toggle("Alt controls: LMB shoot, Space boost", "alt_controls", false))
 
 	var note := Label.new()
 	note.text = "Preferences and high score are saved automatically."
@@ -81,12 +82,13 @@ func _build_ui() -> void:
 	column.add_child(close_button)
 
 ## Helper: creates a CheckButton toggle with a label, initialized from
-## the persisted setting value. Connects its toggled signal to persist
-## changes via SaveManager.
-func _make_toggle(label_text: String, setting_key: String) -> CheckButton:
+## the persisted setting value (using the given fallback when the key has
+## never been saved). Connects its toggled signal to persist changes via
+## SaveManager.
+func _make_toggle(label_text: String, setting_key: String, fallback: bool = true) -> CheckButton:
 	var toggle := CheckButton.new()
 	toggle.text = label_text
-	toggle.button_pressed = bool(SaveManager.get_setting(setting_key, true))
+	toggle.button_pressed = bool(SaveManager.get_setting(setting_key, fallback))
 	toggle.add_theme_font_size_override("font_size", 17)
 	toggle.toggled.connect(_on_toggle_changed.bind(setting_key))
 	return toggle

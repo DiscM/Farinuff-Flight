@@ -119,6 +119,8 @@ func _die(award_rewards: bool = true) -> void:
 		var orb: Area2D = XP_ORB_SCENE.instantiate()
 		orb.global_position = global_position
 		orb.orb_value = orb_value
+		# Drops float off in the same direction the enemy was travelling.
+		orb.drift_direction = spawn_direction
 		scene_root.call_deferred("add_child", orb)
 	# Spawn explosion effect
 	var explosion = ObjectPool.acquire(EXPLOSION_SCENE, scene_root)

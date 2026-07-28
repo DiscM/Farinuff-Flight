@@ -9,30 +9,34 @@ const DEFAULT_SETTINGS: Dictionary = {
 	"screen_shake": true,
 	"crt_effect": true,
 	"screen_distortion": true,
+	"alt_controls": false,
 }
 
 var high_score: int = 0
 var settings: Dictionary = DEFAULT_SETTINGS.duplicate(true)
 
-## Loads saved data from disk on startup and applies the persisted audio settings.
+## Loads saved data from disk on startup and applies the persisted audio
+## and control-scheme settings.
 func _ready() -> void:
 	_load_data()
 	_apply_audio_settings()
+	_apply_control_scheme()
 
 ## Returns the value of a saved setting by key, or the provided fallback
 ## if the key does not exist.
 func get_setting(key: String, fallback: Variant = null) -> Variant:
 	return settings.get(key, fallback)
 
-## Updates a setting value in memory, applies audio changes immediately,
-## persists the change to disk, and emits settings_changed.
-## Silently ignores keys not present in DEFAULT_SETTINGS to prevent
-## storing arbitrary data.
+## Updates a setting value in memory, applies audio and control-scheme
+## changes immediately, persists the change to disk, and emits
+## settings_changed. Silently ignores keys not present in DEFAULT_SETTINGS
+## to prevent storing arbitrary data.
 func update_setting(key: String, value: Variant) -> void:
 	if not DEFAULT_SETTINGS.has(key):
 		return
 	settings[key] = value
 	_apply_audio_settings()
+	_apply_control_scheme()
 	_save_data()
 	settings_changed.emit()
 
@@ -93,3 +97,35 @@ func _apply_audio_settings() -> void:
 	var volume := clampf(float(settings.get("master_volume", 0.8)), 0.0, 1.0)
 	AudioServer.set_bus_mute(bus_index, volume <= 0.001)
 	AudioServer.set_bus_volume_db(bus_index, linear_to_db(maxf(volume, 0.001)))
+
+## Applies the persisted control scheme to the global InputMap.
+## Default: Space shoots, Shift boosts. Alt: left mouse button shoots,
+## Space boosts. The swap is strict — Space never does both at once.
+func _apply_control_scheme() -> void:
+	var alt := bool(settings.get("alt_controls", false))
+	_set_key_binding(&"shoot", KEY_SPACE, not alt)
+	_set_mouse_binding(&"shoot", MOUSE_BUTTON_LEFT, alt)
+	_set_key_binding(&"boost", KEY_SHIFT, not alt)
+	_set_key_binding(&"boost", KEY_SPACE, alt)
+
+## Ensures the given physical key is present on (enabled) or absent from
+## (disabled) an input action, without disturbing the action's other events.
+func _set_key_binding(action: StringName, physical_key: Key, enabled: bool) -> void:
+	for event in InputMap.action_get_events(action):
+		if event is InputEventKey and event.physical_keycode == physical_key:
+			InputMap.action_erase_event(action, event)
+	if enabled:
+		var event := InputEventKey.new()
+		event.physical_keycode = physical_key
+		InputMap.action_add_event(action, event)
+
+## Ensures the given mouse button is present on (enabled) or absent from
+## (disabled) an input action, without disturbing the action's other events.
+func _set_mouse_binding(action: StringName, button: MouseButton, enabled: bool) -> void:
+	for event in InputMap.action_get_events(action):
+		if event is InputEventMouseButton and event.button_index == button:
+			InputMap.action_erase_event(action, event)
+	if enabled:
+		var event := InputEventMouseButton.new()
+		event.button_index = button
+		InputMap.action_add_event(action, event)
