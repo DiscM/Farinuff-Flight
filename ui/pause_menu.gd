@@ -99,6 +99,7 @@ func _make_btn(control_name: String, label: String, accent: Color, callback: Cal
 	btn.offset_right = -14
 	btn.offset_bottom = -6
 	btn.pressed.connect(callback)
+	btn.pressed.connect(AudioManager.play_ui_click)
 	button_wrapper.add_child(btn)
 	return button_wrapper
 

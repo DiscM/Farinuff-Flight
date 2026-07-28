@@ -1,7 +1,6 @@
 extends BaseEnemy
 ## Ranged enemy that establishes a firing lane before retreating off screen.
 
-const ENEMY_BULLET_SCENE := preload("res://entities/bullets/enemy_bullet.tscn")
 const RAIL_BEAM_SCENE := preload("res://entities/enemies/enemy_rail_beam.tscn")
 
 var entry_distance: float = 0.0
@@ -88,15 +87,11 @@ func _begin_aimed_shot() -> void:
 func _fire_locked_shot() -> void:
 	if is_instance_valid(_aim_warning):
 		_aim_warning.queue_free()
-	var scene_root := get_tree().current_scene
-	if scene_root == null:
-		return
-	var bullet = ObjectPool.acquire(ENEMY_BULLET_SCENE, scene_root)
-	if bullet == null:
-		return
 	var shot_speed := randf_range(430.0, 500.0) if generation == 1 else 550.0
 	var shot_color := Color(2.8, 0.25, 0.35, 1.0) if generation >= 3 and shot_sequence % 2 == 1 else Color(2.5, 0.55, 0.15, 1.0)
-	bullet.pool_activate(get_origin(&"Barrel"), _locked_direction, shot_speed, shot_color)
+	var bullet := fire_enemy_bullet(get_origin(&"Barrel"), _locked_direction, shot_speed, shot_color)
+	if bullet == null:
+		return
 	ordinary_shots += 1
 	shot_sequence += 1
 

@@ -61,7 +61,6 @@ var _evolution_banner_active: bool = false
 
 # Screen shake state
 var shake_intensity: float = 0.0
-var shake_duration: float = 0.0
 var shake_timer: float = 0.0
 var _bg_time: float = 0.0
 var _background_palette_tween: Tween = null
@@ -407,7 +406,6 @@ func _on_screen_shake(intensity: float, duration: float) -> void:
 		shake_timer = 0.0
 		return
 	shake_intensity = intensity
-	shake_duration = duration
 	shake_timer = duration
 
 ## Reads visual preferences from SaveManager and shows/hides the CRT
@@ -454,14 +452,18 @@ func _on_try_again_accepted() -> void:
 	_update_pause_state()
 	
 	if is_instance_valid(player):
+		# Reset to the respawn default — respawn_invincibility still holds
+		# whatever duration the killing hit set (2s or 3s).
+		player.respawn_invincibility = player.RESPAWN_INVINCIBILITY
 		player._start_invincibility(player.respawn_invincibility)
 		
 	# Clear regular enemies and bullets from the scene, but spare the Boss
 	for enemy in get_tree().get_nodes_in_group("enemies"):
 		if is_instance_valid(enemy) and not (enemy is BossEnemy):
 			enemy.queue_free()
-	get_tree().call_group("enemy_bullets", "queue_free")
-	get_tree().call_group("powerups", "queue_free")
+	# Pooled objects must be returned to the pool, not queue_freed
+	get_tree().call_group("enemy_bullets", "despawn")
+	get_tree().call_group("powerups", "despawn")
 	# Restart enemy spawning
 	enemy_spawner._on_try_again_accepted()
 
@@ -479,7 +481,9 @@ func _show_game_over(final_score: int) -> void:
 		return
 	game_over_shown = true
 	get_tree().paused = true
-	await get_tree().create_timer(0.8, false, false, true).timeout
+	# process_always must stay true (the default): the tree is paused, so a
+	# pausable timer would never fire and the game-over screen would never appear.
+	await get_tree().create_timer(0.8, true, false, true).timeout
 	var overlay := CanvasLayer.new()
 	overlay.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(overlay)
@@ -533,8 +537,9 @@ func _on_allocation_closed() -> void:
 	_maybe_show_evolution_banner()
 
 ## Handles the elite upgrade popup trigger. Pauses immediately, waits one
-## frame to check for a simultaneous allocation trigger, and either shows
-## both panels side-by-side or the elite popup solo.
+## frame for a simultaneous allocation trigger to set its flag, and shows
+## the elite popup solo. A pending allocation is deferred and shown right
+## after the elite popup closes (see _on_elite_upgrade_closed).
 func _on_elite_upgrade_triggered() -> void:
 	if elite_upgrade_active:
 		return
@@ -565,84 +570,6 @@ func _on_elite_upgrade_closed() -> void:
 		return
 	_update_pause_state()
 	_maybe_show_evolution_banner()
-
-## Shows the elite upgrade and point allocation panels side by side.
-## Creates a shared overlay with an HBoxContainer holding both panels.
-## Each panel independently signals completion; the overlay is freed
-## only when both are done. Includes a fade-in animation.
-func _show_combined(alloc_points: int) -> void:
-	var overlay := CanvasLayer.new()
-	overlay.process_mode = Node.PROCESS_MODE_ALWAYS
-	add_child(overlay)
-
-	# Single shared dark background
-	var root := Control.new()
-	root.set_anchors_preset(Control.PRESET_FULL_RECT)
-	root.set_offsets_preset(Control.PRESET_FULL_RECT)
-	root.process_mode = Node.PROCESS_MODE_ALWAYS
-	overlay.add_child(root)
-
-	var bg := ColorRect.new()
-	bg.color = Color(0.0, 0.0, 0.05, 0.92)
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	root.add_child(bg)
-
-	# Keep the combined UI away from the top HUD and give each panel
-	# room to breathe instead of stretching both across the whole screen.
-	var safe_frame := MarginContainer.new()
-	safe_frame.set_anchors_preset(Control.PRESET_FULL_RECT)
-	safe_frame.set_offsets_preset(Control.PRESET_FULL_RECT)
-	safe_frame.add_theme_constant_override("margin_left", 56)
-	safe_frame.add_theme_constant_override("margin_right", 56)
-	safe_frame.add_theme_constant_override("margin_top", 132)
-	safe_frame.add_theme_constant_override("margin_bottom", 40)
-	root.add_child(safe_frame)
-
-	var hbox := HBoxContainer.new()
-	hbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	hbox.add_theme_constant_override("separation", 56)
-	hbox.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hbox.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	safe_frame.add_child(hbox)
-
-	# Left: elite upgrade panel
-	var elite_panel := ELITE_UPGRADE_SCENE.instantiate()
-	elite_panel.panel_only = true
-	elite_panel.custom_minimum_size = Vector2(560, 0)
-	elite_panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	elite_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	hbox.add_child(elite_panel)
-	elite_panel.upgrade_chosen.connect(func():
-		_on_elite_upgrade_closed()
-		_try_close_combined_overlay(overlay)
-	)
-
-	# Right: allocation panel
-	var alloc_panel := POINT_ALLOCATION_SCENE.instantiate()
-	alloc_panel.panel_only = true
-	alloc_panel.custom_minimum_size = Vector2(410, 0)
-	alloc_panel.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	alloc_panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	hbox.add_child(alloc_panel)
-	alloc_panel.allocation_done.connect(func():
-		_on_allocation_closed()
-		_try_close_combined_overlay(overlay)
-	)
-	alloc_panel.set_points(alloc_points)
-
-	# Animate the whole root in
-	root.modulate.a = 0.0
-	var tween := root.create_tween()
-	tween.tween_property(root, "modulate:a", 1.0, 0.35).set_ease(Tween.EASE_OUT)
-
-
-## Closes the shared milestone screen only after both panels have reached
-## their static completed states.
-func _try_close_combined_overlay(overlay: CanvasLayer) -> void:
-	if not elite_upgrade_active and not allocation_active:
-		overlay.queue_free()
-		_maybe_show_evolution_banner()
-
 
 func _on_evolution_transition_pending(generation: int, generation_name: String) -> void:
 	_pending_evolution_generation = generation

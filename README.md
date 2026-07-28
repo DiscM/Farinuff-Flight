@@ -22,11 +22,11 @@ Failure uses a try-again flow before final game over. Remaining try-again stocks
 
 ## Controls
 
-- Movement: `WASD` or `Arrow Keys`
-- Shoot: hold `Space`
-- Boost: `Shift`
+- Movement: `WASD` or `Arrow Keys`, or gamepad left stick
+- Shoot: hold `Space`, gamepad `A` / right trigger
+- Boost: `Shift`, gamepad `B` / left trigger
 - Pause: `Escape`
-- Free aim: mouse movement or controller right stick
+- Free aim: mouse movement or gamepad right stick
 - Alt controls (Settings toggle): shoot with `Left Mouse Button`, boost with `Space`
 
 ## Tech Stack

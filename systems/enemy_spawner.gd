@@ -16,6 +16,11 @@ var viewport_width := 360.0
 var viewport_height := 720.0
 var edge_padding := 34.0
 var spawn_distance := 80.0
+## Minimum distance between a fresh spawn point and the player. Spawn rolls
+## closer than this are re-rolled (up to MAX_SPAWN_ROLLS attempts) so an
+## enemy can't materialize right on top of the ship with no reaction time.
+var player_safe_distance := 160.0
+const MAX_SPAWN_ROLLS := 6
 var evolution_hold := false
 var grace_time := 0.0
 
@@ -71,22 +76,42 @@ func _spawn_enemy(kind: StringName) -> void:
 		return
 	enemy.generation = threat_director.generation
 	enemy.special_attack_coordinator = special_attack_coordinator
-	var side := randi() % 4
-	match side:
-		0:
-			enemy.position = Vector2(randf_range(edge_padding, viewport_width - edge_padding), -spawn_distance)
-			enemy.spawn_direction = Vector2.DOWN
-		1:
-			enemy.position = Vector2(randf_range(edge_padding, viewport_width - edge_padding), viewport_height + spawn_distance)
-			enemy.spawn_direction = Vector2.UP
-		2:
-			enemy.position = Vector2(-spawn_distance, randf_range(edge_padding, viewport_height - edge_padding))
-			enemy.spawn_direction = Vector2.RIGHT
-		3:
-			enemy.position = Vector2(viewport_width + spawn_distance, randf_range(edge_padding, viewport_height - edge_padding))
-			enemy.spawn_direction = Vector2.LEFT
+	var spawn := _roll_fair_spawn()
+	enemy.position = spawn["position"]
+	enemy.spawn_direction = spawn["direction"]
 	get_tree().current_scene.add_child(enemy)
 	threat_director.record_spawn(kind)
+
+## Rolls a random edge spawn, re-rolling rolls that land too close to the
+## player. After MAX_SPAWN_ROLLS attempts the last roll is accepted so the
+## spawn cadence is never stalled.
+func _roll_fair_spawn() -> Dictionary:
+	var player := get_tree().get_first_node_in_group("player")
+	var spawn := _roll_spawn()
+	for attempt in MAX_SPAWN_ROLLS:
+		if not is_instance_valid(player):
+			break
+		if spawn["position"].distance_to(player.global_position) >= player_safe_distance:
+			break
+		spawn = _roll_spawn()
+	return spawn
+
+## Picks a random point just off one of the four screen edges, travelling
+## inward.
+func _roll_spawn() -> Dictionary:
+	match randi() % 4:
+		0:
+			return {"position": Vector2(randf_range(edge_padding, viewport_width - edge_padding), -spawn_distance),
+				"direction": Vector2.DOWN}
+		1:
+			return {"position": Vector2(randf_range(edge_padding, viewport_width - edge_padding), viewport_height + spawn_distance),
+				"direction": Vector2.UP}
+		2:
+			return {"position": Vector2(-spawn_distance, randf_range(edge_padding, viewport_height - edge_padding)),
+				"direction": Vector2.RIGHT}
+		_:
+			return {"position": Vector2(viewport_width + spawn_distance, randf_range(edge_padding, viewport_height - edge_padding)),
+				"direction": Vector2.LEFT}
 
 
 func spawn_archetype(kind: StringName, generation_override: int = 0) -> void:
@@ -173,6 +198,9 @@ func _on_wave_started(wave_number: int) -> void:
 
 
 func _spawn_boss(wave_number: int) -> void:
+	# Deferred from _on_wave_started — the run may have ended in the meantime.
+	if not GameManager.is_game_active:
+		return
 	stop_spawning()
 	_clear_regular_pressure()
 	var boss := boss_enemy_scene.instantiate() as BossEnemy

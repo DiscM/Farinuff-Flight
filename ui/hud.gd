@@ -31,14 +31,14 @@ const MAX_VISIBLE_HEARTS: int = 10
 
 # --- Active power-up timers ---
 ## Timed power-ups shown as live countdown chips in the PowerUpPanel, keyed
-## by the PowerUp.Type int carried by SignalBus.power_up_collected.
+## by the PowerUp.Type enum carried by SignalBus.power_up_collected.
 ## "timer" names the player's Timer node driving that effect.
 const TIMED_POWER_UPS: Dictionary = {
-	1: {"key": &"rapid", "label": "RAPID", "color": Color(1.0, 0.8, 0.0), "timer": "rapid_fire_timer"},
-	3: {"key": &"spread", "label": "SPREAD", "color": Color(1.0, 0.4, 0.8), "timer": "spread_shot_timer"},
-	4: {"key": &"magnet", "label": "MAGNET", "color": Color(0.6, 0.4, 1.0), "timer": "magnet_timer"},
+	PowerUp.Type.RAPID_FIRE: {"key": &"rapid", "label": "RAPID", "color": Color(1.0, 0.8, 0.0), "timer": "rapid_fire_timer"},
+	PowerUp.Type.SPREAD_SHOT: {"key": &"spread", "label": "SPREAD", "color": Color(1.0, 0.4, 0.8), "timer": "spread_shot_timer"},
+	PowerUp.Type.MAGNET: {"key": &"magnet", "label": "MAGNET", "color": Color(0.6, 0.4, 1.0), "timer": "magnet_timer"},
 }
-const SHIELD_TYPE: int = 2
+const SHIELD_TYPE: int = PowerUp.Type.SHIELD
 const SHIELD_CHIP: Dictionary = {"key": &"shield", "label": "SHIELD", "color": Color(0.3, 0.9, 0.5)}
 
 var _effect_chips: Dictionary = {}  # StringName key -> {panel, time, bar}

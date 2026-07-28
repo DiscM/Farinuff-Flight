@@ -40,21 +40,22 @@ func _on_spawn_timer_timeout() -> void:
 	_spawn_powerup()
 	_restart_timer()
 
-## Instantiates a power-up at a random X position along the top of the
-## screen with a random type (0–5, excluding Nuke during boss fights), and
-## adds it to the current scene.
+## Acquires a pooled power-up at a random X position along the top of the
+## screen with a random PowerUp.Type (excluding Nuke during boss fights).
 func _spawn_powerup() -> void:
-	var pu: Area2D = POWER_UP_SCENE.instantiate()
-	pu.position = Vector2(
-		randf_range(margin, viewport_width - margin),
-		-20.0
-	)
-	# Nukes are disabled during boss fights so they cannot erase the boss.
-	var max_type_index := 4 if GameManager.boss_active else 5
-	var type_index := randi_range(0, max_type_index)
-	pu.type = type_index
 	var scene_root := get_tree().current_scene
-	scene_root.add_child(pu)
+	if scene_root == null:
+		return
+	var pu := ObjectPool.acquire(POWER_UP_SCENE, scene_root)
+	if pu == null or not pu.has_method("pool_activate"):
+		return
+	# Nukes are disabled during boss fights so they cannot erase the boss.
+	var max_type_index := PowerUp.Type.MAGNET if GameManager.boss_active else PowerUp.Type.NUKE
+	var type_index := randi_range(PowerUp.Type.SCALE_UP, max_type_index)
+	pu.pool_activate(
+		Vector2(randf_range(margin, viewport_width - margin), -20.0),
+		type_index
+	)
 
 ## Called on game over. Stops all power-up spawning.
 func _on_game_over(_score: int) -> void:

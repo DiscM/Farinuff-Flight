@@ -1,14 +1,15 @@
 extends BaseEnemy
 ## Bomber enemy — drifts perpendicular to its travel direction, drops bombs periodically.
 
-const ENEMY_BULLET_SCENE := preload("res://entities/bullets/enemy_bullet.tscn")
 const ENEMY_MINE_SCENE := preload("res://entities/enemies/enemy_mine.tscn")
 
 var drift_speed: float = 120.0
 var drift_dir: float = 1.0
 var drop_interval: float = 2.0
 var drop_timer: float = 0.0
-var viewport_size: Vector2 = Vector2(720.0, 1024.0)
+# Overwritten in _ready with the live viewport size; the default only guards
+# against reads before _ready and matches the 360x720 design viewport.
+var viewport_size: Vector2 = Vector2(360.0, 720.0)
 var mine_timer := 5.0
 var mine_count := 0
 
@@ -64,13 +65,7 @@ func _move(delta: float) -> void:
 ## Spawns a neon-green enemy bullet below the bomber's current position,
 ## traveling downward at a randomized speed.
 func _drop_bomb() -> void:
-	var scene_root := get_tree().current_scene
-	if scene_root == null:
-		return
-	var bomb = ObjectPool.acquire(ENEMY_BULLET_SCENE, scene_root)
-	if bomb == null:
-		return
-	bomb.pool_activate(get_origin(&"Bay"), spawn_direction, randf_range(300.0, 400.0), Color(2.6, 0.25, 0.7, 1.0))
+	fire_enemy_bullet(get_origin(&"Bay"), spawn_direction, randf_range(300.0, 400.0), Color(2.6, 0.25, 0.7, 1.0))
 
 
 func _try_drop_mine() -> void:

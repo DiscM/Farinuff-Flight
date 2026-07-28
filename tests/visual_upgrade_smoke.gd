@@ -2,7 +2,9 @@ extends Node
 ## Headless regression coverage for procedural elite-upgrade ship visuals.
 ##
 ## Run with:
-## godot --headless --path . --script res://tests/visual_upgrade_smoke.gd
+## godot --headless --path . res://tests/visual_upgrade_smoke.tscn
+## (Run the .tscn wrapper, not --script: --script mode skips the autoloads
+## these tests depend on and never exits.)
 
 const PLAYER_SCENE := preload("res://entities/player/player.tscn")
 const PREVIEW_SCRIPT := preload("res://entities/player/ship_upgrade_preview.gd")

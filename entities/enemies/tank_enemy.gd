@@ -1,7 +1,6 @@
 extends BaseEnemy
 ## Tank enemy — slow, high HP, fires radial bullet bursts periodically.
 
-const ENEMY_BULLET_SCENE := preload("res://entities/bullets/enemy_bullet.tscn")
 const TANK_PLATE_SCENE := preload("res://entities/enemies/tank_plate.tscn")
 
 var shoot_timer: float = 0.0
@@ -45,17 +44,11 @@ func _move(delta: float) -> void:
 ## Alternates speed between even and odd bullets for visual variety, and
 ## colors them neon purple for high contrast against the background.
 func _fire_radial_burst(angle_offset: float = 0.0) -> void:
-	var scene_root := get_tree().current_scene
-	if scene_root == null:
-		return
 	for i in range(bullet_count):
 		var angle := (TAU / bullet_count) * i + angle_offset
 		var dir := Vector2(sin(angle), cos(angle))
 		var shot_speed := (245.0 if i % 2 == 0 else 305.0) + randf_range(-8.0, 8.0)
-		var bullet = ObjectPool.acquire(ENEMY_BULLET_SCENE, scene_root)
-		if bullet == null:
-			continue
-		bullet.pool_activate(get_origin(&"Emitter"), dir, shot_speed, Color(2.0, 0.2, 3.0, 1.0))
+		fire_enemy_bullet(get_origin(&"Emitter"), dir, shot_speed, Color(2.0, 0.2, 3.0, 1.0))
 
 
 func _update_overload(delta: float) -> void:
@@ -93,12 +86,7 @@ func _update_overload(delta: float) -> void:
 
 
 func _fire_overload_shot(direction: Vector2) -> void:
-	var scene_root := get_tree().current_scene
-	if scene_root == null:
-		return
-	var bullet = ObjectPool.acquire(ENEMY_BULLET_SCENE, scene_root)
-	if bullet != null:
-		bullet.pool_activate(get_origin(&"Emitter"), direction, 260.0, Color(2.8, 0.05, 1.7, 1.0))
+	fire_enemy_bullet(get_origin(&"Emitter"), direction, 260.0, Color(2.8, 0.05, 1.7, 1.0))
 
 
 func dev_trigger_ability() -> void:

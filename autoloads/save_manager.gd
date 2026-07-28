@@ -6,10 +6,13 @@ signal settings_changed
 const SAVE_PATH := "user://save_data.json"
 const DEFAULT_SETTINGS: Dictionary = {
 	"master_volume": 0.8,
+	"music_volume": 0.8,
 	"screen_shake": true,
 	"crt_effect": true,
 	"screen_distortion": true,
 	"alt_controls": false,
+	"fullscreen": false,
+	"reduced_flashing": false,
 }
 
 var high_score: int = 0
@@ -21,6 +24,7 @@ func _ready() -> void:
 	_load_data()
 	_apply_audio_settings()
 	_apply_control_scheme()
+	_apply_display_settings()
 
 ## Returns the value of a saved setting by key, or the provided fallback
 ## if the key does not exist.
@@ -37,6 +41,7 @@ func update_setting(key: String, value: Variant) -> void:
 	settings[key] = value
 	_apply_audio_settings()
 	_apply_control_scheme()
+	_apply_display_settings()
 	_save_data()
 	settings_changed.emit()
 
@@ -72,7 +77,12 @@ func _load_data() -> void:
 	if stored_settings is Dictionary:
 		for key in DEFAULT_SETTINGS:
 			if stored_settings.has(key):
-				settings[key] = stored_settings[key]
+				# Validate against the default's type: a hand-edited save like
+				# "screen_shake": "false" would otherwise coerce the non-empty
+				# string to true, silently inverting the user's intent.
+				var value: Variant = stored_settings[key]
+				if typeof(value) == typeof(DEFAULT_SETTINGS[key]):
+					settings[key] = value
 
 ## Writes the current high score and settings dictionary to the JSON
 ## save file, formatted with tabs for readability.
@@ -87,16 +97,30 @@ func _save_data() -> void:
 	}
 	file.store_string(JSON.stringify(data, "\t"))
 
-## Applies the current master_volume setting to the audio bus.
-## Mutes the bus when volume is effectively zero, otherwise converts
-## the linear 0–1 value to decibels.
+## Applies the current master_volume and music_volume settings to their
+## audio buses. Mutes a bus when its volume is effectively zero, otherwise
+## converts the linear 0–1 value to decibels.
 func _apply_audio_settings() -> void:
-	var bus_index := AudioServer.get_bus_index("Master")
+	_apply_bus_volume("Master", float(settings.get("master_volume", 0.8)))
+	_apply_bus_volume("Music", float(settings.get("music_volume", 0.8)))
+
+func _apply_bus_volume(bus_name: String, raw_volume: float) -> void:
+	var bus_index := AudioServer.get_bus_index(bus_name)
 	if bus_index < 0:
 		return
-	var volume := clampf(float(settings.get("master_volume", 0.8)), 0.0, 1.0)
+	var volume := clampf(raw_volume, 0.0, 1.0)
 	AudioServer.set_bus_mute(bus_index, volume <= 0.001)
 	AudioServer.set_bus_volume_db(bus_index, linear_to_db(maxf(volume, 0.001)))
+
+## Applies the fullscreen setting to the main window.
+func _apply_display_settings() -> void:
+	var fullscreen := bool(settings.get("fullscreen", false))
+	var window := get_tree().root
+	if window == null:
+		return
+	var target := Window.MODE_FULLSCREEN if fullscreen else Window.MODE_WINDOWED
+	if window.mode != target:
+		window.mode = target
 
 ## Applies the persisted control scheme to the global InputMap.
 ## Default: Space shoots, Shift boosts. Alt: left mouse button shoots,

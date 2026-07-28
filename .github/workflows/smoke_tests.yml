@@ -1,0 +1,34 @@
+name: Smoke Tests
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  smoke-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Download Godot 4.6.3 headless
+        run: |
+          curl -fsSL -o godot.zip https://github.com/godotengine/godot/releases/download/4.6.3-stable/Godot_v4.6.3-stable_linux.x86_64.zip
+          unzip -q godot.zip
+          chmod +x Godot_v4.6.3-stable_linux.x86_64
+
+      - name: Import project (refresh class cache)
+        run: ./Godot_v4.6.3-stable_linux.x86_64 --headless --path . --import
+
+      - name: Run smoke tests
+        run: |
+          set -e
+          for test_scene in \
+            enemy_evolution_shader_smoke \
+            visual_upgrade_smoke \
+            upgrade_modal_flow_smoke; do
+            echo "=== $test_scene ==="
+            ./Godot_v4.6.3-stable_linux.x86_64 --headless --path . "res://tests/${test_scene}.tscn"
+          done

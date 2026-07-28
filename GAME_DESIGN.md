@@ -222,27 +222,27 @@ The items below are the most useful next steps based on the current build. These
 
 ### High Priority
 
-- Expand settings with input remapping and additional audio controls.
+- Expand settings with input remapping (audio controls and gamepad bindings are now in).
 - Add a short tutorial or onboarding flow so the orb meter, boss cadence, and upgrade screens are easier to understand.
 - Improve upgrade descriptions and in-game explanation of stacking rules, especially for elite upgrades.
-- Continue playtest-driven tuning of wave pacing, boss health, orb thresholds, and life economy.
+- Continue playtest-driven tuning of wave pacing, boss health, orb thresholds, and life economy. Note: the double-damage fix roughly halved effective player DPS versus what previous tuning assumed, so enemy and boss health likely need a retune.
 
 ### Medium Priority
 
 - Add more enemy archetypes and boss variants beyond the current sniper and archetype rotation.
 - Add more wave modifiers or encounter variety so later waves feel less structurally similar.
-- Add audio polish: music, hit sounds, pickup sounds, boss cues, and menu feedback.
-- Add dedicated evolution audio cues for transformation banners, charge/phase warnings, mine arming and detonation, armor breaks, rail charge/fire, and boss damage states.
-- Add accessibility improvements such as key rebinding, volume sliders, and clearer input prompts for controller users.
+- Add boss audio cues and dedicated evolution audio cues for transformation banners, charge/phase warnings, mine arming and detonation, armor breaks, rail charge/fire, and boss damage states. (Music, menu feedback, and core combat SFX are in.)
+- Add more accessibility improvements such as key rebinding and clearer input prompts for controller users. (Fullscreen, reduced-flashing, and volume sliders are in.)
 - Add more distinct death, hit, and reward effects to make combat events easier to parse.
 
 ### Technical Debt / Refactor Candidates
 
-- Reduce hardcoded screen-size assumptions so the game scales more cleanly across resolutions.
+- Continue reducing hardcoded screen-size assumptions (boss movement bounds are now viewport-relative; the parallax repeat region is still a fixed size).
 - Consider moving some background spawning and presentation logic out of the main game scene if the scene continues to grow.
-- Consolidate overlapping upgrade logic where temporary and permanent systems share similar behavior.
-- Consider pooling bullets, orbs, and frequently spawned effects if performance becomes a problem in later waves.
-- Add smoke tests or editor-run checks for the main game flow, especially boss transitions, try-again flow, and combined popup handling.
+- Continue splitting `player.gd` (the drone escort is now a standalone `ShipDrone` component; boost, weapons, and upgrade systems are still inline).
+- Continue consolidating overlapping upgrade logic where temporary and permanent systems share similar behavior (magnet pull and enemy-fire boilerplate are now shared).
+- Consider pooling enemies themselves if instantiate/free churn shows up in profiling (bullets, orbs, power-ups, explosions, mines, beams, and fields are already pooled).
+- Expand headless smoke-test coverage (now running in CI) to the autoloads: SaveManager corrupt-save handling, ObjectPool cycles, and GameManager wave/score logic.
 
 ### Nice-to-Have Improvements
 
