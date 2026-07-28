@@ -49,10 +49,6 @@ func _move(delta: float) -> void:
 		super._move(delta)
 
 
-func _die(award_rewards: bool = true) -> void:
-	super._die(award_rewards)
-
-
 func _finish_death() -> void:
 	if generation >= 4 and not suppress_death_effects:
 		_release_fragments()

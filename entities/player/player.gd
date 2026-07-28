@@ -5,14 +5,12 @@ const BULLET_SCENE := preload("res://entities/bullets/bullet.tscn")
 const ORBITAL_PROJECTILE_SHADER := preload("res://effects/shaders/projectiles/player_orbital.gdshader")
 const RETICLE_TEXTURE := preload("res://assets/ui/cursor_crosshair.png")
 const PIXEL_EFFECT_SCENE := preload("res://effects/pixel_sprite_effect.tscn")
-const DRONE_VISUAL_SCRIPT := preload("res://entities/player/drone_visual.gd")
 
 @export var speed: float = 280.0
 @export var base_fire_rate: float = 0.22  # seconds between shots
 
 # Power-up state (temporary)
-var current_scale_level: int = 0  # 0 = normal, up to 3 (bullet size)
-var bullet_scale_level: int = 0
+var bullet_scale_level: int = 0  # 0 = normal, up to 3 (bullet size)
 var has_shield: bool = false
 var has_rapid_fire: bool = false
 var has_spread_shot: bool = false
@@ -37,13 +35,10 @@ var orbital_nodes: Array[Node2D] = []
 # Elite (wave-10 boss) upgrades
 var has_twin_cannons: bool = false
 var has_auto_aim: bool = false
-var has_drone: bool = false
 var has_hull_plating: bool = false
 var has_afterburner: bool = false
 var active_elite_upgrade_ids: Array[String] = []
-var drone_node: Area2D = null
-var drone_shoot_timer: float = 0.0
-const DRONE_FIRE_RATE: float = 0.65
+var drone_node: ShipDrone = null
 
 static var _orbital_texture: Texture2D
 static var _burst_ring_texture: Texture2D
@@ -289,9 +284,7 @@ func _physics_process(delta: float) -> void:
 	if _orbitals_active():
 		_update_orbitals(delta)
 
-	# --- Drone ---
-	if has_drone:
-		_update_drone(delta)
+	# (The drone updates itself — see ShipDrone._physics_process.)
 
 	# --- Shield Burst cooldown ---
 	if has_shield_burst:
@@ -316,7 +309,7 @@ func _physics_process(delta: float) -> void:
 
 	# --- Permanent magnet field ---
 	if has_magnet_field and not has_magnet:
-		_attract_powerups_fast(delta)
+		_attract_powerups(delta, 500.0)
 
 	_update_upgrade_visual_runtime()
 
@@ -625,7 +618,12 @@ func _on_shoot_timer_timeout() -> void:
 
 # --- Taking damage ---
 
-var respawn_invincibility: float = 3.0
+## Default post-hit invincibility (seconds), also used for try-again respawns.
+const RESPAWN_INVINCIBILITY := 3.0
+## Duration of the invincibility granted by the next hit. Set by the hit
+## source just before _take_hit(): 3s for enemy contact, 2s for bullets and
+## hostile ordnance.
+var respawn_invincibility: float = RESPAWN_INVINCIBILITY
 
 ## Handles collision with enemies and enemy bullets. Ignores hits during
 ## invincibility or god mode. Enemy contact grants longer invincibility
@@ -660,7 +658,9 @@ func receive_hostile_hit(invincibility_duration: float = 2.0) -> void:
 ## Processes a damage hit. If a shield is active, consumes it instead of
 ## taking damage and grants brief invincibility. Otherwise, emits the
 ## player_hit signal (which triggers life loss in GameManager) and grants
-## invincibility if the player still has lives.
+## invincibility for respawn_invincibility seconds (set by the hit source:
+## 3s for enemy contact, 2s for bullets/ordnance) if the player still has
+## lives.
 func _take_hit() -> void:
 	if has_shield:
 		has_shield = false
@@ -673,7 +673,7 @@ func _take_hit() -> void:
 	SignalBus.player_hit.emit()
 	# Only grant invincibility if the player still has lives left after the hit
 	if GameManager.lives > 0:
-		_start_invincibility(1.5)
+		_start_invincibility(respawn_invincibility)
 
 ## Activates temporary invincibility for the given duration. Starts the
 ## invincibility timer and plays a repeating alpha blink animation on the
@@ -695,24 +695,24 @@ func _on_invincibility_ended() -> void:
 	sprite.modulate.a = 1.0
 
 # --- Power-ups ---
-# Power-up types: 0=SCALE_UP, 1=RAPID_FIRE, 2=SHIELD, 3=SPREAD_SHOT, 4=MAGNET, 5=NUKE
+# Types are the PowerUp.Type enum (entities/powerups/power_up.gd).
 
 ## Routes a collected power-up to the appropriate handler based on its type.
 func _on_power_up_collected(type: int, pos: Vector2) -> void:
 	_spawn_sparkle_effect(pos)
 	AudioManager.play_powerup()
 	match type:
-		0:  # SCALE_UP
+		PowerUp.Type.SCALE_UP:
 			_apply_scale_up()
-		1:  # RAPID_FIRE
+		PowerUp.Type.RAPID_FIRE:
 			_apply_rapid_fire()
-		2:  # SHIELD
+		PowerUp.Type.SHIELD:
 			_apply_shield()
-		3:  # SPREAD_SHOT
+		PowerUp.Type.SPREAD_SHOT:
 			_apply_spread_shot()
-		4:  # MAGNET
+		PowerUp.Type.MAGNET:
 			_apply_magnet()
-		5:  # NUKE
+		PowerUp.Type.NUKE:
 			_apply_nuke()
 
 ## Increments the bullet scale level (up to 3), increasing the visual size
@@ -720,7 +720,6 @@ func _on_power_up_collected(type: int, pos: Vector2) -> void:
 func _apply_scale_up() -> void:
 	if bullet_scale_level < 3:
 		bullet_scale_level += 1
-		current_scale_level = bullet_scale_level
 		# Brief flash on the player to indicate the upgrade
 		var tween := create_tween()
 		tween.tween_property(sprite, "modulate", Color(0.2, 0.8, 1.0), 0.08)
@@ -728,15 +727,15 @@ func _apply_scale_up() -> void:
 
 ## Activates rapid fire: reduces fire rate to 40% of base for 8 seconds.
 ## Restarts the timer if already active (extending the duration).
+## The shoot cooldown itself is recomputed every frame in _physics_process,
+## which honors rapid fire, overclock, and fire-rate bonuses together.
 func _apply_rapid_fire() -> void:
 	has_rapid_fire = true
-	shoot_timer.wait_time = base_fire_rate * 0.4
 	rapid_fire_timer.start()
 
-## Deactivates the rapid fire power-up and restores the base fire rate.
+## Deactivates the rapid fire power-up when its timer expires.
 func _on_rapid_fire_ended() -> void:
 	has_rapid_fire = false
-	shoot_timer.wait_time = base_fire_rate
 
 ## Activates the shield: absorbs one hit before the player takes damage.
 ## Shows the shield visual indicator.
@@ -771,21 +770,16 @@ func _apply_nuke() -> void:
 	get_tree().call_group("tempest_sections", "take_damage", 9999)
 	get_tree().call_group("hostile_ordnance", "clear_ordnance")
 
-## Pulls all power-ups and XP orbs toward the player at 350 px/s.
-## Used by the temporary magnet power-up.
-func _attract_powerups(delta: float) -> void:
+## Pulls all power-ups and XP orbs toward the player. Used by the temporary
+## magnet power-up (350 px/s) and the permanent magnet field upgrade
+## (500 px/s).
+func _attract_powerups(delta: float, pull_speed: float = 350.0) -> void:
 	var tree := get_tree()
-	var powerups := tree.get_nodes_in_group("powerups")
-	for pu in powerups:
-		if is_instance_valid(pu):
-			var dir: Vector2 = (global_position - pu.global_position).normalized()
-			pu.global_position += dir * 350.0 * delta
-	# Also attract XP orbs
-	var orbs := tree.get_nodes_in_group("xp_orbs")
-	for orb in orbs:
-		if is_instance_valid(orb):
-			var dir: Vector2 = (global_position - orb.global_position).normalized()
-			orb.global_position += dir * 350.0 * delta
+	for group_name in ["powerups", "xp_orbs"]:
+		for node in tree.get_nodes_in_group(group_name):
+			if is_instance_valid(node):
+				var dir: Vector2 = (global_position - node.global_position).normalized()
+				node.global_position += dir * pull_speed * delta
 
 
 # --- Canonical upgrade state ---
@@ -815,7 +809,6 @@ func set_elite_upgrade_enabled(upgrade_id: String, enabled: bool, grant_one_time
 			has_auto_aim = enabled
 		"drone_escort":
 			if enabled:
-				has_drone = true
 				_spawn_drone()
 			else:
 				_remove_drone()
@@ -912,6 +905,11 @@ func _orbitals_active() -> bool:
 func _piercing_active() -> bool:
 	return has_piercing or dev_piercing
 
+## Public accessor for the piercing modifier, used by the drone escort's
+## bullets to inherit piercing.
+func is_piercing_active() -> bool:
+	return _piercing_active()
+
 
 func _explosive_rounds_active() -> bool:
 	return has_explosive_rounds or dev_explosive_rounds
@@ -959,72 +957,6 @@ func _update_upgrade_visual_runtime() -> void:
 	}
 	upgrade_visuals_back.set_runtime_state(state)
 	upgrade_visuals_front.set_runtime_state(state)
-
-## Resets all player state to defaults for a new game: clears all power-ups,
-## RPG upgrades, elite upgrades, free aim, boost state, and drift bonuses.
-## Removes orbital and drone child nodes.
-func reset_state() -> void:
-	current_scale_level = 0
-	bullet_scale_level = 0
-	has_shield = false
-	has_rapid_fire = false
-	has_spread_shot = false
-	has_magnet = false
-	is_invincible = false
-	dev_rapid_fire = false
-	dev_spread_shot = false
-	dev_orbitals = false
-	dev_piercing = false
-	dev_explosive_rounds = false
-	dev_god_mode = false
-	scale = Vector2.ONE
-	shoot_timer.wait_time = base_fire_rate
-	shield_sprite.visible = false
-	sprite.modulate.a = 1.0
-	# Reset RPG permanent upgrades
-	has_rear_gun = false
-	has_piercing = false
-	has_explosive_rounds = false
-	zigzag_stacks = 0
-	_clear_orbital_nodes()
-	# Reset elite upgrades
-	clear_elite_upgrades()
-	has_twin_cannons = false
-	has_auto_aim = false
-	has_hull_plating = false
-	has_afterburner = false
-	_apply_afterburner_stats()
-	_remove_drone()
-	# Reset new elite upgrades
-	has_spread_shot_elite = false
-	has_shield_burst = false
-	shield_burst_cooldown = 0.0
-	has_magnet_field = false
-	has_overclock = false
-	overclock_active = false
-	overclock_cooldown = 0.0
-	overclock_timer = 0.0
-	has_rear_gunner = false
-	active_elite_upgrade_ids.clear()
-	_sync_upgrade_visuals()
-
-	# Reset free aim
-	last_aim_direction = Vector2.UP
-	is_using_free_aim = false
-	if is_instance_valid(reticle):
-		reticle.visible = false
-
-	# Reset boost
-	is_boosting = false
-	boost_cooldown_timer = 0.0
-	boost_duration_timer = 0.0
-	boost_reflected_projectiles = 0
-	boost_direction = Vector2.UP
-	boost_distance_remaining = 0.0
-	boost_chain_window_timer = 0.0
-	drift_speed_bonus = 1.0
-	post_boost_slide_timer = 0.0
-	sprite.modulate = Color.WHITE
 
 ## Called by level-up popup for shield upgrade.
 func grant_shield() -> void:
@@ -1289,32 +1221,15 @@ func _acquire_pixel_effect() -> Node:
 		return null
 	return ObjectPool.acquire(PIXEL_EFFECT_SCENE, scene_root)
 
-## Pulls all power-ups and XP orbs toward the player at 500 px/s.
-## Used by the permanent magnet field upgrade (faster than the temporary
-## magnet's 350 px/s pull speed).
-func _attract_powerups_fast(delta: float) -> void:
-	var tree := get_tree()
-	var powerups := tree.get_nodes_in_group("powerups")
-	for pu in powerups:
-		if is_instance_valid(pu):
-			var dir: Vector2 = (global_position - pu.global_position).normalized()
-			pu.global_position += dir * 500.0 * delta
-	var orbs := tree.get_nodes_in_group("xp_orbs")
-	for orb in orbs:
-		if is_instance_valid(orb):
-			var dir: Vector2 = (global_position - orb.global_position).normalized()
-			orb.global_position += dir * 500.0 * delta
-
-
 ## Grants the drone escort upgrade: spawns a combat drone that hovers
 ## near the player and auto-fires at the nearest enemy. Only one drone
 ## can be active at a time.
 func grant_drone_escort() -> void:
 	set_elite_upgrade_enabled("drone_escort", true)
 
-## Creates the drone Area2D node with a small procedural fighter visual,
-## collision shape, and contact damage handler. Adds it to the scene
-## as a top-level node (not parented to the player).
+## Spawns the combat drone as a top-level scene node (not parented to the
+## player). The ShipDrone component manages its own hover, fire cooldown,
+## and contact damage.
 func _spawn_drone() -> void:
 	if is_instance_valid(drone_node):
 		drone_node.queue_free()
@@ -1322,64 +1237,12 @@ func _spawn_drone() -> void:
 	if scene_root == null:
 		drone_node = null
 		return
-	drone_node = Area2D.new()
-	drone_node.collision_layer = 4   # player_bullets
-	drone_node.collision_mask = 2    # enemies
-	drone_node.add_to_group("player_orbitals")
-	drone_node.add_to_group("drone_escort")
-	var visual := DRONE_VISUAL_SCRIPT.new() as DroneVisual
-	drone_node.add_child(visual)
-	# Collision
-	var col := CollisionShape2D.new()
-	var circ := CircleShape2D.new()
-	circ.radius = 7.0
-	col.shape = circ
-	drone_node.add_child(col)
-	drone_node.area_entered.connect(_on_drone_hit)
+	drone_node = ShipDrone.new()
+	drone_node.setup(self)
 	scene_root.add_child(drone_node)
 
-## Updates the drone each frame: lerps toward a hover position offset
-## from the player, and auto-fires a bullet at the nearest enemy on a
-## cooldown timer.
-func _update_drone(delta: float) -> void:
-
-	if not is_instance_valid(drone_node):
-		return
-	# Hover to the right of the player
-	var target_pos := global_position + Vector2(50, -20)
-	drone_node.global_position = drone_node.global_position.lerp(target_pos, delta * 6.0)
-	drone_node.rotation = sin(Time.get_ticks_msec() * 0.004) * 0.08
-	# Auto-fire at nearest enemy
-	drone_shoot_timer -= delta
-	if drone_shoot_timer <= 0.0:
-		drone_shoot_timer = DRONE_FIRE_RATE
-		_drone_fire()
-
-## Fires a single bullet from the drone aimed at the nearest enemy.
-## Falls back to firing upward if no enemies are present. Inherits
-## the piercing modifier if the player has it.
-func _drone_fire() -> void:
-	var dir := _get_nearest_enemy_direction(drone_node.global_position)
-	if dir.is_zero_approx():
-		dir = Vector2.UP
-	var scene_root := get_tree().current_scene
-	if scene_root == null:
-		return
-	var bullet = ObjectPool.acquire(BULLET_SCENE, scene_root)
-	if bullet == null:
-		return
-	bullet.pool_activate(drone_node.global_position, dir, 1.0, _piercing_active())
-
-## Handles drone body collision: deals 1 + bonus damage to enemies and
-## tempest sections on contact.
-func _on_drone_hit(area: Area2D) -> void:
-	if area.is_in_group("enemies") or area.is_in_group("tempest_sections"):
-		area.take_damage(1 + GameManager.bonus_damage)
-
-## Removes the drone from the scene and resets its state.
+## Removes the drone from the scene.
 func _remove_drone() -> void:
-	has_drone = false
-	drone_shoot_timer = 0.0
 	if is_instance_valid(drone_node):
 		drone_node.queue_free()
 	drone_node = null

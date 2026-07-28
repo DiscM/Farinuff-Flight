@@ -93,7 +93,6 @@ const ALL_UPGRADES: Array[Dictionary] = [
 # --- Difficulty scaling ---
 var base_spawn_interval: float = 1.55
 var min_spawn_interval: float = 0.48
-var enemy_speed_multiplier: float = 1.0
 var orbs_needed_this_wave: int = 10
 var orbs_collected_this_wave: int = 0
 
@@ -127,7 +126,6 @@ func _ready() -> void:
 	high_score = SaveManager.high_score
 	SignalBus.enemy_killed.connect(_on_enemy_killed)
 	SignalBus.player_hit.connect(_on_player_hit)
-	SignalBus.game_restarted.connect(_on_game_restarted)
 	SignalBus.boss_died.connect(_on_boss_died)
 	SignalBus.xp_orb_collected.connect(_on_orb_collected)
 
@@ -237,7 +235,6 @@ func _advance_wave() -> void:
 	orbs_collected_this_wave = 0
 	orbs_needed_this_wave = int(10.0 + float(current_wave) * 1.30)
 	# Regular enemy stats are fixed by generation; only spawn cadence scales by wave.
-	enemy_speed_multiplier = 1.0
 	boss_active = (current_wave % 5 == 0)
 	SignalBus.wave_started.emit(current_wave)
 
@@ -268,18 +265,17 @@ func get_spawn_interval() -> float:
 
 # --- Restart ---
 
-## Resets all game state to initial values for a new run. Clears score,
-## combo, lives, waves, stat allocations, orb meter, damage history,
-## try-again stocks, and chosen upgrades, then emits signals to refresh
-## the HUD.
-func _on_game_restarted() -> void:
+## Entry point for starting a new game. Resets all game state to initial
+## values for a new run — clears score, combo, lives, waves, stat
+## allocations, orb meter, damage history, try-again stocks, and chosen
+## upgrades — then emits signals to refresh the HUD.
+func start_game() -> void:
 	score = 0
 	combo = 0
 	lives = 3
 	current_wave = 1
 	orbs_collected_this_wave = 0
 	orbs_needed_this_wave = 10
-	enemy_speed_multiplier = 1.0
 
 	# Reset allocation state
 	stat_fire_rate_level = 0
@@ -300,9 +296,4 @@ func _on_game_restarted() -> void:
 	SignalBus.combo_changed.emit(combo)
 	SignalBus.lives_changed.emit(lives)
 	SignalBus.wave_started.emit(current_wave)
-
-## Entry point for starting a new game. Delegates to _on_game_restarted()
-## to reset all state and also syncs the orb meter HUD.
-func start_game() -> void:
-	_on_game_restarted()
 	SignalBus.orb_meter_changed.emit(orbs_collected, orbs_per_heart)

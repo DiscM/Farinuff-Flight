@@ -1,5 +1,8 @@
 extends Area2D
+class_name PowerUp
 ## Power-up — drifts downward. Collected by shooting it or by direct player contact.
+## Pooled via ObjectPool: activate with pool_activate() after acquire, and
+## return it with despawn() instead of queue_free().
 
 enum Type { SCALE_UP, RAPID_FIRE, SHIELD, SPREAD_SHOT, MAGNET, NUKE }
 
@@ -7,6 +10,7 @@ enum Type { SCALE_UP, RAPID_FIRE, SHIELD, SPREAD_SHOT, MAGNET, NUKE }
 @export var drift_speed: float = 80.0
 
 var bob_time: float = 0.0
+var _is_despawning: bool = false
 
 # Color mapping for each type
 const TYPE_COLORS: Dictionary = {
@@ -27,30 +31,62 @@ const TYPE_LABELS: Dictionary = {
 	Type.NUKE: "NK",
 }
 
-## Initializes the power-up: adds to the "powerups" group, connects collision,
-## attaches a screen-exit notifier, and applies the type-specific color and label.
+## One-time setup: connects collision and attaches a screen-exit notifier.
+## Everything that must refresh on reuse lives in pool_activate().
 func _ready() -> void:
-	add_to_group("powerups")
 	area_entered.connect(_on_area_entered)
 
 	var notifier := VisibleOnScreenNotifier2D.new()
 	add_child(notifier)
 	notifier.screen_exited.connect(_on_screen_exited)
 
-	# Set sprite color based on type
+## Reuses the power-up from the pool with fresh spawn values.
+func pool_activate(spawn_position: Vector2, new_type: int) -> void:
+	_is_despawning = false
+	global_position = spawn_position
+	type = new_type as Type
+	bob_time = 0.0
+	collision_layer = 16
+	collision_mask = 5
+	monitoring = true
+	monitorable = true
+	visible = true
+	process_mode = Node.PROCESS_MODE_INHERIT
+	set_physics_process(true)
+	add_to_group("powerups")
 	_setup_visuals()
+
+## Returns the power-up to the pool after disabling its collision and physics.
+func despawn() -> void:
+	if _is_despawning:
+		return
+	_is_despawning = true
+	visible = false
+	call_deferred("_deactivate_for_pool")
+
+## Disables and releases the power-up after the current physics query finishes.
+func _deactivate_for_pool() -> void:
+	remove_from_group("powerups")
+	monitoring = false
+	monitorable = false
+	collision_layer = 0
+	collision_mask = 0
+	set_physics_process(false)
+	process_mode = Node.PROCESS_MODE_DISABLED
+	ObjectPool.release(self)
 
 ## Drifts the power-up downward and applies a gentle horizontal bob.
 func _physics_process(delta: float) -> void:
 	position.y += drift_speed * delta
-	# Floating bob effect
+	# Floating bob effect (delta-scaled so amplitude is frame-rate independent;
+	# 30.0/s reproduces the original per-frame 0.5 nudge at 60 fps)
 	bob_time += delta
-	position.x += sin(bob_time * 2.5) * 0.5
+	position.x += sin(bob_time * 2.5) * 30.0 * delta
 
 ## Handles collision: collected by a player bullet hit (destroys the bullet)
 ## or by direct player contact.
 func _on_area_entered(area: Area2D) -> void:
-	if is_queued_for_deletion():
+	if _is_despawning:
 		return
 	# Collected by bullet hit
 	if area.collision_layer & 4:  # player_bullets layer
@@ -64,16 +100,16 @@ func _on_area_entered(area: Area2D) -> void:
 		_collect()
 
 ## Emits the power_up_collected signal with this power-up's type and position,
-## spawns a collection particle effect, and frees the node.
+## spawns a collection particle effect, and returns the node to the pool.
 func _collect() -> void:
 	SignalBus.power_up_collected.emit(type, global_position)
 	_spawn_collect_effect()
-	queue_free()
+	despawn()
 
-## Frees the power-up when it exits the bottom of the screen.
+## Despawns the power-up when it exits the bottom of the screen.
 func _on_screen_exited() -> void:
 	if global_position.y > 0:
-		queue_free()
+		despawn()
 
 ## Applies the type-specific color tint to the sprite and sets the
 ## corresponding abbreviation label (e.g. "RF" for Rapid Fire).

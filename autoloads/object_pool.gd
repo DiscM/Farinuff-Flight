@@ -19,12 +19,6 @@ func acquire(scene: PackedScene, parent: Node) -> Node:
 	parent.add_child(node)
 	return node
 
-## Returns a node to the pool on the next idle tick. Nodes without a pool key
-## fall back to queue_free so the helper stays safe for non-pooled objects.
-func release_deferred(node: Node) -> void:
-	if is_instance_valid(node):
-		call_deferred("release", node)
-
 ## Returns a node to the pool immediately.
 func release(node: Node) -> void:
 	if not is_instance_valid(node):

@@ -4,7 +4,6 @@ class_name BossEnemy
 ## Regular bosses appear every 5th wave with archetype-specific base HP.
 ## Elite bosses appear every 10th wave with 125 HP, and the Wave 20 Tempest Core is a special encounter.
 
-const ENEMY_BULLET_SCENE := preload("res://entities/bullets/enemy_bullet.tscn")
 const TEMPEST_SECTION_SCRIPT := preload("res://entities/enemies/tempest_section.gd")
 const TEMPEST_CORE_TEXTURE := preload("res://assets/sprites/generated/tempest_core_idle_strip.png")
 const ASSAULT_TEXTURE := preload("res://assets/sprites/generated/boss_assault_idle_strip.png")
@@ -32,7 +31,9 @@ var move_phase: MovePhase = MovePhase.HOVER
 var move_timer: float = 0.0
 var move_target: Vector2 = Vector2.ZERO
 var strafe_angle: float = 0.0
-var viewport_size: Vector2 = Vector2(720.0, 1024.0)
+# Overwritten in _ready with the live viewport size; the default only guards
+# against reads before _ready and matches the 360x720 design viewport.
+var viewport_size: Vector2 = Vector2(360.0, 720.0)
 
 var is_telegraphing: bool = false
 var telegraph_timer: float = 0.0
@@ -507,6 +508,16 @@ func _release_tempest_storm_strike(target_position: Vector2, lane_count: int) ->
 	if tempest_phase >= TempestPhase.EXPOSED:
 		_fire_radial(10 if tempest_phase == TempestPhase.EXPOSED else 14)
 
+## STRAFE orbit center, in the upper half of the screen.
+func _strafe_center() -> Vector2:
+	return Vector2(viewport_size.x / 2.0, 280.0)
+
+## STRAFE orbit radius, proportional to the viewport so the boss stays on
+## screen on narrow portrait layouts (a fixed 210px pushed the boss past the
+## edges of the 360px design viewport).
+func _strafe_radius() -> float:
+	return viewport_size.x * 0.3
+
 ## Executes the current movement phase: HOVER (sway at target), DASH (quick
 ## snap to a new position), STRAFE (circle-strafe around upper screen), or
 ## DIVE (rush toward lower screen). Each phase uses lerp-based movement with
@@ -523,7 +534,10 @@ func _execute_move(delta: float) -> void:
 				pattern_time += delta
 				# Blend the sway in so it doesn't instantly jump
 				var blend := minf(pattern_time, 1.0)
-				var sway_x := sin(pattern_time * 0.85) * 200.0
+				# Sway scales with the viewport so the boss stays on screen on
+				# narrow portrait layouts (±200px was tuned for 720px-wide and
+				# pushed the boss off the 360px design viewport).
+				var sway_x := sin(pattern_time * 0.85) * viewport_size.x * 0.28
 				var sway_y := sin(pattern_time * 0.5) * 35.0
 				target += Vector2(sway_x, sway_y) * blend
 				
@@ -535,16 +549,16 @@ func _execute_move(delta: float) -> void:
 
 		MovePhase.STRAFE:
 			# Circle-strafe around the upper half of the screen
-			var radius := 210.0
-			var center := Vector2(viewport_size.x / 2.0, 280.0)
-			
+			var center := _strafe_center()
+			var radius := _strafe_radius()
+
 			# Fly to the exact telegraphed spot on the circle before we start orbiting
 			if position.distance_to(move_target) < 30.0:
 				pattern_active = true
-				
+
 			if pattern_active:
 				strafe_angle += delta * (2.0 if is_elite else 1.4)
-				
+
 			var target := center + Vector2(cos(strafe_angle), sin(strafe_angle) * 0.5) * radius
 			position = position.lerp(target, delta * (5.0 if not pattern_active else 3.5))
 
@@ -576,9 +590,7 @@ func _pick_next_move_phase() -> void:
 		MovePhase.STRAFE:
 			strafe_angle = randf() * TAU
 			move_timer = randf_range(3.0, 5.0)
-			var radius := 210.0
-			var center := Vector2(viewport_size.x / 2.0, 280.0)
-			move_target = center + Vector2(cos(strafe_angle), sin(strafe_angle) * 0.5) * radius
+			move_target = _strafe_center() + Vector2(cos(strafe_angle), sin(strafe_angle) * 0.5) * _strafe_radius()
 		MovePhase.DIVE:
 			move_target = Vector2(
 				randf_range(120.0, viewport_size.x - 120.0),
@@ -724,13 +736,7 @@ func _spawn_bullet(dir: Vector2, spd: float) -> void:
 ## tempest sections firing from their own positions). Adds slight speed
 ## randomization for visual variety.
 func _spawn_bullet_from(origin: Vector2, dir: Vector2, spd: float) -> void:
-	var scene_root := get_tree().current_scene
-	if scene_root == null:
-		return
-	var bullet = ObjectPool.acquire(ENEMY_BULLET_SCENE, scene_root)
-	if bullet == null:
-		return
-	bullet.pool_activate(origin, dir, spd * randf_range(0.92, 1.08), bullet_color)
+	fire_enemy_bullet(origin, dir, spd * randf_range(0.92, 1.08), bullet_color)
 
 
 ## Fires aimed shots from each active tempest section toward the player.
@@ -813,10 +819,7 @@ func _die(_award_rewards: bool = true) -> void:
 	SignalBus.enemy_killed.emit(points, global_position)
 	var scene_root := get_tree().current_scene
 	if guaranteed_orb or randf() < 0.6:
-		var orb: Area2D = XP_ORB_SCENE.instantiate()
-		orb.global_position = global_position
-		orb.orb_value = orb_value
-		scene_root.call_deferred("add_child", orb)
+		call_deferred("_spawn_orb", global_position, orb_value, spawn_direction)
 	var explosion = ObjectPool.acquire(EXPLOSION_SCENE, scene_root)
 	if explosion != null and explosion.has_method("play_at"):
 		explosion.play_at(global_position)
@@ -829,12 +832,12 @@ func _die(_award_rewards: bool = true) -> void:
 	call_deferred("queue_free")
 
 ## Player contact damages the player through its own collision handler but
-## never damages or destroys the boss. Player projectiles still deal damage.
-func _on_area_entered(area: Area2D) -> void:
-	if _dying or is_queued_for_deletion():
-		return
-	if area.collision_layer & 4 != 0:
-		take_damage(1 + GameManager.bonus_damage)
+## never damages or destroys the boss, so this override deliberately swallows
+## every contact (including the base class's ram-response). Player-bullet
+## damage is applied solely by the bullet itself (it carries the bonus_damage
+## bonus) — handling it here as well would deal double damage per hit.
+func _on_area_entered(_area: Area2D) -> void:
+	pass
 
 
 func _apply_boss_visual() -> void:

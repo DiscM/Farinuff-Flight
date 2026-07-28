@@ -24,6 +24,7 @@ const SCORE_MULTIPLIERS := [1.0, 1.5, 2.25, 3.25]
 
 const XP_ORB_SCENE := preload("res://entities/collectibles/xp_orb.tscn")
 const EXPLOSION_SCENE := preload("res://effects/explosion.tscn")
+const ENEMY_BULLET_SCENE := preload("res://entities/bullets/enemy_bullet.tscn")
 
 var health: int
 ## The normalized direction this enemy travels. Set by the spawner before adding to scene.
@@ -83,9 +84,8 @@ func _physics_process(delta: float) -> void:
 		visible_time += delta
 	_move(delta)
 
-## Default movement: moves straight along spawn_direction at speed,
-## scaled by the global enemy_speed_multiplier. Override in subclasses
-## for custom movement patterns.
+## Default movement: moves straight along spawn_direction at speed.
+## Override in subclasses for custom movement patterns.
 func _move(delta: float) -> void:
 	position += spawn_direction * speed * delta
 
@@ -116,12 +116,8 @@ func _die(award_rewards: bool = true) -> void:
 		SignalBus.enemy_killed.emit(points, global_position)
 	# Spawn XP orb (60% chance, but guaranteed if guaranteed_orb is true).
 	if award_rewards and rewards_enabled and (guaranteed_orb or randf() < 0.6):
-		var orb: Area2D = XP_ORB_SCENE.instantiate()
-		orb.global_position = global_position
-		orb.orb_value = orb_value
 		# Drops float off in the same direction the enemy was travelling.
-		orb.drift_direction = spawn_direction
-		scene_root.call_deferred("add_child", orb)
+		call_deferred("_spawn_orb", global_position, orb_value, spawn_direction)
 	# Spawn explosion effect
 	var explosion = ObjectPool.acquire(EXPLOSION_SCENE, scene_root)
 	if explosion != null and explosion.has_method("play_at"):
@@ -139,18 +135,28 @@ func _die(award_rewards: bool = true) -> void:
 func _finish_death() -> void:
 	queue_free()
 
+## Spawns a pooled XP orb. Always called deferred: _die() can run inside a
+## physics signal callback, where toggling the orb's collision state during
+## activation would be unsafe.
+func _spawn_orb(spawn_position: Vector2, value: int, direction: Vector2) -> void:
+	var scene_root := get_tree().current_scene
+	if scene_root == null:
+		return
+	var orb := ObjectPool.acquire(XP_ORB_SCENE, scene_root)
+	if orb != null and orb.has_method("pool_activate"):
+		orb.pool_activate(spawn_position, value, direction)
+
 ## Handles collisions with other Area2D nodes. If the collider is the
-## player, the enemy self-destructs via _die(). If it's a player bullet
-## (collision layer 4), takes 1 damage.
+## player, the enemy self-destructs via _die(). Player-bullet damage is
+## applied solely by the bullet itself (it carries the bonus_damage bonus),
+## so bullets must NOT also be handled here or every hit would deal double
+## damage.
 func _on_area_entered(area: Area2D) -> void:
 	if is_queued_for_deletion():
 		return
 	if area.is_in_group("player"):
 		# Ram into player — self-destruct without emitting kill points
 		_die(false)
-	elif area.collision_layer & 4 != 0:  # layer 3 = player_bullets (bitmask 4)
-		# Bullet hit — take 1 damage; the bullet handles its own queue_free
-		take_damage(1)
 
 ## Called when the enemy leaves the visible screen. Only frees the enemy
 ## if it has moved past the edge it was heading toward (prevents premature
@@ -181,6 +187,25 @@ func get_origin(origin_name: StringName) -> Vector2:
 		return global_position
 	var marker := evolution.get_active_origin(origin_name)
 	return marker.global_position if marker != null else global_position
+
+## Fires a pooled enemy bullet. Centralizes the pool acquire/activate
+## boilerplate every archetype shares. The default color mirrors
+## enemy_bullet.gd's DEFAULT_BULLET_COLOR.
+## Returns the bullet, or null if the scene root or pool was unavailable.
+func fire_enemy_bullet(
+	origin: Vector2,
+	direction: Vector2,
+	shot_speed: float,
+	bullet_color: Color = Color(3.0, 0.8, 0.1, 1.0)
+) -> Node:
+	var scene_root := get_tree().current_scene
+	if scene_root == null:
+		return null
+	var bullet = ObjectPool.acquire(ENEMY_BULLET_SCENE, scene_root)
+	if bullet == null:
+		return null
+	bullet.pool_activate(origin, direction, shot_speed, bullet_color)
+	return bullet
 
 
 func make_line_warning(direction: Vector2, length: float, color: Color, width: float = 3.0) -> Line2D:

@@ -105,6 +105,11 @@ func _configure_effect(small: bool, kind: EffectKind) -> void:
 	var flash_duration := 0.14 if is_impact else 0.2 if small else 0.3
 	var flash_color := Color(1.0, 0.9, 0.55, 0.55) if is_impact else Color(1.0, 0.85, 0.5, 0.78) if small else Color(1.0, 0.9, 0.5, 0.8)
 
+	# Photosensitivity option: keep a faint glow instead of the bright pop.
+	if SaveManager.get_setting("reduced_flashing", false):
+		flash_scale *= 0.6
+		flash_color.a *= 0.25
+
 	if is_impact:
 		_configure_sprite_sheet(IMPACT_TEXTURE, IMPACT_FRAME_COUNT, 1.0)
 	elif small:

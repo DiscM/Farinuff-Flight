@@ -6,17 +6,11 @@ extends Node
 @warning_ignore("unused_signal")
 ## Emitted when any enemy is killed. Carries the point value and world position of the kill.
 signal enemy_killed(points: int, position: Vector2)
-@warning_ignore("unused_signal")
-## Emitted when all enemies on screen have been destroyed (currently unused but reserved).
-signal all_enemies_cleared
 
 # Player signals
 @warning_ignore("unused_signal")
 ## Emitted when the player takes damage (before lives are decremented by GameManager).
 signal player_hit
-@warning_ignore("unused_signal")
-## Emitted when the player loses all lives (reserved — game_over is the primary signal).
-signal player_died
 
 # Power-up signals
 @warning_ignore("unused_signal")
@@ -83,6 +77,3 @@ signal screen_shake(intensity: float, duration: float)
 @warning_ignore("unused_signal")
 ## Emitted when the player loses all lives and the game ends. Carries the final score.
 signal game_over(final_score: int)
-@warning_ignore("unused_signal")
-## Emitted when the player restarts the game from the game over or pause menu.
-signal game_restarted

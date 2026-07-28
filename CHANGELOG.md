@@ -2,6 +2,32 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased] - 2026-07-28
+
+### Added
+- **Music and Audio Buses:** Added a looping ambient music bed on a dedicated `Music` audio bus with an independent music-volume slider in Settings, plus UI click sounds on the title, pause, and settings menus.
+- **Gamepad Support:** Bound the left stick to movement, A / right trigger to shoot, and B / left trigger to boost (right-stick aim already worked). Settings control-scheme swaps no longer disturb joypad bindings.
+- **Accessibility Options:** Added a Fullscreen toggle and a Reduced Flashing toggle (dims and shrinks explosion flash sprites) to Settings.
+- **CI Smoke Tests:** Added a GitHub Actions workflow that runs all three headless smoke-test scenes on every push and pull request, and corrected the broken `--script` run commands in the test headers (that mode skips autoloads and never exits).
+- **Repository Hygiene:** Added a `.gitignore` and untracked the `.godot/` editor cache (12k+ files), the exported Windows binaries, and `.DS_Store` files.
+
+### Changed
+- **Object Pooling:** XP orbs and power-ups are now pooled through `ObjectPool` like bullets and explosions, removing the highest-churn instantiate/free cycles. The try-again flow now returns pooled bullets and power-ups to the pool instead of `queue_free`-ing them.
+- **Boss Movement Bounds:** Boss HOVER sway and STRAFE orbit radius now scale with the live viewport width instead of using fixed 720px-landscape constants, so the boss stays on screen on narrow portrait layouts.
+- **Spawn Fairness:** Enemy spawn rolls that land within 160px of the player are re-rolled (up to 6 attempts) so enemies can't materialize on top of the ship.
+- **Player Script Split:** Extracted the drone escort into a self-contained `ShipDrone` component and removed the dead `reset_state()` path, dead signals, and other dead code; `player.gd` is ~150 lines lighter.
+- **Shared Power-Up Enum:** `power_up.gd` now declares `class_name PowerUp`, and the player, HUD, and spawner all reference `PowerUp.Type` instead of duplicated raw ints.
+- **Shared Enemy Fire Helper:** The copy-pasted pooled-bullet spawn block across tank, bomber, sniper, and boss is now a single `BaseEnemy.fire_enemy_bullet()`.
+- **Combined Milestone Screen Removed:** Deleted the dead side-by-side elite/allocation screen; the production sequential flow (elite first, allocation after) is now covered by the modal-flow smoke test.
+- **Save Validation:** Loaded settings are type-checked against their defaults, so a hand-edited save can no longer invert boolean preferences.
+- **Frame-Rate-Independent Bobbing:** XP orb and power-up bob effects are now delta-scaled.
+
+### Fixed
+- **Game-Over Soft-Lock:** The game-over screen paused the tree and then awaited a pause-frozen timer, so it never appeared and input was dead. Every run that reached true game-over wedged on a frozen frame.
+- **Double Damage:** Enemy and boss `area_entered` handlers applied damage on top of the bullet's own handler, so every bullet dealt roughly twice its designed damage (bosses took double bonus damage too). Bullet damage is now applied solely by the bullet.
+- **Invincibility Durations:** Hits always granted 1.5s of invincibility regardless of source, and the try-again flow read a stale leftover duration. Contact hits now grant 3s, bullets/ordnance 2s, and try-again respawns a clean 3s as documented.
+- **Boss Spawning After Game Over:** A same-frame wave transition could instantiate a boss during the game-over flow.
+
 ## [Unreleased] - 2026-05-24
 
 ### Added

@@ -4,6 +4,7 @@ extends Control
 signal closed
 
 var volume_label: Label
+var music_label: Label
 
 ## Sets up the settings panel as a process-always full-rect control and
 ## builds the UI contents.
@@ -24,9 +25,9 @@ func _build_ui() -> void:
 	var panel := PanelContainer.new()
 	panel.set_anchors_preset(Control.PRESET_CENTER)
 	panel.offset_left = -180.0
-	panel.offset_top = -250.0
+	panel.offset_top = -305.0
 	panel.offset_right = 180.0
-	panel.offset_bottom = 250.0
+	panel.offset_bottom = 305.0
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(0.04, 0.06, 0.15)
 	style.border_color = Color(0.2, 0.75, 1.0, 0.8)
@@ -61,9 +62,25 @@ func _build_ui() -> void:
 	column.add_child(volume)
 	_refresh_volume_label(volume.value)
 
+	music_label = Label.new()
+	music_label.add_theme_color_override("font_color", Color(0.8, 0.9, 1.0))
+	column.add_child(music_label)
+
+	var music := HSlider.new()
+	music.min_value = 0.0
+	music.max_value = 1.0
+	music.step = 0.05
+	music.value = float(SaveManager.get_setting("music_volume", 0.8))
+	music.custom_minimum_size = Vector2(260, 34)
+	music.value_changed.connect(_on_music_changed)
+	column.add_child(music)
+	_refresh_music_label(music.value)
+
 	column.add_child(_make_toggle("Screen shake", "screen_shake"))
 	column.add_child(_make_toggle("CRT scanline effect", "crt_effect"))
 	column.add_child(_make_toggle("Screen distortion", "screen_distortion"))
+	column.add_child(_make_toggle("Fullscreen", "fullscreen", false))
+	column.add_child(_make_toggle("Reduced flashing effects", "reduced_flashing", false))
 	column.add_child(_make_toggle("Alt controls: LMB shoot, Space boost", "alt_controls", false))
 
 	var note := Label.new()
@@ -103,13 +120,25 @@ func _on_volume_changed(value: float) -> void:
 func _refresh_volume_label(value: float) -> void:
 	volume_label.text = "Master Volume: %d%%" % int(round(value * 100.0))
 
+## Called when the music slider value changes. Persists the new value
+## via SaveManager and refreshes the percentage label.
+func _on_music_changed(value: float) -> void:
+	SaveManager.update_setting("music_volume", value)
+	_refresh_music_label(value)
+
+## Updates the music label to display the current percentage (0–100%).
+func _refresh_music_label(value: float) -> void:
+	music_label.text = "Music Volume: %d%%" % int(round(value * 100.0))
+
 ## Called when any toggle switch changes. Persists the new boolean value
 ## under the given setting key via SaveManager.
 func _on_toggle_changed(enabled: bool, setting_key: String) -> void:
+	AudioManager.play_ui_click()
 	SaveManager.update_setting(setting_key, enabled)
 
 ## Emits the closed signal and frees this settings panel.
 func _on_close_pressed() -> void:
+	AudioManager.play_ui_click()
 	closed.emit()
 	queue_free()
 

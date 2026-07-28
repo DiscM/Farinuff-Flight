@@ -1,5 +1,10 @@
 extends Node
 ## Regression coverage for elite-selection and point-allocation completion flow.
+##
+## Run with:
+## godot --headless --path . res://tests/upgrade_modal_flow_smoke.tscn
+## (Run the .tscn wrapper, not --script: --script mode skips the autoloads
+## these tests depend on and never exits.)
 
 const PLAYER_SCENE := preload("res://entities/player/player.tscn")
 const ELITE_POPUP_SCENE := preload("res://ui/elite_upgrade_popup.tscn")
@@ -84,8 +89,7 @@ func _run() -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
 
-	await _check_actual_combined_flow(true)
-	await _check_actual_combined_flow(false)
+	await _check_sequential_milestone_flow()
 
 	GameManager.chosen_upgrade_ids = original_chosen
 	GameManager.stat_fire_rate_level = original_fire_rate
@@ -126,58 +130,66 @@ func _check_solo_elite_close(player: Node) -> void:
 	_expect(not is_instance_valid(overlay), "Solo elite popup must close immediately after confirmation")
 
 
-func _check_actual_combined_flow(elite_first: bool) -> void:
+## Drives the real production milestone flow against game.tscn: the elite
+## popup opens solo, the stat allocation is deferred, and the allocation
+## popup opens only after the elite popup closes. Gameplay must unpause
+## once both decisions are complete.
+func _check_sequential_milestone_flow() -> void:
 	var game_scene: PackedScene = load("res://scenes/game.tscn") as PackedScene
 	var game: Node = game_scene.instantiate()
 	add_child(game)
 	await get_tree().process_frame
-	game.elite_upgrade_active = true
-	game.allocation_active = true
-	get_tree().paused = true
-	game._show_combined(1)
+
+	game._on_elite_upgrade_triggered()
+	game._on_allocation_triggered(1)
+	await get_tree().process_frame
 	await get_tree().process_frame
 
-	var overlay := game.get_child(game.get_child_count() - 1) as CanvasLayer
-	var elite_popup := _find_descendant_with_method(overlay, "_on_upgrade_selected")
-	var allocation_popup := _find_descendant_with_method(overlay, "_on_confirm")
-	_expect(elite_popup != null, "Combined screen must contain the real elite panel")
-	_expect(allocation_popup != null, "Combined screen must contain the real allocation panel")
-	if elite_popup == null or allocation_popup == null:
+	_expect(game.elite_upgrade_active, "Elite popup must be active first")
+	_expect(
+		game._pending_allocation_points == 1,
+		"Allocation must be deferred until the elite popup closes"
+	)
+
+	var elite_overlay := game.get_child(game.get_child_count() - 1) as CanvasLayer
+	var elite_popup := _find_descendant_with_method(elite_overlay, "_on_upgrade_selected")
+	_expect(elite_popup != null, "Milestone flow must open the real elite popup")
+	_expect(
+		_find_descendant_with_method(elite_overlay, "_on_confirm") == null,
+		"Allocation panel must not open alongside the elite popup"
+	)
+	if elite_popup == null:
 		get_tree().paused = false
 		game.queue_free()
 		await get_tree().process_frame
 		return
 
 	var upgrade_id := str(elite_popup.chosen_upgrades[0]["id"])
-	if elite_first:
-		elite_popup._on_upgrade_selected(upgrade_id)
-		await get_tree().create_timer(0.18, true, false, true).timeout
-		_expect(is_instance_valid(overlay), "Combined overlay must wait after elite completion")
-		var card := elite_popup.cards_by_id[upgrade_id] as PanelContainer
-		var button := card.get_meta("select_button") as Button
-		_expect(button.text == "SELECTED" and button.disabled, "Waiting elite panel must stay SELECTED")
-		_expect(not game.elite_upgrade_active and game.allocation_active, "Only elite completion flag should clear")
-		allocation_popup._on_plus_pressed("fire_rate")
-		allocation_popup._on_confirm()
-	else:
-		allocation_popup._on_plus_pressed("fire_rate")
-		allocation_popup._on_confirm()
-		await get_tree().process_frame
-		_expect(is_instance_valid(overlay), "Combined overlay must wait after allocation completion")
-		_expect(
-			allocation_popup.confirm_btn.text == "ALLOCATED" and allocation_popup.confirm_btn.disabled,
-			"Waiting allocation panel must stay ALLOCATED"
-		)
-		_expect(game.elite_upgrade_active and not game.allocation_active, "Only allocation completion flag should clear")
-		elite_popup._on_upgrade_selected(upgrade_id)
-		await get_tree().create_timer(0.10, true, false, true).timeout
-		_expect(is_instance_valid(overlay), "Elite-last flow must retain the 0.15s confirmation")
-		await get_tree().create_timer(0.08, true, false, true).timeout
-
+	elite_popup._on_upgrade_selected(upgrade_id)
+	await get_tree().create_timer(0.25, true, false, true).timeout
 	await get_tree().process_frame
-	_expect(not is_instance_valid(overlay), "Combined overlay must close after both real panels complete")
-	_expect(not game.elite_upgrade_active and not game.allocation_active, "Both completion flags must clear")
-	_expect(not get_tree().paused, "Gameplay must resume after both combined decisions")
+
+	# The elite popup frees its own overlay after confirmation; the deferred
+	# allocation popup must then appear on a new overlay.
+	var alloc_overlay := game.get_child(game.get_child_count() - 1) as CanvasLayer
+	var allocation_popup := _find_descendant_with_method(alloc_overlay, "_on_confirm")
+	_expect(allocation_popup != null, "Allocation popup must open after the elite popup closes")
+	if allocation_popup == null:
+		get_tree().paused = false
+		game.queue_free()
+		await get_tree().process_frame
+		return
+
+	allocation_popup._on_plus_pressed("fire_rate")
+	allocation_popup._on_confirm()
+	await get_tree().process_frame
+	await get_tree().process_frame
+	_expect(
+		not game.elite_upgrade_active and not game.allocation_active,
+		"Both milestone completion flags must clear"
+	)
+	_expect(not get_tree().paused, "Gameplay must resume after both milestone decisions")
+
 	await _clear_player_upgrade_state(game.player)
 	game.queue_free()
 	await get_tree().process_frame
