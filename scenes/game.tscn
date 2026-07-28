@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://dd67s6bc4xvjy"]
+[gd_scene load_steps=11 format=3 uid="uid://dd67s6bc4xvjy"]
 
 [ext_resource type="Script" uid="uid://k78vdvgqtcv0" path="res://scenes/game.gd" id="1_game"]
 [ext_resource type="PackedScene" uid="uid://bpv3rwt1k4f2i" path="res://entities/player/player.tscn" id="2_player"]
@@ -7,17 +7,29 @@
 [ext_resource type="Script" uid="uid://u2ouinr3eduo" path="res://systems/powerup_spawner.gd" id="5_pspawner"]
 [ext_resource type="Script" path="res://systems/threat_director.gd" id="6_threat"]
 [ext_resource type="Script" path="res://systems/special_attack_coordinator.gd" id="7_special"]
+[ext_resource type="Shader" path="res://effects/shaders/galactic_starfield.gdshader" id="8_galaxy"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_galaxy"]
+shader = ExtResource("8_galaxy")
+shader_parameter/u_time = 0.0
+shader_parameter/drift_speed = 0.035
+shader_parameter/nebula_strength = 1.1
+shader_parameter/star_brightness = 1.0
+shader_parameter/space_color = Color(0.003, 0.009, 0.042, 1)
+shader_parameter/nebula_blue = Color(0.02, 0.32, 0.82, 1)
+shader_parameter/nebula_violet = Color(0.08, 0.12, 0.62, 1)
+shader_parameter/nebula_pink = Color(0.12, 0.72, 0.92, 1)
 
 [node name="Game" type="Node2D" unique_id=173375341]
 script = ExtResource("1_game")
 
 [node name="Background" type="ColorRect" parent="." unique_id=846929081]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0.02, 0.02, 0.07, 1)
+material = SubResource("ShaderMaterial_galaxy")
+offset_left = -32.0
+offset_top = -32.0
+offset_right = 392.0
+offset_bottom = 752.0
+color = Color(1, 1, 1, 1)
 
 [node name="StarField" type="Node2D" parent="." unique_id=884997156]
 

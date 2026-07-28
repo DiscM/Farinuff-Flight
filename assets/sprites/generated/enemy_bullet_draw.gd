@@ -4,7 +4,7 @@ static var _enemy_bullet_texture: Texture2D
 
 func _ready() -> void:
 	if _enemy_bullet_texture == null:
-		var size := 24
+		var size := 32
 		var img := Image.create(size, size, false, Image.FORMAT_RGBAF)
 		img.fill(Color.TRANSPARENT)
 
@@ -25,3 +25,4 @@ func _ready() -> void:
 					img.set_pixel(x, y, c)
 		_enemy_bullet_texture = ImageTexture.create_from_image(img)
 	texture = _enemy_bullet_texture
+	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST

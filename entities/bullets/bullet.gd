@@ -12,10 +12,13 @@ var zigzag: bool = false
 var zigzag_stacks: int = 1
 var _zigzag_time: float = 0.0
 var _is_despawning: bool = false
+@onready var sprite: Sprite2D = $Sprite2D
 
 ## Sets up a screen-exit notifier for auto-cleanup and connects the
 ## collision handler to damage enemies on contact.
 func _ready() -> void:
+	if sprite.material != null:
+		sprite.material = sprite.material.duplicate(true)
 	var notifier := VisibleOnScreenNotifier2D.new()
 	add_child(notifier)
 	notifier.screen_exited.connect(_on_screen_exited)
@@ -26,6 +29,7 @@ func pool_activate(spawn_position: Vector2, new_direction: Vector2, scale_multip
 	_is_despawning = false
 	global_position = spawn_position
 	direction = new_direction.normalized() if not new_direction.is_zero_approx() else Vector2.UP
+	rotation = direction.angle() + PI * 0.5
 	scale = Vector2.ONE * scale_multiplier
 	piercing = new_piercing
 	explosive = new_explosive
@@ -37,9 +41,35 @@ func pool_activate(spawn_position: Vector2, new_direction: Vector2, scale_multip
 	monitoring = true
 	monitorable = true
 	visible = true
+	sprite.modulate = Color.WHITE
+	_configure_projectile_shader(spawn_position)
 	process_mode = Node.PROCESS_MODE_INHERIT
 	set_physics_process(true)
 	add_to_group("player_bullets")
+
+## Updates the local shader instance so projectile upgrades are readable at a
+## glance without changing collision, damage, or pooled-resource behavior.
+func _configure_projectile_shader(spawn_position: Vector2) -> void:
+	var material := sprite.material as ShaderMaterial
+	if material == null:
+		return
+	var core_color := Color(0.82, 1.0, 1.0)
+	var glow_color := Color(0.02, 0.72, 1.0)
+	if piercing:
+		core_color = Color(0.94, 0.82, 1.0)
+		glow_color = Color(0.38, 0.16, 1.0)
+	if explosive:
+		core_color = core_color.lerp(Color(1.0, 0.9, 0.55), 0.62)
+		glow_color = glow_color.lerp(Color(1.0, 0.18, 0.025), 0.72)
+	material.set_shader_parameter(&"core_color", core_color)
+	material.set_shader_parameter(&"glow_color", glow_color)
+	material.set_shader_parameter(&"piercing_amount", 1.0 if piercing else 0.0)
+	material.set_shader_parameter(&"explosive_amount", 1.0 if explosive else 0.0)
+	material.set_shader_parameter(&"zigzag_amount", clampf(float(zigzag_stacks) / 5.0, 0.0, 1.0))
+	material.set_shader_parameter(
+		&"phase_offset",
+		fposmod(spawn_position.x * 0.071 + spawn_position.y * 0.037, TAU)
+	)
 
 ## Returns the bullet to the pool after disabling its collision and physics.
 func despawn() -> void:

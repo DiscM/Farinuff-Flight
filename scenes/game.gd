@@ -7,11 +7,44 @@ const ELITE_UPGRADE_SCENE := preload("res://ui/elite_upgrade_popup.tscn")
 const PAUSE_MENU_SCENE := preload("res://ui/pause_menu.tscn")
 const TRY_AGAIN_SCENE := preload("res://ui/try_again_popup.tscn")
 
+const BACKGROUND_PALETTE_TRANSITION_DURATION := 2.4
+const BACKGROUND_EVOLUTION_PALETTES: Array[Dictionary] = [
+	# Generation I — Standard: cold, open deep space.
+	{
+		&"space_color": Color(0.003, 0.009, 0.042),
+		&"nebula_blue": Color(0.02, 0.32, 0.82),
+		&"nebula_violet": Color(0.08, 0.12, 0.62),
+		&"nebula_pink": Color(0.12, 0.72, 0.92),
+	},
+	# Generation II — Augmented: synthetic green with warning-amber filaments.
+	{
+		&"space_color": Color(0.004, 0.025, 0.025),
+		&"nebula_blue": Color(0.02, 0.58, 0.42),
+		&"nebula_violet": Color(0.06, 0.72, 0.25),
+		&"nebula_pink": Color(1.0, 0.38, 0.025),
+	},
+	# Generation III — Warform: hot crimson and furnace orange.
+	{
+		&"space_color": Color(0.04, 0.002, 0.008),
+		&"nebula_blue": Color(0.52, 0.012, 0.035),
+		&"nebula_violet": Color(0.88, 0.025, 0.018),
+		&"nebula_pink": Color(1.0, 0.2, 0.018),
+	},
+	# Generation IV — Apex: ultraviolet and high-energy magenta.
+	{
+		&"space_color": Color(0.02, 0.002, 0.045),
+		&"nebula_blue": Color(0.18, 0.012, 0.76),
+		&"nebula_violet": Color(0.64, 0.018, 0.96),
+		&"nebula_pink": Color(1.0, 0.018, 0.52),
+	},
+]
+
 @onready var player: Area2D = $Player
 @onready var hud: CanvasLayer = $HUD
 @onready var camera: Camera2D = $Camera2D
 @onready var enemy_spawner: Node = $EnemySpawner
 @onready var powerup_spawner: Node = $PowerUpSpawner
+@onready var background: ColorRect = $Background
 
 var game_over_shown: bool = false
 var allocation_active: bool = false
@@ -31,6 +64,7 @@ var shake_intensity: float = 0.0
 var shake_duration: float = 0.0
 var shake_timer: float = 0.0
 var _bg_time: float = 0.0
+var _background_palette_tween: Tween = null
 var _crt_layer: CanvasLayer = null
 var _distort_layer: CanvasLayer = null
 
@@ -70,6 +104,9 @@ func _ready() -> void:
 	# Position player at bottom center
 	var viewport_size := get_viewport().get_visible_rect().size
 	player.position = Vector2(viewport_size.x / 2.0, viewport_size.y - 80.0)
+	get_viewport().size_changed.connect(_resize_background)
+	_resize_background()
+	_apply_background_evolution_palette(GameManager.get_enemy_generation(), true)
 
 	# Dedicated container for boost afterimage sprites.
 	# Parenting afterimages here (rather than the scene root) prevents
@@ -83,17 +120,18 @@ func _ready() -> void:
 	# --- Parallax Background ---
 	var parallax_scene := preload("res://effects/parallax_layer.gd")
 	
+	# The shader owns the nebula so these layers only add crisp parallax stars.
 	# Layer configs: [scroll_speed_y, star_count, min_size, max_size, color, show_nebulae, nebula_count]
 	var layer_configs := [
-		# Layer 1 — Deep (slowest, tiny dim stars, faint nebulae)
+		# Layer 1 — Deep (slowest, tiny dim stars)
 		{"speed": 15.0, "stars": 120, "min_sz": 0.5, "max_sz": 1.2,
-		 "color": Color(0.6, 0.7, 1.0), "nebulae": true, "neb_count": 5},
+		 "color": Color(0.6, 0.7, 1.0), "nebulae": false, "neb_count": 0},
 		# Layer 2 — Mid (medium speed, normal stars)
 		{"speed": 40.0, "stars": 80, "min_sz": 1.0, "max_sz": 2.2,
 		 "color": Color(0.8, 0.88, 1.0), "nebulae": false, "neb_count": 0},
 		# Layer 3 — Near (fastest, large bright stars with subtle color)
 		{"speed": 80.0, "stars": 35, "min_sz": 1.8, "max_sz": 3.5,
-		 "color": Color(0.9, 0.95, 1.0), "nebulae": true, "neb_count": 3},
+		 "color": Color(0.9, 0.95, 1.0), "nebulae": false, "neb_count": 0},
 	]
 	
 	for cfg in layer_configs:
@@ -168,6 +206,55 @@ func _ready() -> void:
 
 	_apply_visual_settings()
 
+
+## Sizes the shader host explicitly because its parent is a Node2D, which
+## cannot provide Control anchors with a layout rectangle. A small border
+## keeps the galaxy covering the screen during camera shake.
+func _resize_background() -> void:
+	var viewport_rect := get_viewport().get_visible_rect()
+	var overscan := Vector2(32.0, 32.0)
+	background.position = viewport_rect.position - overscan
+	background.size = viewport_rect.size + overscan * 2.0
+
+
+## Crossfades the galaxy's four color uniforms to the palette associated with
+## the active enemy generation. Starting from the material's current colors
+## makes repeated or interrupted transitions remain visually continuous.
+func _apply_background_evolution_palette(generation: int, immediate: bool = false) -> void:
+	var material := background.material as ShaderMaterial
+	if material == null:
+		return
+	var palette := BACKGROUND_EVOLUTION_PALETTES[clampi(generation, 1, 4) - 1]
+
+	if _background_palette_tween != null and _background_palette_tween.is_valid():
+		_background_palette_tween.kill()
+
+	if immediate:
+		for parameter: StringName in palette:
+			material.set_shader_parameter(parameter, palette[parameter])
+		return
+
+	_background_palette_tween = create_tween()
+	_background_palette_tween.set_parallel(true)
+	_background_palette_tween.set_trans(Tween.TRANS_SINE)
+	_background_palette_tween.set_ease(Tween.EASE_IN_OUT)
+	for parameter: StringName in palette:
+		var current_color: Color = material.get_shader_parameter(parameter)
+		var target_color: Color = palette[parameter]
+		_background_palette_tween.tween_method(
+			_set_background_shader_color.bind(parameter),
+			current_color,
+			target_color,
+			BACKGROUND_PALETTE_TRANSITION_DURATION
+		)
+
+
+func _set_background_shader_color(color: Color, parameter: StringName) -> void:
+	var material := background.material as ShaderMaterial
+	if material != null:
+		material.set_shader_parameter(parameter, color)
+
+
 ## Per-frame update: handles camera shake decay, feeds time to the background
 ## shader, scrolls foreground planets downward, cleans up off-screen planets,
 ## and periodically spawns new planets above the viewport.
@@ -186,8 +273,8 @@ func _process(delta: float) -> void:
 		
 	# Feed paused time to the background shader
 	_bg_time += delta
-	if is_instance_valid($Background) and $Background.material:
-		($Background.material as ShaderMaterial).set_shader_parameter("u_time", _bg_time)
+	if is_instance_valid(background) and background.material:
+		(background.material as ShaderMaterial).set_shader_parameter("u_time", _bg_time)
 
 	# --- Foreground planet continuous spawning ---
 	if is_instance_valid(_planet_container):
@@ -585,6 +672,7 @@ func _show_evolution_banner() -> void:
 	get_tree().call_group("hostile_ordnance", "clear_ordnance")
 	get_tree().call_group("rail_beams", "despawn")
 	enemy_spawner.clear_for_transition()
+	_apply_background_evolution_palette(generation)
 
 	var overlay := CanvasLayer.new()
 	overlay.layer = 30

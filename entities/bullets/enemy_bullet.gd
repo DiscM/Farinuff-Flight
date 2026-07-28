@@ -14,6 +14,8 @@ var _is_despawning: bool = false
 
 ## Initializes the bullet: sets up the visibility ring and screen exit cleanup.
 func _ready() -> void:
+	if sprite.material != null:
+		sprite.material = sprite.material.duplicate(true)
 	if has_meta("direction"):
 		direction = get_meta("direction")
 	if has_meta("custom_speed"):
@@ -42,6 +44,7 @@ func pool_activate(spawn_position: Vector2, new_direction: Vector2 = Vector2.DOW
 	_pulse_time = 0.0
 	z_index = 24
 	sprite.modulate = bullet_color
+	_configure_projectile_shader(spawn_position, false)
 	if is_instance_valid(_visibility_ring):
 		_visibility_ring.modulate = bullet_color
 		_visibility_ring.scale = Vector2.ONE
@@ -53,6 +56,18 @@ func pool_activate(spawn_position: Vector2, new_direction: Vector2 = Vector2.DOW
 	process_mode = Node.PROCESS_MODE_INHERIT
 	set_physics_process(true)
 	add_to_group("enemy_bullets")
+
+## Gives every pooled orb a stable animation phase and resets its reflected
+## state without allocating a new material on every shot.
+func _configure_projectile_shader(spawn_position: Vector2, reflected: bool) -> void:
+	var material := sprite.material as ShaderMaterial
+	if material == null:
+		return
+	material.set_shader_parameter(
+		&"phase_offset",
+		fposmod(spawn_position.x * 0.053 + spawn_position.y * 0.031, TAU)
+	)
+	material.set_shader_parameter(&"reflected_amount", 1.0 if reflected else 0.0)
 
 ## Returns the enemy bullet to the pool after disabling its collision and
 ## physics so it can be safely reused later.
@@ -105,6 +120,7 @@ func deflect(deflector_position: Vector2, deflector_velocity: Vector2) -> bool:
 	collision_layer = 0
 	collision_mask = 2
 	sprite.modulate = PLAYER_PROJECTILE_COLOR
+	_configure_projectile_shader(global_position, true)
 	if is_instance_valid(_visibility_ring):
 		_visibility_ring.modulate = PLAYER_PROJECTILE_COLOR
 		_visibility_ring.scale = Vector2.ONE * 1.18

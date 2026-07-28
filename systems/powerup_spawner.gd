@@ -41,15 +41,17 @@ func _on_spawn_timer_timeout() -> void:
 	_restart_timer()
 
 ## Instantiates a power-up at a random X position along the top of the
-## screen with a random type (0–5), and adds it to the current scene.
+## screen with a random type (0–5, excluding Nuke during boss fights), and
+## adds it to the current scene.
 func _spawn_powerup() -> void:
 	var pu: Area2D = POWER_UP_SCENE.instantiate()
 	pu.position = Vector2(
 		randf_range(margin, viewport_width - margin),
 		-20.0
 	)
-	# Random type
-	var type_index := randi_range(0, 5)
+	# Nukes are disabled during boss fights so they cannot erase the boss.
+	var max_type_index := 4 if GameManager.boss_active else 5
+	var type_index := randi_range(0, max_type_index)
 	pu.type = type_index
 	var scene_root := get_tree().current_scene
 	scene_root.add_child(pu)
