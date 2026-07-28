@@ -34,11 +34,16 @@ var _bg_time: float = 0.0
 var _crt_layer: CanvasLayer = null
 var _distort_layer: CanvasLayer = null
 
-# --- Background planet continuous spawning ---
+# --- Foreground planet continuous spawning ---
 var _planet_container: Node2D = null   # Plain Node2D, moves with _process
 var _planet_spawn_timer: float = 0.0
-var _planet_spawn_interval: float = 6.0   # seconds between planet spawns
+var _planet_spawn_interval: float = 16.0  # seconds between planet spawns
 var _planet_scene_ref = null              # cached preloaded script
+var _planets_suspended: bool = false      # true during boss fights (black hole owns the sky)
+
+# --- Boss black hole set piece ---
+const BOSS_BLACK_HOLE_SCRIPT := preload("res://effects/boss_black_hole.gd")
+var _boss_black_hole: Node2D = null
 
 ## Initializes the game scene: starts the game via GameManager, sets up spawners,
 ## connects signals, positions the player, builds the parallax star field with
@@ -55,6 +60,8 @@ func _ready() -> void:
 
 	SignalBus.game_over.connect(_on_game_over)
 	SignalBus.screen_shake.connect(_on_screen_shake)
+	SignalBus.boss_spawned.connect(_on_boss_spawned)
+	SignalBus.boss_died.connect(_on_boss_died_resume_planets)
 	SignalBus.allocation_triggered.connect(_on_allocation_triggered)
 	SignalBus.elite_upgrade_triggered.connect(_on_elite_upgrade_triggered)
 	SignalBus.evolution_transition_pending.connect(_on_evolution_transition_pending)
@@ -108,19 +115,19 @@ func _ready() -> void:
 		add_child(p2d)
 		move_child(p2d, 1) # After Background ColorRect
 
-	# --- Background Planets (continuous spawner) ---
+	# --- Foreground Planets (continuous spawner) ---
 	_planet_scene_ref = preload("res://effects/planet_background.gd")
 
 	# Use a plain Node2D so we control position entirely via _process.
-	# It sits behind the star parallax layers.
+	# Planets are a foreground feature: they draw above the star parallax
+	# layers (indices 1–3) instead of hiding behind them.
 	_planet_container = Node2D.new()
 	_planet_container.name = "PlanetContainer"
 	add_child(_planet_container)
-	move_child(_planet_container, 1) # Behind stars
-	
-	# Pre-seed a few planets spread across the visible screen so it isn't empty at start
-	# var viewport_size := get_viewport().get_visible_rect().size
-	for i in range(randi_range(3, 5)):
+	move_child(_planet_container, 4) # Above stars
+
+	# Pre-seed a planet or two so the screen isn't empty at start
+	for i in range(randi_range(1, 2)):
 		_spawn_background_planet(randf_range(-50.0, viewport_size.y + 50.0))
 
 	# --- Shader Injection ---
@@ -162,7 +169,7 @@ func _ready() -> void:
 	_apply_visual_settings()
 
 ## Per-frame update: handles camera shake decay, feeds time to the background
-## shader, scrolls background planets downward, cleans up off-screen planets,
+## shader, scrolls foreground planets downward, cleans up off-screen planets,
 ## and periodically spawns new planets above the viewport.
 func _process(delta: float) -> void:
 	# Camera shake
@@ -182,7 +189,7 @@ func _process(delta: float) -> void:
 	if is_instance_valid($Background) and $Background.material:
 		($Background.material as ShaderMaterial).set_shader_parameter("u_time", _bg_time)
 
-	# --- Background planet continuous spawning ---
+	# --- Foreground planet continuous spawning ---
 	if is_instance_valid(_planet_container):
 		var vp_size := get_viewport().get_visible_rect().size
 		var scroll_speed := 10.0  # must match planet_parallax autoscroll Y
@@ -191,18 +198,22 @@ func _process(delta: float) -> void:
 		for child in _planet_container.get_children():
 			child.position.y += scroll_speed * delta
 			# Clean up planets that have fully scrolled past the bottom
-			if child.position.y > vp_size.y + 200.0:
+			# (generous margin — planets are large now and must exit fully)
+			if child.position.y > vp_size.y + 450.0:
 				child.queue_free()
 
-		# Timer-based spawn
-		_planet_spawn_timer -= delta
-		if _planet_spawn_timer <= 0.0:
-			_planet_spawn_timer = randf_range(_planet_spawn_interval * 0.6, _planet_spawn_interval * 1.4)
-			_spawn_background_planet(-150.0)  # just above the viewport
+		# Timer-based spawn. Suspended during boss fights; the timer value is
+		# deliberately left untouched while suspended so generation continues
+		# from exactly where it was once the boss is defeated.
+		if not _planets_suspended:
+			_planet_spawn_timer -= delta
+			if _planet_spawn_timer <= 0.0:
+				_planet_spawn_timer = randf_range(_planet_spawn_interval * 0.6, _planet_spawn_interval * 1.4)
+				_spawn_background_planet(-250.0)  # just above the viewport
 
-## Spawns a single background planet at the given Y position (random X).
+## Spawns a single foreground planet at the given Y position (random X).
 ## Creates a Node2D with the planet_background script attached and adds it
-## to the planet container at a random scale for depth variation.
+## to the planet container at a large, screen-dominating scale.
 func _spawn_background_planet(y_pos: float) -> void:
 	if not is_instance_valid(_planet_container) or _planet_scene_ref == null:
 		return
@@ -210,9 +221,41 @@ func _spawn_background_planet(y_pos: float) -> void:
 	var node := Node2D.new()
 	node.set_script(_planet_scene_ref)
 	node.position = Vector2(randf_range(60.0, vp_size.x - 60.0), y_pos)
-	var s := randf_range(0.25, 1.0)
+	var s := randf_range(0.9, 1.8)
 	node.scale = Vector2(s, s)
 	_planet_container.add_child(node)
+
+## Spawns the boss-fight black hole when a boss arrives. The hole phases in
+## and grows for the whole fight, and frees itself on boss_died. Also
+## suspends planet generation and fizzles out any live planets so the black
+## hole owns the sky for the duration of the fight.
+func _on_boss_spawned(_health: int, _max_health: int, _boss_name: String) -> void:
+	_planets_suspended = true
+	_fizzle_out_planets()
+	if is_instance_valid(_boss_black_hole):
+		return
+	_boss_black_hole = Node2D.new()
+	_boss_black_hole.set_script(BOSS_BLACK_HOLE_SCRIPT)
+	add_child(_boss_black_hole)
+	# Draw above the foreground planets, below the gameplay nodes.
+	move_child(_boss_black_hole, _planet_container.get_index() + 1)
+
+## Fades and shrinks every live planet away (with slight per-planet timing
+## variation so they don't all vanish in lockstep), then frees them.
+func _fizzle_out_planets() -> void:
+	if not is_instance_valid(_planet_container):
+		return
+	for child in _planet_container.get_children():
+		var tween := create_tween()
+		tween.set_parallel(true)
+		tween.tween_property(child, "modulate:a", 0.0, randf_range(1.0, 1.8)).set_ease(Tween.EASE_IN)
+		tween.tween_property(child, "scale", child.scale * 0.15, randf_range(1.2, 2.0)).set_ease(Tween.EASE_IN)
+		tween.chain().tween_callback(child.queue_free)
+
+## Resumes planet generation when the boss dies. The spawn timer kept its
+## pre-fight value, so generation continues right where it left off.
+func _on_boss_died_resume_planets(_points: int) -> void:
+	_planets_suspended = false
 
 ## Consolidates all pause sources (pause menu, allocation popup, elite upgrade,
 ## try-again screen) into a single paused state for the scene tree.

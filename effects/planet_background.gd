@@ -2,9 +2,10 @@ extends Node2D
 ## Logic for managing randomly generated background planets using PixelPlanets shaders.
 
 const BASE_PATH = "res://effects/shaders/PixelPlanets/Planets/"
+# Note: BlackHole is intentionally excluded from the random pool — it is
+# reserved for boss fights (see effects/boss_black_hole.gd).
 const PLANET_SCENES = [
 	"Asteroids/Asteroid.tscn",
-	"BlackHole/BlackHole.tscn",
 	"DryTerran/DryTerran.tscn",
 	"Galaxy/Galaxy.tscn",
 	"GasPlanet/GasPlanet.tscn",

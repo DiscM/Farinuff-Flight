@@ -29,6 +29,21 @@ const HUD_PANEL_DARK_ALPHA := 0.12
 # Orb meter (built in code)
 const MAX_VISIBLE_HEARTS: int = 10
 
+# --- Active power-up timers ---
+## Timed power-ups shown as live countdown chips in the PowerUpPanel, keyed
+## by the PowerUp.Type int carried by SignalBus.power_up_collected.
+## "timer" names the player's Timer node driving that effect.
+const TIMED_POWER_UPS: Dictionary = {
+	1: {"key": &"rapid", "label": "RAPID", "color": Color(1.0, 0.8, 0.0), "timer": "rapid_fire_timer"},
+	3: {"key": &"spread", "label": "SPREAD", "color": Color(1.0, 0.4, 0.8), "timer": "spread_shot_timer"},
+	4: {"key": &"magnet", "label": "MAGNET", "color": Color(0.6, 0.4, 1.0), "timer": "magnet_timer"},
+}
+const SHIELD_TYPE: int = 2
+const SHIELD_CHIP: Dictionary = {"key": &"shield", "label": "SHIELD", "color": Color(0.3, 0.9, 0.5)}
+
+var _effect_chips: Dictionary = {}  # StringName key -> {panel, time, bar}
+var _player: Node = null
+
 ## Connects all HUD-relevant signals from the SignalBus, hides the boss
 ## bar initially, and builds the orb meter UI.
 func _ready() -> void:
@@ -183,9 +198,104 @@ func _on_boss_died(_points: int) -> void:
 
 # --- Power-ups ---
 
+## Polls the player's power-up timers every frame and keeps one chip per
+## active effect in the PowerUpPanel. Timed effects (rapid fire, spread shot,
+## magnet) show a live countdown and a depleting bar; the shield shows a
+## persistent "HELD" chip until it absorbs a hit.
+func _process(_delta: float) -> void:
+	_sync_power_up_timers()
+
+func _sync_power_up_timers() -> void:
+	if not is_instance_valid(_player):
+		_player = get_tree().get_first_node_in_group("player")
+	if _player == null:
+		_clear_effect_chips()
+		return
+	for type: int in TIMED_POWER_UPS:
+		var cfg: Dictionary = TIMED_POWER_UPS[type]
+		var timer: Timer = _player.get(cfg["timer"]) as Timer
+		if timer != null and timer.time_left > 0.0:
+			_update_effect_chip(cfg, timer.time_left, timer.wait_time)
+		else:
+			_remove_effect_chip(cfg["key"])
+	# Shield persists until consumed — no countdown.
+	if bool(_player.get("has_shield")):
+		_update_effect_chip(SHIELD_CHIP, -1.0, 1.0)
+	else:
+		_remove_effect_chip(SHIELD_CHIP["key"])
+
+## Creates the chip for an effect on first use, then refreshes its countdown
+## text and progress bar. A negative remaining time means "no timer" (shield).
+func _update_effect_chip(cfg: Dictionary, remaining: float, duration: float) -> void:
+	var key: StringName = cfg["key"]
+	if not _effect_chips.has(key):
+		_effect_chips[key] = _build_effect_chip(cfg)
+	var chip: Dictionary = _effect_chips[key]
+	if remaining >= 0.0:
+		(chip["time"] as Label).text = "%.1fs" % remaining
+		(chip["bar"] as ProgressBar).value = remaining / maxf(duration, 0.01)
+	else:
+		(chip["time"] as Label).text = "HELD"
+		(chip["bar"] as ProgressBar).value = 1.0
+
+## Builds a compact color-coded chip: effect name on top, countdown beneath,
+## and a thin depleting progress bar at the bottom.
+func _build_effect_chip(cfg: Dictionary) -> Dictionary:
+	var accent: Color = cfg["color"]
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(40, 30)
+	panel.add_theme_stylebox_override("panel", _hud_outline(accent, Color(0.01, 0.04, 0.09, 0.28), 4))
+	var vbox := VBoxContainer.new()
+	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
+	vbox.add_theme_constant_override("separation", 1)
+	panel.add_child(vbox)
+	var name_label := Label.new()
+	name_label.text = cfg["label"]
+	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name_label.add_theme_color_override("font_color", accent)
+	name_label.add_theme_font_size_override("font_size", 7)
+	vbox.add_child(name_label)
+	var time_label := Label.new()
+	time_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	time_label.add_theme_color_override("font_color", NeonUI.WHITE)
+	time_label.add_theme_font_size_override("font_size", 7)
+	vbox.add_child(time_label)
+	var bar := ProgressBar.new()
+	bar.custom_minimum_size = Vector2(0, 3)
+	bar.min_value = 0.0
+	bar.max_value = 1.0
+	bar.value = 1.0
+	bar.show_percentage = false
+	_style_progress_bar(bar, accent)
+	vbox.add_child(bar)
+	power_up_container.add_child(panel)
+	# Brief fade-in so chips don't pop harshly
+	panel.modulate.a = 0.0
+	var tween := create_tween()
+	tween.tween_property(panel, "modulate:a", 1.0, 0.15)
+	return {"panel": panel, "time": time_label, "bar": bar}
+
+## Fades out and frees an effect's chip if one is currently shown.
+func _remove_effect_chip(key: StringName) -> void:
+	if not _effect_chips.has(key):
+		return
+	var panel: PanelContainer = _effect_chips[key]["panel"]
+	_effect_chips.erase(key)
+	if is_instance_valid(panel):
+		var tween := create_tween()
+		tween.tween_property(panel, "modulate:a", 0.0, 0.2)
+		tween.tween_callback(panel.queue_free)
+
+func _clear_effect_chips() -> void:
+	for key: StringName in _effect_chips.keys():
+		_remove_effect_chip(key)
+
 ## Shows a brief color-coded text indicator when a power-up is collected
-## (e.g. "RAPID FIRE!"), then fades it out after 1.5 seconds.
+## (e.g. "NUKE!"), then fades it out after 1.5 seconds. Timed effects and the
+## shield are skipped here — they get persistent countdown chips instead.
 func _on_power_up_collected(type: int, _pos: Vector2) -> void:
+	if TIMED_POWER_UPS.has(type) or type == SHIELD_TYPE:
+		return
 	# Show brief indicator
 	var indicator := Label.new()
 	var names := ["SCALE", "RAPID", "SHIELD", "SPREAD", "MAGNET", "NUKE"]

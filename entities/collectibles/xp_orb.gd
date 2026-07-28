@@ -4,8 +4,12 @@ extends Area2D
 
 @export var orb_value: int = 1
 @export var drift_speed: float = 40.0
+## Direction the orb floats in. Set by the dying enemy so drops drift the
+## same way the enemy was travelling.
+var drift_direction: Vector2 = Vector2.DOWN
 
 var bob_time: float = 0.0
+var _entered_screen: bool = false
 
 ## Initializes the orb: adds to the "xp_orbs" group, connects collision,
 ## attaches a screen-exit notifier, sets the color based on value tier,
@@ -17,6 +21,10 @@ func _ready() -> void:
 	var notifier := VisibleOnScreenNotifier2D.new()
 	add_child(notifier)
 	notifier.screen_exited.connect(_on_screen_exited)
+	notifier.screen_entered.connect(_on_screen_entered)
+	# Safety net for orbs that never cross the screen (e.g. spawned at an
+	# edge drifting outward) — the notifier alone would never free them.
+	get_tree().create_timer(20.0).timeout.connect(queue_free)
 
 	_update_color()
 
@@ -44,13 +52,14 @@ func _update_color() -> void:
 	if $Sprite2D.has_method("generate_texture"):
 		$Sprite2D.generate_texture(base_col, edge_col)
 
-## Drifts the orb downward and applies a gentle horizontal sine-wave bob
-## for a floating visual effect.
+## Drifts the orb along drift_direction (the spawning enemy's heading) and
+## applies a gentle sine-wave bob perpendicular to the drift for a floating
+## visual effect.
 func _physics_process(delta: float) -> void:
-	position.y += drift_speed * delta
+	position += drift_direction * drift_speed * delta
 	# Floating bob effect
 	bob_time += delta
-	position.x += sin(bob_time * 3.0) * 0.4
+	position += drift_direction.orthogonal() * sin(bob_time * 3.0) * 0.4
 
 ## Handles collision with the player — triggers collection.
 func _on_area_entered(area: Area2D) -> void:
@@ -68,10 +77,16 @@ func _collect() -> void:
 	_spawn_collect_effect()
 	queue_free()
 
-## Frees the orb when it exits the bottom of the screen (only if it has
-## actually fallen below the viewport, not just spawned off-screen at top).
+## Latches once the orb has been on screen. Orbs can drift in any direction
+## now, so cleanup is based on having been visible at least once rather than
+## on a fixed fall direction.
+func _on_screen_entered() -> void:
+	_entered_screen = true
+
+## Frees the orb when it leaves the screen in any direction after having
+## been visible (prevents premature cleanup when spawned just off-screen).
 func _on_screen_exited() -> void:
-	if global_position.y > 0:
+	if _entered_screen:
 		queue_free()
 
 ## Spawns a brief CPU particle burst at the orb's position using a color

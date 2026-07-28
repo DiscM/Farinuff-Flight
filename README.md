@@ -27,6 +27,7 @@ Failure uses a try-again flow before final game over. Remaining try-again stocks
 - Boost: `Shift`
 - Pause: `Escape`
 - Free aim: mouse movement or controller right stick
+- Alt controls (Settings toggle): shoot with `Left Mouse Button`, boost with `Space`
 
 ## Tech Stack
 
