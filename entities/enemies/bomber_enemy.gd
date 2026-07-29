@@ -13,9 +13,10 @@ var viewport_size: Vector2 = Vector2(360.0, 720.0)
 var mine_timer := 5.0
 var mine_count := 0
 
-## Sets stats for the bomber (2 HP, slow speed, 200 points, guaranteed orb),
-## randomizes which perpendicular direction it drifts initially, and
-## staggers the first bomb drop timer.
+## Initializes the bomber: randomizes which perpendicular direction it
+## drifts initially and staggers the first bomb drop timer. Health, speed,
+## and points come from the evolution-stage data in the scene, not this
+## script.
 func _ready() -> void:
 	archetype_id = &"bomber"
 	orb_value = 2

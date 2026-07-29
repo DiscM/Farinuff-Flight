@@ -1,6 +1,9 @@
 extends Node
 
 const POOL_KEY_META := "_pool_key"
+## Maximum idle nodes retained per scene. Boss-wave spikes would otherwise
+## keep hundreds of idle nodes alive for the rest of the run.
+const MAX_IDLE_PER_SCENE := 128
 
 var _available: Dictionary = {}
 
@@ -34,8 +37,11 @@ func release(node: Node) -> void:
 	var parent := node.get_parent()
 	if parent != null:
 		parent.remove_child(node)
-	add_child(node)
 	var bucket: Array = _available.get(key, [])
+	if bucket.size() >= MAX_IDLE_PER_SCENE:
+		node.queue_free()
+		return
+	add_child(node)
 	bucket.append(node)
 	_available[key] = bucket
 

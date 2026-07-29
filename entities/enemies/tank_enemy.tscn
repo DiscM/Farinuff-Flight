@@ -37,7 +37,7 @@ generation = 1
 display_name = "Standard"
 texture = ExtResource("6")
 collision_shape = SubResource("shape1")
-max_health = 15
+max_health = 8
 move_speed = 80.0
 base_points = 300
 [node name="Origins" type="Node2D" parent="VisualRoot/Evolution/GenerationI"]
@@ -49,7 +49,7 @@ generation = 2
 display_name = "Augmented"
 texture = ExtResource("7")
 collision_shape = SubResource("shape2")
-max_health = 18
+max_health = 9
 move_speed = 82.0
 base_points = 300
 [node name="Origins" type="Node2D" parent="VisualRoot/Evolution/GenerationII"]
@@ -61,7 +61,7 @@ generation = 3
 display_name = "Warform"
 texture = ExtResource("8")
 collision_shape = SubResource("shape3")
-max_health = 22
+max_health = 11
 move_speed = 85.0
 base_points = 300
 [node name="Origins" type="Node2D" parent="VisualRoot/Evolution/GenerationIII"]
@@ -73,7 +73,7 @@ generation = 4
 display_name = "Apex"
 texture = ExtResource("9")
 collision_shape = SubResource("shape4")
-max_health = 26
+max_health = 13
 move_speed = 88.0
 base_points = 300
 [node name="Origins" type="Node2D" parent="VisualRoot/Evolution/GenerationIV"]

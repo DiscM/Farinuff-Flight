@@ -62,6 +62,9 @@ var _evolution_banner_active: bool = false
 # Screen shake state
 var shake_intensity: float = 0.0
 var shake_timer: float = 0.0
+## Sequence id for overlapping hit-stop calls — the latest call wins the
+## time_scale restore.
+var _hit_stop_seq: int = 0
 var _bg_time: float = 0.0
 var _background_palette_tween: Tween = null
 var _crt_layer: CanvasLayer = null
@@ -97,6 +100,7 @@ func _ready() -> void:
 	SignalBus.boss_died.connect(_on_boss_died_resume_planets)
 	SignalBus.allocation_triggered.connect(_on_allocation_triggered)
 	SignalBus.elite_upgrade_triggered.connect(_on_elite_upgrade_triggered)
+	SignalBus.power_up_collected.connect(_on_power_up_collected_hit_stop)
 	SignalBus.evolution_transition_pending.connect(_on_evolution_transition_pending)
 	SaveManager.settings_changed.connect(_apply_visual_settings)
 
@@ -342,11 +346,31 @@ func _fizzle_out_planets() -> void:
 ## pre-fight value, so generation continues right where it left off.
 func _on_boss_died_resume_planets(_points: int) -> void:
 	_planets_suspended = false
+	_hit_stop(0.25, 0.05)
+
+## Adds a small hit-stop punch to nuke pickups.
+func _on_power_up_collected_hit_stop(type: int, _pos: Vector2) -> void:
+	if type == PowerUp.Type.NUKE:
+		_hit_stop(0.15, 0.1)
+
+## Briefly freezes the action for impact emphasis ("hit-stop"). The timer
+## ignores the slowed time scale and always processes, so it resolves even
+## if a popup pauses the tree mid-effect. Overlapping calls: latest wins.
+func _hit_stop(duration: float, time_scale: float) -> void:
+	_hit_stop_seq += 1
+	var seq := _hit_stop_seq
+	Engine.time_scale = time_scale
+	await get_tree().create_timer(duration, true, false, true).timeout
+	if seq == _hit_stop_seq:
+		Engine.time_scale = 1.0
 
 ## Consolidates all pause sources (pause menu, allocation popup, elite upgrade,
 ## try-again screen) into a single paused state for the scene tree.
+## Single choke point for tree pausing. Every pause source is a flag OR'd
+## here — never write get_tree().paused directly elsewhere, or a later
+## recompute from these flags would silently stomp it.
 func _update_pause_state() -> void:
-	get_tree().paused = pause_active or allocation_active or elite_upgrade_active or try_again_active
+	get_tree().paused = pause_active or allocation_active or elite_upgrade_active or try_again_active or game_over_shown
 	_sync_hud_visibility()
 
 ## Keeps the gameplay HUD out of modal upgrade/allocation screens so it
@@ -427,6 +451,7 @@ func _on_game_over(final_score: int) -> void:
 	if game_over_shown:
 		return
 	_final_score_cache = final_score
+	_hit_stop(0.3, 0.15)
 
 	if GameManager.try_again_stocks > 0 and not try_again_active:
 		# Intercept — offer a try-again before the true game over
@@ -480,9 +505,9 @@ func _show_game_over(final_score: int) -> void:
 	if game_over_shown:
 		return
 	game_over_shown = true
-	get_tree().paused = true
-	# process_always must stay true (the default): the tree is paused, so a
-	# pausable timer would never fire and the game-over screen would never appear.
+	_update_pause_state()
+	# process_always must stay true: the tree is paused, so a pausable
+	# timer would never fire and the game-over screen would never appear.
 	await get_tree().create_timer(0.8, true, false, true).timeout
 	var overlay := CanvasLayer.new()
 	overlay.process_mode = Node.PROCESS_MODE_ALWAYS
@@ -520,7 +545,9 @@ func _on_allocation_triggered(points: int) -> void:
 
 
 func _show_allocation_popup(points: int) -> void:
-	get_tree().paused = true
+	# allocation_active is always already set by the callers, so this is
+	# equivalent to a direct pause write but goes through the choke point.
+	_update_pause_state()
 	var overlay := CanvasLayer.new()
 	overlay.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(overlay)
@@ -544,10 +571,8 @@ func _on_elite_upgrade_triggered() -> void:
 	if elite_upgrade_active:
 		return
 	elite_upgrade_active = true
-	_sync_hud_visibility()
-
-	# Pause immediately
-	get_tree().paused = true
+	# Pauses via the flag-based choke point
+	_update_pause_state()
 
 	# Wait one frame so allocation_triggered (emitted right after) can set its flag
 	await get_tree().process_frame

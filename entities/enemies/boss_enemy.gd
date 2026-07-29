@@ -2,7 +2,9 @@ extends BaseEnemy
 class_name BossEnemy
 ## Boss enemy — actively moves around the screen in phases, cycles through unique attack patterns.
 ## Regular bosses appear every 5th wave with archetype-specific base HP.
-## Elite bosses appear every 10th wave with 125 HP, and the Wave 20 Tempest Core is a special encounter.
+## Elite bosses appear every 10th wave with 63 HP, and the Wave 20 Tempest Core is a special encounter.
+## (All boss HP was halved in the 2026-07 balance retune to preserve the original
+## hits-to-kill after the double-damage collision bug was fixed.)
 
 const TEMPEST_SECTION_SCRIPT := preload("res://entities/enemies/tempest_section.gd")
 const TEMPEST_CORE_TEXTURE := preload("res://assets/sprites/generated/tempest_core_idle_strip.png")
@@ -75,7 +77,7 @@ func _ready() -> void:
 	if is_tempest_core:
 		_configure_tempest_core()
 	elif is_elite:
-		max_health = 125
+		max_health = 63
 		points = 5000
 		orb_value = 10
 		boss_variant = BossVariant.TEMPEST
@@ -135,7 +137,7 @@ func _get_telegraph_marker_texture() -> Texture2D:
 ## Configures the Tempest Core boss (Wave 20): sets high HP, points,
 ## orb value, variant type, title, and bullet color.
 func _configure_tempest_core() -> void:
-	max_health = 300
+	max_health = 150
 	points = 12000
 	orb_value = 18
 	boss_variant = BossVariant.TEMPEST
@@ -155,17 +157,17 @@ func _configure_regular_variant() -> void:
 		1:
 			boss_variant = BossVariant.ASSAULT
 			boss_title = "BOSS: ASSAULT WING"
-			max_health = 46
+			max_health = 23
 			bullet_color = Color(3.0, 0.35, 0.35, 1.0)
 		2:
 			boss_variant = BossVariant.BULWARK
 			boss_title = "BOSS: BULWARK ARRAY"
-			max_health = 62
+			max_health = 31
 			bullet_color = Color(2.0, 0.4, 3.0, 1.0)
 		_:
 			boss_variant = BossVariant.TEMPEST
 			boss_title = "BOSS: TEMPEST FORK"
-			max_health = 52
+			max_health = 26
 			bullet_color = Color(2.8, 0.08, 1.9, 1.0)
 
 ## Builds the ordered list of attack patterns the boss will cycle through,
@@ -785,7 +787,9 @@ func take_damage(amount: int) -> void:
 	if health > 0:
 		SignalBus.boss_health_changed.emit(health)
 		_update_damage_effects()
-	if is_tempest_core and health > 0 and not tempest_overload_triggered and health <= int(max_boss_health * 0.42):
+	# Only trigger from EXPOSED: chip damage during CONDUITS must not skip
+	# the designed phase order by jumping straight to OVERLOAD.
+	if is_tempest_core and health > 0 and tempest_phase == TempestPhase.EXPOSED and not tempest_overload_triggered and health <= int(max_boss_health * 0.42):
 		tempest_overload_triggered = true
 		_start_tempest_phase(TempestPhase.OVERLOAD)
 

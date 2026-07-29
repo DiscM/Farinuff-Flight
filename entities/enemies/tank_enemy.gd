@@ -12,8 +12,10 @@ var overload_step_timer := 0.0
 var overload_shots := 0
 var overload_angle := 0.0
 
-## Sets stats for the tank enemy (15 HP, slow, 300 points, guaranteed 3-value orb)
-## and randomizes the first shot timer so multiple tanks don't fire simultaneously.
+## Initializes the tank enemy: sets the guaranteed high-value orb and
+## randomizes the first shot timer so multiple tanks don't fire
+## simultaneously. Health, speed, and points come from the evolution-stage
+## data in the scene, not this script.
 func _ready() -> void:
 	archetype_id = &"tank"
 	orb_value = 3  # High-value Tank orb

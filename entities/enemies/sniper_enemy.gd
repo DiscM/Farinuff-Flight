@@ -16,8 +16,9 @@ var _aim_timer := 0.0
 var _locked_direction := Vector2.ZERO
 var _rail_used := false
 
-## Sets stats for the sniper enemy (3 HP, moderate speed, 260 points,
-## guaranteed 2-value orb) and randomizes the first shot delay.
+## Initializes the sniper enemy: sets the guaranteed 2-value orb and
+## randomizes the first shot delay. Health, speed, and points come from
+## the evolution-stage data in the scene, not this script.
 func _ready() -> void:
 	archetype_id = &"sniper"
 	orb_value = 2
