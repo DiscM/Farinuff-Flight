@@ -37,7 +37,9 @@ func pool_activate(spawn_position: Vector2, new_direction: Vector2, scale_multip
 	zigzag = zigzag_stacks > 0
 	_zigzag_time = 0.0
 	collision_layer = 4
-	collision_mask = 54
+	# Layers 2 (enemies), 5 (powerups), 6 (hostile ordnance). Own layer
+	# (player_bullets) is excluded so volleys don't pair-check each other.
+	collision_mask = 50
 	monitoring = true
 	monitorable = true
 	visible = true

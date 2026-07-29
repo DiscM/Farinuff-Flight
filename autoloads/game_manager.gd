@@ -4,6 +4,9 @@ extends Node
 # --- State ---
 var score: int = 0
 var high_score: int = 0
+## True when the finished run beat the previous high score. Set once at
+## game over and reset on the next start_game(); read by the game-over screen.
+var last_run_was_record: bool = false
 var combo: int = 0
 var lives: int = 3
 var current_wave: int = 1
@@ -206,6 +209,7 @@ func _on_player_hit() -> void:
 		is_game_active = false
 		if score > high_score:
 			high_score = score
+			last_run_was_record = true
 			SaveManager.record_high_score(high_score)
 		SignalBus.game_over.emit(score)
 
@@ -232,7 +236,11 @@ func _advance_wave() -> void:
 	var cleared_wave := current_wave
 	SignalBus.wave_cleared.emit(cleared_wave)
 	current_wave += 1
-	orbs_collected_this_wave = 0
+	# Carry surplus orb progress into the next wave instead of silently
+	# discarding it — this includes orbs farmed during boss waves, which
+	# used to vanish at this reset.
+	var needed_for_cleared_wave := orbs_needed_this_wave
+	orbs_collected_this_wave = maxi(0, orbs_collected_this_wave - needed_for_cleared_wave)
 	orbs_needed_this_wave = int(10.0 + float(current_wave) * 1.30)
 	# Regular enemy stats are fixed by generation; only spawn cadence scales by wave.
 	boss_active = (current_wave % 5 == 0)
@@ -276,6 +284,7 @@ func start_game() -> void:
 	current_wave = 1
 	orbs_collected_this_wave = 0
 	orbs_needed_this_wave = 10
+	last_run_was_record = false
 
 	# Reset allocation state
 	stat_fire_rate_level = 0

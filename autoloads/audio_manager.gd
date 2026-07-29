@@ -106,4 +106,13 @@ func _get_available_player() -> AudioStreamPlayer:
 	for player in _players:
 		if not player.playing:
 			return player
-	return _players[0] if not _players.is_empty() else null
+	# All voices busy: steal the one nearest completion — its cutoff is the
+	# least audible, unlike always clipping the same oldest slot.
+	var best: AudioStreamPlayer = null
+	var best_pos := -1.0
+	for player in _players:
+		var pos := player.get_playback_position()
+		if pos > best_pos:
+			best_pos = pos
+			best = player
+	return best

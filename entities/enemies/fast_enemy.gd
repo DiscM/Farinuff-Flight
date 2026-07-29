@@ -7,12 +7,16 @@ var wave_frequency: float = 3.0
 var start_pos: Vector2 = Vector2.ZERO
 var pattern_timer := 0.0
 var sidestep_cooldown := 0.0
+## Throttles the bullet-proximity scan so it runs ~8x/sec instead of every
+## physics frame (0.12s is imperceptible for a dodge reaction).
+var sidestep_scan_timer := 0.0
 var phase_timer := 0.0
 var phase_state := 0
 var phase_direction := Vector2.ZERO
 
-## Sets stats for the fast enemy (1 HP, high speed, 150 points) and
-## records the spawn position for sine wave offset calculations.
+## Initializes the fast enemy: records the spawn position for sine-wave
+## offset calculations and staggers the pattern timer. Health, speed, and
+## points come from the evolution-stage data in the scene, not this script.
 func _ready() -> void:
 	archetype_id = &"fast"
 	super._ready()
@@ -38,7 +42,10 @@ func _move(delta: float) -> void:
 		tween.tween_callback(flare.queue_free)
 
 	if generation >= 3 and sidestep_cooldown <= 0.0:
-		_try_reactive_sidestep()
+		sidestep_scan_timer -= delta
+		if sidestep_scan_timer <= 0.0:
+			sidestep_scan_timer = 0.12
+			_try_reactive_sidestep()
 
 	if generation >= 4 and phase_state == 0:
 		phase_timer -= delta

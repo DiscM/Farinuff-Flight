@@ -311,7 +311,7 @@ func _physics_process(delta: float) -> void:
 	if has_magnet_field and not has_magnet:
 		_attract_powerups(delta, 500.0)
 
-	_update_upgrade_visual_runtime()
+	_update_upgrade_visual_runtime(delta)
 
 ## Manages the boost state machine: during a boost, decrements the duration
 ## timer, deflects nearby projectiles, checks for chain boost triggers,
@@ -670,9 +670,12 @@ func _take_hit() -> void:
 		return
 
 	AudioManager.play_player_hit()
+	# Decide invincibility BEFORE emitting: the hit costs a life, so grant it
+	# only when at least one life remains after this one (lives > 1 now).
+	# Checking before the emit keeps this independent of signal ordering.
+	var survives_hit := GameManager.lives > 1
 	SignalBus.player_hit.emit()
-	# Only grant invincibility if the player still has lives left after the hit
-	if GameManager.lives > 0:
+	if survives_hit:
 		_start_invincibility(respawn_invincibility)
 
 ## Activates temporary invincibility for the given duration. Starts the
@@ -929,34 +932,45 @@ func _sync_upgrade_visuals() -> void:
 		afterimage_cache.rebuild(sprite.texture, active_elite_upgrade_ids)
 
 
-func _update_upgrade_visual_runtime() -> void:
+## Cached results of the expensive visual scans (nearest enemy, group
+## queries), refreshed at 10 Hz — plenty fast for indicator visuals.
+var _visual_scan_timer: float = 0.0
+var _cached_auto_dir: Vector2 = Vector2.ZERO
+var _cached_magnet_active: bool = false
+## Reused runtime-state dictionary (set_runtime_state copies per-key, so a
+## fresh Dictionary per frame would be pure GC churn).
+var _visual_state: Dictionary = {}
+
+func _update_upgrade_visual_runtime(delta: float) -> void:
 	if not is_instance_valid(upgrade_visuals_front):
 		return
-	var auto_dir := _get_nearest_enemy_direction(global_position, 500.0) if has_auto_aim else Vector2.ZERO
+	_visual_scan_timer -= delta
+	if _visual_scan_timer <= 0.0:
+		_visual_scan_timer = 0.1
+		_cached_auto_dir = _get_nearest_enemy_direction(global_position, 500.0) if has_auto_aim else Vector2.ZERO
+		_cached_magnet_active = has_magnet_field and (
+			not get_tree().get_nodes_in_group("xp_orbs").is_empty()
+			or not get_tree().get_nodes_in_group("powerups").is_empty()
+		)
+	var auto_dir := _cached_auto_dir
 	var local_auto_angle := 0.0
 	if not auto_dir.is_zero_approx():
 		local_auto_angle = auto_dir.rotated(-rotation).angle() + PI / 2.0
 	var shield_charge := 0.0
 	if has_shield_burst:
 		shield_charge = 1.0 - clampf(shield_burst_cooldown / SHIELD_BURST_PERIOD, 0.0, 1.0)
-	var magnet_active := has_magnet_field and (
-		not get_tree().get_nodes_in_group("xp_orbs").is_empty()
-		or not get_tree().get_nodes_in_group("powerups").is_empty()
+	_visual_state["afterburner_boost"] = has_afterburner and is_boosting
+	_visual_state["overclock_active"] = has_overclock and overclock_active
+	_visual_state["overclock_phase"] = (
+		1.0 - clampf(overclock_timer / OVERCLOCK_DURATION, 0.0, 1.0)
+		if has_overclock and overclock_active else 0.0
 	)
-	var state := {
-		"afterburner_boost": has_afterburner and is_boosting,
-		"overclock_active": has_overclock and overclock_active,
-		"overclock_phase": (
-			1.0 - clampf(overclock_timer / OVERCLOCK_DURATION, 0.0, 1.0)
-			if has_overclock and overclock_active else 0.0
-		),
-		"shield_charge": shield_charge,
-		"magnet_active": magnet_active,
-		"auto_aim_angle": local_auto_angle,
-		"auto_aim_locked": not auto_dir.is_zero_approx(),
-	}
-	upgrade_visuals_back.set_runtime_state(state)
-	upgrade_visuals_front.set_runtime_state(state)
+	_visual_state["shield_charge"] = shield_charge
+	_visual_state["magnet_active"] = _cached_magnet_active
+	_visual_state["auto_aim_angle"] = local_auto_angle
+	_visual_state["auto_aim_locked"] = not auto_dir.is_zero_approx()
+	upgrade_visuals_back.set_runtime_state(_visual_state)
+	upgrade_visuals_front.set_runtime_state(_visual_state)
 
 ## Called by level-up popup for shield upgrade.
 func grant_shield() -> void:

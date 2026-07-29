@@ -8,8 +8,13 @@ All notable changes to this project will be documented in this file.
 - **Music and Audio Buses:** Added a looping ambient music bed on a dedicated `Music` audio bus with an independent music-volume slider in Settings, plus UI click sounds on the title, pause, and settings menus.
 - **Gamepad Support:** Bound the left stick to movement, A / right trigger to shoot, and B / left trigger to boost (right-stick aim already worked). Settings control-scheme swaps no longer disturb joypad bindings.
 - **Accessibility Options:** Added a Fullscreen toggle and a Reduced Flashing toggle (dims and shrinks explosion flash sprites) to Settings.
-- **CI Smoke Tests:** Added a GitHub Actions workflow that runs all three headless smoke-test scenes on every push and pull request, and corrected the broken `--script` run commands in the test headers (that mode skips autoloads and never exits).
+- **CI Smoke Tests:** Added a GitHub Actions workflow that runs all four headless smoke-test scenes on every push and pull request, and corrected the broken `--script` run commands in the test headers (that mode skips autoloads and never exits).
 - **Repository Hygiene:** Added a `.gitignore` and untracked the `.godot/` editor cache (12k+ files), the exported Windows binaries, and `.DS_Store` files.
+- **New Record Highlight:** The game-over screen now shows a gold `NEW RECORD` line when the run beat the previous high score, instead of always showing identical score and high-score values.
+- **Hit-Stop:** Added brief impact freezes on boss kills, player death, and nuke pickups.
+- **Autoload Smoke Test:** New headless coverage for SaveManager (corrupt/hand-edited saves, version handling) and ObjectPool (reuse, double-release, idle cap), wired into CI.
+- **Save Schema Version:** Save files now carry a `version` field; mismatched versions fall back to defaults until a migration exists. Pre-versioning saves still load.
+- **Try-Again Stock Readout:** Stock count now shows a number alongside the star icons.
 
 ### Changed
 - **Object Pooling:** XP orbs and power-ups are now pooled through `ObjectPool` like bullets and explosions, removing the highest-churn instantiate/free cycles. The try-again flow now returns pooled bullets and power-ups to the pool instead of `queue_free`-ing them.
@@ -21,12 +26,22 @@ All notable changes to this project will be documented in this file.
 - **Combined Milestone Screen Removed:** Deleted the dead side-by-side elite/allocation screen; the production sequential flow (elite first, allocation after) is now covered by the modal-flow smoke test.
 - **Save Validation:** Loaded settings are type-checked against their defaults, so a hand-edited save can no longer invert boolean preferences.
 - **Frame-Rate-Independent Bobbing:** XP orb and power-up bob effects are now delta-scaled.
+- **Balance Retune (Double-Damage Compensation):** All regular enemy and boss base HP halved (`ceil(old/2)`) to preserve the original hits-to-kill now that bullets correctly deal single damage. Secondary damage sources (drone, orbitals, explosive splash) are intentionally unchanged, so they are relatively stronger than before.
+- **Pause Consolidation:** All tree pausing now flows through `_update_pause_state()` (including game-over, via `game_over_shown` as a flag) — no more direct `get_tree().paused` writes that could stomp each other.
+- **Orb Carry-Over:** Surplus orb progress now carries into the next wave instead of being reset; orbs farmed during boss waves no longer vanish.
+- **Order-Independent Hit Handling:** The player now decides post-hit invincibility before emitting `player_hit`, removing the silent dependence on synchronous signal ordering.
+- **Throttled Visual Scans:** Auto-aim/magnet indicator scans refresh at 10 Hz instead of every physics frame, the fast enemy's sidestep bullet scan at ~8 Hz, and the per-frame upgrade-state Dictionary is reused.
+- **Audio Voice Stealing:** When all 16 SFX voices are busy, the voice nearest completion is stolen instead of always clipping the same oldest slot.
+- **Object Pool Cap:** Idle pooled nodes are capped at 128 per scene; overflow is freed instead of retained forever.
 
 ### Fixed
 - **Game-Over Soft-Lock:** The game-over screen paused the tree and then awaited a pause-frozen timer, so it never appeared and input was dead. Every run that reached true game-over wedged on a frozen frame.
 - **Double Damage:** Enemy and boss `area_entered` handlers applied damage on top of the bullet's own handler, so every bullet dealt roughly twice its designed damage (bosses took double bonus damage too). Bullet damage is now applied solely by the bullet.
 - **Invincibility Durations:** Hits always granted 1.5s of invincibility regardless of source, and the try-again flow read a stale leftover duration. Contact hits now grant 3s, bullets/ordnance 2s, and try-again respawns a clean 3s as documented.
 - **Boss Spawning After Game Over:** A same-frame wave transition could instantiate a boss during the game-over flow.
+- **Bullet Self-Collision:** Player bullets no longer pair-check against each other every physics step.
+- **Boss Phase Skip:** The Tempest Core's OVERLOAD phase can no longer be triggered by chip damage during CONDUITS, which silently skipped the EXPOSED phase.
+- **Stale Stat Docstrings:** Enemy scripts no longer claim `_ready` sets health/points (those live in evolution-stage scene data).
 
 ## [Unreleased] - 2026-05-24
 

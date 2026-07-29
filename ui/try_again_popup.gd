@@ -41,10 +41,10 @@ func _build_ui() -> void:
 	title.add_theme_font_size_override("font_size", 44)
 	vbox.add_child(title)
 
-	# Stocks left
+	# Stocks left (icons plus a numeric readout so the count is never icon-only)
 	var stocks_lbl := Label.new()
 	var s := GameManager.try_again_stocks
-	stocks_lbl.text = "Try Again Stocks: " + _stock_icons(s)
+	stocks_lbl.text = "Try Again Stocks: %s (%d)" % [_stock_icons(s), s]
 	stocks_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	stocks_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
 	stocks_lbl.add_theme_font_size_override("font_size", 22)

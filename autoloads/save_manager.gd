@@ -4,6 +4,9 @@ extends Node
 signal settings_changed
 
 const SAVE_PATH := "user://save_data.json"
+## Schema version of the save file. Bump when the layout changes and add a
+## migration path in _load_data.
+const SAVE_VERSION := 1
 const DEFAULT_SETTINGS: Dictionary = {
 	"master_volume": 0.8,
 	"music_volume": 0.8,
@@ -72,6 +75,10 @@ func _load_data() -> void:
 	if not parsed is Dictionary:
 		return
 	var data := parsed as Dictionary
+	# Missing version means a pre-versioning save, which matches v1. A
+	# different explicit version falls back to defaults until a migration exists.
+	if int(data.get("version", SAVE_VERSION)) != SAVE_VERSION:
+		return
 	high_score = maxi(int(data.get("high_score", 0)), 0)
 	var stored_settings: Variant = data.get("settings", {})
 	if stored_settings is Dictionary:
@@ -92,6 +99,7 @@ func _save_data() -> void:
 		push_warning("Unable to save player data.")
 		return
 	var data := {
+		"version": SAVE_VERSION,
 		"high_score": high_score,
 		"settings": settings,
 	}
