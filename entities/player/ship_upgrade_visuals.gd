@@ -56,13 +56,17 @@ const UPGRADE_BOUNDS := {
 	"rear_gunner": Rect2(-7.0, 20.0, 14.0, 28.0),
 }
 
+# Bullet spawn anchors in unscaled player-local pixels. They track the
+# butterfly hull's anatomy: twin shots leave the antenna-club tips, spread
+# shots the marginal forewing spots, rear fire the abdomen stinger. The 3D
+# module sockets sit at the same points (verified by player_upgrade_3d_smoke).
 const MUZZLE_ANCHORS := {
 	"center": Vector2(0.0, -35.0),
-	"twin_left": Vector2(-14.0, -27.0),
-	"twin_right": Vector2(14.0, -27.0),
-	"spread_left": Vector2(-48.0, 1.0),
-	"spread_right": Vector2(48.0, 1.0),
-	"rear": Vector2(0.0, 45.0),
+	"twin_left": Vector2(-5.5623, -41.0552),
+	"twin_right": Vector2(5.5623, -41.0552),
+	"spread_left": Vector2(-26.7521, -3.9729),
+	"spread_right": Vector2(26.7521, -3.9729),
+	"rear": Vector2(0.0, 32.5793),
 }
 
 # Upgrade hardware no longer inherits the legacy sprite strip's bob/roll.

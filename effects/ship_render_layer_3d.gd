@@ -29,6 +29,7 @@ const CLASS_ACCENT := Catalog.CLASS_ACCENT
 const STATIC_STYLES := Catalog.STATIC_STYLES
 const ENGINE_LAYOUTS := Catalog.ENGINE_LAYOUTS
 const PIXELS_PER_MODEL_UNIT := Catalog.PIXELS_PER_MODEL_UNIT
+const PIXELATION := Catalog.PIXELATION
 const CAMERA_HEIGHT := Catalog.CAMERA_HEIGHT
 const CAMERA_DEPTH := Catalog.CAMERA_DEPTH
 const INVINCIBILITY_VISIBLE_ALPHA := Catalog.INVINCIBILITY_VISIBLE_ALPHA
@@ -51,7 +52,9 @@ func _ready() -> void:
 	process_priority = 80
 	add_to_group(&"ship_render_layer_3d")
 	viewport_display.texture = ship_viewport.get_texture()
-	viewport_display.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	# NEAREST upscale keeps the low-res ship pixels chunky, matching the
+	# PixelPlanets backgrounds instead of smoothing them away.
+	viewport_display.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	get_viewport().size_changed.connect(_resize_render_target)
 	get_tree().node_added.connect(_on_tree_node_added)
 	_resize_render_target()
@@ -176,7 +179,13 @@ func _resize_render_target() -> void:
 		maxi(1, roundi(_viewport_rect.size.x)),
 		maxi(1, roundi(_viewport_rect.size.y))
 	) + overscan * 2
-	ship_viewport.size = target_size
+	# Render into a 1/PIXELATION buffer; the TextureRect stretches it back to
+	# the full composite size with NEAREST filtering (the chunky pixel grid).
+	var buffer_size := Vector2i(
+		maxi(1, target_size.x / PIXELATION),
+		maxi(1, target_size.y / PIXELATION)
+	)
+	ship_viewport.size = buffer_size
 	# The oversized composite is positioned beyond the playfield. The main
 	# viewport crops it only after Camera2D shake, so edge ships do not pop.
 	viewport_display.position = _viewport_rect.position - Vector2(overscan)
@@ -192,8 +201,11 @@ func screen_to_world(screen_position: Vector2) -> Vector3:
 		- _viewport_rect.position
 		+ Vector2(RENDER_OVERSCAN_PIXELS, RENDER_OVERSCAN_PIXELS)
 	)
-	var ray_origin := camera_3d.project_ray_origin(local_position)
-	var ray_direction := camera_3d.project_ray_normal(local_position)
+	# Ray projection works in the SubViewport's pixel space, which is the
+	# 1/PIXELATION buffer, so scale the full-res composite position down.
+	var buffer_position := local_position / float(PIXELATION)
+	var ray_origin := camera_3d.project_ray_origin(buffer_position)
+	var ray_direction := camera_3d.project_ray_normal(buffer_position)
 	if absf(ray_direction.y) < 0.0001:
 		return Vector3.ZERO
 	var distance := -ray_origin.y / ray_direction.y

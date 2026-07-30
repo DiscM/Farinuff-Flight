@@ -6,10 +6,10 @@ class_name PlayerShipAssembly3D
 ## enabling one is an immediate visibility change. No animation-frame offsets,
 ## transform interpolation, or attachment tweens are involved.
 
-const SHIP_SHADER: Shader = preload("res://effects/shaders/models/neon_ship_3d.gdshader")
-const OUTLINE_SHADER: Shader = preload("res://effects/shaders/models/neon_outline_3d.gdshader")
-const HULL_SCENE: PackedScene = preload("res://assets/models/mockups/player_ship_mockup.glb")
-const DRONE_SCENE: PackedScene = preload("res://assets/models/mockups/player_drone_escort.glb")
+const SHIP_SHADER: Shader = preload("res://effects/shaders/models/pixel_toon_3d.gdshader")
+const OUTLINE_SHADER: Shader = preload("res://effects/shaders/models/pixel_outline_3d.gdshader")
+const HULL_SCENE: PackedScene = preload("res://assets/models/redesign/player_butterfly.glb")
+const DRONE_SCENE: PackedScene = preload("res://assets/models/redesign/butterfly_elites/bf_elite_drone_escort.glb")
 
 const ATTACHED_IDS: Array[String] = [
 	"twin_cannons",
@@ -24,27 +24,27 @@ const ATTACHED_IDS: Array[String] = [
 ]
 
 const MODULE_SCENES := {
-	"twin_cannons": preload("res://assets/models/mockups/player_upgrade_twin_cannons.glb"),
-	"auto_aim": preload("res://assets/models/mockups/player_upgrade_auto_aim.glb"),
-	"hull_plating": preload("res://assets/models/mockups/player_upgrade_hull_plating.glb"),
-	"afterburner": preload("res://assets/models/mockups/player_upgrade_afterburner.glb"),
-	"spread_shot_elite": preload("res://assets/models/mockups/player_upgrade_spread_shot.glb"),
-	"shield_burst": preload("res://assets/models/mockups/player_upgrade_shield_burst.glb"),
-	"magnet_field": preload("res://assets/models/mockups/player_upgrade_magnet_field.glb"),
-	"overclock": preload("res://assets/models/mockups/player_upgrade_overclock.glb"),
-	"rear_gunner": preload("res://assets/models/mockups/player_upgrade_rear_gunner.glb"),
+	"twin_cannons": preload("res://assets/models/redesign/butterfly_elites/bf_elite_twin_cannons.glb"),
+	"auto_aim": preload("res://assets/models/redesign/butterfly_elites/bf_elite_auto_aim.glb"),
+	"hull_plating": preload("res://assets/models/redesign/butterfly_elites/bf_elite_hull_plating.glb"),
+	"afterburner": preload("res://assets/models/redesign/butterfly_elites/bf_elite_afterburner.glb"),
+	"spread_shot_elite": preload("res://assets/models/redesign/butterfly_elites/bf_elite_spread_shot.glb"),
+	"shield_burst": preload("res://assets/models/redesign/butterfly_elites/bf_elite_shield_burst.glb"),
+	"magnet_field": preload("res://assets/models/redesign/butterfly_elites/bf_elite_magnet_field.glb"),
+	"overclock": preload("res://assets/models/redesign/butterfly_elites/bf_elite_overclock.glb"),
+	"rear_gunner": preload("res://assets/models/redesign/butterfly_elites/bf_elite_rear_gunner.glb"),
 }
 
 const MODULE_PATHS := {
-	"twin_cannons": "res://assets/models/mockups/player_upgrade_twin_cannons.glb",
-	"auto_aim": "res://assets/models/mockups/player_upgrade_auto_aim.glb",
-	"hull_plating": "res://assets/models/mockups/player_upgrade_hull_plating.glb",
-	"afterburner": "res://assets/models/mockups/player_upgrade_afterburner.glb",
-	"spread_shot_elite": "res://assets/models/mockups/player_upgrade_spread_shot.glb",
-	"shield_burst": "res://assets/models/mockups/player_upgrade_shield_burst.glb",
-	"magnet_field": "res://assets/models/mockups/player_upgrade_magnet_field.glb",
-	"overclock": "res://assets/models/mockups/player_upgrade_overclock.glb",
-	"rear_gunner": "res://assets/models/mockups/player_upgrade_rear_gunner.glb",
+	"twin_cannons": "res://assets/models/redesign/butterfly_elites/bf_elite_twin_cannons.glb",
+	"auto_aim": "res://assets/models/redesign/butterfly_elites/bf_elite_auto_aim.glb",
+	"hull_plating": "res://assets/models/redesign/butterfly_elites/bf_elite_hull_plating.glb",
+	"afterburner": "res://assets/models/redesign/butterfly_elites/bf_elite_afterburner.glb",
+	"spread_shot_elite": "res://assets/models/redesign/butterfly_elites/bf_elite_spread_shot.glb",
+	"shield_burst": "res://assets/models/redesign/butterfly_elites/bf_elite_shield_burst.glb",
+	"magnet_field": "res://assets/models/redesign/butterfly_elites/bf_elite_magnet_field.glb",
+	"overclock": "res://assets/models/redesign/butterfly_elites/bf_elite_overclock.glb",
+	"rear_gunner": "res://assets/models/redesign/butterfly_elites/bf_elite_rear_gunner.glb",
 }
 
 const UPGRADE_COLORS := {
@@ -258,6 +258,8 @@ func _make_surface_material(
 	var metallic := 0.55
 	var roughness := 0.30
 	var source_emission := 0.0
+	var emissive_surface := 0.0
+	var glow_color := Color(0.0, 0.0, 0.0, 0.0)
 	if source_material is BaseMaterial3D:
 		var base_material := source_material as BaseMaterial3D
 		base_color = base_material.albedo_color
@@ -265,6 +267,8 @@ func _make_surface_material(
 		roughness = base_material.roughness
 		if base_material.emission_enabled:
 			source_emission = 0.75
+			emissive_surface = 1.0
+			glow_color = Color(base_material.emission, 1.0)
 
 	var heat_amount := 0.0
 	if style_id == &"afterburner" or style_id == &"overclock":
@@ -276,6 +280,8 @@ func _make_surface_material(
 	material.set_shader_parameter("accent_color", accent_color)
 	material.set_shader_parameter("metallic", metallic)
 	material.set_shader_parameter("roughness", roughness)
+	material.set_shader_parameter("emissive_surface", emissive_surface)
+	material.set_shader_parameter("glow_color", glow_color)
 	material.set_shader_parameter("evolution_level", 0.25 if style_id == &"player" else 0.46)
 	material.set_shader_parameter("circuit_amount", 0.34 if style_id == &"player" else 0.28)
 	material.set_shader_parameter("heat_amount", heat_amount)
@@ -290,9 +296,12 @@ func _make_surface_material(
 func _make_outline_material(energy_color: Color, animate_shader: bool) -> ShaderMaterial:
 	var material := ShaderMaterial.new()
 	material.shader = OUTLINE_SHADER
-	material.set_shader_parameter("outline_color", energy_color)
-	material.set_shader_parameter("outline_width", 0.034 if animate_shader else 0.028)
-	material.set_shader_parameter("outline_energy", 1.85 if animate_shader else 1.72)
+	# Shared void rim, one low-res buffer pixel thick (see the material
+	# library); energy_color/animate_shader kept for signature parity.
+	material.set_shader_parameter(
+		"outline_width",
+		float(ShipRenderCatalog3D.PIXELATION) / ShipRenderCatalog3D.PIXELS_PER_MODEL_UNIT
+	)
 	return material
 
 

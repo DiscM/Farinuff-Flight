@@ -504,7 +504,7 @@ func _check_proxy_shaders(
 			_expect(
 				material != null
 				and material.shader.resource_path
-				== "res://effects/shaders/models/neon_ship_3d.gdshader",
+				== "res://effects/shaders/models/pixel_toon_3d.gdshader",
 				"%s hull surface %d must use the production 3D shader"
 				% [label, surface_index]
 			)
@@ -513,7 +513,7 @@ func _check_proxy_shaders(
 		_expect(
 			material != null
 			and material.shader.resource_path
-			== "res://effects/shaders/models/neon_outline_3d.gdshader",
+			== "res://effects/shaders/models/pixel_outline_3d.gdshader",
 			"%s outline must use the production outline shader" % label
 		)
 	if not expect_trail:
@@ -526,7 +526,7 @@ func _check_proxy_shaders(
 	_expect(
 		trail_material != null
 		and trail_material.shader.resource_path
-		== "res://effects/shaders/models/engine_trail_3d.gdshader",
+		== "res://effects/shaders/models/pixel_trail_3d.gdshader",
 		"%s must use the production 3D engine-trail shader" % label
 	)
 

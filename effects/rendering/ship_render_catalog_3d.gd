@@ -5,7 +5,7 @@ class_name ShipRenderCatalog3D
 ## runtime coordinator easier to navigate without changing its public API.
 
 const MODEL_SCENES := {
-	&"player": preload("res://assets/models/mockups/player_ship_mockup.glb"),
+	&"player": preload("res://assets/models/redesign/player_butterfly.glb"),
 	&"basic": preload("res://assets/models/mockups/basic_enemy_mockup.glb"),
 	&"fast": preload("res://assets/models/mockups/fast_enemy_mockup.glb"),
 	&"bomber": preload("res://assets/models/mockups/bomber_enemy_mockup.glb"),
@@ -17,11 +17,11 @@ const MODEL_SCENES := {
 	&"boss_void_harbinger": preload("res://assets/models/mockups/boss_void_harbinger_mockup.glb"),
 	&"boss_tempest_core": preload("res://assets/models/mockups/boss_tempest_core_mockup.glb"),
 	&"tempest_section": preload("res://assets/models/mockups/tempest_section_mockup.glb"),
-	&"drone_escort": preload("res://assets/models/mockups/player_drone_escort.glb"),
+	&"drone_escort": preload("res://assets/models/redesign/butterfly_elites/bf_elite_drone_escort.glb"),
 }
 
 const MODEL_PATHS := {
-	&"player": "res://assets/models/mockups/player_ship_mockup.glb",
+	&"player": "res://assets/models/redesign/player_butterfly.glb",
 	&"basic": "res://assets/models/mockups/basic_enemy_mockup.glb",
 	&"fast": "res://assets/models/mockups/fast_enemy_mockup.glb",
 	&"bomber": "res://assets/models/mockups/bomber_enemy_mockup.glb",
@@ -33,7 +33,7 @@ const MODEL_PATHS := {
 	&"boss_void_harbinger": "res://assets/models/mockups/boss_void_harbinger_mockup.glb",
 	&"boss_tempest_core": "res://assets/models/mockups/boss_tempest_core_mockup.glb",
 	&"tempest_section": "res://assets/models/mockups/tempest_section_mockup.glb",
-	&"drone_escort": "res://assets/models/mockups/player_drone_escort.glb",
+	&"drone_escort": "res://assets/models/redesign/butterfly_elites/bf_elite_drone_escort.glb",
 }
 
 const CLASS_ENERGY := {
@@ -128,7 +128,8 @@ const STATIC_STYLES := {
 }
 
 const ENGINE_LAYOUTS := {
-	&"player": {"x": 0.27, "z": 1.63, "length": 1.45},
+	# Twin trails ride the butterfly's swallowtail streamer tips.
+	&"player": {"x": 1.05, "z": 1.56, "length": 1.30, "half_width": 0.06, "y": 0.0},
 	&"basic": {"x": 0.25, "z": 1.17, "length": 0.95},
 	&"fast": {"x": 0.15, "z": 1.59, "length": 1.35},
 	&"bomber": {"x": 0.33, "z": 1.48, "length": 1.10},
@@ -157,6 +158,10 @@ const ENGINE_LAYOUTS := {
 }
 
 const PIXELS_PER_MODEL_UNIT := 11.0
+# The ship SubViewport renders at 1/PIXELATION of the composite size and is
+# upscaled with NEAREST filtering, giving the 3D fleet the same chunky pixel
+# grid as the PixelPlanets background shaders.
+const PIXELATION := 2
 const CAMERA_HEIGHT := 45.0
 const CAMERA_DEPTH := 28.125
 const INVINCIBILITY_VISIBLE_ALPHA := 0.5
