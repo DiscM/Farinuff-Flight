@@ -1,9 +1,8 @@
-[gd_scene load_steps=7 format=3 uid="uid://i1xv8y2r7bk0g"]
+[gd_scene load_steps=6 format=3 uid="uid://i1xv8y2r7bk0g"]
 
 [ext_resource type="Script" path="res://ui/main_menu.gd" id="1_menu"]
 [ext_resource type="Script" path="res://ui/main_menu_backdrop.gd" id="2_backdrop"]
 [ext_resource type="Script" path="res://ui/main_menu_ship.gd" id="3_ship"]
-[ext_resource type="Texture2D" path="res://assets/sprites/generated/player_fully_upgraded_strip.png" id="4_ship_texture"]
 [ext_resource type="Shader" path="res://effects/shaders/crt_overlay.gdshader" id="5_crt"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_crt"]
@@ -60,11 +59,6 @@ mouse_filter = 2
 
 [node name="ShipRig" type="Node2D" parent="ShipStage"]
 script = ExtResource("3_ship")
-
-[node name="Sprite2D" type="Sprite2D" parent="ShipStage/ShipRig"]
-texture_filter = 1
-texture = ExtResource("4_ship_texture")
-hframes = 4
 
 [node name="CabinetLayout" type="Control" parent="."]
 custom_minimum_size = Vector2(760, 650)

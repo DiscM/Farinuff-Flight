@@ -1,0 +1,72 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://tests/mockup_models_preview.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://assets/models/mockups/player_ship_mockup.glb" id="2_player"]
+[ext_resource type="PackedScene" path="res://assets/models/mockups/basic_enemy_mockup.glb" id="3_basic"]
+[ext_resource type="PackedScene" path="res://assets/models/mockups/fast_enemy_mockup.glb" id="4_fast"]
+[ext_resource type="PackedScene" path="res://assets/models/mockups/bomber_enemy_mockup.glb" id="5_bomber"]
+[ext_resource type="PackedScene" path="res://assets/models/mockups/tank_enemy_mockup.glb" id="6_tank"]
+[ext_resource type="PackedScene" path="res://assets/models/mockups/sniper_enemy_mockup.glb" id="7_sniper"]
+
+[sub_resource type="Environment" id="Environment_showroom"]
+background_mode = 1
+background_color = Color(0.004, 0.008, 0.03, 1)
+ambient_light_source = 3
+ambient_light_color = Color(0.24, 0.34, 0.58, 1)
+ambient_light_energy = 0.65
+
+[sub_resource type="StandardMaterial3D" id="Material_floor"]
+albedo_color = Color(0.015, 0.025, 0.07, 1)
+metallic = 0.7
+roughness = 0.45
+
+[sub_resource type="PlaneMesh" id="Plane_floor"]
+material = SubResource("Material_floor")
+size = Vector2(18, 12)
+
+[node name="MockupModelsPreview" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_showroom")
+
+[node name="KeyLight" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-48, -28, 0)
+light_color = Color(0.72, 0.86, 1, 1)
+light_energy = 2.2
+shadow_enabled = true
+
+[node name="RimLight" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(36, 142, 0)
+light_color = Color(1, 0.12, 0.62, 1)
+light_energy = 1.4
+
+[node name="Camera3D" type="Camera3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 0.866025, 0.5, 0, -0.5, 0.866025, 0, 8.6, 12.8)
+current = true
+projection = 1
+size = 11.5
+
+[node name="Floor" type="MeshInstance3D" parent="."]
+position = Vector3(0, -0.65, 0.6)
+mesh = SubResource("Plane_floor")
+
+[node name="Fleet" type="Node3D" parent="."]
+
+[node name="Player" parent="Fleet" instance=ExtResource("2_player")]
+position = Vector3(-4.6, 0, -2.8)
+
+[node name="Basic" parent="Fleet" instance=ExtResource("3_basic")]
+position = Vector3(0, 0, -2.8)
+
+[node name="Fast" parent="Fleet" instance=ExtResource("4_fast")]
+position = Vector3(4.6, 0, -2.8)
+
+[node name="Bomber" parent="Fleet" instance=ExtResource("5_bomber")]
+position = Vector3(-4.6, 0, 2.4)
+
+[node name="Tank" parent="Fleet" instance=ExtResource("6_tank")]
+position = Vector3(0, 0, 2.4)
+
+[node name="Sniper" parent="Fleet" instance=ExtResource("7_sniper")]
+position = Vector3(4.6, 0, 2.4)

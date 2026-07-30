@@ -22,9 +22,15 @@ func _ready() -> void:
 	orb_value = 2
 	guaranteed_orb = true
 	super._ready()
-	viewport_size = get_viewport_rect().size
+	_refresh_viewport_size()
+	get_viewport().size_changed.connect(_refresh_viewport_size)
 	drift_dir = [-1.0, 1.0].pick_random()
 	drop_timer = randf_range(0.5, drop_interval)
+
+
+func _refresh_viewport_size() -> void:
+	viewport_size = get_viewport_rect().size
+
 
 ## Moves the bomber slowly along its travel direction while drifting
 ## sideways perpendicular to it. Bounces off screen edges to stay visible.

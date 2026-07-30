@@ -820,13 +820,15 @@ func _die(_award_rewards: bool = true) -> void:
 	# Let live projectiles finish their normal lifecycle instead of being purged here.
 
 	# Spawn death orbs and explosion (mirrors base_enemy._die() without queue_free)
-	SignalBus.enemy_killed.emit(points, global_position)
 	var scene_root := get_tree().current_scene
-	if guaranteed_orb or randf() < 0.6:
-		call_deferred("_spawn_orb", global_position, orb_value, spawn_direction)
-	var explosion = ObjectPool.acquire(EXPLOSION_SCENE, scene_root)
-	if explosion != null and explosion.has_method("play_at"):
-		explosion.play_at(global_position)
+	if rewards_enabled:
+		SignalBus.enemy_killed.emit(points, global_position)
+		if guaranteed_orb or randf() < 0.6:
+			call_deferred("_spawn_orb", global_position, orb_value, spawn_direction)
+	if not suppress_death_effects:
+		var explosion = ObjectPool.acquire(EXPLOSION_SCENE, scene_root)
+		if explosion != null and explosion.has_method("play_at"):
+			explosion.play_at(global_position)
 
 	# Emit the boss signal AFTER hiding, so the pause triggered by elite upgrade
 	# doesn't block any remaining cleanup.

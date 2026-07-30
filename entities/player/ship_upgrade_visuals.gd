@@ -1,9 +1,10 @@
 extends Node2D
 class_name ShipUpgradeVisuals
-## Shared procedural renderer for every elite ship-upgrade visual.
+## Static 2D fallback/state driver for every elite ship-upgrade visual.
 ##
-## Two instances sandwich the base ship sprite. The same static drawing
-## helpers are reused by popup previews and boost afterimages.
+## The live game suppresses these pixels while PlayerShipAssembly3D renders
+## the real modules. Keeping the anchor API here preserves 2D gameplay and a
+## graceful fallback when the shared 3D layer is absent.
 
 enum VisualLayer {
 	BACK,
@@ -64,15 +65,14 @@ const MUZZLE_ANCHORS := {
 	"rear": Vector2(0.0, 45.0),
 }
 
-# The base strip bakes a four-frame bob and ±4° roll into the artwork.
-const FRAME_BOB: Array[float] = [0.0, 2.13, 0.0, -2.13]
-const FRAME_ROLL: Array[float] = [0.0, 4.0, 0.0, -4.0]
+# Upgrade hardware no longer inherits the legacy sprite strip's bob/roll.
+const FRAME_BOB: Array[float] = [0.0, 0.0, 0.0, 0.0]
+const FRAME_ROLL: Array[float] = [0.0, 0.0, 0.0, 0.0]
 
 @export var visual_layer: VisualLayer = VisualLayer.FRONT
 
 var _source_sprite: Sprite2D
 var _active_upgrades: Array[String] = []
-var _last_frame := -1
 var _muzzle_timers: Dictionary = {}
 var _runtime_state := {
 	"afterburner_boost": false,
@@ -125,13 +125,16 @@ func _process(delta: float) -> void:
 func _sync_to_source_frame(force: bool = false) -> void:
 	if not is_instance_valid(_source_sprite):
 		return
-	var current_frame := clampi(_source_sprite.frame, 0, 3)
-	if not force and current_frame == _last_frame:
+	if (
+		not force
+		and scale.is_equal_approx(_source_sprite.scale)
+		and position.is_zero_approx()
+		and is_zero_approx(rotation)
+	):
 		return
-	_last_frame = current_frame
 	scale = _source_sprite.scale
-	position = Vector2(0.0, FRAME_BOB[current_frame] * _source_sprite.scale.y)
-	rotation = deg_to_rad(FRAME_ROLL[current_frame])
+	position = Vector2.ZERO
+	rotation = 0.0
 
 
 func set_active_upgrades(upgrade_ids: Array[String]) -> void:

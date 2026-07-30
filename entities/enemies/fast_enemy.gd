@@ -88,6 +88,15 @@ func _try_reactive_sidestep() -> void:
 
 
 func _spawn_afterimages() -> void:
+	var ship_renderer := get_tree().get_first_node_in_group(&"ship_render_layer_3d")
+	if (
+		ship_renderer != null
+		and ship_renderer.has_method(&"get_visual_for")
+		and ship_renderer.call(&"get_visual_for", self) != null
+	):
+		# Keep the Apex phase effect fully 3D; the proxy's animated shader and
+		# engine trails replace the legacy Sprite2D ghosts.
+		return
 	for i in range(3):
 		var ghost := Sprite2D.new()
 		ghost.texture = sprite.texture

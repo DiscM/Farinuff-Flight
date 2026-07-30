@@ -1,196 +1,224 @@
 extends Node2D
-## Explosion effect - pooled pixel burst with particle accents.
+## Original procedural impact and explosion VFX.
+##
+## Every visible shape is drawn in-house at runtime. The effect deliberately
+## avoids sprite sheets so pooled bursts can be recolored and scaled without
+## carrying third-party texture dependencies.
 
 static var _gradient: Gradient
-static var _flash_texture: Texture2D
-
-const LARGE_EXPLOSION_TEXTURE := preload("res://assets/Super Pixel Effects Gigapack (Free Version)/spritesheet/Explosions/epic_explosion_001/epic_explosion_001_large_orange/spritesheet.png")
-const SMALL_EXPLOSION_TEXTURE := preload("res://assets/Super Pixel Effects Gigapack (Free Version)/spritesheet/Explosions/stylized_explosion_001/stylized_explosion_001_small_yellow/spritesheet.png")
-const IMPACT_TEXTURE := preload("res://assets/Super Pixel Effects Gigapack (Free Version)/spritesheet/Impacts/symmetrical_impact_004/symmetrical_impact_004_small_yellow/spritesheet.png")
-const LARGE_FRAME_COUNT: int = 13
-const SMALL_FRAME_COUNT: int = 9
-const IMPACT_FRAME_COUNT: int = 8
-const FRAME_TIME: float = 1.0 / 24.0
 
 enum EffectKind { IMPACT, EXPLOSION }
 
-var _sprite_sheet: Sprite2D
 var _particles: CPUParticles2D
-var _flash: Sprite2D
-var _flash_tween: Tween
-var _play_token: int = 0
-var _frame_timer: float = 0.0
-var _frame_index: int = 0
-var _frame_count: int = 1
+var _elapsed := 0.0
+var _duration := 0.5
+var _kind := EffectKind.EXPLOSION
+var _small := false
+var _burst_seed := 1
+var _reduced_flashing := false
 
-## Sets up the reusable particle/flash children once, then leaves the node
-## hidden and idle until play_at() is called.
+
 func _ready() -> void:
 	_ensure_nodes()
 	_set_idle_state()
 
-func _process(delta: float) -> void:
-	if not visible or not is_instance_valid(_sprite_sheet):
-		return
-	_frame_timer += delta
-	while _frame_timer >= FRAME_TIME:
-		_frame_timer -= FRAME_TIME
-		_frame_index += 1
-		if _frame_index >= _frame_count:
-			_frame_index = _frame_count - 1
-			return
-		_sprite_sheet.frame = _frame_index
 
-## Starts the effect at the given position. A small variant keeps the same
-## pooled node but trims the burst so it works for bullet impacts too.
+func _process(delta: float) -> void:
+	if not visible:
+		return
+	_elapsed += delta
+	queue_redraw()
+	if _elapsed >= _duration:
+		_set_idle_state()
+		ObjectPool.release(self)
+
+
+func _draw() -> void:
+	if not visible:
+		return
+	var progress := clampf(_elapsed / _duration, 0.0, 1.0)
+	if _kind == EffectKind.IMPACT:
+		_draw_impact(progress)
+	else:
+		_draw_explosion(progress)
+
+
+## Starts a death/explosive-round burst at the requested world position.
 func play_at(effect_position: Vector2, small: bool = false) -> void:
 	_play_effect(effect_position, small, EffectKind.EXPLOSION)
 
-## Starts a short hit-spark animation for non-explosive bullet impacts.
+
+## Starts the compact directional star used by ordinary projectile hits.
 func play_impact_at(effect_position: Vector2) -> void:
 	_play_effect(effect_position, true, EffectKind.IMPACT)
 
+
 func _play_effect(effect_position: Vector2, small: bool, kind: EffectKind) -> void:
 	_ensure_nodes()
-	_play_token += 1
 	global_position = effect_position
+	rotation = 0.0
+	scale = Vector2.ONE
+	modulate = Color.WHITE
+	_kind = kind
+	_small = small
+	_elapsed = 0.0
+	_duration = 0.24 if kind == EffectKind.IMPACT else 0.46 if small else 0.68
+	_burst_seed = randi_range(1, 1_000_000)
+	_reduced_flashing = bool(SaveManager.get_setting("reduced_flashing", false))
 	visible = true
 	process_mode = Node.PROCESS_MODE_INHERIT
 	set_process(true)
-	if is_instance_valid(_flash_tween):
-		_flash_tween.kill()
-	_configure_effect(small, kind)
+
+	_configure_particles()
+	_particles.restart()
+	_particles.emitting = true
+	queue_redraw()
+
 	if kind == EffectKind.IMPACT:
 		AudioManager.play_hit_marker()
 	else:
 		AudioManager.play_explosion(small)
-	_particles.restart()
-	_particles.emitting = true
-	_sprite_sheet.visible = true
-	_flash.visible = true
-	var release_delay := 0.38 if kind == EffectKind.IMPACT else 0.5 if small else 0.72
-	var token := _play_token
-	get_tree().create_timer(release_delay).timeout.connect(_on_release_timeout.bind(token))
 
-## Builds the child nodes on first use and reuses them for every future play.
+
 func _ensure_nodes() -> void:
-	if _sprite_sheet == null:
-		_sprite_sheet = Sprite2D.new()
-		_sprite_sheet.name = "SpriteSheet"
-		_sprite_sheet.centered = true
-		add_child(_sprite_sheet)
-	if _particles == null:
-		_particles = CPUParticles2D.new()
-		_particles.name = "Particles"
-		_particles.one_shot = true
-		add_child(_particles)
-	if _flash == null:
-		_flash = Sprite2D.new()
-		_flash.name = "Flash"
-		_flash.texture = _get_flash_texture()
-		add_child(_flash)
+	if _particles != null:
+		return
+	_particles = CPUParticles2D.new()
+	_particles.name = "ProceduralDebris"
+	_particles.one_shot = true
+	_particles.z_index = 1
+	add_child(_particles)
 
-## Configures the particle and flash properties for either the small impact
-## burst or the larger death burst.
-func _configure_effect(small: bool, kind: EffectKind) -> void:
-	var is_impact := kind == EffectKind.IMPACT
-	var particle_amount := 8 if is_impact else 12 if small else 20
-	var particle_lifetime := 0.22 if is_impact else 0.35 if small else 0.5
-	var particle_min_velocity := 25.0 if is_impact else 45.0 if small else 60.0
-	var particle_max_velocity := 95.0 if is_impact else 140.0 if small else 200.0
-	var particle_min_scale := 0.8 if is_impact else 1.5 if small else 3.0
-	var particle_max_scale := 2.0 if is_impact else 3.5 if small else 6.0
-	var particle_gravity := Vector2(0, 12) if is_impact else Vector2(0, 25) if small else Vector2(0, 40)
-	var flash_scale := Vector2(1.35, 1.35) if is_impact else Vector2(2.0, 2.0) if small else Vector2(3.0, 3.0)
-	var flash_duration := 0.14 if is_impact else 0.2 if small else 0.3
-	var flash_color := Color(1.0, 0.9, 0.55, 0.55) if is_impact else Color(1.0, 0.85, 0.5, 0.78) if small else Color(1.0, 0.9, 0.5, 0.8)
 
-	# Photosensitivity option: keep a faint glow instead of the bright pop.
-	if SaveManager.get_setting("reduced_flashing", false):
-		flash_scale *= 0.6
-		flash_color.a *= 0.25
-
-	if is_impact:
-		_configure_sprite_sheet(IMPACT_TEXTURE, IMPACT_FRAME_COUNT, 1.0)
-	elif small:
-		_configure_sprite_sheet(SMALL_EXPLOSION_TEXTURE, SMALL_FRAME_COUNT, 1.15)
-	else:
-		_configure_sprite_sheet(LARGE_EXPLOSION_TEXTURE, LARGE_FRAME_COUNT, 0.78)
-
+func _configure_particles() -> void:
+	var is_impact := _kind == EffectKind.IMPACT
 	_particles.emitting = false
 	_particles.one_shot = true
-	_particles.amount = particle_amount
-	_particles.lifetime = particle_lifetime
-	_particles.explosiveness = 0.95 if small else 0.98
+	_particles.amount = 5 if is_impact else 9 if _small else 16
+	_particles.lifetime = 0.16 if is_impact else 0.30 if _small else 0.46
+	_particles.explosiveness = 0.98
 	_particles.direction = Vector2.ZERO
 	_particles.spread = 180.0
-	_particles.initial_velocity_min = particle_min_velocity
-	_particles.initial_velocity_max = particle_max_velocity
-	_particles.gravity = particle_gravity
-	_particles.scale_amount_min = particle_min_scale
-	_particles.scale_amount_max = particle_max_scale
+	_particles.initial_velocity_min = 34.0 if is_impact else 48.0 if _small else 72.0
+	_particles.initial_velocity_max = 105.0 if is_impact else 145.0 if _small else 220.0
+	_particles.gravity = Vector2(0.0, 16.0 if is_impact else 30.0)
+	_particles.scale_amount_min = 1.0 if is_impact else 1.8
+	_particles.scale_amount_max = 2.2 if is_impact else 4.8 if _small else 6.5
 	_particles.color_ramp = _get_gradient()
-	_particles.color = Color(1.0, 0.6, 0.1) if not small else Color(1.0, 0.7, 0.2)
 
-	_flash.texture = _get_flash_texture()
-	_flash.modulate = flash_color
-	_flash.scale = flash_scale
-	_flash_tween = create_tween()
-	_flash_tween.tween_property(_flash, "scale", Vector2(0.1, 0.1), flash_duration)
-	_flash_tween.parallel().tween_property(_flash, "modulate:a", 0.0, flash_duration)
 
-func _configure_sprite_sheet(texture: Texture2D, frame_count: int, sprite_scale: float) -> void:
-	_sprite_sheet.texture = texture
-	_sprite_sheet.hframes = frame_count
-	_sprite_sheet.vframes = 1
-	_sprite_sheet.frame = 0
-	_sprite_sheet.scale = Vector2.ONE * sprite_scale
-	_sprite_sheet.modulate = Color.WHITE
-	_frame_count = frame_count
-	_frame_index = 0
-	_frame_timer = 0.0
+func _draw_impact(progress: float) -> void:
+	var expansion := _ease_out_cubic(progress)
+	var fade := 1.0 - progress
+	var flash_alpha := fade * (0.34 if _reduced_flashing else 0.92)
+	var core_radius := lerpf(5.0, 1.0, progress)
+	draw_circle(Vector2.ZERO, core_radius, Color(1.0, 0.96, 0.74, flash_alpha))
 
-## Returns the effect to the pool if the current play sequence is still the
-## latest one, preventing stale timers from reclaiming a reused node.
-func _on_release_timeout(token: int) -> void:
-	if token != _play_token:
-		return
-	_set_idle_state()
-	ObjectPool.release(self)
+	for index in range(7):
+		var angle := TAU * float(index) / 7.0 + (_noise(index) - 0.5) * 0.34
+		var reach := lerpf(5.0, 20.0 + _noise(index + 17) * 11.0, expansion)
+		var start := Vector2.from_angle(angle) * (2.0 + reach * 0.18)
+		var end := Vector2.from_angle(angle) * reach
+		var width := 2.5 if index % 2 == 0 else 1.5
+		draw_line(start, end, Color(1.0, 0.72, 0.20, fade), width, true)
 
-## Hides the effect and stops the active particle burst so the node can be
-## safely stored in the pool.
+	var ring_radius := lerpf(3.0, 25.0, expansion)
+	draw_arc(
+		Vector2.ZERO,
+		ring_radius,
+		0.0,
+		TAU,
+		28,
+		Color(1.0, 0.34, 0.08, fade * 0.72),
+		2.0,
+		true
+	)
+
+
+func _draw_explosion(progress: float) -> void:
+	var expansion := _ease_out_cubic(progress)
+	var fade := clampf(1.0 - progress, 0.0, 1.0)
+	var size_factor := 0.64 if _small else 1.0
+	var shock_radius := lerpf(6.0, 72.0 * size_factor, expansion)
+	var shock_width := lerpf(6.0, 1.2, progress)
+	draw_arc(
+		Vector2.ZERO,
+		shock_radius,
+		0.0,
+		TAU,
+		52,
+		Color(1.0, 0.30, 0.06, fade * 0.74),
+		shock_width,
+		true
+	)
+	draw_arc(
+		Vector2.ZERO,
+		shock_radius * 0.72,
+		0.0,
+		TAU,
+		44,
+		Color(1.0, 0.78, 0.18, fade * 0.55),
+		maxf(1.0, shock_width * 0.45),
+		true
+	)
+
+	var bloom := sin(progress * PI)
+	var flash_alpha := bloom * (0.18 if _reduced_flashing else 0.82) * fade
+	draw_circle(
+		Vector2.ZERO,
+		lerpf(7.0, 29.0 * size_factor, bloom),
+		Color(1.0, 0.94, 0.64, flash_alpha)
+	)
+
+	# Uneven overlapping fire cells keep each seeded burst energetic without
+	# resembling a pre-authored sprite animation.
+	for index in range(10 if _small else 15):
+		var angle := TAU * _noise(index + 31)
+		var radial := (8.0 + 33.0 * _noise(index + 61)) * size_factor * expansion
+		var center := Vector2.from_angle(angle) * radial
+		var cell_radius := (4.0 + 12.0 * _noise(index + 91)) * size_factor
+		cell_radius *= lerpf(0.35, 1.0, bloom)
+		var heat := _noise(index + 121)
+		var color := Color(1.0, lerpf(0.22, 0.78, heat), 0.04, fade * 0.86)
+		draw_circle(center, cell_radius, color)
+		if heat > 0.56:
+			draw_circle(center, cell_radius * 0.42, Color(1.0, 0.94, 0.56, fade * 0.9))
+
+	# A few long fragments give the large explosion a readable silhouette.
+	var streak_count := 6 if _small else 11
+	for index in range(streak_count):
+		var angle := TAU * _noise(index + 151)
+		var reach := (32.0 + 62.0 * _noise(index + 181)) * size_factor * expansion
+		var start := Vector2.from_angle(angle) * reach * 0.55
+		var end := Vector2.from_angle(angle) * reach
+		draw_line(start, end, Color(1.0, 0.48, 0.08, fade * 0.72), 2.0, true)
+
+
+func _noise(index: int) -> float:
+	var value := sin(float(_burst_seed + index * 1_103) * 12.9898) * 43_758.5453
+	return value - floor(value)
+
+
+func _ease_out_cubic(value: float) -> float:
+	return 1.0 - pow(1.0 - value, 3.0)
+
+
 func _set_idle_state() -> void:
 	visible = false
-	scale = Vector2.ONE
-	modulate = Color.WHITE
 	process_mode = Node.PROCESS_MODE_DISABLED
 	set_process(false)
-	if is_instance_valid(_sprite_sheet):
-		_sprite_sheet.visible = false
+	queue_redraw()
 	if is_instance_valid(_particles):
 		_particles.emitting = false
-	if is_instance_valid(_flash):
-		_flash.visible = false
-		_flash.modulate.a = 0.0
 
-## Creates a shared gradient for the explosion particles.
+
 func _get_gradient() -> Gradient:
 	if _gradient == null:
 		_gradient = Gradient.new()
 		_gradient.colors = PackedColorArray([
-			Color(1.0, 0.9, 0.3),
-			Color(1.0, 0.4, 0.1),
-			Color(0.4, 0.1, 0.05, 0.0)
+			Color(1.0, 0.96, 0.58),
+			Color(1.0, 0.38, 0.06),
+			Color(0.25, 0.02, 0.01, 0.0),
 		])
-		_gradient.offsets = PackedFloat32Array([0.0, 0.4, 1.0])
+		_gradient.offsets = PackedFloat32Array([0.0, 0.42, 1.0])
 	return _gradient
-
-## Creates a shared flash texture so the pooled effect does not rebuild it on
-## every play.
-func _get_flash_texture() -> Texture2D:
-	if _flash_texture == null:
-		var img := Image.create(16, 16, false, Image.FORMAT_RGBA8)
-		img.fill(Color(1.0, 0.9, 0.5, 0.8))
-		_flash_texture = ImageTexture.create_from_image(img)
-	return _flash_texture

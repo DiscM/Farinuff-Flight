@@ -1,0 +1,82 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://tests/shader_3d_mockups.gd" id="1_script"]
+[ext_resource type="Shader" path="res://effects/shaders/models/galactic_floor_3d.gdshader" id="2_galaxy"]
+
+[sub_resource type="Environment" id="Environment_mockup"]
+background_mode = 1
+background_color = Color(0.002, 0.004, 0.018, 1)
+ambient_light_source = 3
+ambient_light_color = Color(0.18, 0.28, 0.52, 1)
+ambient_light_energy = 0.72
+reflected_light_source = 2
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_galaxy"]
+shader = ExtResource("2_galaxy")
+shader_parameter/u_time = 18.0
+shader_parameter/nebula_strength = 1.08
+shader_parameter/star_brightness = 1.0
+shader_parameter/space_color = Color(0.003, 0.009, 0.042, 1)
+shader_parameter/nebula_blue = Color(0.02, 0.32, 0.82, 1)
+shader_parameter/nebula_violet = Color(0.08, 0.12, 0.62, 1)
+shader_parameter/nebula_pink = Color(0.12, 0.72, 0.92, 1)
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_galaxy"]
+material = SubResource("ShaderMaterial_galaxy")
+size = Vector2(26, 18)
+subdivide_width = 1
+subdivide_depth = 1
+
+[sub_resource type="StandardMaterial3D" id="Material_grid"]
+transparency = 1
+shading_mode = 0
+albedo_color = Color(0.04, 0.58, 1, 0.09)
+emission_enabled = true
+emission = Color(0.02, 0.34, 0.86, 1)
+emission_energy_multiplier = 0.35
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_grid"]
+material = SubResource("Material_grid")
+size = Vector2(24, 16)
+subdivide_width = 24
+subdivide_depth = 16
+
+[node name="Shader3DMockups" type="Node3D"]
+script = ExtResource("1_script")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_mockup")
+
+[node name="GalaxyFloor" type="MeshInstance3D" parent="."]
+position = Vector3(0, -0.72, 0)
+mesh = SubResource("PlaneMesh_galaxy")
+
+[node name="GridFloor" type="MeshInstance3D" parent="."]
+position = Vector3(0, -0.69, 0)
+mesh = SubResource("PlaneMesh_grid")
+
+[node name="KeyLight" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-54, -24, 0)
+light_color = Color(0.58, 0.8, 1, 1)
+light_energy = 2.65
+shadow_enabled = true
+
+[node name="RimLight" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(42, 154, 0)
+light_color = Color(1, 0.08, 0.52, 1)
+light_energy = 1.8
+
+[node name="FillLight" type="OmniLight3D" parent="."]
+position = Vector3(0, 5.5, 1.5)
+light_color = Color(0.12, 0.52, 1, 1)
+light_energy = 4.0
+omni_range = 15.0
+
+[node name="Camera3D" type="Camera3D" parent="."]
+position = Vector3(0, 11.5, 7.2)
+rotation_degrees = Vector3(-58, 0, 0)
+current = true
+projection = 1
+size = 12.2
+
+[node name="Fleet" type="Node3D" parent="."]

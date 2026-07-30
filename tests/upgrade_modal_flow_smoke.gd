@@ -33,16 +33,46 @@ func _run() -> void:
 
 	var elite_popup := ELITE_POPUP_SCENE.instantiate()
 	elite_popup.panel_only = true
+	var tween_count_before_popup := get_tree().get_processed_tweens().size()
 	add_child(elite_popup)
-	await get_tree().create_timer(0.45, true, false, true).timeout
+	await get_tree().process_frame
+	_expect(
+		get_tree().get_processed_tweens().size() == tween_count_before_popup,
+		"Elite upgrade popup must not create an entrance tween"
+	)
+	_expect(
+		is_equal_approx(elite_popup.modulate.a, 1.0)
+		and is_zero_approx(elite_popup.position.y),
+		"Elite upgrade popup must appear immediately at its final transform"
+	)
 
 	var upgrade_id := str(elite_popup.chosen_upgrades[0]["id"])
 	_elite_signal_count = 0
 	elite_popup.upgrade_chosen.connect(_on_elite_upgrade_chosen)
 	var alpha_before_selection: float = elite_popup.modulate.a
-	elite_popup._on_upgrade_selected(upgrade_id)
 
 	var selected_card := elite_popup.cards_by_id[upgrade_id] as PanelContainer
+	var selected_style := selected_card.get_theme_stylebox("panel") as StyleBoxFlat
+	var selected_color := Color(elite_popup.chosen_upgrades[0]["color"])
+	var tween_count_before_hover := get_tree().get_processed_tweens().size()
+	elite_popup._on_card_hover(selected_card, selected_style, selected_color)
+	_expect(
+		selected_card.scale.is_equal_approx(Vector2(1.04, 1.04)),
+		"Elite card hover scale must apply immediately"
+	)
+	_expect(
+		not selected_card.has_meta("hover_tween")
+		and get_tree().get_processed_tweens().size() == tween_count_before_hover,
+		"Elite card hover must not create a tween"
+	)
+	elite_popup._on_card_unhover(selected_card, selected_style)
+	_expect(
+		selected_card.scale.is_equal_approx(Vector2.ONE)
+		and selected_style.bg_color.is_equal_approx(Color(0.06, 0.06, 0.16)),
+		"Elite card idle state must restore immediately"
+	)
+
+	elite_popup._on_upgrade_selected(upgrade_id)
 	var selected_button := selected_card.get_meta("select_button") as Button
 	_expect(
 		player.is_elite_upgrade_enabled(upgrade_id),
@@ -112,7 +142,7 @@ func _check_solo_elite_close(player: Node) -> void:
 	add_child(overlay)
 	var popup := ELITE_POPUP_SCENE.instantiate()
 	overlay.add_child(popup)
-	await get_tree().create_timer(0.45, true, false, true).timeout
+	await get_tree().process_frame
 
 	var upgrade_id := str(popup.chosen_upgrades[0]["id"])
 	_elite_signal_count = 0

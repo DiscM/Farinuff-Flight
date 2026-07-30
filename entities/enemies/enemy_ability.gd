@@ -13,4 +13,3 @@ func bind(host: BaseEnemy, generation: int) -> void:
 	enemy_host = host
 	enabled = generation >= minimum_generation
 	process_mode = Node.PROCESS_MODE_INHERIT if enabled else Node.PROCESS_MODE_DISABLED
-

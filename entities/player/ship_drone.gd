@@ -27,8 +27,10 @@ func setup(owner_player: Node2D) -> void:
 	add_to_group("player_orbitals")
 	add_to_group("drone_escort")
 	var visual := DRONE_VISUAL_SCRIPT.new() as DroneVisual
+	visual.name = "DroneVisual"
 	add_child(visual)
 	var col := CollisionShape2D.new()
+	col.name = "CollisionShape2D"
 	var circ := CircleShape2D.new()
 	circ.radius = 7.0
 	col.shape = circ
@@ -36,15 +38,16 @@ func setup(owner_player: Node2D) -> void:
 	area_entered.connect(_on_area_entered)
 	global_position = _player.global_position + HOVER_OFFSET
 
-## Hovers toward the offset position beside the player and auto-fires on a
-## cooldown. Frees itself if the player is gone (e.g. mid-restart).
+## Follows the authored offset beside the player and auto-fires on a cooldown.
+## Positional smoothing remains gameplay-authoritative for collision and shots;
+## the former cosmetic roll animation has been removed.
 func _physics_process(delta: float) -> void:
 	if not is_instance_valid(_player):
 		queue_free()
 		return
 	var target_pos: Vector2 = _player.global_position + HOVER_OFFSET
 	global_position = global_position.lerp(target_pos, delta * 6.0)
-	rotation = sin(Time.get_ticks_msec() * 0.004) * 0.08
+	rotation = 0.0
 	_shoot_timer -= delta
 	if _shoot_timer <= 0.0:
 		_shoot_timer = FIRE_RATE

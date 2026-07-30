@@ -11,4 +11,3 @@ class_name EnemyEvolutionStage
 @export var move_speed: float = 150.0
 @export var base_points: int = 100
 @export var animation_fps: float = 8.0
-

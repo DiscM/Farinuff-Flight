@@ -22,12 +22,13 @@ var panel_only: bool = false
 # ── Setup ──────────────────────────────────────────────────────────────────────
 
 ## Picks 3 random upgrades from the available pool, builds the card-based
-## UI, and plays the entrance animation.
+## UI, already at its final transform with no entrance interpolation.
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_pick_upgrades()
 	_build_ui()
-	_animate_in()
+	modulate.a = 1.0
+	position.y = 0.0
 
 ## Selects up to 3 upgrades from ALL_UPGRADES, excluding any that have
 ## already been chosen in this run. Shuffles the pool for random selection.
@@ -95,8 +96,8 @@ func _build_ui() -> void:
 		cards_row.add_child(_make_card(upg))
 
 ## Creates a single upgrade card panel: styled border in the upgrade's color,
-## preview, name, description, and a SELECT button. Registers hover effects for
-## the glow animation.
+## preview, name, description, and a SELECT button. Registers immediate hover
+## state changes.
 func _make_card(upg: Dictionary) -> PanelContainer:
 	var card := PanelContainer.new()
 	card.custom_minimum_size = Vector2(168, 214) if panel_only else Vector2(192, 260)
@@ -165,42 +166,25 @@ func _make_card(upg: Dictionary) -> PanelContainer:
 	card.set_meta("select_button", btn)
 	cards_by_id[upg["id"]] = card
 
-	# Hover glow effect
+	# Hover state changes immediately; upgrade presentation does not tween.
 	card.mouse_entered.connect(_on_card_hover.bind(card, style, upg["color"]))
 	card.mouse_exited.connect(_on_card_unhover.bind(card, style))
 
 	return card
 
-## Animates a subtle background glow and slight scale-up when the mouse
-## hovers over an upgrade card.
+## Applies the hover state immediately.
 func _on_card_hover(card: PanelContainer, style: StyleBoxFlat, color: Color) -> void:
 	if selection_locked:
 		return
-	_stop_card_tween(card)
-	var tween := card.create_tween()
-	card.set_meta("hover_tween", tween)
-	tween.tween_method(func(c: Color): style.bg_color = c,
-		style.bg_color, Color(color.r * 0.15, color.g * 0.15, color.b * 0.15), 0.12)
-	tween.parallel().tween_property(card, "scale", Vector2(1.04, 1.04), 0.1).set_ease(Tween.EASE_OUT)
+	style.bg_color = Color(color.r * 0.15, color.g * 0.15, color.b * 0.15)
+	card.scale = Vector2(1.04, 1.04)
 
-## Reverts the card's background and scale when the mouse leaves.
+## Restores the idle state immediately.
 func _on_card_unhover(card: PanelContainer, style: StyleBoxFlat) -> void:
 	if selection_locked:
 		return
-	_stop_card_tween(card)
-	var tween := card.create_tween()
-	card.set_meta("hover_tween", tween)
-	tween.tween_method(func(c: Color): style.bg_color = c,
-		style.bg_color, Color(0.06, 0.06, 0.16), 0.12)
-	tween.parallel().tween_property(card, "scale", Vector2.ONE, 0.1).set_ease(Tween.EASE_OUT)
-
-
-func _stop_card_tween(card: PanelContainer) -> void:
-	if not card.has_meta("hover_tween"):
-		return
-	var tween: Tween = card.get_meta("hover_tween")
-	if tween != null and tween.is_valid():
-		tween.kill()
+	style.bg_color = Color(0.06, 0.06, 0.16)
+	card.scale = Vector2.ONE
 
 
 # ── Interaction ────────────────────────────────────────────────────────────────
@@ -247,7 +231,6 @@ func _show_selection_feedback(upgrade_id: String, upgrade: Dictionary) -> void:
 		confirmation_label.add_theme_color_override("font_color", selected_color)
 	for id in cards_by_id:
 		var card := cards_by_id[id] as PanelContainer
-		_stop_card_tween(card)
 		card.scale = Vector2.ONE
 		var button := card.get_meta("select_button") as Button
 		button.disabled = true
@@ -260,13 +243,3 @@ func _show_selection_feedback(upgrade_id: String, upgrade: Dictionary) -> void:
 				style.set_border_width_all(4)
 		else:
 			card.modulate.a = 0.25
-
-# ── Animation ──────────────────────────────────────────────────────────────────
-
-## Plays a fade-in and slide-up entrance animation for the popup.
-func _animate_in() -> void:
-	modulate.a = 0.0
-	var tween := create_tween()
-	tween.tween_property(self, "modulate:a", 1.0, 0.4).set_ease(Tween.EASE_OUT)
-	tween.parallel().tween_property(self, "position:y", 0.0, 0.4)\
-		.from(30.0).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
