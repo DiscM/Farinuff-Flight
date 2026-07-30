@@ -121,10 +121,11 @@ func _check_structure(
 		visible_size
 		+ Vector2i.ONE * ShipRenderLayer3D.RENDER_OVERSCAN_PIXELS * 2
 	)
+	var expected_buffer_size := expected_render_size / ShipRenderLayer3D.PIXELATION
 	_expect(viewport.transparent_bg, "3D ship viewport must preserve the 2D background")
 	_expect(
-		viewport.size == expected_render_size,
-		"3D viewport must include camera-shake overscan around the live playfield"
+		viewport.size == expected_buffer_size,
+		"3D viewport must render at 1/PIXELATION of the overscanned playfield"
 	)
 	_expect(camera.projection == Camera3D.PROJECTION_ORTHOGONAL and camera.current, "Ship camera must be current and orthographic")
 	_expect(display.texture == viewport.get_texture(), "ViewportDisplay must composite the ship viewport texture")
@@ -160,7 +161,7 @@ func _check_structure(
 	var player_sprite := player.get_node("Sprite2D") as Sprite2D
 	_expect(player_sprite.visible, "Player Sprite2D must remain available as a state driver")
 	_expect(is_zero_approx(player_sprite.self_modulate.a), "Player Sprite2D pixels must be suppressed")
-	_expect(layer.get_model_path_for(player) == "res://assets/models/mockups/player_ship_mockup.glb", "Player must map to the player GLB")
+	_expect(layer.get_model_path_for(player) == "res://assets/models/redesign/player_butterfly.glb", "Player must map to the player GLB")
 	var player_visual := layer.get_visual_for(player)
 	_expect(player_visual != null, "Player must own a 3D proxy")
 
@@ -239,7 +240,7 @@ func _check_shader_profiles(layer: ShipRenderLayer3D, enemies: Array[BaseEnemy])
 				if material == null:
 					continue
 				_expect(
-					material.shader.resource_path == "res://effects/shaders/models/neon_ship_3d.gdshader",
+					material.shader.resource_path == "res://effects/shaders/models/pixel_toon_3d.gdshader",
 					"%s hull surface %d uses the wrong spatial shader" % [enemy.name, surface_index]
 				)
 				_expect(
@@ -265,7 +266,7 @@ func _check_shader_profiles(layer: ShipRenderLayer3D, enemies: Array[BaseEnemy])
 			var outline_material := outline.material_override as ShaderMaterial
 			_expect(
 				outline_material != null
-				and outline_material.shader.resource_path == "res://effects/shaders/models/neon_outline_3d.gdshader",
+				and outline_material.shader.resource_path == "res://effects/shaders/models/pixel_outline_3d.gdshader",
 				"%s outline uses the wrong spatial shader" % enemy.name
 			)
 		var visual := layer.get_visual_for(enemy)
@@ -276,7 +277,7 @@ func _check_shader_profiles(layer: ShipRenderLayer3D, enemies: Array[BaseEnemy])
 				trail_material = trail.material_override as ShaderMaterial
 			_expect(
 				trail_material != null
-				and trail_material.shader.resource_path == "res://effects/shaders/models/engine_trail_3d.gdshader",
+				and trail_material.shader.resource_path == "res://effects/shaders/models/pixel_trail_3d.gdshader",
 				"%s must use the integrated 3D engine-trail shader" % enemy.name
 			)
 

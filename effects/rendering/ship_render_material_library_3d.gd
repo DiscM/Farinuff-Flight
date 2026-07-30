@@ -8,9 +8,9 @@ const VisualProxy := preload(
 	"res://effects/rendering/ship_visual_proxy_3d.gd"
 )
 
-const SHIP_SHADER: Shader = preload("res://effects/shaders/models/neon_ship_3d.gdshader")
-const OUTLINE_SHADER: Shader = preload("res://effects/shaders/models/neon_outline_3d.gdshader")
-const ENGINE_TRAIL_SHADER: Shader = preload("res://effects/shaders/models/engine_trail_3d.gdshader")
+const SHIP_SHADER: Shader = preload("res://effects/shaders/models/pixel_toon_3d.gdshader")
+const OUTLINE_SHADER: Shader = preload("res://effects/shaders/models/pixel_outline_3d.gdshader")
+const ENGINE_TRAIL_SHADER: Shader = preload("res://effects/shaders/models/pixel_trail_3d.gdshader")
 
 var _surface_material_cache: Dictionary = {}
 var _outline_material_cache: Dictionary = {}
@@ -108,6 +108,8 @@ func _get_surface_material(
 	var metallic := 0.55
 	var roughness := 0.30
 	var source_emission := 0.0
+	var emissive_surface := 0.0
+	var glow_color := Color(0.0, 0.0, 0.0, 0.0)
 	if source_material is BaseMaterial3D:
 		var base_material := source_material as BaseMaterial3D
 		base_color = base_material.albedo_color
@@ -119,6 +121,8 @@ func _get_surface_material(
 				if Catalog.STATIC_STYLES.has(archetype)
 				else 1.45
 			)
+			emissive_surface = 1.0
+			glow_color = Color(base_material.emission, 1.0)
 
 	var style := _get_style(archetype, generation)
 	var material := ShaderMaterial.new()
@@ -128,6 +132,8 @@ func _get_surface_material(
 	material.set_shader_parameter("accent_color", style["accent_color"])
 	material.set_shader_parameter("metallic", metallic)
 	material.set_shader_parameter("roughness", roughness)
+	material.set_shader_parameter("emissive_surface", emissive_surface)
+	material.set_shader_parameter("glow_color", glow_color)
 	material.set_shader_parameter("evolution_level", style["evolution_level"])
 	material.set_shader_parameter("circuit_amount", style["circuit_amount"])
 	material.set_shader_parameter("heat_amount", style["heat_amount"])
@@ -156,17 +162,13 @@ func _get_outline_material(
 	var cache_key := "%s:%d" % [archetype, generation]
 	if _outline_material_cache.has(cache_key):
 		return _outline_material_cache[cache_key] as ShaderMaterial
-	var style := _get_style(archetype, generation)
 	var material := ShaderMaterial.new()
 	material.shader = OUTLINE_SHADER
-	material.set_shader_parameter("outline_color", style["energy_color"])
+	# The pixel style shares one void rim across every ship: the dark limb of
+	# the planet shaders, exactly one low-res buffer pixel thick.
 	material.set_shader_parameter(
 		"outline_width",
-		0.028 + float(style["evolution_level"]) * 0.014
-	)
-	material.set_shader_parameter(
-		"outline_energy",
-		1.45 + float(style["evolution_level"]) * 0.85
+		float(Catalog.PIXELATION) / Catalog.PIXELS_PER_MODEL_UNIT
 	)
 	_outline_material_cache[cache_key] = material
 	return material

@@ -210,8 +210,8 @@ func _exercise_preview_3d(world: Node2D, player: Node) -> void:
 		var material := meshes[0].get_surface_override_material(0) as ShaderMaterial
 		_expect(
 			material != null
-			and material.shader.resource_path == "res://effects/shaders/models/neon_ship_3d.gdshader",
-			"Upgrade-card candidate must use the shared neon 3D shader"
+			and material.shader.resource_path == "res://effects/shaders/models/pixel_toon_3d.gdshader",
+			"Upgrade-card candidate must use the shared pixel 3D shader"
 		)
 		_expect(
 			is_zero_approx(float(material.get_shader_parameter("animation_speed"))),

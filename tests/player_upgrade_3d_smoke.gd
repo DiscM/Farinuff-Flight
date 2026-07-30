@@ -17,19 +17,19 @@ const MOUNTED_IDS: Array[String] = [
 	"rear_gunner",
 ]
 const EXPECTED_PATHS := {
-	"twin_cannons": "res://assets/models/mockups/player_upgrade_twin_cannons.glb",
-	"auto_aim": "res://assets/models/mockups/player_upgrade_auto_aim.glb",
-	"hull_plating": "res://assets/models/mockups/player_upgrade_hull_plating.glb",
-	"afterburner": "res://assets/models/mockups/player_upgrade_afterburner.glb",
-	"spread_shot_elite": "res://assets/models/mockups/player_upgrade_spread_shot.glb",
-	"shield_burst": "res://assets/models/mockups/player_upgrade_shield_burst.glb",
-	"magnet_field": "res://assets/models/mockups/player_upgrade_magnet_field.glb",
-	"overclock": "res://assets/models/mockups/player_upgrade_overclock.glb",
-	"rear_gunner": "res://assets/models/mockups/player_upgrade_rear_gunner.glb",
+	"twin_cannons": "res://assets/models/redesign/butterfly_elites/bf_elite_twin_cannons.glb",
+	"auto_aim": "res://assets/models/redesign/butterfly_elites/bf_elite_auto_aim.glb",
+	"hull_plating": "res://assets/models/redesign/butterfly_elites/bf_elite_hull_plating.glb",
+	"afterburner": "res://assets/models/redesign/butterfly_elites/bf_elite_afterburner.glb",
+	"spread_shot_elite": "res://assets/models/redesign/butterfly_elites/bf_elite_spread_shot.glb",
+	"shield_burst": "res://assets/models/redesign/butterfly_elites/bf_elite_shield_burst.glb",
+	"magnet_field": "res://assets/models/redesign/butterfly_elites/bf_elite_magnet_field.glb",
+	"overclock": "res://assets/models/redesign/butterfly_elites/bf_elite_overclock.glb",
+	"rear_gunner": "res://assets/models/redesign/butterfly_elites/bf_elite_rear_gunner.glb",
 }
-const SHIP_SHADER_PATH := "res://effects/shaders/models/neon_ship_3d.gdshader"
-const OUTLINE_SHADER_PATH := "res://effects/shaders/models/neon_outline_3d.gdshader"
-const EXPECTED_FULLY_UPGRADED_TRIANGLES := 644
+const SHIP_SHADER_PATH := "res://effects/shaders/models/pixel_toon_3d.gdshader"
+const OUTLINE_SHADER_PATH := "res://effects/shaders/models/pixel_outline_3d.gdshader"
+const EXPECTED_FULLY_UPGRADED_TRIANGLES := 2152
 
 var _failures: Array[String] = []
 
@@ -121,7 +121,7 @@ func _check_player_engine_trail(
 	_expect(
 		material != null
 		and material.shader.resource_path
-		== "res://effects/shaders/models/engine_trail_3d.gdshader",
+		== "res://effects/shaders/models/pixel_trail_3d.gdshader",
 		"Player assembly must retain the integrated 3D engine trail"
 	)
 
@@ -336,7 +336,7 @@ func _check_drone_proxy(
 	)
 	_expect(
 		layer.get_model_path_for(drone)
-		== "res://assets/models/mockups/player_drone_escort.glb",
+		== "res://assets/models/redesign/butterfly_elites/bf_elite_drone_escort.glb",
 		"Drone Escort must map to its GLB"
 	)
 	var visual := layer.get_visual_for(drone)
