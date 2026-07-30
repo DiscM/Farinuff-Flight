@@ -6,14 +6,18 @@ extends Node2D
 
 enum EffectKind { WARP, SPARKLE }
 
+const COMBAT_VFX_SHADER := preload("res://effects/shaders/vfx/combat_burst.gdshader")
+
 var _kind := EffectKind.WARP
 var _elapsed := 0.0
 var _duration := 0.4
 var _effect_seed := 1
 var _reduced_flashing := false
+var _shader_material: ShaderMaterial
 
 
 func _ready() -> void:
+	_ensure_shader_material()
 	_set_idle_state()
 
 
@@ -47,6 +51,7 @@ func play_at(effect_position: Vector2, kind: EffectKind, effect_rotation: float 
 	_duration = 0.46 if kind == EffectKind.WARP else 0.52
 	_effect_seed = randi_range(1, 1_000_000)
 	_reduced_flashing = bool(SaveManager.get_setting("reduced_flashing", false))
+	_configure_shader_material()
 	visible = true
 	process_mode = Node.PROCESS_MODE_INHERIT
 	set_process(true)
@@ -60,6 +65,33 @@ func play_warp_at(effect_position: Vector2, direction: Vector2) -> void:
 
 func play_sparkle_at(effect_position: Vector2) -> void:
 	play_at(effect_position, EffectKind.SPARKLE)
+
+
+func _ensure_shader_material() -> void:
+	if _shader_material != null:
+		return
+	_shader_material = ShaderMaterial.new()
+	_shader_material.shader = COMBAT_VFX_SHADER
+	material = _shader_material
+
+
+func _configure_shader_material() -> void:
+	_ensure_shader_material()
+	var is_warp := _kind == EffectKind.WARP
+	_shader_material.set_shader_parameter(
+		"primary_color",
+		Color(0.02, 0.82, 1.0) if is_warp else Color(0.10, 0.94, 0.88)
+	)
+	_shader_material.set_shader_parameter(
+		"secondary_color",
+		Color(0.66, 0.12, 1.0) if is_warp else Color(1.0, 0.16, 0.62)
+	)
+	_shader_material.set_shader_parameter("hot_color", Color(0.90, 0.99, 1.0))
+	_shader_material.set_shader_parameter("energy", 0.64 if _reduced_flashing else 1.18)
+	_shader_material.set_shader_parameter("pixel_size", 2.0)
+	_shader_material.set_shader_parameter("dither_strength", 0.40 if is_warp else 0.52)
+	_shader_material.set_shader_parameter("reduced_flashing", 1.0 if _reduced_flashing else 0.0)
+	_shader_material.set_shader_parameter("phase_offset", float(_effect_seed % 1_000) * 0.01)
 
 
 func _draw_warp(progress: float) -> void:

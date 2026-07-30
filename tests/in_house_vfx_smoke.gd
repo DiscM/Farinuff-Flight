@@ -6,10 +6,12 @@ extends Node
 
 const EXPLOSION_SCENE := preload("res://effects/explosion.tscn")
 const FEEDBACK_SCENE := preload("res://effects/pixel_sprite_effect.tscn")
+const COMBAT_VFX_SHADER_PATH := "res://effects/shaders/vfx/combat_burst.gdshader"
 
 const OWNED_VFX_FILES := [
 	"res://effects/explosion.gd",
 	"res://effects/pixel_sprite_effect.gd",
+	COMBAT_VFX_SHADER_PATH,
 ]
 const FORBIDDEN_EXTERNAL_MARKERS := [
 	"Super Pixel Effects",
@@ -33,6 +35,14 @@ func _run() -> void:
 		explosion.get_node_or_null("ProceduralDebris") is CPUParticles2D,
 		"Explosion must generate its own debris particles"
 	)
+	_expect(
+		(explosion.material as ShaderMaterial).shader.resource_path == COMBAT_VFX_SHADER_PATH,
+		"Explosion must use the shared neon-pixel combat shader"
+	)
+	_expect(
+		(explosion.get_node("ProceduralDebris") as CPUParticles2D).use_parent_material,
+		"Explosion debris must inherit the shared combat shader"
+	)
 
 	var feedback := FEEDBACK_SCENE.instantiate()
 	add_child(feedback)
@@ -41,6 +51,10 @@ func _run() -> void:
 	_expect(
 		feedback.get_child_count() == 0,
 		"Boost warp must not create a texture-backed Sprite2D"
+	)
+	_expect(
+		(feedback.material as ShaderMaterial).shader.resource_path == COMBAT_VFX_SHADER_PATH,
+		"Boost warp must use the shared neon-pixel combat shader"
 	)
 
 	await get_tree().process_frame
