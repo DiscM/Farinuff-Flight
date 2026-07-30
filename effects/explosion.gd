@@ -6,10 +6,12 @@ extends Node2D
 ## carrying third-party texture dependencies.
 
 static var _gradient: Gradient
+const COMBAT_VFX_SHADER := preload("res://effects/shaders/vfx/combat_burst.gdshader")
 
 enum EffectKind { IMPACT, EXPLOSION }
 
 var _particles: CPUParticles2D
+var _shader_material: ShaderMaterial
 var _elapsed := 0.0
 var _duration := 0.5
 var _kind := EffectKind.EXPLOSION
@@ -19,6 +21,7 @@ var _reduced_flashing := false
 
 
 func _ready() -> void:
+	_ensure_shader_material()
 	_ensure_nodes()
 	_set_idle_state()
 
@@ -65,6 +68,7 @@ func _play_effect(effect_position: Vector2, small: bool, kind: EffectKind) -> vo
 	_duration = 0.24 if kind == EffectKind.IMPACT else 0.46 if small else 0.68
 	_burst_seed = randi_range(1, 1_000_000)
 	_reduced_flashing = bool(SaveManager.get_setting("reduced_flashing", false))
+	_configure_shader_material()
 	visible = true
 	process_mode = Node.PROCESS_MODE_INHERIT
 	set_process(true)
@@ -87,7 +91,38 @@ func _ensure_nodes() -> void:
 	_particles.name = "ProceduralDebris"
 	_particles.one_shot = true
 	_particles.z_index = 1
+	_particles.use_parent_material = true
 	add_child(_particles)
+
+
+func _ensure_shader_material() -> void:
+	if _shader_material != null:
+		return
+	_shader_material = ShaderMaterial.new()
+	_shader_material.shader = COMBAT_VFX_SHADER
+	material = _shader_material
+
+
+func _configure_shader_material() -> void:
+	_ensure_shader_material()
+	var is_impact := _kind == EffectKind.IMPACT
+	_shader_material.set_shader_parameter(
+		"primary_color",
+		Color(0.92, 0.06, 0.015) if not is_impact else Color(1.0, 0.30, 0.025)
+	)
+	_shader_material.set_shader_parameter(
+		"secondary_color",
+		Color(1.0, 0.38, 0.025) if not is_impact else Color(1.0, 0.72, 0.08)
+	)
+	_shader_material.set_shader_parameter("hot_color", Color(1.0, 0.96, 0.68))
+	_shader_material.set_shader_parameter(
+		"energy",
+		0.68 if _reduced_flashing else 1.15 if _small else 1.28
+	)
+	_shader_material.set_shader_parameter("pixel_size", 2.0 if _small else 3.0)
+	_shader_material.set_shader_parameter("dither_strength", 0.34 if is_impact else 0.46)
+	_shader_material.set_shader_parameter("reduced_flashing", 1.0 if _reduced_flashing else 0.0)
+	_shader_material.set_shader_parameter("phase_offset", float(_burst_seed % 1_000) * 0.01)
 
 
 func _configure_particles() -> void:
