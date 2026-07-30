@@ -452,6 +452,15 @@ func _get_boost_cooldown() -> float:
 ## every installed ship-mounted elite module. Transient flashes and the
 ## independent drone are intentionally omitted.
 func _spawn_afterimage() -> void:
+	var ship_renderer := get_tree().get_first_node_in_group(&"ship_render_layer_3d")
+	if (
+		ship_renderer != null
+		and ship_renderer.has_method(&"get_visual_for")
+		and ship_renderer.call(&"get_visual_for", self) != null
+	):
+		# The shared 3D renderer supplies continuous engine trails. Do not place
+		# a baked legacy sprite over the 3D ship while boosting.
+		return
 	if afterimage_cache.texture == null:
 		return
 	var af := Sprite2D.new()
@@ -930,6 +939,12 @@ func _sync_upgrade_visuals() -> void:
 		upgrade_visuals_front.set_active_upgrades(active_elite_upgrade_ids)
 	if is_instance_valid(afterimage_cache):
 		afterimage_cache.rebuild(sprite.texture, active_elite_upgrade_ids)
+	var ship_renderer := get_tree().get_first_node_in_group(&"ship_render_layer_3d")
+	if (
+		ship_renderer != null
+		and ship_renderer.has_method(&"request_render_refresh")
+	):
+		ship_renderer.call(&"request_render_refresh")
 
 
 ## Cached results of the expensive visual scans (nearest enemy, group
@@ -1210,12 +1225,10 @@ func _get_burst_ring_texture() -> Texture2D:
 		_burst_ring_texture = ImageTexture.create_from_image(img)
 	return _burst_ring_texture
 
-## Plays a brief yellow flash on the player sprite to indicate overclock
-## activation.
+## Emits non-transform feedback when Overclock activates. The ship's shared
+## presentation state is left untouched so boost, invincibility, and developer
+## tinting remain authoritative.
 func _flash_overclock() -> void:
-	var tween := create_tween()
-	tween.tween_property(sprite, "modulate", Color(1.0, 0.7, 0.0), 0.05)
-	tween.tween_property(sprite, "modulate", Color.WHITE, 0.25)
 	_spawn_sparkle_effect(global_position)
 	AudioManager.play_powerup()
 

@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3 uid="uid://dd67s6bc4xvjy"]
+[gd_scene load_steps=12 format=3 uid="uid://dd67s6bc4xvjy"]
 
 [ext_resource type="Script" uid="uid://k78vdvgqtcv0" path="res://scenes/game.gd" id="1_game"]
 [ext_resource type="PackedScene" uid="uid://bpv3rwt1k4f2i" path="res://entities/player/player.tscn" id="2_player"]
@@ -8,6 +8,7 @@
 [ext_resource type="Script" path="res://systems/threat_director.gd" id="6_threat"]
 [ext_resource type="Script" path="res://systems/special_attack_coordinator.gd" id="7_special"]
 [ext_resource type="Shader" path="res://effects/shaders/galactic_starfield.gdshader" id="8_galaxy"]
+[ext_resource type="PackedScene" path="res://effects/ship_render_layer_3d.tscn" id="9_ship_3d"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_galaxy"]
 shader = ExtResource("8_galaxy")
@@ -24,6 +25,7 @@ shader_parameter/nebula_pink = Color(0.12, 0.72, 0.92, 1)
 script = ExtResource("1_game")
 
 [node name="Background" type="ColorRect" parent="." unique_id=846929081]
+z_index = -100
 material = SubResource("ShaderMaterial_galaxy")
 offset_left = -32.0
 offset_top = -32.0
@@ -32,9 +34,12 @@ offset_bottom = 752.0
 color = Color(1, 1, 1, 1)
 
 [node name="StarField" type="Node2D" parent="." unique_id=884997156]
+z_index = -90
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=98105400]
 anchor_mode = 0
+
+[node name="ShipRenderLayer3D" parent="." instance=ExtResource("9_ship_3d")]
 
 [node name="Player" parent="." unique_id=1991327863 instance=ExtResource("2_player")]
 

@@ -45,6 +45,7 @@ const BACKGROUND_EVOLUTION_PALETTES: Array[Dictionary] = [
 @onready var enemy_spawner: Node = $EnemySpawner
 @onready var powerup_spawner: Node = $PowerUpSpawner
 @onready var background: ColorRect = $Background
+@onready var ship_render_layer: ShipRenderLayer3D = $ShipRenderLayer3D
 
 var game_over_shown: bool = false
 var allocation_active: bool = false
@@ -139,6 +140,7 @@ func _ready() -> void:
 	
 	for cfg in layer_configs:
 		var p2d := Parallax2D.new()
+		p2d.z_index = -90
 		p2d.autoscroll = Vector2(0.0, cfg["speed"])
 		p2d.repeat_size = Vector2(720.0, 1024.0)
 		
@@ -164,6 +166,7 @@ func _ready() -> void:
 	# layers (indices 1–3) instead of hiding behind them.
 	_planet_container = Node2D.new()
 	_planet_container.name = "PlanetContainer"
+	_planet_container.z_index = -30
 	add_child(_planet_container)
 	move_child(_planet_container, 4) # Above stars
 
@@ -326,6 +329,7 @@ func _on_boss_spawned(_health: int, _max_health: int, _boss_name: String) -> voi
 		return
 	_boss_black_hole = Node2D.new()
 	_boss_black_hole.set_script(BOSS_BLACK_HOLE_SCRIPT)
+	_boss_black_hole.z_index = -20
 	add_child(_boss_black_hole)
 	# Draw above the foreground planets, below the gameplay nodes.
 	move_child(_boss_black_hole, _planet_container.get_index() + 1)
@@ -370,7 +374,10 @@ func _hit_stop(duration: float, time_scale: float) -> void:
 ## here — never write get_tree().paused directly elsewhere, or a later
 ## recompute from these flags would silently stomp it.
 func _update_pause_state() -> void:
-	get_tree().paused = pause_active or allocation_active or elite_upgrade_active or try_again_active or game_over_shown
+	var paused := pause_active or allocation_active or elite_upgrade_active or try_again_active or game_over_shown
+	get_tree().paused = paused
+	if is_instance_valid(ship_render_layer):
+		ship_render_layer.set_render_paused(paused)
 	_sync_hud_visibility()
 
 ## Keeps the gameplay HUD out of modal upgrade/allocation screens so it

@@ -257,16 +257,12 @@ func _on_play_pressed() -> void:
 	settings_button.disabled = true
 
 	var viewport_size := size if size.x > 1.0 else get_viewport_rect().size
-	var fade := create_tween()
-	fade.set_parallel(true)
-	fade.set_trans(Tween.TRANS_QUART)
-	fade.set_ease(Tween.EASE_IN)
-	fade.tween_property(cabinet_layout, "modulate:a", 0.0, 0.38)
-	fade.tween_property(cabinet_layout, "position:x", cabinet_layout.position.x - 45.0, 0.38)
 	if is_instance_valid(_planet) and _planet.has_method("set_rotates"):
 		_planet.call("set_rotates", 0.055)
 	if ship_rig.has_method("fly_out"):
 		ship_rig.call("fly_out", viewport_size)
+	else:
+		_on_ship_launch_finished()
 
 
 func _on_ship_launch_finished() -> void:

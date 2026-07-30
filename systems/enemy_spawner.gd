@@ -26,15 +26,20 @@ var grace_time := 0.0
 
 
 func _ready() -> void:
-	var viewport_size := get_viewport().get_visible_rect().size
-	viewport_width = viewport_size.x
-	viewport_height = viewport_size.y
+	_refresh_viewport_size()
+	get_viewport().size_changed.connect(_refresh_viewport_size)
 	spawn_timer.wait_time = GameManager.get_spawn_interval()
 	spawn_timer.timeout.connect(_on_spawn_timer_timeout)
 	SignalBus.wave_started.connect(_on_wave_started)
 	SignalBus.game_over.connect(_on_game_over)
 	SignalBus.boss_died.connect(_on_boss_died)
 	SignalBus.evolution_transition_finished.connect(_on_evolution_transition_finished)
+
+
+func _refresh_viewport_size() -> void:
+	var viewport_size := get_viewport().get_visible_rect().size
+	viewport_width = viewport_size.x
+	viewport_height = viewport_size.y
 
 
 func start_spawning() -> void:

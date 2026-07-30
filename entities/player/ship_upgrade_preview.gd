@@ -1,11 +1,17 @@
 extends Control
 class_name ShipUpgradePreview
-## Compact popup preview of the current ship plus one highlighted candidate.
+## Static 3D popup preview of the current hull plus one candidate module.
 
-const SHIP_TEXTURE := preload("res://assets/sprites/generated/player_idle_strip.png")
+const PREVIEW_SIZE := Vector2i(256, 128)
 
 var _current_upgrades: Array[String] = []
 var _candidate_id := ""
+var _preview_viewport: SubViewport
+var _assembly: PlayerShipAssembly3D
+
+
+func _ready() -> void:
+	_build_3d_preview()
 
 
 func configure(current_upgrades: Array[String], candidate_id: String) -> void:
@@ -16,44 +22,86 @@ func configure(current_upgrades: Array[String], candidate_id: String) -> void:
 	_candidate_id = candidate_id
 	custom_minimum_size = Vector2(0, 66)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	queue_redraw()
+	if is_node_ready():
+		_refresh_preview()
 
 
-func _draw() -> void:
+func get_assembly() -> PlayerShipAssembly3D:
+	return _assembly
+
+
+func get_preview_viewport() -> SubViewport:
+	return _preview_viewport
+
+
+func _build_3d_preview() -> void:
+	_preview_viewport = SubViewport.new()
+	_preview_viewport.name = "UpgradePreviewViewport"
+	_preview_viewport.size = PREVIEW_SIZE
+	_preview_viewport.transparent_bg = true
+	_preview_viewport.handle_input_locally = false
+	_preview_viewport.own_world_3d = true
+	_preview_viewport.msaa_3d = Viewport.MSAA_4X
+	_preview_viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
+	add_child(_preview_viewport)
+
+	var world := Node3D.new()
+	world.name = "PreviewWorld"
+	_preview_viewport.add_child(world)
+
+	var key_light := DirectionalLight3D.new()
+	key_light.name = "KeyLight"
+	key_light.rotation_degrees = Vector3(-52.0, -24.0, 0.0)
+	key_light.light_color = Color(0.62, 0.82, 1.0)
+	key_light.light_energy = 2.35
+	key_light.shadow_enabled = false
+	world.add_child(key_light)
+
+	var rim_light := DirectionalLight3D.new()
+	rim_light.name = "RimLight"
+	rim_light.rotation_degrees = Vector3(38.0, 148.0, 0.0)
+	rim_light.light_color = Color(1.0, 0.08, 0.54)
+	rim_light.light_energy = 1.35
+	rim_light.shadow_enabled = false
+	world.add_child(rim_light)
+
+	var camera := Camera3D.new()
+	camera.name = "Camera3D"
+	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
+	camera.size = 7.0
+	camera.position = Vector3(0.0, 8.0, 5.0)
+	camera.current = true
+	world.add_child(camera)
+	camera.look_at(Vector3.ZERO, Vector3.UP)
+
+	_assembly = PlayerShipAssembly3D.new()
+	_assembly.name = "PlayerShipAssembly3D"
+	world.add_child(_assembly)
+	_assembly.build()
+
+	var display := TextureRect.new()
+	display.name = "PreviewDisplay"
+	display.set_anchors_preset(Control.PRESET_FULL_RECT)
+	display.set_offsets_preset(Control.PRESET_FULL_RECT)
+	display.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	display.texture = _preview_viewport.get_texture()
+	display.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
+	display.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	display.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	add_child(display)
+	_refresh_preview()
+
+
+func _refresh_preview() -> void:
+	if not is_instance_valid(_assembly):
+		return
 	var upgrades := _current_upgrades.duplicate()
 	if not upgrades.has(_candidate_id):
 		upgrades.append(_candidate_id)
-
-	var preview_scale := 0.48
-	var center := Vector2(size.x * 0.5, size.y * 0.54)
-	draw_set_transform(center, 0.0, Vector2.ONE * preview_scale)
-	ShipUpgradeVisuals.draw_upgrade_layer(
-		self,
+	_assembly.set_active_upgrades(
 		upgrades,
-		ShipUpgradeVisuals.VisualLayer.BACK,
-		{},
 		_candidate_id,
+		true,
 		true
 	)
-	draw_texture_rect_region(
-		SHIP_TEXTURE,
-		Rect2(-64, -64, 128, 128),
-		Rect2(0, 0, 128, 128),
-		Color(0.62, 0.66, 0.75, 0.72)
-	)
-	ShipUpgradeVisuals.draw_upgrade_layer(
-		self,
-		upgrades,
-		ShipUpgradeVisuals.VisualLayer.FRONT,
-		{},
-		_candidate_id,
-		true
-	)
-	if upgrades.has("drone_escort"):
-		var drone_alpha := 1.0 if _candidate_id == "drone_escort" else 0.30
-		ShipUpgradeVisuals.draw_drone_preview(
-			self,
-			drone_alpha,
-			_candidate_id == "drone_escort"
-		)
-	draw_set_transform(Vector2.ZERO)
+	_preview_viewport.render_target_update_mode = SubViewport.UPDATE_ONCE

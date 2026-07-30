@@ -1,0 +1,711 @@
+[
+  {
+    "name": "player_ship_mockup",
+    "display_name": "PLAYER // STARLANCE Mk II",
+    "file": "player_ship_mockup.glb",
+    "triangles": 250,
+    "vertices": 326,
+    "materials": 4,
+    "socket_count": 7,
+    "bytes": 13352,
+    "sockets": {
+      "Socket_EngineLeft": [
+        -0.27,
+        -0.02,
+        1.63
+      ],
+      "Socket_EngineRight": [
+        0.27,
+        -0.02,
+        1.63
+      ],
+      "Socket_MuzzleCenter": [
+        0.0,
+        0.08,
+        -2.48
+      ],
+      "Socket_MuzzleLeft": [
+        -1.01,
+        0.18,
+        -0.42
+      ],
+      "Socket_MuzzleRight": [
+        1.01,
+        0.18,
+        -0.42
+      ],
+      "Socket_UpgradeLeft": [
+        -1.25,
+        0.18,
+        0.28
+      ],
+      "Socket_UpgradeRight": [
+        1.25,
+        0.18,
+        0.28
+      ]
+    }
+  },
+  {
+    "name": "player_upgrade_twin_cannons",
+    "display_name": "PLAYER UPGRADE // TWIN CANNONS",
+    "file": "player_upgrade_twin_cannons.glb",
+    "triangles": 60,
+    "vertices": 120,
+    "materials": 2,
+    "socket_count": 2,
+    "bytes": 5280,
+    "sockets": {
+      "Socket_MuzzleLeft": [
+        -0.899,
+        0.28,
+        -1.733
+      ],
+      "Socket_MuzzleRight": [
+        0.899,
+        0.28,
+        -1.733
+      ]
+    }
+  },
+  {
+    "name": "player_upgrade_auto_aim",
+    "display_name": "PLAYER UPGRADE // AUTO-AIM CORE",
+    "file": "player_upgrade_auto_aim.glb",
+    "triangles": 32,
+    "vertices": 60,
+    "materials": 1,
+    "socket_count": 1,
+    "bytes": 2856,
+    "sockets": {
+      "Socket_AimSensor": [
+        0.0,
+        0.56,
+        -2.18
+      ]
+    }
+  },
+  {
+    "name": "player_upgrade_hull_plating",
+    "display_name": "PLAYER UPGRADE // HULL PLATING",
+    "file": "player_upgrade_hull_plating.glb",
+    "triangles": 52,
+    "vertices": 100,
+    "materials": 1,
+    "socket_count": 2,
+    "bytes": 4040,
+    "sockets": {
+      "Socket_ArmorLeft": [
+        -1.64,
+        0.18,
+        0.28
+      ],
+      "Socket_ArmorRight": [
+        1.64,
+        0.18,
+        0.28
+      ]
+    }
+  },
+  {
+    "name": "player_upgrade_afterburner",
+    "display_name": "PLAYER UPGRADE // AFTERBURNER",
+    "file": "player_upgrade_afterburner.glb",
+    "triangles": 48,
+    "vertices": 60,
+    "materials": 2,
+    "socket_count": 2,
+    "bytes": 3900,
+    "sockets": {
+      "Socket_EngineLeft": [
+        -0.72,
+        -0.18,
+        2.33
+      ],
+      "Socket_EngineRight": [
+        0.72,
+        -0.18,
+        2.33
+      ]
+    }
+  },
+  {
+    "name": "player_upgrade_spread_shot",
+    "display_name": "PLAYER UPGRADE // SPREAD EMITTERS",
+    "file": "player_upgrade_spread_shot.glb",
+    "triangles": 40,
+    "vertices": 80,
+    "materials": 1,
+    "socket_count": 2,
+    "bytes": 3528,
+    "sockets": {
+      "Socket_MuzzleLeft": [
+        -3.081,
+        0.2,
+        0.064
+      ],
+      "Socket_MuzzleRight": [
+        3.081,
+        0.2,
+        0.064
+      ]
+    }
+  },
+  {
+    "name": "player_upgrade_shield_burst",
+    "display_name": "PLAYER UPGRADE // SHIELD PROJECTORS",
+    "file": "player_upgrade_shield_burst.glb",
+    "triangles": 52,
+    "vertices": 100,
+    "materials": 1,
+    "socket_count": 2,
+    "bytes": 4084,
+    "sockets": {
+      "Socket_ShieldLeft": [
+        -1.72,
+        0.4,
+        0.18
+      ],
+      "Socket_ShieldRight": [
+        1.72,
+        0.4,
+        0.18
+      ]
+    }
+  },
+  {
+    "name": "player_upgrade_magnet_field",
+    "display_name": "PLAYER UPGRADE // MAGNET RAILS",
+    "file": "player_upgrade_magnet_field.glb",
+    "triangles": 40,
+    "vertices": 80,
+    "materials": 1,
+    "socket_count": 2,
+    "bytes": 3520,
+    "sockets": {
+      "Socket_MagnetLeft": [
+        -2.3,
+        0.29,
+        1.08
+      ],
+      "Socket_MagnetRight": [
+        2.3,
+        0.29,
+        1.08
+      ]
+    }
+  },
+  {
+    "name": "player_upgrade_overclock",
+    "display_name": "PLAYER UPGRADE // OVERCLOCK REACTOR",
+    "file": "player_upgrade_overclock.glb",
+    "triangles": 38,
+    "vertices": 70,
+    "materials": 1,
+    "socket_count": 1,
+    "bytes": 3176,
+    "sockets": {
+      "Socket_OverclockCore": [
+        0.0,
+        0.52,
+        0.8
+      ]
+    }
+  },
+  {
+    "name": "player_upgrade_rear_gunner",
+    "display_name": "PLAYER UPGRADE // REAR GUNNER",
+    "file": "player_upgrade_rear_gunner.glb",
+    "triangles": 32,
+    "vertices": 60,
+    "materials": 1,
+    "socket_count": 1,
+    "bytes": 2888,
+    "sockets": {
+      "Socket_MuzzleRear": [
+        0.0,
+        0.34,
+        2.888
+      ]
+    }
+  },
+  {
+    "name": "player_drone_escort",
+    "display_name": "PLAYER UPGRADE // DRONE ESCORT",
+    "file": "player_drone_escort.glb",
+    "triangles": 60,
+    "vertices": 100,
+    "materials": 2,
+    "socket_count": 2,
+    "bytes": 4808,
+    "sockets": {
+      "Socket_MuzzleCenter": [
+        0.0,
+        0.1,
+        -0.76
+      ],
+      "Socket_Engine": [
+        0.0,
+        -0.02,
+        0.62
+      ]
+    }
+  },
+  {
+    "name": "basic_enemy_mockup",
+    "display_name": "BASIC // REDJACK Mk II",
+    "file": "basic_enemy_mockup.glb",
+    "triangles": 176,
+    "vertices": 256,
+    "materials": 4,
+    "socket_count": 3,
+    "bytes": 10800,
+    "sockets": {
+      "Socket_EngineLeft": [
+        -0.25,
+        -0.01,
+        1.17
+      ],
+      "Socket_EngineRight": [
+        0.25,
+        -0.01,
+        1.17
+      ],
+      "Socket_MuzzleCenter": [
+        0.0,
+        0.08,
+        -1.84
+      ]
+    }
+  },
+  {
+    "name": "fast_enemy_mockup",
+    "display_name": "FAST // RAZOR Mk II",
+    "file": "fast_enemy_mockup.glb",
+    "triangles": 228,
+    "vertices": 326,
+    "materials": 5,
+    "socket_count": 3,
+    "bytes": 13524,
+    "sockets": {
+      "Socket_EngineLeft": [
+        -0.15,
+        -0.01,
+        1.59
+      ],
+      "Socket_EngineRight": [
+        0.15,
+        -0.01,
+        1.59
+      ],
+      "Socket_MuzzleCenter": [
+        0.0,
+        0.07,
+        -2.36
+      ]
+    }
+  },
+  {
+    "name": "bomber_enemy_mockup",
+    "display_name": "BOMBER // MANTIS Mk II",
+    "file": "bomber_enemy_mockup.glb",
+    "triangles": 264,
+    "vertices": 346,
+    "materials": 4,
+    "socket_count": 5,
+    "bytes": 13668,
+    "sockets": {
+      "Socket_EngineLeft": [
+        -0.33,
+        -0.02,
+        1.48
+      ],
+      "Socket_EngineRight": [
+        0.33,
+        -0.02,
+        1.48
+      ],
+      "Socket_MuzzleCenter": [
+        0.0,
+        0.08,
+        -1.78
+      ],
+      "Socket_BombBayLeft": [
+        -0.54,
+        -0.34,
+        0.74
+      ],
+      "Socket_BombBayRight": [
+        0.54,
+        -0.34,
+        0.74
+      ]
+    }
+  },
+  {
+    "name": "tank_enemy_mockup",
+    "display_name": "TANK // BULWARK Mk II",
+    "file": "tank_enemy_mockup.glb",
+    "triangles": 258,
+    "vertices": 396,
+    "materials": 6,
+    "socket_count": 5,
+    "bytes": 16208,
+    "sockets": {
+      "Socket_EngineLeft": [
+        -0.5,
+        -0.08,
+        1.69
+      ],
+      "Socket_EngineRight": [
+        0.5,
+        -0.08,
+        1.69
+      ],
+      "Socket_MuzzleCenter": [
+        0.0,
+        0.46,
+        -1.66
+      ],
+      "Socket_ArmorLeft": [
+        -1.75,
+        0.03,
+        0.22
+      ],
+      "Socket_ArmorRight": [
+        1.75,
+        0.03,
+        0.22
+      ]
+    }
+  },
+  {
+    "name": "sniper_enemy_mockup",
+    "display_name": "SNIPER // LONGBOW Mk II",
+    "file": "sniper_enemy_mockup.glb",
+    "triangles": 256,
+    "vertices": 320,
+    "materials": 5,
+    "socket_count": 4,
+    "bytes": 13608,
+    "sockets": {
+      "Socket_EngineLeft": [
+        -0.23,
+        -0.01,
+        1.53
+      ],
+      "Socket_EngineRight": [
+        0.23,
+        -0.01,
+        1.53
+      ],
+      "Socket_MuzzleCenter": [
+        0.0,
+        0.2,
+        -2.64
+      ],
+      "Socket_LaserOrigin": [
+        0.0,
+        0.2,
+        -2.64
+      ]
+    }
+  },
+  {
+    "name": "boss_assault_mockup",
+    "display_name": "BOSS // ASSAULT WING",
+    "file": "boss_assault_mockup.glb",
+    "triangles": 322,
+    "vertices": 422,
+    "materials": 4,
+    "socket_count": 8,
+    "bytes": 16448,
+    "sockets": {
+      "Socket_EngineLeft": [
+        -0.817,
+        -0.076,
+        3.705
+      ],
+      "Socket_EngineRight": [
+        0.817,
+        -0.076,
+        3.705
+      ],
+      "Socket_MuzzleCenter": [
+        0.0,
+        0.19,
+        -6.232
+      ],
+      "Socket_MuzzleLeft": [
+        -2.584,
+        0.114,
+        -3.838
+      ],
+      "Socket_MuzzleRight": [
+        2.584,
+        0.114,
+        -3.838
+      ],
+      "Socket_WingHardpointLeft": [
+        -3.99,
+        0.19,
+        -0.456
+      ],
+      "Socket_WingHardpointRight": [
+        3.99,
+        0.19,
+        -0.456
+      ],
+      "Socket_Core": [
+        0.0,
+        0.912,
+        -0.342
+      ]
+    }
+  },
+  {
+    "name": "boss_bulwark_mockup",
+    "display_name": "BOSS // BULWARK ARRAY",
+    "file": "boss_bulwark_mockup.glb",
+    "triangles": 342,
+    "vertices": 580,
+    "materials": 8,
+    "socket_count": 8,
+    "bytes": 23292,
+    "sockets": {
+      "Socket_EngineLeft": [
+        -1.147,
+        -0.185,
+        3.0895
+      ],
+      "Socket_EngineRight": [
+        1.147,
+        -0.185,
+        3.0895
+      ],
+      "Socket_MuzzleCenter": [
+        0.0,
+        1.221,
+        -3.071
+      ],
+      "Socket_MuzzleLeft": [
+        -1.924,
+        1.221,
+        -2.479
+      ],
+      "Socket_MuzzleRight": [
+        1.924,
+        1.221,
+        -2.479
+      ],
+      "Socket_ShieldEmitterLeft": [
+        -4.588,
+        1.073,
+        -0.148
+      ],
+      "Socket_ShieldEmitterRight": [
+        4.588,
+        1.073,
+        -0.148
+      ],
+      "Socket_Core": [
+        0.0,
+        1.406,
+        -0.222
+      ]
+    }
+  },
+  {
+    "name": "boss_tempest_mockup",
+    "display_name": "BOSS // TEMPEST FORK",
+    "file": "boss_tempest_mockup.glb",
+    "triangles": 312,
+    "vertices": 514,
+    "materials": 5,
+    "socket_count": 8,
+    "bytes": 19328,
+    "sockets": {
+      "Socket_EngineLeft": [
+        -0.748,
+        -0.132,
+        2.618
+      ],
+      "Socket_EngineRight": [
+        0.748,
+        -0.132,
+        2.618
+      ],
+      "Socket_MuzzleCenter": [
+        0.0,
+        1.232,
+        -2.288
+      ],
+      "Socket_EmitterFrontLeft": [
+        -4.29,
+        0.308,
+        -4.29
+      ],
+      "Socket_EmitterFrontRight": [
+        4.29,
+        0.308,
+        -4.29
+      ],
+      "Socket_EmitterRearLeft": [
+        -4.29,
+        0.308,
+        4.29
+      ],
+      "Socket_EmitterRearRight": [
+        4.29,
+        0.308,
+        4.29
+      ],
+      "Socket_Core": [
+        0.0,
+        1.32,
+        0.0
+      ]
+    }
+  },
+  {
+    "name": "boss_void_harbinger_mockup",
+    "display_name": "ELITE BOSS // VOID HARBINGER",
+    "file": "boss_void_harbinger_mockup.glb",
+    "triangles": 374,
+    "vertices": 552,
+    "materials": 7,
+    "socket_count": 8,
+    "bytes": 22080,
+    "sockets": {
+      "Socket_EngineLeft": [
+        -0.7056,
+        -0.1176,
+        3.3768
+      ],
+      "Socket_EngineRight": [
+        0.7056,
+        -0.1176,
+        3.3768
+      ],
+      "Socket_MuzzleCenter": [
+        0.0,
+        1.1424,
+        -4.0992
+      ],
+      "Socket_MuzzleLeft": [
+        -1.1424,
+        0.336,
+        -1.7136
+      ],
+      "Socket_MuzzleRight": [
+        1.1424,
+        0.336,
+        -1.7136
+      ],
+      "Socket_Core": [
+        0.0,
+        1.2432,
+        -0.168
+      ],
+      "Socket_CrownLeft": [
+        -1.3776,
+        0.42,
+        3.0576
+      ],
+      "Socket_CrownRight": [
+        1.3776,
+        0.42,
+        3.0576
+      ]
+    }
+  },
+  {
+    "name": "boss_tempest_core_mockup",
+    "display_name": "WAVE 20 // TEMPEST CORE",
+    "file": "boss_tempest_core_mockup.glb",
+    "triangles": 364,
+    "vertices": 640,
+    "materials": 7,
+    "socket_count": 10,
+    "bytes": 24452,
+    "sockets": {
+      "Socket_EngineLeft": [
+        -1.1,
+        -0.198,
+        3.982
+      ],
+      "Socket_EngineRight": [
+        1.1,
+        -0.198,
+        3.982
+      ],
+      "Socket_MuzzleCenter": [
+        0.0,
+        1.54,
+        -4.796
+      ],
+      "Socket_MuzzleLeft": [
+        -1.98,
+        1.43,
+        -2.2
+      ],
+      "Socket_MuzzleRight": [
+        1.98,
+        1.43,
+        -2.2
+      ],
+      "Socket_Core": [
+        0.0,
+        1.716,
+        -0.572
+      ],
+      "Socket_SectionFront": [
+        0.0,
+        1.452,
+        -6.6
+      ],
+      "Socket_SectionRear": [
+        0.0,
+        1.452,
+        6.6
+      ],
+      "Socket_SectionLeft": [
+        -6.6,
+        1.452,
+        0.0
+      ],
+      "Socket_SectionRight": [
+        6.6,
+        1.452,
+        0.0
+      ]
+    }
+  },
+  {
+    "name": "tempest_section_mockup",
+    "display_name": "TEMPEST CORE // ORBITAL SECTION",
+    "file": "tempest_section_mockup.glb",
+    "triangles": 84,
+    "vertices": 170,
+    "materials": 3,
+    "socket_count": 3,
+    "bytes": 7492,
+    "sockets": {
+      "Socket_Attach": [
+        0.0,
+        0.0,
+        2.14
+      ],
+      "Socket_MuzzleCenter": [
+        0.0,
+        0.34,
+        -2.1
+      ],
+      "Socket_Core": [
+        0.0,
+        0.36,
+        -0.42
+      ]
+    }
+  }
+]

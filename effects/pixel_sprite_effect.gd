@@ -1,88 +1,172 @@
 extends Node2D
-## Reusable one-shot spritesheet effect for small combat feedback.
-
-const WARP_TEXTURE := preload("res://assets/Super Pixel Effects Gigapack (Free Version)/spritesheet/Sci-fi/scifi_warp_003/scifi_warp_003_small_blue/spritesheet.png")
-const SPARKLE_TEXTURE := preload("res://assets/Super Pixel Effects Gigapack (Free Version)/spritesheet/Magic Bursts/round_sparkle_burst_001/round_sparkle_burst_001_small_blue/spritesheet.png")
-
-const FRAME_TIME: float = 1.0 / 24.0
+## Original procedural one-shot VFX for boost and upgrade feedback.
+##
+## The legacy scene name is retained to keep pooling keys stable, but no
+## sprites or external textures are used.
 
 enum EffectKind { WARP, SPARKLE }
 
-var _sprite: Sprite2D
-var _frame_count: int = 1
-var _frame_index: int = 0
-var _frame_timer: float = 0.0
-var _play_token: int = 0
+var _kind := EffectKind.WARP
+var _elapsed := 0.0
+var _duration := 0.4
+var _effect_seed := 1
+var _reduced_flashing := false
+
 
 func _ready() -> void:
-	_ensure_nodes()
 	_set_idle_state()
+
 
 func _process(delta: float) -> void:
 	if not visible:
 		return
-	_frame_timer += delta
-	while _frame_timer >= FRAME_TIME:
-		_frame_timer -= FRAME_TIME
-		_frame_index += 1
-		if _frame_index >= _frame_count:
-			_set_idle_state()
-			ObjectPool.release(self)
-			return
-		_sprite.frame = _frame_index
+	_elapsed += delta
+	queue_redraw()
+	if _elapsed >= _duration:
+		_set_idle_state()
+		ObjectPool.release(self)
+
+
+func _draw() -> void:
+	if not visible:
+		return
+	var progress := clampf(_elapsed / _duration, 0.0, 1.0)
+	if _kind == EffectKind.WARP:
+		_draw_warp(progress)
+	else:
+		_draw_sparkle(progress)
+
 
 func play_at(effect_position: Vector2, kind: EffectKind, effect_rotation: float = 0.0) -> void:
-	_ensure_nodes()
-	_play_token += 1
 	global_position = effect_position
 	rotation = effect_rotation
+	scale = Vector2.ONE
+	modulate = Color.WHITE
+	_kind = kind
+	_elapsed = 0.0
+	_duration = 0.46 if kind == EffectKind.WARP else 0.52
+	_effect_seed = randi_range(1, 1_000_000)
+	_reduced_flashing = bool(SaveManager.get_setting("reduced_flashing", false))
 	visible = true
 	process_mode = Node.PROCESS_MODE_INHERIT
 	set_process(true)
-	_configure(kind)
+	queue_redraw()
 
-	var token := _play_token
-	get_tree().create_timer(float(_frame_count) * FRAME_TIME + 0.08).timeout.connect(_release_if_current.bind(token))
 
 func play_warp_at(effect_position: Vector2, direction: Vector2) -> void:
 	var angle := direction.angle() + PI / 2.0 if not direction.is_zero_approx() else 0.0
 	play_at(effect_position, EffectKind.WARP, angle)
 
+
 func play_sparkle_at(effect_position: Vector2) -> void:
 	play_at(effect_position, EffectKind.SPARKLE)
 
-func _ensure_nodes() -> void:
-	if _sprite == null:
-		_sprite = Sprite2D.new()
-		_sprite.name = "Sprite2D"
-		_sprite.centered = true
-		add_child(_sprite)
 
-func _configure(kind: EffectKind) -> void:
-	match kind:
-		EffectKind.WARP:
-			_set_sprite(WARP_TEXTURE, 12, 1, 12, 1.35)
-		EffectKind.SPARKLE:
-			_set_sprite(SPARKLE_TEXTURE, 14, 1, 14, 1.4)
+func _draw_warp(progress: float) -> void:
+	var expansion := 1.0 - pow(1.0 - progress, 3.0)
+	var fade := 1.0 - progress
+	var flash_limit := 0.32 if _reduced_flashing else 1.0
 
-func _set_sprite(texture: Texture2D, hframes: int, vframes: int, frame_count: int, sprite_scale: float) -> void:
-	_sprite.texture = texture
-	_sprite.hframes = hframes
-	_sprite.vframes = vframes
-	_sprite.frame = 0
-	_sprite.scale = Vector2.ONE * sprite_scale
-	_sprite.modulate = Color.WHITE
-	_frame_count = frame_count
-	_frame_index = 0
-	_frame_timer = 0.0
+	# Three broken launch rings collapse into the departure vector.
+	for ring_index in range(3):
+		var delayed := clampf(progress * 1.35 - float(ring_index) * 0.12, 0.0, 1.0)
+		var radius := lerpf(7.0 + ring_index * 5.0, 42.0 + ring_index * 10.0, delayed)
+		var ring_alpha := (1.0 - delayed) * 0.74
+		draw_arc(
+			Vector2(0.0, 4.0 + delayed * 13.0),
+			radius,
+			-PI * 0.84,
+			-PI * 0.16,
+			20,
+			Color(0.18, 0.92, 1.0, ring_alpha),
+			3.0 - float(ring_index) * 0.45,
+			true
+		)
+		draw_arc(
+			Vector2(0.0, 4.0 + delayed * 13.0),
+			radius,
+			PI * 0.16,
+			PI * 0.84,
+			20,
+			Color(0.58, 0.26, 1.0, ring_alpha * 0.8),
+			2.0,
+			true
+		)
 
-func _release_if_current(token: int) -> void:
-	if token != _play_token or not visible:
-		return
-	_set_idle_state()
-	ObjectPool.release(self)
+	# Tapered speed lines point opposite travel, making the dash direction
+	# readable even when the ship is momentarily obscured.
+	for index in range(9):
+		var x := lerpf(-24.0, 24.0, float(index) / 8.0)
+		x += (_noise(index) - 0.5) * 5.0
+		var length := 26.0 + _noise(index + 19) * 44.0
+		var start := Vector2(x * (1.0 - expansion * 0.35), 8.0 + expansion * 18.0)
+		var end := start + Vector2(x * 0.18, length * expansion)
+		var line_color := Color(0.20, 0.86, 1.0, fade * (0.45 + _noise(index + 39) * 0.5))
+		draw_line(start, end, line_color, 1.2 + _noise(index + 59) * 1.8, true)
+
+	var core_alpha := sin(progress * PI) * flash_limit
+	var core := PackedVector2Array([
+		Vector2(0.0, -18.0 - expansion * 8.0),
+		Vector2(9.0 * fade, 5.0),
+		Vector2(0.0, 18.0 + expansion * 20.0),
+		Vector2(-9.0 * fade, 5.0),
+	])
+	draw_colored_polygon(core, Color(0.74, 0.98, 1.0, core_alpha * 0.78))
+
+
+func _draw_sparkle(progress: float) -> void:
+	var expansion := sin(progress * PI * 0.72)
+	var fade := 1.0 - progress
+	var flash_limit := 0.34 if _reduced_flashing else 1.0
+	var palette := [
+		Color(0.20, 0.94, 1.0),
+		Color(0.70, 0.34, 1.0),
+		Color(1.0, 0.28, 0.70),
+	]
+
+	for index in range(12):
+		var angle := TAU * float(index) / 12.0 + (_noise(index) - 0.5) * 0.18
+		var inner := lerpf(2.0, 13.0, expansion)
+		var outer := lerpf(7.0, 37.0 + _noise(index + 17) * 14.0, expansion)
+		var color: Color = palette[index % palette.size()]
+		color.a = fade * 0.84
+		draw_line(
+			Vector2.from_angle(angle) * inner,
+			Vector2.from_angle(angle) * outer,
+			color,
+			2.5 if index % 3 == 0 else 1.3,
+			true
+		)
+
+	for orbit_index in range(3):
+		var orbit_radius := lerpf(4.0, 17.0 + orbit_index * 8.0, expansion)
+		var orbit_color: Color = palette[orbit_index]
+		orbit_color.a = fade * 0.48
+		draw_arc(
+			Vector2.ZERO,
+			orbit_radius,
+			progress * TAU + orbit_index,
+			progress * TAU + orbit_index + PI * 1.28,
+			24,
+			orbit_color,
+			1.8,
+			true
+		)
+
+	draw_circle(
+		Vector2.ZERO,
+		lerpf(2.0, 8.0, expansion),
+		Color(0.88, 1.0, 1.0, fade * flash_limit)
+	)
+
+
+func _noise(index: int) -> float:
+	var value := sin(float(_effect_seed + index * 977) * 12.9898) * 43_758.5453
+	return value - floor(value)
+
 
 func _set_idle_state() -> void:
 	visible = false
 	process_mode = Node.PROCESS_MODE_DISABLED
 	set_process(false)
+	queue_redraw()
