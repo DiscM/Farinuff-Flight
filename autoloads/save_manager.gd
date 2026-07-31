@@ -20,6 +20,13 @@ const DEFAULT_SETTINGS: Dictionary = {
 
 var high_score: int = 0
 var settings: Dictionary = DEFAULT_SETTINGS.duplicate(true)
+# Meta-progression state, owned by the MetaProgression autoload and
+# persisted here alongside the high score.
+var salvage: int = 0
+## Unlock state: item id -> owned level (absent key = locked).
+var unlock_levels: Dictionary = {}
+var selected_ship: String = "ship_swallowtail"
+var active_modifiers: Array[String] = []
 
 ## Loads saved data from disk on startup and applies the persisted audio
 ## and control-scheme settings.
@@ -61,6 +68,16 @@ func reset_high_score() -> void:
 	high_score = 0
 	_save_data()
 
+## Stores the meta-progression wallet, unlock levels, and run-loadout
+## selections, then persists them. Called by the MetaProgression autoload
+## whenever any of these values change.
+func save_meta(new_salvage: int, new_unlock_levels: Dictionary, new_selected_ship: String, new_active_modifiers: Array[String]) -> void:
+	salvage = maxi(new_salvage, 0)
+	unlock_levels = new_unlock_levels.duplicate()
+	selected_ship = new_selected_ship
+	active_modifiers = new_active_modifiers.duplicate()
+	_save_data()
+
 ## Loads saved data (high score and settings) from the JSON save file.
 ## Falls back to defaults if the file doesn't exist, can't be opened,
 ## or contains malformed data. Only overwrites settings keys that exist
@@ -80,6 +97,37 @@ func _load_data() -> void:
 	if int(data.get("version", SAVE_VERSION)) != SAVE_VERSION:
 		return
 	high_score = maxi(int(data.get("high_score", 0)), 0)
+	# Meta-progression keys are additive to the v1 schema: absent keys keep
+	# the in-memory defaults, and mistyped values are rejected the same way
+	# settings are.
+	var stored_salvage: Variant = data.get("salvage", salvage)
+	if stored_salvage is float or stored_salvage is int:
+		salvage = maxi(int(stored_salvage), 0)
+	var stored_levels: Variant = data.get("unlock_levels", null)
+	if stored_levels is Dictionary:
+		unlock_levels.clear()
+		for key: Variant in stored_levels:
+			var level: Variant = stored_levels[key]
+			if key is String and (level is int or level is float) and int(level) >= 1:
+				unlock_levels[key] = int(level)
+	else:
+		# Migration: the pre-tiers schema stored a flat purchased_unlocks
+		# array; each entry becomes a level-1 unlock.
+		var stored_unlocks: Variant = data.get("purchased_unlocks", null)
+		if stored_unlocks is Array:
+			unlock_levels.clear()
+			for entry: Variant in stored_unlocks:
+				if entry is String:
+					unlock_levels[entry] = 1
+	var stored_ship: Variant = data.get("selected_ship", null)
+	if stored_ship is String:
+		selected_ship = stored_ship
+	var stored_modifiers: Variant = data.get("active_modifiers", null)
+	if stored_modifiers is Array:
+		active_modifiers.clear()
+		for entry: Variant in stored_modifiers:
+			if entry is String and not active_modifiers.has(entry):
+				active_modifiers.append(entry)
 	var stored_settings: Variant = data.get("settings", {})
 	if stored_settings is Dictionary:
 		for key in DEFAULT_SETTINGS:
@@ -101,6 +149,10 @@ func _save_data() -> void:
 	var data := {
 		"version": SAVE_VERSION,
 		"high_score": high_score,
+		"salvage": salvage,
+		"unlock_levels": unlock_levels,
+		"selected_ship": selected_ship,
+		"active_modifiers": active_modifiers,
 		"settings": settings,
 	}
 	file.store_string(JSON.stringify(data, "\t"))

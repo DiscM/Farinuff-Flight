@@ -93,6 +93,44 @@ const ALL_UPGRADES: Array[Dictionary] = [
 	},
 ]
 
+# Elite upgrades that only enter the Wave-10 pool once the matching
+# MetaProgression shop item ("meta_unlock" id) has been purchased.
+const META_ELITE_UPGRADES: Array[Dictionary] = [
+	{
+		"id": "orbitals",
+		"name": "Orbital Array",
+		"icon": "🛰️",
+		"description": "Three projectiles orbit your ship,\ndamaging enemies on contact.",
+		"color": Color(0.4, 0.85, 1.0),
+		"meta_unlock": "meta_orbitals",
+	},
+	{
+		"id": "piercing",
+		"name": "Piercing Rounds",
+		"icon": "🗡️",
+		"description": "Bullets pass through enemies\ninstead of stopping on impact.",
+		"color": Color(1.0, 0.75, 0.1),
+		"meta_unlock": "meta_piercing",
+	},
+	{
+		"id": "explosive_rounds",
+		"name": "Explosive Rounds",
+		"icon": "💣",
+		"description": "Bullets deal area damage\non impact.",
+		"color": Color(1.0, 0.35, 0.35),
+		"meta_unlock": "meta_explosive",
+	},
+]
+
+## Returns the elite upgrade pool for this run: the base catalog plus any
+## meta-unlockable upgrades whose blueprint has been purchased.
+func get_upgrade_pool() -> Array[Dictionary]:
+	var pool: Array[Dictionary] = ALL_UPGRADES.duplicate()
+	for upgrade in META_ELITE_UPGRADES:
+		if MetaProgression.is_unlocked(str(upgrade["meta_unlock"])):
+			pool.append(upgrade)
+	return pool
+
 # --- Difficulty scaling ---
 var base_spawn_interval: float = 1.55
 var min_spawn_interval: float = 0.48
@@ -112,6 +150,27 @@ var stat_speed_level: int = 0
 var bonus_speed_pct: float = 0.0
 var bonus_fire_rate_pct: float = 0.0
 var bonus_damage: int = 0
+
+# Meta-progression bonuses (driven by purchased unlocks), applied every run.
+# Kept separate from the allocation bonuses so the allocation cap stays intact.
+var meta_speed_pct: float = 0.0
+var meta_fire_rate_pct: float = 0.0
+# Ship-variant bonuses (driven by the launch-bay selection), applied every run.
+var ship_speed_pct: float = 0.0
+var ship_fire_rate_pct: float = 0.0
+
+# --- Meta-Progression ---
+## Salvage banked during the current run (boss kills + end-of-run bonus).
+## Displayed on the game-over screen; the wallet lives in MetaProgression.
+var run_salvage: int = 0
+# Run-summary breakdown, shown on the game-over screen.
+var run_salvage_boss: int = 0
+var run_salvage_score_bonus: int = 0
+var run_salvage_wave_bonus: int = 0
+## Salvage multiplier snapshot from the launch-bay modifiers, fixed for the run.
+var run_salvage_multiplier: float = 1.0
+## Guards against banking the end-of-run salvage bonus more than once per run.
+var _run_finalized: bool = false
 
 # --- Damage Feedback ---
 const DAMAGE_SHAKE_WINDOW: float = 5.0
@@ -149,9 +208,15 @@ func _on_enemy_killed(points: int, _position: Vector2) -> void:
 ## are still available, then advances to the next wave.
 func _on_boss_died(_points: int) -> void:
 	boss_active = false
+	# Bosses are the primary salvage source during a run: elite bosses pay double.
+	var base_reward := MetaProgression.SALVAGE_PER_ELITE_BOSS if current_wave % 10 == 0 else MetaProgression.SALVAGE_PER_BOSS
+	var salvage_reward := roundi(float(base_reward) * run_salvage_multiplier)
+	run_salvage += salvage_reward
+	run_salvage_boss += salvage_reward
+	MetaProgression.earn_salvage(salvage_reward)
 	# Emit elite upgrade trigger FIRST so the game pauses before wave advances + spawning restarts.
 	# But ONLY if we haven't already collected all possible elite upgrades.
-	if current_wave % 10 == 0 and chosen_upgrade_ids.size() < ALL_UPGRADES.size():
+	if current_wave % 10 == 0 and chosen_upgrade_ids.size() < get_upgrade_pool().size():
 		SignalBus.elite_upgrade_triggered.emit()
 	_advance_wave()
 
@@ -241,7 +306,7 @@ func _advance_wave() -> void:
 	# used to vanish at this reset.
 	var needed_for_cleared_wave := orbs_needed_this_wave
 	orbs_collected_this_wave = maxi(0, orbs_collected_this_wave - needed_for_cleared_wave)
-	orbs_needed_this_wave = int(10.0 + float(current_wave) * 1.30)
+	orbs_needed_this_wave = get_orb_threshold_for_wave(current_wave)
 	# Regular enemy stats are fixed by generation; only spawn cadence scales by wave.
 	boss_active = (current_wave % 5 == 0)
 	SignalBus.wave_started.emit(current_wave)
@@ -265,11 +330,50 @@ func get_enemy_generation(wave_number: int = current_wave) -> int:
 func get_enemy_generation_name(generation: int) -> String:
 	return ["Standard", "Augmented", "Warform", "Apex"][clampi(generation, 1, 4) - 1]
 
+## Returns the orb target for the given wave. The Energy Drought challenge
+## modifier raises every target by 50%.
+func get_orb_threshold_for_wave(wave_number: int) -> int:
+	var threshold := 10.0 + float(wave_number) * 1.30
+	if is_modifier_active("mod_orb_drought"):
+		threshold *= 1.5
+	return int(threshold)
+
 ## Returns the current enemy spawn interval in seconds, decreasing as
-## waves progress but clamped to a minimum floor for playability.
+## waves progress but clamped to a minimum floor for playability. The Rapid
+## Assault challenge modifier shortens the interval by 20%.
 func get_spawn_interval() -> float:
 	var interval := base_spawn_interval - float(current_wave - 1) * 0.045
+	if is_modifier_active("mod_fast_spawns"):
+		interval *= 0.8
 	return maxf(interval, min_spawn_interval)
+
+## Health multiplier applied to regular enemies by BaseEnemy. The Armored
+## Fleet challenge modifier grants +30% HP.
+func get_enemy_health_multiplier() -> float:
+	return 1.3 if is_modifier_active("mod_tough_enemies") else 1.0
+
+## True when the given challenge modifier was toggled on in the launch bay
+## (and is owned). Effects read this at their source system.
+func is_modifier_active(modifier_id: String) -> bool:
+	return MetaProgression.is_modifier_active(modifier_id)
+
+# --- Run Finalization ---
+
+## Called once per run when the final game-over screen is shown (after the
+## try-again flow resolves). Banks the end-of-run salvage bonus — score
+## conversion plus a per-wave-cleared reward — on top of any boss salvage
+## already banked during the run.
+func finalize_run() -> void:
+	if _run_finalized:
+		return
+	_run_finalized = true
+	var waves_cleared := maxi(current_wave - 1, 0)
+	run_salvage_score_bonus = roundi(float(score / MetaProgression.SALVAGE_SCORE_DIVISOR) * run_salvage_multiplier)
+	run_salvage_wave_bonus = roundi(float(waves_cleared * MetaProgression.SALVAGE_PER_WAVE_CLEARED) * run_salvage_multiplier)
+	var bonus := run_salvage_score_bonus + run_salvage_wave_bonus
+	if bonus > 0:
+		run_salvage += bonus
+		MetaProgression.earn_salvage(bonus)
 
 # --- Restart ---
 
@@ -283,7 +387,7 @@ func start_game() -> void:
 	lives = 3
 	current_wave = 1
 	orbs_collected_this_wave = 0
-	orbs_needed_this_wave = 10
+	orbs_needed_this_wave = get_orb_threshold_for_wave(current_wave)
 	last_run_was_record = false
 
 	# Reset allocation state
@@ -298,6 +402,27 @@ func start_game() -> void:
 	try_again_stocks = 2
 	chosen_upgrade_ids = []
 	dev_enemy_generation_override = 0
+
+	# Apply purchased meta-progression unlocks for the new run.
+	run_salvage = 0
+	run_salvage_boss = 0
+	run_salvage_score_bonus = 0
+	run_salvage_wave_bonus = 0
+	run_salvage_multiplier = MetaProgression.get_salvage_multiplier()
+	_run_finalized = false
+	meta_speed_pct = MetaProgression.META_SPEED_BONUS * MetaProgression.get_level("meta_thrusters")
+	meta_fire_rate_pct = MetaProgression.META_FIRE_RATE_BONUS * MetaProgression.get_level("meta_cannons")
+	lives += MetaProgression.get_level("meta_hull")
+	try_again_stocks += MetaProgression.get_level("meta_reserves")
+
+	# Apply the launch-bay loadout: ship-variant profile and Damaged Hull.
+	var profile := MetaProgression.get_selected_ship_profile()
+	lives += int(profile.get("lives_delta", 0))
+	ship_speed_pct = float(profile.get("speed_pct", 0.0))
+	ship_fire_rate_pct = float(profile.get("fire_rate_pct", 0.0))
+	if is_modifier_active("mod_frail"):
+		lives -= 1
+	lives = maxi(lives, 1)
 
 	is_game_active = true
 	boss_active = false

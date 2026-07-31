@@ -172,22 +172,37 @@ offset_right = 478.0
 offset_bottom = 398.0
 rotation = -0.0523599
 pivot_offset = Vector2(195, 38)
-focus_neighbor_bottom = NodePath("../SettingsButton")
+focus_neighbor_bottom = NodePath("../HangarButton")
 text = "START RUN"
 theme_override_font_sizes/font_size = 30
 
-[node name="SettingsButton" type="Button" parent="CabinetLayout"]
-custom_minimum_size = Vector2(286, 58)
+[node name="HangarButton" type="Button" parent="CabinetLayout"]
+custom_minimum_size = Vector2(189, 58)
 layout_mode = 0
-offset_left = 206.0
+offset_left = 88.0
 offset_top = 420.0
-offset_right = 492.0
+offset_right = 277.0
 offset_bottom = 478.0
 rotation = -0.0523599
-pivot_offset = Vector2(143, 29)
+pivot_offset = Vector2(94, 29)
 focus_neighbor_top = NodePath("../PlayButton")
+focus_neighbor_right = NodePath("../SettingsButton")
+text = "HANGAR"
+theme_override_font_sizes/font_size = 20
+
+[node name="SettingsButton" type="Button" parent="CabinetLayout"]
+custom_minimum_size = Vector2(189, 58)
+layout_mode = 0
+offset_left = 289.0
+offset_top = 420.0
+offset_right = 478.0
+offset_bottom = 478.0
+rotation = -0.0523599
+pivot_offset = Vector2(94, 29)
+focus_neighbor_top = NodePath("../PlayButton")
+focus_neighbor_left = NodePath("../HangarButton")
 text = "SETTINGS"
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 20
 
 [node name="FooterRule" type="ColorRect" parent="CabinetLayout"]
 layout_mode = 0

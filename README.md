@@ -20,6 +20,10 @@ Progression adds permanent run choices at milestone moments. Every fifth cleared
 
 Failure uses a try-again flow before final game over. Remaining try-again stocks can continue a run, clear immediate pressure, and return the ship with temporary invincibility. Final game over records score, high score, and highest wave reached.
 
+Runs also earn salvage — a persistent currency banked from boss kills and an end-of-run bonus based on score and waves cleared. Salvage spends in the Hangar on the title screen: tiered ship systems (starting lives, speed, fire rate, extra try-again stocks), elite blueprints that add Orbital Array, Piercing Rounds, and Explosive Rounds to the elite upgrade pool, ship variants, and challenge modifiers.
+
+Before each run, the launch bay offers a loadout choice: pick an unlocked ship variant (the balanced Swallowtail, the fast-but-fragile Interceptor, or the slow-but-tough Bulwark) and toggle any owned challenge modifiers — faster spawns, armored enemies, no power-ups, and more — each paying a percentage bonus on all salvage earned that run. The game-over screen itemizes where the run's salvage came from.
+
 ## Controls
 
 - Movement: `WASD` or `Arrow Keys`, or gamepad left stick
@@ -34,7 +38,7 @@ Failure uses a try-again flow before final game over. Remaining try-again stocks
 - Engine: Godot 4.6 project format with GL Compatibility rendering
 - Language: GDScript 2.0 with typed scripts across gameplay systems
 - Architecture: scene-based composition with reusable player, enemy, bullet, power-up, HUD, menu, and popup scenes
-- Global state: autoload singletons for `GameManager`, `SignalBus`, and `SaveManager`
+- Global state: autoload singletons for `GameManager`, `MetaProgression`, `SignalBus`, and `SaveManager`
 - Event flow: signal-driven score, combo, life, orb meter, wave, boss, allocation, elite upgrade, settings, and game-over updates
 - Rendering: procedural starfield and background layers, shader-driven CRT overlay, distortion pass, screen shake, tweens, and generated visual effects
 - Persistence: saved settings and high score through the save manager

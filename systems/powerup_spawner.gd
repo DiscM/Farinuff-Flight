@@ -18,8 +18,11 @@ func _ready() -> void:
 	spawn_timer.timeout.connect(_on_spawn_timer_timeout)
 	SignalBus.game_over.connect(_on_game_over)
 
-## Starts power-up spawning by scheduling the first timer.
+## Starts power-up spawning by scheduling the first timer. The Supply
+## Blockade challenge modifier disables all power-up drops for the run.
 func start_spawning() -> void:
+	if GameManager.is_modifier_active("mod_no_powerups"):
+		return
 	_restart_timer()
 
 ## Stops power-up spawning by halting the timer.

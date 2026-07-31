@@ -200,7 +200,7 @@ func _physics_process(delta: float) -> void:
 	if input_dir.length() > 1.0:
 		input_dir = input_dir.normalized()
 
-	var effective_speed := speed * (1.0 + GameManager.bonus_speed_pct) * drift_speed_bonus
+	var effective_speed := speed * (1.0 + GameManager.bonus_speed_pct + GameManager.meta_speed_pct + GameManager.ship_speed_pct) * drift_speed_bonus
 	var current_accel := acceleration
 	var current_drag := drag
 	
@@ -270,9 +270,9 @@ func _physics_process(delta: float) -> void:
 			var rate_factor := 0.4
 			if _rapid_fire_active() and overclock_active:
 				rate_factor = 0.15  # stacking: rapid fire + overclock = ultra fast
-			effective_rate = base_fire_rate * rate_factor * maxf(1.0 - GameManager.bonus_fire_rate_pct, 0.15)
+			effective_rate = base_fire_rate * rate_factor * maxf(1.0 - GameManager.bonus_fire_rate_pct - GameManager.meta_fire_rate_pct - GameManager.ship_fire_rate_pct, 0.15)
 		else:
-			effective_rate = base_fire_rate * maxf(1.0 - GameManager.bonus_fire_rate_pct, 0.15)
+			effective_rate = base_fire_rate * maxf(1.0 - GameManager.bonus_fire_rate_pct - GameManager.meta_fire_rate_pct - GameManager.ship_fire_rate_pct, 0.15)
 		shoot_timer.wait_time = maxf(effective_rate, 0.05)
 		_fire()
 
@@ -846,6 +846,16 @@ func set_elite_upgrade_enabled(upgrade_id: String, enabled: bool, grant_one_time
 			overclock_cooldown = 3.0 if enabled else 0.0
 		"rear_gunner":
 			has_rear_gunner = enabled
+		# Meta-unlockable elites — they reuse the dormant RPG upgrade systems.
+		"orbitals":
+			if enabled:
+				grant_orbitals()
+			else:
+				_remove_orbitals()
+		"piercing":
+			has_piercing = enabled
+		"explosive_rounds":
+			has_explosive_rounds = enabled
 		_:
 			if enabled:
 				active_elite_upgrade_ids.erase(upgrade_id)
