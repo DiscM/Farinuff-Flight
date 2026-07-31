@@ -512,6 +512,8 @@ func _show_game_over(final_score: int) -> void:
 	if game_over_shown:
 		return
 	game_over_shown = true
+	# The run is truly over (try-again resolved): bank the end-of-run salvage.
+	GameManager.finalize_run()
 	_update_pause_state()
 	# process_always must stay true: the tree is paused, so a pausable
 	# timer would never fire and the game-over screen would never appear.

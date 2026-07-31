@@ -30,12 +30,11 @@ func _ready() -> void:
 	modulate.a = 1.0
 	position.y = 0.0
 
-## Selects up to 3 upgrades from ALL_UPGRADES, excluding any that have
-## already been chosen in this run. Shuffles the pool for random selection.
+## Selects up to 3 upgrades from the current run's pool (base catalog plus
+## meta-unlocked blueprints), excluding any already chosen this run.
 func _pick_upgrades() -> void:
-	# Exclude upgrades that were chosen in previous Wave-10 events this run.
 	var pool: Array[Dictionary] = []
-	for upg in GameManager.ALL_UPGRADES:
+	for upg in GameManager.get_upgrade_pool():
 		if not GameManager.chosen_upgrade_ids.has(upg["id"]):
 			pool.append(upg)
 	pool.shuffle()

@@ -2,6 +2,8 @@ extends Control
 ## Animated Neon Vector Cabinet title screen.
 
 const SETTINGS_MENU_SCENE := preload("res://ui/settings_menu.tscn")
+const HANGAR_MENU_SCENE := preload("res://ui/hangar_menu.tscn")
+const LAUNCH_BAY_SCENE := preload("res://ui/launch_bay.tscn")
 const PIXEL_PLANET_SCENE_PATH := "res://effects/shaders/PixelPlanets/Planets/GasPlanetLayers/GasPlanetLayers.tscn"
 
 const CYAN := Color(0.14, 0.93, 1.0)
@@ -28,6 +30,7 @@ const CRT_DISABLED_PROFILE := {
 @onready var cabinet_layout: Control = $CabinetLayout
 @onready var ship_rig: Node2D = $ShipStage/ShipRig
 @onready var play_button: Button = $CabinetLayout/PlayButton
+@onready var hangar_button: Button = $CabinetLayout/HangarButton
 @onready var settings_button: Button = $CabinetLayout/SettingsButton
 @onready var play_reticle: Label = $CabinetLayout/PlayReticle
 @onready var tagline: PanelContainer = $CabinetLayout/Tagline
@@ -35,6 +38,8 @@ const CRT_DISABLED_PROFILE := {
 
 var _planet: Control
 var _settings_menu: Node
+var _hangar_menu: Node
+var _launch_bay: Node
 var _launching := false
 var _pulse_time := 0.0
 var _intro_played := false
@@ -49,12 +54,16 @@ func _ready() -> void:
 	_build_pixel_planet()
 
 	play_button.pressed.connect(_on_play_pressed)
+	hangar_button.pressed.connect(_on_hangar_pressed)
 	settings_button.pressed.connect(_on_settings_pressed)
 	play_button.pressed.connect(AudioManager.play_ui_click)
+	hangar_button.pressed.connect(AudioManager.play_ui_click)
 	settings_button.pressed.connect(AudioManager.play_ui_click)
 	play_button.mouse_entered.connect(play_button.grab_focus)
+	hangar_button.mouse_entered.connect(hangar_button.grab_focus)
 	settings_button.mouse_entered.connect(settings_button.grab_focus)
 	play_button.focus_entered.connect(_on_button_focus_entered.bind(play_button))
+	hangar_button.focus_entered.connect(_on_button_focus_entered.bind(hangar_button))
 	settings_button.focus_entered.connect(_on_button_focus_entered.bind(settings_button))
 	ship_rig.connect("launch_finished", _on_ship_launch_finished)
 	resized.connect(_on_resized)
@@ -190,6 +199,17 @@ func _apply_arcade_styles() -> void:
 	play_button.add_theme_color_override("font_hover_color", Color(0.01, 0.01, 0.01))
 	play_button.add_theme_color_override("font_focus_color", Color(0.01, 0.01, 0.01))
 
+	var hangar_normal := _make_style(INK, MAGENTA, 2, 2)
+	var hangar_hover := _make_style(Color(0.14, 0.02, 0.10, 0.98), Color(1.0, 0.44, 0.72), 2, 3)
+	var hangar_pressed := _make_style(Color(0.20, 0.03, 0.13, 1.0), MAGENTA, 2, 2)
+	hangar_button.add_theme_stylebox_override("normal", hangar_normal)
+	hangar_button.add_theme_stylebox_override("hover", hangar_hover)
+	hangar_button.add_theme_stylebox_override("focus", hangar_hover)
+	hangar_button.add_theme_stylebox_override("pressed", hangar_pressed)
+	hangar_button.add_theme_color_override("font_color", MAGENTA)
+	hangar_button.add_theme_color_override("font_hover_color", Color(1.0, 0.84, 0.92))
+	hangar_button.add_theme_color_override("font_focus_color", Color(1.0, 0.84, 0.92))
+
 	var settings_normal := _make_style(INK, CYAN, 2, 2)
 	var settings_hover := _make_style(Color(0.02, 0.10, 0.18, 0.98), Color(0.48, 0.98, 1.0), 2, 3)
 	var settings_pressed := _make_style(Color(0.03, 0.14, 0.22, 1.0), CYAN, 2, 2)
@@ -249,11 +269,32 @@ func _apply_visual_settings() -> void:
 		crt_material.set_shader_parameter(parameter, profile[parameter])
 
 
+## START RUN opens the launch bay loadout screen; the actual launch happens
+## when the bay confirms (see _on_launch_bay_confirmed).
 func _on_play_pressed() -> void:
-	if _launching or is_instance_valid(_settings_menu):
+	if _launching or _any_overlay_open():
 		return
+	_launch_bay = LAUNCH_BAY_SCENE.instantiate()
+	_launch_bay.connect("launch_confirmed", _on_launch_bay_confirmed)
+	_launch_bay.connect("closed", _on_launch_bay_closed)
+	add_child(_launch_bay)
+
+
+func _on_launch_bay_confirmed() -> void:
+	_launch_bay.queue_free()
+	_launch_bay = null
+	_begin_launch()
+
+
+func _on_launch_bay_closed() -> void:
+	_launch_bay = null
+	play_button.grab_focus()
+
+
+func _begin_launch() -> void:
 	_launching = true
 	play_button.disabled = true
+	hangar_button.disabled = true
 	settings_button.disabled = true
 
 	var viewport_size := size if size.x > 1.0 else get_viewport_rect().size
@@ -269,8 +310,25 @@ func _on_ship_launch_finished() -> void:
 	get_tree().change_scene_to_file("res://scenes/game.tscn")
 
 
+func _any_overlay_open() -> bool:
+	return is_instance_valid(_settings_menu) or is_instance_valid(_hangar_menu) or is_instance_valid(_launch_bay)
+
+
+func _on_hangar_pressed() -> void:
+	if _launching or _any_overlay_open():
+		return
+	_hangar_menu = HANGAR_MENU_SCENE.instantiate()
+	_hangar_menu.connect("closed", _on_hangar_closed)
+	add_child(_hangar_menu)
+
+
+func _on_hangar_closed() -> void:
+	_hangar_menu = null
+	hangar_button.grab_focus()
+
+
 func _on_settings_pressed() -> void:
-	if _launching or is_instance_valid(_settings_menu):
+	if _launching or _any_overlay_open():
 		return
 	_settings_menu = SETTINGS_MENU_SCENE.instantiate()
 	_settings_menu.connect("closed", _on_settings_closed)

@@ -61,6 +61,9 @@ func _ready() -> void:
 	if uses_wave_health_scaling:
 		wave_bonus = ceili(float(max_health) * float(GameManager.current_wave - 1) * HEALTH_SCALE_PER_WAVE * health_scale_multiplier)
 	health = max_health + wave_bonus
+	# Challenge modifiers (e.g. Armored Fleet) boost regular enemies only.
+	if is_regular_enemy:
+		health = roundi(float(health) * GameManager.get_enemy_health_multiplier())
 	area_entered.connect(_on_area_entered)
 
 	var notifier := VisibleOnScreenNotifier2D.new()

@@ -4,6 +4,8 @@ extends Control
 @onready var score_label: Label = $VBoxContainer/ScoreLabel
 @onready var high_score_label: Label = $VBoxContainer/HighScoreLabel
 @onready var level_label: Label = $VBoxContainer/LevelLabel
+@onready var salvage_label: Label = $VBoxContainer/SalvageLabel
+@onready var salvage_breakdown_label: Label = $VBoxContainer/SalvageBreakdownLabel
 
 ## Connects the retry and menu buttons to their respective handlers.
 func _ready() -> void:
@@ -20,6 +22,15 @@ func show_score(final_score: int) -> void:
 	else:
 		high_score_label.text = "HIGH SCORE: " + str(GameManager.high_score)
 	level_label.text = "WAVE REACHED: " + str(GameManager.current_wave)
+	salvage_label.text = "SALVAGE EARNED: ⬡ " + str(GameManager.run_salvage) + "   (TOTAL: ⬡ " + str(MetaProgression.salvage) + ")"
+	var breakdown := "BOSSES ⬡%d · SCORE ⬡%d · WAVES ⬡%d" % [
+		GameManager.run_salvage_boss,
+		GameManager.run_salvage_score_bonus,
+		GameManager.run_salvage_wave_bonus,
+	]
+	if GameManager.run_salvage_multiplier > 1.0:
+		breakdown += "\n(INCLUDES ×%.2f MODIFIER BONUS)" % GameManager.run_salvage_multiplier
+	salvage_breakdown_label.text = breakdown
 
 ## Unpauses the game and reloads the game scene for a fresh run.
 func _on_retry_pressed() -> void:

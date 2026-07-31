@@ -23,6 +23,7 @@ config/icon="res://icon.svg"
 
 SignalBus="*res://autoloads/signal_bus.gd"
 SaveManager="*res://autoloads/save_manager.gd"
+MetaProgression="*res://autoloads/meta_progression.gd"
 GameManager="*res://autoloads/game_manager.gd"
 ObjectPool="*res://autoloads/object_pool.gd"
 AudioManager="*res://autoloads/audio_manager.gd"

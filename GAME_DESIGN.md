@@ -9,6 +9,7 @@ Space Shooter is a fast, procedural 2D arcade shooter built in Godot 4. The curr
 3. Pick up temporary combat power-ups during the run.
 4. Defeat a boss every 5 waves.
 5. Choose a permanent elite upgrade after every 10th-wave boss.
+6. Bank salvage from bosses and end-of-run results, then spend it in the Hangar on permanent unlocks for future runs.
 
 The game leans heavily into speed, readability, and high-feedback presentation with shader-driven effects, screen shake, tweened UI, and a retro CRT aesthetic.
 
@@ -41,6 +42,7 @@ Every major action is paired with a visual response:
 The game uses scene composition, autoload singletons, and a signal bus so the systems stay decoupled:
 
 - `GameManager` owns global state, progression, and balancing values
+- `MetaProgression` owns the persistent salvage economy, shop catalog, and purchases
 - `SignalBus` routes gameplay events to UI and effects
 - The main game scene assembles the player, spawners, camera, HUD, and overlays
 
@@ -78,7 +80,24 @@ The game uses scene composition, autoload singletons, and a signal bus so the sy
 
 - When lives reach zero, the game enters game over flow.
 - If try-again stocks remain, the player can spend one to continue the run.
-- Otherwise, the game over screen shows final score, high score, and highest wave reached.
+- Otherwise, the game over screen shows final score, high score, highest wave reached, and the salvage earned during the run.
+
+### Meta-Progression
+
+- Boss kills bank salvage immediately: 20 for a regular boss, 40 for an elite (Wave-10) boss.
+- When the run truly ends (after the try-again flow resolves), an end-of-run bonus is banked once: 1 salvage per 100 score points plus 2 per cleared wave. The game-over screen itemizes the earnings (bosses / score / waves / modifier multiplier).
+- Salvage spends in the Hangar, opened from the main menu:
+  - Tiered permanent systems: Hull Reinforcement (+1 life/level), Tuned Thrusters (+8% speed/level), Overcharged Cannons (+8% fire rate/level), Emergency Reserves (+1 try-again stock/level).
+  - Elite blueprints: Orbital Array, Piercing Rounds, and Explosive Rounds join the Wave-10 elite upgrade pool once purchased.
+  - Ship variants and challenge modifiers (below).
+- The wallet, unlock levels, and loadout selections persist between sessions through the save file.
+- Meta and ship speed/fire-rate bonuses are tracked separately from milestone stat allocation, so the allocation cap is unaffected.
+
+### Launch Bay and Run Loadout
+
+- START RUN opens the launch bay: the player picks a ship variant, toggles challenge modifiers, reviews the salvage multiplier, and launches.
+- Ship variants are sidegrades on the same hull: Swallowtail (balanced), Interceptor (+15% speed, +10% fire rate, −1 life), Bulwark (+2 lives, −10% speed, −10% fire rate).
+- Challenge modifiers raise difficulty for bonus salvage, snapshotted as a run-wide multiplier: Rapid Assault (+20%, 20% faster spawns), Armored Fleet (+30%, regular enemies +30% HP), Damaged Hull (+15%, −1 starting life), Supply Blockade (+25%, no power-up drops), Energy Drought (+25%, waves need 50% more orbs). All five pay ×1.90 salvage.
 
 ## Implemented Systems
 
@@ -93,6 +112,7 @@ The player currently supports:
 - Temporary shield, rapid fire, spread shot, magnet, and nuke power-ups
 - Permanent in-run upgrades such as orbitals, piercing, explosive rounds, zigzag bullets, rear gun, drone escort, and afterburner
 - Elite upgrades including twin cannons, auto-aim, spread shot elite, shield burst, magnet field, overclock, and rear gunner
+- Meta-unlockable elite upgrades (Hangar blueprints): orbital array, piercing rounds, and explosive rounds
 
 ### Enemy Roster
 
@@ -153,7 +173,9 @@ The UI currently provides:
 - Power-up pickup notifications
 - Pause menu with retry, main menu, and developer tools
 - Settings menu from both title and pause screens
-- Game over screen
+- Hangar shop for meta-progression purchases, from the title screen
+- Launch bay for pre-run ship and modifier selection
+- Game over screen with run-summary salvage breakdown
 - Try-again popup
 - Stat allocation popup
 - Elite upgrade popup
@@ -248,7 +270,7 @@ The items below are the most useful next steps based on the current build. These
 
 - Add more visual variety to backgrounds, planets, and enemy silhouettes.
 - Add a proper pause-menu layout for toggles and settings, separate from the developer tools.
-- Add meta-progression or unlocks if the game is intended to support longer-term play.
+- Expand meta-progression with new hull art for ship variants, unlockable power-up types, or boss-specific modifiers.
 - Add localization support if the game is expected to reach a broader audience.
 
 ## Suggested Next Milestone
