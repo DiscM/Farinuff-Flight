@@ -108,6 +108,20 @@ func _ready() -> void:
 	# Position player at bottom center
 	var viewport_size := get_viewport().get_visible_rect().size
 	player.position = Vector2(viewport_size.x / 2.0, viewport_size.y - 80.0)
+
+	# Pre-loaded drop pod consumable: start the run with a random power-up
+	# already installed (Nuke excluded — it would be wasted on an empty field).
+	if GameManager.pending_start_powerup:
+		GameManager.pending_start_powerup = false
+		var pod_type: int = [
+			PowerUp.Type.SHIELD,
+			PowerUp.Type.RAPID_FIRE,
+			PowerUp.Type.SPREAD_SHOT,
+			PowerUp.Type.MAGNET,
+			PowerUp.Type.SCALE_UP,
+		].pick_random()
+		SignalBus.power_up_collected.emit(pod_type, player.global_position)
+
 	get_viewport().size_changed.connect(_resize_background)
 	_resize_background()
 	_apply_background_evolution_palette(GameManager.get_enemy_generation(), true)

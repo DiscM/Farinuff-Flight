@@ -127,13 +127,14 @@ func _process(delta: float) -> void:
 # ── Actions ────────────────────────────────────────────────────────────────────
 
 ## Called when the player presses "TRY AGAIN". Spends one stock, restores
-## 3 lives, re-activates the game, emits try_again_accepted, and closes
-## the popup.
+## lives to the run's loadout-based starting lives, re-activates the game,
+## emits try_again_accepted, and closes the popup.
 func _on_try_again() -> void:
 	_action_taken = true
 	GameManager.try_again_stocks -= 1
-	# Restore lives to 3 and mark game active
-	GameManager.lives = 3
+	# Revive at the lives this run's loadout started with (hull reinforcement,
+	# ship variant, and Damaged Hull already factored in), not a flat 3.
+	GameManager.lives = GameManager.starting_lives
 	GameManager.is_game_active = true
 	SignalBus.lives_changed.emit(GameManager.lives)
 	try_again_accepted.emit()
