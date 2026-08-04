@@ -91,14 +91,28 @@ func _build_ui() -> void:
 	for item in MetaProgression.SHOP_ITEMS:
 		if item["category"] == "blueprint":
 			_add_item_row(list, item)
+	_add_category_header(list, "FIELD SUPPLY  ·  CONSUMED NEXT RUN")
+	for item in MetaProgression.CONSUMABLE_ITEMS:
+		_add_item_row(list, item)
 
 	var note := Label.new()
-	note.text = "Salvage is earned from boss kills and at the end of every run."
+	note.text = "Salvage is earned from boss kills, first-clear wave milestones, and the end-of-run bonus."
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	note.add_theme_font_size_override("font_size", 12)
 	note.add_theme_color_override("font_color", Color(0.55, 0.65, 0.8))
 	column.add_child(note)
+
+	var stats := Label.new()
+	stats.text = "LIFETIME — RUNS: %d · KILLS: %d · BEST WAVE: %d" % [
+		MetaProgression.stat_total_runs,
+		MetaProgression.stat_total_kills,
+		MetaProgression.stat_best_wave,
+	]
+	stats.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	stats.add_theme_font_size_override("font_size", 12)
+	stats.add_theme_color_override("font_color", Color(0.5, 0.55, 0.7))
+	column.add_child(stats)
 
 	var close_button := Button.new()
 	close_button.text = "CLOSE"
@@ -192,7 +206,10 @@ func _refresh_row(unlock_id: String) -> void:
 		# Maxed out (level 1 for single-tier items).
 		style.bg_color = Color(item["color"].r * 0.12, item["color"].g * 0.12, item["color"].b * 0.12)
 		style.border_color = item["color"]
-		button.text = "MAX" if max_level > 1 else "OWNED"
+		if item.get("category") == "consumable" and max_level == 1:
+			button.text = "READY"
+		else:
+			button.text = "MAX" if max_level > 1 else "OWNED"
 		button.disabled = true
 		button.add_theme_color_override("font_color", item["color"])
 	else:

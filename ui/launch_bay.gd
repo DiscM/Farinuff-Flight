@@ -12,6 +12,7 @@ signal closed
 
 var _ship_cards_by_id: Dictionary = {}
 var _multiplier_label: Label
+var _supply_label: Label
 
 ## Sets up the launch bay as a process-always full-rect control and builds
 ## the UI from the MetaProgression catalogs.
@@ -73,6 +74,13 @@ func _build_ui() -> void:
 	_multiplier_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.4))
 	column.add_child(_multiplier_label)
 	_refresh_multiplier_label()
+
+	_supply_label = Label.new()
+	_supply_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_supply_label.add_theme_font_size_override("font_size", 13)
+	_supply_label.add_theme_color_override("font_color", Color(0.65, 0.75, 0.9))
+	column.add_child(_supply_label)
+	_refresh_supply_label()
 
 	var buttons_row := HBoxContainer.new()
 	buttons_row.alignment = BoxContainer.ALIGNMENT_CENTER
@@ -226,6 +234,17 @@ func _refresh_multiplier_label() -> void:
 		_multiplier_label.text = "SALVAGE MULTIPLIER: ×%.2f" % multiplier
 	else:
 		_multiplier_label.text = "SALVAGE MULTIPLIER: ×1.00  ·  NO MODIFIERS"
+
+## Shows the Hangar field supply that will be consumed by this run
+## (stockpiled try-again stocks and an armed drop pod), or hides the line.
+func _refresh_supply_label() -> void:
+	var parts: Array[String] = []
+	if MetaProgression.consumable_stocks > 0:
+		parts.append("⭐ ×%d TRY-AGAIN" % MetaProgression.consumable_stocks)
+	if MetaProgression.consumable_powerup_armed:
+		parts.append("🎁 DROP POD ARMED")
+	_supply_label.visible = not parts.is_empty()
+	_supply_label.text = "FIELD SUPPLY:  " + "  ·  ".join(parts)
 
 func _on_launch_pressed() -> void:
 	AudioManager.play_ui_click()

@@ -66,6 +66,7 @@ The game uses scene composition, autoload singletons, and a signal bus so the sy
 - Enemies spawn from the screen edges at a pace that increases over time.
 - Killing enemies grants score, combo growth, and XP orb drops.
 - XP orbs fill a wave meter and restore lives when enough are collected.
+- Surplus orb progress carries into the next wave, capped at half the new wave's threshold — a boss's orb shower is a head start, not a wave skip.
 - Power-ups spawn independently and drift down the screen.
 - The player can collect power-ups by touch or by shooting them.
 
@@ -79,23 +80,26 @@ The game uses scene composition, autoload singletons, and a signal bus so the sy
 ### Failure and Recovery
 
 - When lives reach zero, the game enters game over flow.
-- If try-again stocks remain, the player can spend one to continue the run.
-- Otherwise, the game over screen shows final score, high score, highest wave reached, and the salvage earned during the run.
+- If try-again stocks remain, the player can spend one to continue the run, reviving at the loadout's starting lives (hull reinforcement, ship variant, and Damaged Hull already factored in).
+- Otherwise, the game over screen shows final score, high score, wave reached against the persisted best, lifetime stats, and the salvage earned during the run.
 
 ### Meta-Progression
 
-- Boss kills bank salvage immediately: 20 for a regular boss, 40 for an elite (Wave-10) boss.
-- When the run truly ends (after the try-again flow resolves), an end-of-run bonus is banked once: 1 salvage per 100 score points plus 2 per cleared wave. The game-over screen itemizes the earnings (bosses / score / waves / modifier multiplier).
+- Boss kills bank salvage immediately: 30 for a regular boss, 60 for an elite (Wave-10) boss. Bosses are the primary salvage source.
+- When the run truly ends (after the try-again flow resolves), an end-of-run bonus is banked once: diminishing score conversion (√(score ÷ 10), so combo-inflated scores can't dwarf boss rewards) plus 3 per cleared wave. The game-over screen itemizes the earnings (bosses / score / waves / milestones / modifier multiplier).
+- First-clear milestones pay flat one-time awards the first time each wave milestone is cleared: 50/100/150/250/400/600 salvage for waves 5/10/15/20/25/30. Milestones are not affected by the modifier multiplier.
 - Salvage spends in the Hangar, opened from the main menu:
   - Tiered permanent systems: Hull Reinforcement (+1 life/level), Tuned Thrusters (+8% speed/level), Overcharged Cannons (+8% fire rate/level), Emergency Reserves (+1 try-again stock/level).
   - Elite blueprints: Orbital Array, Piercing Rounds, and Explosive Rounds join the Wave-10 elite upgrade pool once purchased.
   - Ship variants and challenge modifiers (below).
-- The wallet, unlock levels, and loadout selections persist between sessions through the save file.
+  - Field supply consumables, consumed at the next run's start: Reserve Stock (120, +1 try-again stock, stockpile up to 3) and Pre-Loaded Drop Pod (100, start the next run with a random non-nuke power-up installed).
+- Lifetime stats (total runs, total kills, best wave) persist and show on the game-over screen — with a NEW BEST WAVE highlight — and in the Hangar footer.
+- The wallet, unlock levels, consumable stockpile, claimed milestones, lifetime stats, and loadout selections persist between sessions through the save file.
 - Meta and ship speed/fire-rate bonuses are tracked separately from milestone stat allocation, so the allocation cap is unaffected.
 
 ### Launch Bay and Run Loadout
 
-- START RUN opens the launch bay: the player picks a ship variant, toggles challenge modifiers, reviews the salvage multiplier, and launches.
+- START RUN opens the launch bay: the player picks a ship variant, toggles challenge modifiers, reviews the salvage multiplier and any armed field supply, and launches.
 - Ship variants are sidegrades on the same hull: Swallowtail (balanced), Interceptor (+15% speed, +10% fire rate, −1 life), Bulwark (+2 lives, −10% speed, −10% fire rate).
 - Challenge modifiers raise difficulty for bonus salvage, snapshotted as a run-wide multiplier: Rapid Assault (+20%, 20% faster spawns), Armored Fleet (+30%, regular enemies +30% HP), Damaged Hull (+15%, −1 starting life), Supply Blockade (+25%, no power-up drops), Energy Drought (+25%, waves need 50% more orbs). All five pay ×1.90 salvage.
 
@@ -133,6 +137,8 @@ Regular enemies evolve immediately after the Wave 5, 10, and 15 boss milestones:
 - Gen IV — Apex (Wave 16 onward)
 
 Each generation uses a distinct silhouette, fixed health/speed profile, score multiplier, and additional archetype behavior. A scene-local threat director reduces simultaneous enemy pressure as generations become more advanced, while a shared attack coordinator caps major telegraphs and deployed hazards. Spawn cadence still scales by wave; regular enemy health and speed do not scale between generation milestones.
+
+To keep endless runs from plateauing at Gen IV, the late game adds gentle drift: past wave 16 regular enemies gain +4% health per wave (capped at ×2.0) and +1.5% speed per wave (capped at ×1.30), and past wave 15 the threat director's active cap and threat budget grow +1 per 5 waves (max +3). Boss health scaling per wave is unchanged.
 
 ### Boss Design
 
@@ -264,7 +270,7 @@ The items below are the most useful next steps based on the current build. These
 - Continue splitting `player.gd` (the drone escort is now a standalone `ShipDrone` component; boost, weapons, and upgrade systems are still inline).
 - Continue consolidating overlapping upgrade logic where temporary and permanent systems share similar behavior (magnet pull and enemy-fire boilerplate are now shared).
 - Consider pooling enemies themselves if instantiate/free churn shows up in profiling (bullets, orbs, power-ups, explosions, mines, beams, and fields are already pooled).
-- Expand headless smoke-test coverage (now running in CI) to the autoloads: SaveManager corrupt-save handling, ObjectPool cycles, and GameManager wave/score logic.
+- Expand headless smoke-test coverage (now running in CI) further: SaveManager corrupt-save handling, ObjectPool cycles, MetaProgression economy/loadout logic, and GameManager wave/score logic are covered; a full simulated run (spawners, bosses, game-over flow) is not.
 
 ### Nice-to-Have Improvements
 

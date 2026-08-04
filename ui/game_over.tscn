@@ -64,6 +64,13 @@ horizontal_alignment = 1
 theme_override_colors/font_color = Color(0.6, 0.75, 1, 1)
 theme_override_font_sizes/font_size = 18
 
+[node name="BestWaveLabel" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "BEST WAVE: 1"
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.6, 0.75, 1, 1)
+theme_override_font_sizes/font_size = 14
+
 [node name="SalvageLabel" type="Label" parent="VBoxContainer"]
 layout_mode = 2
 text = "SALVAGE EARNED: ⬡ 0"
@@ -77,6 +84,13 @@ text = "BOSSES ⬡0 · SCORE ⬡0 · WAVES ⬡0"
 horizontal_alignment = 1
 theme_override_colors/font_color = Color(0.75, 0.65, 0.35, 1)
 theme_override_font_sizes/font_size = 13
+
+[node name="StatsLabel" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "RUNS: 0 · KILLS: 0"
+horizontal_alignment = 1
+theme_override_colors/font_color = Color(0.5, 0.55, 0.7, 1)
+theme_override_font_sizes/font_size = 12
 
 [node name="Spacer" type="Control" parent="VBoxContainer"]
 layout_mode = 2

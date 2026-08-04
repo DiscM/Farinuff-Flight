@@ -12,6 +12,13 @@ const COSTS := {
 	&"tank": 3.0,
 }
 
+## Late-game pressure growth: past wave 15 the active cap and threat budget
+## gain +1 per 5 waves (max +3), so Gen IV pressure keeps rising alongside
+## the enemy stat drift instead of plateauing.
+const LATE_PRESSURE_START_WAVE := 15
+const LATE_PRESSURE_WAVES_PER_STEP := 5
+const LATE_PRESSURE_MAX_BONUS := 3
+
 var generation: int = 1
 var spawn_history: Array[StringName] = []
 
@@ -20,15 +27,23 @@ func set_generation(value: int) -> void:
 	generation = clampi(value, 1, 4)
 
 
+## Bonus added to the active cap and threat budget in the late game
+## (0 at/below wave 15, +1 per 5 waves after, max +3).
+func get_late_pressure_bonus(wave_number: int = GameManager.current_wave) -> int:
+	var past := maxi(0, wave_number - LATE_PRESSURE_START_WAVE)
+	return clampi(past / LATE_PRESSURE_WAVES_PER_STEP, 0, LATE_PRESSURE_MAX_BONUS)
+
+
 func can_spawn(archetype: StringName) -> bool:
 	var active := get_tree().get_nodes_in_group("regular_enemies")
-	if active.size() >= ACTIVE_CAPS[generation - 1]:
+	var bonus := get_late_pressure_bonus()
+	if active.size() >= ACTIVE_CAPS[generation - 1] + bonus:
 		return false
 	var used := 0.0
 	for enemy in active:
 		if is_instance_valid(enemy):
 			used += float(COSTS.get(enemy.archetype_id, 1.0))
-	return used + float(COSTS.get(archetype, 1.0)) <= THREAT_BUDGETS[generation - 1]
+	return used + float(COSTS.get(archetype, 1.0)) <= THREAT_BUDGETS[generation - 1] + float(bonus)
 
 
 func record_spawn(archetype: StringName) -> void:

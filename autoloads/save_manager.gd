@@ -27,6 +27,15 @@ var salvage: int = 0
 var unlock_levels: Dictionary = {}
 var selected_ship: String = "ship_swallowtail"
 var active_modifiers: Array[String] = []
+## Stockpiled try-again stocks from the Hangar (consumed at next run start).
+var consumable_stocks: int = 0
+## Whether a pre-loaded drop pod is armed for the next run.
+var consumable_powerup: bool = false
+## First-clear milestone waves already awarded.
+var claimed_milestones: Array[int] = []
+var stat_total_runs: int = 0
+var stat_total_kills: int = 0
+var stat_best_wave: int = 0
 
 ## Loads saved data from disk on startup and applies the persisted audio
 ## and control-scheme settings.
@@ -68,14 +77,20 @@ func reset_high_score() -> void:
 	high_score = 0
 	_save_data()
 
-## Stores the meta-progression wallet, unlock levels, and run-loadout
-## selections, then persists them. Called by the MetaProgression autoload
-## whenever any of these values change.
-func save_meta(new_salvage: int, new_unlock_levels: Dictionary, new_selected_ship: String, new_active_modifiers: Array[String]) -> void:
-	salvage = maxi(new_salvage, 0)
-	unlock_levels = new_unlock_levels.duplicate()
-	selected_ship = new_selected_ship
-	active_modifiers = new_active_modifiers.duplicate()
+## Stores the meta-progression wallet, unlock levels, run-loadout selections,
+## consumable stockpile, claimed milestones, and lifetime stats, then persists
+## them. Called by the MetaProgression autoload whenever any of these change.
+func save_meta(state: Dictionary) -> void:
+	salvage = maxi(int(state.get("salvage", salvage)), 0)
+	unlock_levels = (state.get("unlock_levels", {}) as Dictionary).duplicate()
+	selected_ship = str(state.get("selected_ship", selected_ship))
+	active_modifiers = (state.get("active_modifiers", []) as Array[String]).duplicate()
+	consumable_stocks = maxi(int(state.get("consumable_stocks", consumable_stocks)), 0)
+	consumable_powerup = bool(state.get("consumable_powerup", consumable_powerup))
+	claimed_milestones = (state.get("claimed_milestones", []) as Array[int]).duplicate()
+	stat_total_runs = maxi(int(state.get("stat_total_runs", stat_total_runs)), 0)
+	stat_total_kills = maxi(int(state.get("stat_total_kills", stat_total_kills)), 0)
+	stat_best_wave = maxi(int(state.get("stat_best_wave", stat_best_wave)), 0)
 	_save_data()
 
 ## Loads saved data (high score and settings) from the JSON save file.
@@ -128,6 +143,24 @@ func _load_data() -> void:
 		for entry: Variant in stored_modifiers:
 			if entry is String and not active_modifiers.has(entry):
 				active_modifiers.append(entry)
+	# Consumables, milestones, and lifetime stats are likewise additive keys.
+	var stored_stocks: Variant = data.get("consumable_stocks", null)
+	if stored_stocks is int or stored_stocks is float:
+		consumable_stocks = maxi(int(stored_stocks), 0)
+	var stored_powerup: Variant = data.get("consumable_powerup", null)
+	if stored_powerup is bool:
+		consumable_powerup = stored_powerup
+	var stored_milestones: Variant = data.get("claimed_milestones", null)
+	if stored_milestones is Array:
+		claimed_milestones.clear()
+		for entry: Variant in stored_milestones:
+			var wave := int(entry) if entry is int or entry is float else -1
+			if wave >= 0 and not claimed_milestones.has(wave):
+				claimed_milestones.append(wave)
+	for stat_key: String in ["stat_total_runs", "stat_total_kills", "stat_best_wave"]:
+		var stored_stat: Variant = data.get(stat_key, null)
+		if stored_stat is int or stored_stat is float:
+			set(stat_key, maxi(int(stored_stat), 0))
 	var stored_settings: Variant = data.get("settings", {})
 	if stored_settings is Dictionary:
 		for key in DEFAULT_SETTINGS:
@@ -153,6 +186,12 @@ func _save_data() -> void:
 		"unlock_levels": unlock_levels,
 		"selected_ship": selected_ship,
 		"active_modifiers": active_modifiers,
+		"consumable_stocks": consumable_stocks,
+		"consumable_powerup": consumable_powerup,
+		"claimed_milestones": claimed_milestones,
+		"stat_total_runs": stat_total_runs,
+		"stat_total_kills": stat_total_kills,
+		"stat_best_wave": stat_best_wave,
 		"settings": settings,
 	}
 	file.store_string(JSON.stringify(data, "\t"))

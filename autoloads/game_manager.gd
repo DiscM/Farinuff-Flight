@@ -9,11 +9,20 @@ var high_score: int = 0
 var last_run_was_record: bool = false
 var combo: int = 0
 var lives: int = 3
+## Lives the current run started with (after hull, ship, and modifier
+## deltas). Try-again revives restore to this instead of a flat value.
+var starting_lives: int = 3
 var current_wave: int = 1
 var is_game_active: bool = false
 var boss_active: bool = false
 var try_again_stocks: int = 2
 var dev_enemy_generation_override: int = 0
+## Enemies killed this run — flushed into MetaProgression's lifetime stats
+## when the run finalizes.
+var run_kills: int = 0
+## True when a pre-loaded drop pod consumable was armed for this run.
+## The game scene applies a random power-up at spawn, then clears this.
+var pending_start_powerup: bool = false
 
 # Upgrade IDs chosen so far this run — excluded from future pools.
 var chosen_upgrade_ids: Array[String] = []
@@ -167,6 +176,9 @@ var run_salvage: int = 0
 var run_salvage_boss: int = 0
 var run_salvage_score_bonus: int = 0
 var run_salvage_wave_bonus: int = 0
+## One-time first-clear milestone awards banked by this run (flat, not
+## affected by the modifier multiplier).
+var run_salvage_milestones: int = 0
 ## Salvage multiplier snapshot from the launch-bay modifiers, fixed for the run.
 var run_salvage_multiplier: float = 1.0
 ## Guards against banking the end-of-run salvage bonus more than once per run.
@@ -198,6 +210,7 @@ func _ready() -> void:
 ## to the score, and emits score/combo change signals.
 func _on_enemy_killed(points: int, _position: Vector2) -> void:
 	combo += 1
+	run_kills += 1
 	var multiplied_points := points * combo
 	score += multiplied_points
 	SignalBus.score_changed.emit(score)
@@ -302,11 +315,12 @@ func _advance_wave() -> void:
 	SignalBus.wave_cleared.emit(cleared_wave)
 	current_wave += 1
 	# Carry surplus orb progress into the next wave instead of silently
-	# discarding it — this includes orbs farmed during boss waves, which
-	# used to vanish at this reset.
-	var needed_for_cleared_wave := orbs_needed_this_wave
-	orbs_collected_this_wave = maxi(0, orbs_collected_this_wave - needed_for_cleared_wave)
+	# discarding it — but cap the carry-over at half the new threshold. A
+	# boss's orb shower should give a head start on the next wave, not a
+	# free skip (which would also cascade through first-clear milestones).
+	var surplus := maxi(0, orbs_collected_this_wave - orbs_needed_this_wave)
 	orbs_needed_this_wave = get_orb_threshold_for_wave(current_wave)
+	orbs_collected_this_wave = mini(surplus, orbs_needed_this_wave / 2)
 	# Regular enemy stats are fixed by generation; only spawn cadence scales by wave.
 	boss_active = (current_wave % 5 == 0)
 	SignalBus.wave_started.emit(current_wave)
@@ -352,6 +366,29 @@ func get_spawn_interval() -> float:
 func get_enemy_health_multiplier() -> float:
 	return 1.3 if is_modifier_active("mod_tough_enemies") else 1.0
 
+# --- Late-game drift ---
+# Generation stats stop at Gen IV (wave 16) and the spawn interval floors
+# around wave 25, so without drift an endless run plateaus. Past wave
+# LATE_GAME_START_WAVE, regular enemies gain gentle per-wave health and
+# speed scaling (capped) to keep pressure on maxed-out players.
+const LATE_GAME_START_WAVE: int = 16
+const LATE_GAME_HEALTH_PER_WAVE: float = 0.04
+const LATE_GAME_HEALTH_CAP: float = 2.0
+const LATE_GAME_SPEED_PER_WAVE: float = 0.015
+const LATE_GAME_SPEED_CAP: float = 1.30
+
+## Health multiplier for regular enemies from the late-game drift
+## (1.0 at/below wave 16, +4% per wave after, capped at ×2.0).
+func get_late_game_health_multiplier(wave_number: int = current_wave) -> float:
+	var drift_waves := maxi(0, wave_number - LATE_GAME_START_WAVE)
+	return minf(1.0 + float(drift_waves) * LATE_GAME_HEALTH_PER_WAVE, LATE_GAME_HEALTH_CAP)
+
+## Speed multiplier for regular enemies from the late-game drift
+## (1.0 at/below wave 16, +1.5% per wave after, capped at ×1.30).
+func get_late_game_speed_multiplier(wave_number: int = current_wave) -> float:
+	var drift_waves := maxi(0, wave_number - LATE_GAME_START_WAVE)
+	return minf(1.0 + float(drift_waves) * LATE_GAME_SPEED_PER_WAVE, LATE_GAME_SPEED_CAP)
+
 ## True when the given challenge modifier was toggled on in the launch bay
 ## (and is owned). Effects read this at their source system.
 func is_modifier_active(modifier_id: String) -> bool:
@@ -360,17 +397,21 @@ func is_modifier_active(modifier_id: String) -> bool:
 # --- Run Finalization ---
 
 ## Called once per run when the final game-over screen is shown (after the
-## try-again flow resolves). Banks the end-of-run salvage bonus — score
-## conversion plus a per-wave-cleared reward — on top of any boss salvage
-## already banked during the run.
+## try-again flow resolves). Banks the end-of-run salvage bonus — diminishing
+## score conversion plus a per-wave-cleared reward — claims any newly reached
+## first-clear milestones, records lifetime stats, and adds all of it on top
+## of any boss salvage already banked during the run.
 func finalize_run() -> void:
 	if _run_finalized:
 		return
 	_run_finalized = true
 	var waves_cleared := maxi(current_wave - 1, 0)
-	run_salvage_score_bonus = roundi(float(score / MetaProgression.SALVAGE_SCORE_DIVISOR) * run_salvage_multiplier)
+	run_salvage_score_bonus = roundi(float(MetaProgression.score_to_salvage(score)) * run_salvage_multiplier)
 	run_salvage_wave_bonus = roundi(float(waves_cleared * MetaProgression.SALVAGE_PER_WAVE_CLEARED) * run_salvage_multiplier)
-	var bonus := run_salvage_score_bonus + run_salvage_wave_bonus
+	# Milestones are flat one-time awards — deliberately not multiplied.
+	run_salvage_milestones = MetaProgression.claim_first_clear_milestones(waves_cleared)
+	MetaProgression.record_run_stats(current_wave, run_kills)
+	var bonus := run_salvage_score_bonus + run_salvage_wave_bonus + run_salvage_milestones
 	if bonus > 0:
 		run_salvage += bonus
 		MetaProgression.earn_salvage(bonus)
@@ -402,18 +443,25 @@ func start_game() -> void:
 	try_again_stocks = 2
 	chosen_upgrade_ids = []
 	dev_enemy_generation_override = 0
+	run_kills = 0
 
 	# Apply purchased meta-progression unlocks for the new run.
 	run_salvage = 0
 	run_salvage_boss = 0
 	run_salvage_score_bonus = 0
 	run_salvage_wave_bonus = 0
+	run_salvage_milestones = 0
 	run_salvage_multiplier = MetaProgression.get_salvage_multiplier()
 	_run_finalized = false
 	meta_speed_pct = MetaProgression.META_SPEED_BONUS * MetaProgression.get_level("meta_thrusters")
 	meta_fire_rate_pct = MetaProgression.META_FIRE_RATE_BONUS * MetaProgression.get_level("meta_cannons")
 	lives += MetaProgression.get_level("meta_hull")
 	try_again_stocks += MetaProgression.get_level("meta_reserves")
+
+	# Consume Hangar field supply: stockpiled try-again stocks and an armed
+	# drop pod (the game scene applies the random power-up at spawn).
+	try_again_stocks += MetaProgression.consume_stockpile()
+	pending_start_powerup = MetaProgression.consume_powerup_pod()
 
 	# Apply the launch-bay loadout: ship-variant profile and Damaged Hull.
 	var profile := MetaProgression.get_selected_ship_profile()
@@ -423,6 +471,8 @@ func start_game() -> void:
 	if is_modifier_active("mod_frail"):
 		lives -= 1
 	lives = maxi(lives, 1)
+	# Try-again revives restore to the loadout's starting lives, not a flat 3.
+	starting_lives = lives
 
 	is_game_active = true
 	boss_active = false

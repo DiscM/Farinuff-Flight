@@ -64,6 +64,10 @@ func _ready() -> void:
 	# Challenge modifiers (e.g. Armored Fleet) boost regular enemies only.
 	if is_regular_enemy:
 		health = roundi(float(health) * GameManager.get_enemy_health_multiplier())
+		# Late-game drift: generation stats stop at Gen IV (wave 16+), so
+		# regular enemies keep scaling gently to avoid an endless plateau.
+		health = roundi(float(health) * GameManager.get_late_game_health_multiplier())
+		speed *= GameManager.get_late_game_speed_multiplier()
 	area_entered.connect(_on_area_entered)
 
 	var notifier := VisibleOnScreenNotifier2D.new()
