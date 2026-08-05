@@ -60,14 +60,14 @@ func pool_activate(spawn_position: Vector2, new_direction: Vector2 = Vector2.DOW
 ## Gives every pooled orb a stable animation phase and resets its reflected
 ## state without allocating a new material on every shot.
 func _configure_projectile_shader(spawn_position: Vector2, reflected: bool) -> void:
-	var material := sprite.material as ShaderMaterial
-	if material == null:
+	var shader_material := sprite.material as ShaderMaterial
+	if shader_material == null:
 		return
-	material.set_shader_parameter(
+	shader_material.set_shader_parameter(
 		&"phase_offset",
 		fposmod(spawn_position.x * 0.053 + spawn_position.y * 0.031, TAU)
 	)
-	material.set_shader_parameter(&"reflected_amount", 1.0 if reflected else 0.0)
+	shader_material.set_shader_parameter(&"reflected_amount", 1.0 if reflected else 0.0)
 
 ## Returns the enemy bullet to the pool after disabling its collision and
 ## physics so it can be safely reused later.

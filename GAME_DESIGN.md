@@ -1,15 +1,16 @@
-# Space Shooter Design Document
+# Farinuff Flight Design Document
 
 ## Overview
 
-Space Shooter is a fast, procedural 2D arcade shooter built in Godot 4. The current build focuses on a compact core loop:
+Farinuff Flight is a fast, procedural 2D arcade shooter built in Godot 4. The current build focuses on a compact premium loop:
 
-1. Survive endless enemy waves.
-2. Collect XP orbs to fill the wave meter and earn extra lives.
-3. Pick up temporary combat power-ups during the run.
-4. Defeat a boss every 5 waves.
-5. Choose a permanent elite upgrade after every 10th-wave boss.
-6. Bank salvage from bosses and end-of-run results, then spend it in the Hangar on permanent unlocks for future runs.
+1. Learn the controls and core loop in Flight School.
+2. Survive an authored Expedition through Wave 20.
+3. Continue into optional Endless mastery after the first clear.
+4. Collect XP orbs to fill the wave meter and earn extra lives.
+5. Pick up temporary combat power-ups during the run.
+6. Defeat a boss every 5 waves and choose transformative upgrades at elite milestones.
+7. Bank salvage from bosses and end-of-run results, then spend it in the Hangar on permanent unlocks for future runs.
 
 The game leans heavily into speed, readability, and high-feedback presentation with shader-driven effects, screen shake, tweened UI, and a retro CRT aesthetic.
 
@@ -51,7 +52,8 @@ The game uses scene composition, autoload singletons, and a signal bus so the sy
 ### Start Flow
 
 - The game opens on the main menu.
-- Pressing Play loads the main game scene.
+- The first launch opens a replayable Flight School briefing; later launches go directly to the Launch Bay.
+- Pressing Launch loads the main game scene.
 - The player starts centered near the bottom of the screen with 3 lives and no upgrades.
 
 ### Moment-to-Moment Play
@@ -76,6 +78,7 @@ The game uses scene composition, autoload singletons, and a signal bus so the sy
 - Every 5th wave triggers a boss encounter.
 - Every 10th wave uses an elite boss and unlocks a permanent transformation choice after the boss is defeated.
 - Every 5 waves, the player also receives point allocation choices for stat upgrades.
+- Defeating the Wave-20 Tempest Core completes the Expedition and presents an explicit choice: continue at Wave 21 in Endless or return to the Hangar.
 
 ### Failure and Recovery
 

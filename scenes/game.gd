@@ -6,6 +6,7 @@ const POINT_ALLOCATION_SCENE := preload("res://ui/point_allocation_popup.tscn")
 const ELITE_UPGRADE_SCENE := preload("res://ui/elite_upgrade_popup.tscn")
 const PAUSE_MENU_SCENE := preload("res://ui/pause_menu.tscn")
 const TRY_AGAIN_SCENE := preload("res://ui/try_again_popup.tscn")
+const EXPEDITION_VICTORY_SCENE := preload("res://ui/expedition_victory.tscn")
 
 const BACKGROUND_PALETTE_TRANSITION_DURATION := 2.4
 const BACKGROUND_EVOLUTION_PALETTES: Array[Dictionary] = [
@@ -52,6 +53,7 @@ var allocation_active: bool = false
 var elite_upgrade_active: bool = false
 var pause_active: bool = false
 var try_again_active: bool = false
+var expedition_victory_active: bool = false
 var _final_score_cache: int = 0
 
 # Pending allocation: stored when elite and allocation trigger simultaneously
@@ -70,6 +72,7 @@ var _bg_time: float = 0.0
 var _background_palette_tween: Tween = null
 var _crt_layer: CanvasLayer = null
 var _distort_layer: CanvasLayer = null
+var _expedition_overlay: CanvasLayer = null
 
 # --- Foreground planet continuous spawning ---
 var _planet_container: Node2D = null   # Plain Node2D, moves with _process
@@ -99,6 +102,7 @@ func _ready() -> void:
 	SignalBus.screen_shake.connect(_on_screen_shake)
 	SignalBus.boss_spawned.connect(_on_boss_spawned)
 	SignalBus.boss_died.connect(_on_boss_died_resume_planets)
+	SignalBus.expedition_completed.connect(_on_expedition_completed)
 	SignalBus.allocation_triggered.connect(_on_allocation_triggered)
 	SignalBus.elite_upgrade_triggered.connect(_on_elite_upgrade_triggered)
 	SignalBus.power_up_collected.connect(_on_power_up_collected_hit_stop)
@@ -241,8 +245,8 @@ func _resize_background() -> void:
 ## the active enemy generation. Starting from the material's current colors
 ## makes repeated or interrupted transitions remain visually continuous.
 func _apply_background_evolution_palette(generation: int, immediate: bool = false) -> void:
-	var material := background.material as ShaderMaterial
-	if material == null:
+	var shader_material := background.material as ShaderMaterial
+	if shader_material == null:
 		return
 	var palette := BACKGROUND_EVOLUTION_PALETTES[clampi(generation, 1, 4) - 1]
 
@@ -251,7 +255,7 @@ func _apply_background_evolution_palette(generation: int, immediate: bool = fals
 
 	if immediate:
 		for parameter: StringName in palette:
-			material.set_shader_parameter(parameter, palette[parameter])
+			shader_material.set_shader_parameter(parameter, palette[parameter])
 		return
 
 	_background_palette_tween = create_tween()
@@ -259,7 +263,7 @@ func _apply_background_evolution_palette(generation: int, immediate: bool = fals
 	_background_palette_tween.set_trans(Tween.TRANS_SINE)
 	_background_palette_tween.set_ease(Tween.EASE_IN_OUT)
 	for parameter: StringName in palette:
-		var current_color: Color = material.get_shader_parameter(parameter)
+		var current_color: Color = shader_material.get_shader_parameter(parameter)
 		var target_color: Color = palette[parameter]
 		_background_palette_tween.tween_method(
 			_set_background_shader_color.bind(parameter),
@@ -270,9 +274,9 @@ func _apply_background_evolution_palette(generation: int, immediate: bool = fals
 
 
 func _set_background_shader_color(color: Color, parameter: StringName) -> void:
-	var material := background.material as ShaderMaterial
-	if material != null:
-		material.set_shader_parameter(parameter, color)
+	var shader_material := background.material as ShaderMaterial
+	if shader_material != null:
+		shader_material.set_shader_parameter(parameter, color)
 
 
 ## Per-frame update: handles camera shake decay, feeds time to the background
@@ -388,7 +392,7 @@ func _hit_stop(duration: float, time_scale: float) -> void:
 ## here — never write get_tree().paused directly elsewhere, or a later
 ## recompute from these flags would silently stomp it.
 func _update_pause_state() -> void:
-	var paused := pause_active or allocation_active or elite_upgrade_active or try_again_active or game_over_shown
+	var paused := pause_active or allocation_active or elite_upgrade_active or try_again_active or game_over_shown or expedition_victory_active
 	get_tree().paused = paused
 	if is_instance_valid(ship_render_layer):
 		ship_render_layer.set_render_paused(paused)
@@ -398,7 +402,7 @@ func _update_pause_state() -> void:
 ## cannot overlap the card UI, while leaving pause/game-over behavior alone.
 func _sync_hud_visibility() -> void:
 	if is_instance_valid(hud):
-		hud.visible = not (allocation_active or elite_upgrade_active)
+		hud.visible = not (allocation_active or elite_upgrade_active or expedition_victory_active)
 
 var _pause_overlay: CanvasLayer = null
 
@@ -409,7 +413,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.keycode == KEY_ESCAPE and event.pressed and not event.echo:
 		if not GameManager.is_game_active:
 			return
-		if allocation_active or elite_upgrade_active or try_again_active:
+		if allocation_active or elite_upgrade_active or try_again_active or expedition_victory_active:
 			return
 		if pause_active:
 			_close_pause_menu()
@@ -539,6 +543,59 @@ func _show_game_over(final_score: int) -> void:
 	overlay.add_child(game_over_screen)
 	game_over_screen.show_score(final_score)
 
+
+## Pauses the run after the finite Wave-20 climax and presents the explicit
+## Endless continuation choice. The victory overlay owns no game state; the
+## GameManager remains the source of truth for both branches.
+func _on_expedition_completed(final_wave: int) -> void:
+	if expedition_victory_active or game_over_shown:
+		return
+	expedition_victory_active = true
+	enemy_spawner.stop_spawning()
+	powerup_spawner.stop_spawning()
+	get_tree().call_group("enemy_bullets", "despawn")
+	get_tree().call_group("hostile_ordnance", "clear_ordnance")
+	get_tree().call_group("rail_beams", "despawn")
+	_update_pause_state()
+
+	_expedition_overlay = CanvasLayer.new()
+	_expedition_overlay.layer = 40
+	_expedition_overlay.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(_expedition_overlay)
+	var victory := EXPEDITION_VICTORY_SCENE.instantiate()
+	victory.continue_endless.connect(_on_expedition_continue)
+	victory.return_to_menu.connect(_on_expedition_return_to_menu)
+	_expedition_overlay.add_child(victory)
+	victory.show_result(final_wave)
+
+
+func _clear_expedition_overlay() -> void:
+	if is_instance_valid(_expedition_overlay):
+		_expedition_overlay.queue_free()
+	_expedition_overlay = null
+
+
+func _on_expedition_continue() -> void:
+	if not expedition_victory_active:
+		return
+	_clear_expedition_overlay()
+	expedition_victory_active = false
+	if GameManager.continue_into_endless():
+		enemy_spawner.start_spawning()
+		powerup_spawner.start_spawning()
+	_update_pause_state()
+
+
+func _on_expedition_return_to_menu() -> void:
+	if not expedition_victory_active:
+		return
+	GameManager.finalize_run()
+	_clear_expedition_overlay()
+	expedition_victory_active = false
+	_update_pause_state()
+	get_tree().paused = false
+	get_tree().change_scene_to_file("res://ui/main_menu.tscn")
+
 ## Handles the stat allocation popup trigger. Defers showing it if an
 ## elite upgrade popup is already active (so both can be shown side-by-side),
 ## or waits one frame to check for simultaneous triggers before showing
@@ -630,7 +687,7 @@ func _on_evolution_transition_pending(generation: int, generation_name: String) 
 func _maybe_show_evolution_banner() -> void:
 	if _pending_evolution_generation <= 0 or _evolution_banner_active:
 		return
-	if allocation_active or elite_upgrade_active or try_again_active or pause_active:
+	if allocation_active or elite_upgrade_active or try_again_active or pause_active or expedition_victory_active:
 		return
 	_show_evolution_banner()
 

@@ -42,15 +42,21 @@ func release(node: Node) -> void:
 		node.queue_free()
 		return
 	add_child(node)
-	bucket.append(node)
+	bucket.append(weakref(node))
 	_available[key] = bucket
 
 func _take_from_pool(key: String) -> Node:
 	if key.is_empty():
 		return null
 	var bucket: Array = _available.get(key, [])
-	var node: Node = null
-	while not bucket.is_empty() and not is_instance_valid(node):
-		node = bucket.pop_back()
+	while not bucket.is_empty():
+		# Weak references make scene teardown safe: a freed pooled node resolves
+		# to null instead of becoming an invalid Object value in a typed local.
+		var candidate_ref: Variant = bucket.pop_back()
+		if candidate_ref is WeakRef:
+			var candidate: Variant = candidate_ref.get_ref()
+			if candidate != null and is_instance_valid(candidate):
+				_available[key] = bucket
+				return candidate as Node
 	_available[key] = bucket
-	return node
+	return null

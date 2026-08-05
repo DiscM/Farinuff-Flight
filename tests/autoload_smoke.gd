@@ -53,6 +53,15 @@ func _check_object_pool() -> void:
 	_expect(third == second, "Double release must not duplicate the pooled instance")
 	ObjectPool.release(third)
 
+	# A stale pooled reference can exist when another system frees an inactive
+	# node during a scene teardown. The pool must discard it without crashing.
+	var stale := ObjectPool.acquire(BULLET_SCENE, holder)
+	ObjectPool.release(stale)
+	stale.free()
+	var recovered := ObjectPool.acquire(BULLET_SCENE, holder)
+	_expect(recovered != null, "Pool must skip stale freed references")
+	ObjectPool.release(recovered)
+
 	# Releasing a node with no pool key must fall back to queue_free
 	var stray := Node2D.new()
 	holder.add_child(stray)
@@ -78,12 +87,31 @@ func _check_object_pool() -> void:
 
 func _check_save_manager() -> void:
 	var save_path: String = SaveManager.SAVE_PATH
+	var backup_path: String = SaveManager.SAVE_BACKUP_PATH
+	var temp_path: String = SaveManager.SAVE_TEMP_PATH
 	var had_save := FileAccess.file_exists(save_path)
 	var original_bytes: PackedByteArray = []
 	if had_save:
 		original_bytes = FileAccess.get_file_as_bytes(save_path)
+	var had_backup := FileAccess.file_exists(backup_path)
+	var original_backup_bytes: PackedByteArray = []
+	if had_backup:
+		original_backup_bytes = FileAccess.get_file_as_bytes(backup_path)
+	var had_temp := FileAccess.file_exists(temp_path)
+	var original_temp_bytes: PackedByteArray = []
+	if had_temp:
+		original_temp_bytes = FileAccess.get_file_as_bytes(temp_path)
 	var original_settings: Dictionary = SaveManager.settings.duplicate(true)
 	var original_high_score: int = SaveManager.high_score
+	var original_flight_school_seen: bool = SaveManager.has_seen_flight_school
+	var original_save_read_only: bool = SaveManager._save_read_only_due_to_future_version
+
+	# Remove transactional leftovers for deterministic test fixtures. Restore
+	# them verbatim at the end so the smoke test is non-destructive.
+	if had_backup:
+		DirAccess.remove_absolute(backup_path)
+	if had_temp:
+		DirAccess.remove_absolute(temp_path)
 
 	# Unknown keys are ignored by update_setting
 	SaveManager.update_setting("not_a_real_key", 123)
@@ -111,26 +139,52 @@ func _check_save_manager() -> void:
 		"Valid music_volume must load from the save file"
 	)
 
-	# Pre-versioning save (no version key) is treated as the current schema
+	# Pre-versioning save (no version key) is treated as the legacy schema
 	_write_save('{"high_score": 700, "settings": {}}')
 	SaveManager._load_data()
 	_expect(SaveManager.high_score == 700, "Save without a version key must still load")
 
+	# Versioned writes are atomic and keep a recoverable previous copy.
+	SaveManager.record_high_score(701)
+	_expect(FileAccess.file_exists(backup_path), "Save writes must keep a backup of the previous copy")
+	_write_save("{not valid json")
+	SaveManager.high_score = 42
+	SaveManager._load_data()
+	_expect(SaveManager.high_score == 700, "Malformed primary save must recover from its backup")
+
+	# Additive v2 fields load without invalidating a v1-compatible save.
+	_write_save('{"version": 2, "high_score": 800, "has_seen_flight_school": true, "settings": {}}')
+	SaveManager.has_seen_flight_school = false
+	SaveManager._load_data()
+	_expect(SaveManager.high_score == 800, "Current schema save must load normally")
+	_expect(SaveManager.has_seen_flight_school, "Current schema onboarding state must load")
+
+	SaveManager.has_seen_flight_school = false
+	SaveManager.mark_flight_school_seen()
+	_expect(SaveManager.has_seen_flight_school, "Flight School completion must persist in memory")
+
 	# Mismatched explicit version is rejected
+	if FileAccess.file_exists(backup_path):
+		DirAccess.remove_absolute(backup_path)
 	_write_save('{"version": 999, "high_score": 1, "settings": {}}')
 	SaveManager.high_score = 42
 	SaveManager._load_data()
 	_expect(SaveManager.high_score == 42, "Mismatched save version must be rejected")
+	SaveManager.record_high_score(900)
+	var future_save := FileAccess.get_file_as_string(save_path)
+	_expect(
+		future_save.contains('"version": 999'),
+		"A future save must remain intact when this build cannot migrate it"
+	)
 
 	# Restore the player's real save data and in-memory state
-	if had_save:
-		var file := FileAccess.open(save_path, FileAccess.WRITE)
-		file.store_buffer(original_bytes)
-		file.close()
-	else:
-		DirAccess.remove_absolute(save_path)
+	_restore_file(save_path, had_save, original_bytes)
+	_restore_file(backup_path, had_backup, original_backup_bytes)
+	_restore_file(temp_path, had_temp, original_temp_bytes)
 	SaveManager.settings = original_settings
 	SaveManager.high_score = original_high_score
+	SaveManager.has_seen_flight_school = original_flight_school_seen
+	SaveManager._save_read_only_due_to_future_version = original_save_read_only
 	SaveManager._apply_audio_settings()
 	SaveManager._apply_control_scheme()
 	await get_tree().process_frame
@@ -142,14 +196,34 @@ func _write_save(content: String) -> void:
 	file.close()
 
 
+func _restore_file(path: String, existed: bool, bytes: PackedByteArray) -> void:
+	if existed:
+		var file := FileAccess.open(path, FileAccess.WRITE)
+		if file != null:
+			file.store_buffer(bytes)
+			file.close()
+	elif FileAccess.file_exists(path):
+		DirAccess.remove_absolute(path)
+
+
 # --- MetaProgression ---
 
 func _check_meta_progression() -> void:
 	var save_path: String = SaveManager.SAVE_PATH
+	var backup_path: String = SaveManager.SAVE_BACKUP_PATH
+	var temp_path: String = SaveManager.SAVE_TEMP_PATH
 	var had_save := FileAccess.file_exists(save_path)
 	var original_bytes: PackedByteArray = []
 	if had_save:
 		original_bytes = FileAccess.get_file_as_bytes(save_path)
+	var had_backup := FileAccess.file_exists(backup_path)
+	var original_backup_bytes: PackedByteArray = []
+	if had_backup:
+		original_backup_bytes = FileAccess.get_file_as_bytes(backup_path)
+	var had_temp := FileAccess.file_exists(temp_path)
+	var original_temp_bytes: PackedByteArray = []
+	if had_temp:
+		original_temp_bytes = FileAccess.get_file_as_bytes(temp_path)
 	var original_salvage: int = MetaProgression.salvage
 	var original_levels: Dictionary = MetaProgression.unlock_levels.duplicate()
 	var original_ship: String = MetaProgression.selected_ship
@@ -164,6 +238,9 @@ func _check_meta_progression() -> void:
 	var original_wave: int = GameManager.current_wave
 	var original_run_salvage: int = GameManager.run_salvage
 	var original_finalized: bool = GameManager._run_finalized
+	var original_expedition_completed: bool = GameManager.expedition_completed
+	var original_game_active: bool = GameManager.is_game_active
+	var original_boss_active: bool = GameManager.boss_active
 
 	# Start from a clean wallet so cost arithmetic is deterministic.
 	MetaProgression.salvage = 0
@@ -306,6 +383,25 @@ func _check_meta_progression() -> void:
 		MetaProgression.salvage == MetaProgression.SALVAGE_PER_BOSS + MetaProgression.SALVAGE_PER_ELITE_BOSS,
 		"Boss salvage must reach the wallet immediately"
 	)
+
+	# Wave 20 is the finite Expedition climax; the player can explicitly
+	# continue into Endless after the victory state instead of being forced to
+	# treat the victory as an ordinary wave transition.
+	GameManager.current_wave = GameManager.FINAL_EXPEDITION_WAVE
+	GameManager.run_salvage = 0
+	GameManager.run_salvage_boss = 0
+	GameManager.run_salvage_multiplier = 1.0
+	GameManager.chosen_upgrade_ids = []
+	GameManager.boss_active = true
+	GameManager.is_game_active = true
+	GameManager.expedition_completed = false
+	GameManager._on_boss_died(0)
+	_expect(GameManager.expedition_completed, "Wave 20 boss must complete the Expedition")
+	_expect(not GameManager.is_game_active, "Expedition completion must stop active gameplay")
+	_expect(GameManager.current_wave == GameManager.FINAL_EXPEDITION_WAVE + 1, "Expedition completion must stage Endless at wave 21")
+	_expect(GameManager.run_salvage_boss == MetaProgression.SALVAGE_PER_ELITE_BOSS, "Tempest Core must bank its elite salvage reward")
+	_expect(GameManager.continue_into_endless(), "Completed Expedition must offer an Endless continuation")
+	_expect(GameManager.is_game_active and not GameManager.expedition_completed, "Endless continuation must resume active gameplay")
 
 	# First-clear milestones: flat one-time awards keyed on waves cleared.
 	MetaProgression.claimed_milestones = []
@@ -457,7 +553,9 @@ func _check_meta_progression() -> void:
 	GameManager.orbs_collected_this_wave = 100
 	GameManager._advance_wave()
 	_expect(
-		GameManager.orbs_collected_this_wave == GameManager.get_orb_threshold_for_wave(2) / 2,
+		GameManager.orbs_collected_this_wave == floori(
+			float(GameManager.get_orb_threshold_for_wave(2)) / 2.0
+		),
 		"A huge orb surplus must be capped at half the new wave's threshold"
 	)
 	GameManager.orbs_needed_this_wave = GameManager.get_orb_threshold_for_wave(GameManager.current_wave)
@@ -484,12 +582,9 @@ func _check_meta_progression() -> void:
 	director.queue_free()
 
 	# Restore the player's real save data and in-memory state.
-	if had_save:
-		var file := FileAccess.open(save_path, FileAccess.WRITE)
-		file.store_buffer(original_bytes)
-		file.close()
-	else:
-		DirAccess.remove_absolute(save_path)
+	_restore_file(save_path, had_save, original_bytes)
+	_restore_file(backup_path, had_backup, original_backup_bytes)
+	_restore_file(temp_path, had_temp, original_temp_bytes)
 	MetaProgression.salvage = original_salvage
 	MetaProgression.unlock_levels = original_levels
 	MetaProgression.selected_ship = original_ship
@@ -514,6 +609,7 @@ func _check_meta_progression() -> void:
 	GameManager.run_salvage_milestones = 0
 	GameManager.run_salvage_multiplier = 1.0
 	GameManager._run_finalized = original_finalized
+	GameManager.expedition_completed = original_expedition_completed
 	GameManager.chosen_upgrade_ids = []
 	GameManager.lives = 3
 	GameManager.starting_lives = 3
@@ -526,6 +622,8 @@ func _check_meta_progression() -> void:
 	GameManager.ship_speed_pct = 0.0
 	GameManager.ship_fire_rate_pct = 0.0
 	GameManager.is_game_active = false
+	GameManager.boss_active = original_boss_active
+	GameManager.is_game_active = original_game_active
 	await get_tree().process_frame
 
 

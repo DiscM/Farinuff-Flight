@@ -66,6 +66,10 @@ signal allocation_triggered(points: int)
 @warning_ignore("unused_signal")
 ## Emitted after defeating a Wave-10 elite boss to trigger the elite upgrade selection popup.
 signal elite_upgrade_triggered
+@warning_ignore("unused_signal")
+## Emitted once the Wave-20 Tempest Core is defeated. The game scene owns the
+## victory presentation and offers the player a deliberate Endless choice.
+signal expedition_completed(final_wave: int)
 
 
 # Effects

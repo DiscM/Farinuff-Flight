@@ -15,6 +15,10 @@ var starting_lives: int = 3
 var current_wave: int = 1
 var is_game_active: bool = false
 var boss_active: bool = false
+## The finite first-clear target. Waves after this are an optional Endless
+## continuation rather than an implicit replacement for the campaign climax.
+const FINAL_EXPEDITION_WAVE: int = 20
+var expedition_completed: bool = false
 var try_again_stocks: int = 2
 var dev_enemy_generation_override: int = 0
 ## Enemies killed this run — flushed into MetaProgression's lifetime stats
@@ -216,9 +220,9 @@ func _on_enemy_killed(points: int, _position: Vector2) -> void:
 	SignalBus.score_changed.emit(score)
 	SignalBus.combo_changed.emit(combo)
 
-## Called when the boss dies. Clears the boss_active flag, triggers
-## an elite upgrade selection if this was a Wave-10 boss and upgrades
-## are still available, then advances to the next wave.
+## Called when the boss dies. Bosses clear every fifth wave, Wave-10/15
+## encounters can offer an elite upgrade, and Wave 20 completes the finite
+## Expedition before the player chooses whether to continue into Endless.
 func _on_boss_died(_points: int) -> void:
 	boss_active = false
 	# Bosses are the primary salvage source during a run: elite bosses pay double.
@@ -227,11 +231,37 @@ func _on_boss_died(_points: int) -> void:
 	run_salvage += salvage_reward
 	run_salvage_boss += salvage_reward
 	MetaProgression.earn_salvage(salvage_reward)
+
+	if current_wave == FINAL_EXPEDITION_WAVE:
+		# Keep the campaign climax distinct from an ordinary wave transition.
+		# The game scene presents the choice while the run remains resumable.
+		SignalBus.wave_cleared.emit(current_wave)
+		expedition_completed = true
+		is_game_active = false
+		current_wave = FINAL_EXPEDITION_WAVE + 1
+		SignalBus.expedition_completed.emit(FINAL_EXPEDITION_WAVE)
+		return
+
 	# Emit elite upgrade trigger FIRST so the game pauses before wave advances + spawning restarts.
 	# But ONLY if we haven't already collected all possible elite upgrades.
 	if current_wave % 10 == 0 and chosen_upgrade_ids.size() < get_upgrade_pool().size():
 		SignalBus.elite_upgrade_triggered.emit()
 	_advance_wave()
+
+
+## Resumes an Expedition after the Wave-20 victory overlay chooses Endless.
+## Returns false when called before the finite campaign has been completed.
+func continue_into_endless() -> bool:
+	if not expedition_completed:
+		return false
+	expedition_completed = false
+	is_game_active = true
+	boss_active = false
+	current_wave = maxi(current_wave, FINAL_EXPEDITION_WAVE + 1)
+	orbs_needed_this_wave = get_orb_threshold_for_wave(current_wave)
+	orbs_collected_this_wave = 0
+	SignalBus.wave_started.emit(current_wave)
+	return true
 
 
 # --- Orb Meter ---
@@ -320,7 +350,7 @@ func _advance_wave() -> void:
 	# free skip (which would also cascade through first-clear milestones).
 	var surplus := maxi(0, orbs_collected_this_wave - orbs_needed_this_wave)
 	orbs_needed_this_wave = get_orb_threshold_for_wave(current_wave)
-	orbs_collected_this_wave = mini(surplus, orbs_needed_this_wave / 2)
+	orbs_collected_this_wave = mini(surplus, floori(float(orbs_needed_this_wave) / 2.0))
 	# Regular enemy stats are fixed by generation; only spawn cadence scales by wave.
 	boss_active = (current_wave % 5 == 0)
 	SignalBus.wave_started.emit(current_wave)
@@ -427,6 +457,7 @@ func start_game() -> void:
 	combo = 0
 	lives = 3
 	current_wave = 1
+	expedition_completed = false
 	orbs_collected_this_wave = 0
 	orbs_needed_this_wave = get_orb_threshold_for_wave(current_wave)
 	last_run_was_record = false

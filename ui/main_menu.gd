@@ -4,6 +4,7 @@ extends Control
 const SETTINGS_MENU_SCENE := preload("res://ui/settings_menu.tscn")
 const HANGAR_MENU_SCENE := preload("res://ui/hangar_menu.tscn")
 const LAUNCH_BAY_SCENE := preload("res://ui/launch_bay.tscn")
+const FLIGHT_SCHOOL_SCENE := preload("res://ui/flight_school.tscn")
 const PIXEL_PLANET_SCENE_PATH := "res://effects/shaders/PixelPlanets/Planets/GasPlanetLayers/GasPlanetLayers.tscn"
 
 const CYAN := Color(0.14, 0.93, 1.0)
@@ -32,14 +33,18 @@ const CRT_DISABLED_PROFILE := {
 @onready var play_button: Button = $CabinetLayout/PlayButton
 @onready var hangar_button: Button = $CabinetLayout/HangarButton
 @onready var settings_button: Button = $CabinetLayout/SettingsButton
+@onready var help_button: Button = $CabinetLayout/HelpButton
 @onready var play_reticle: Label = $CabinetLayout/PlayReticle
 @onready var tagline: PanelContainer = $CabinetLayout/Tagline
+@onready var status_label: Label = $CabinetLayout/Status
 @onready var crt_overlay: ColorRect = $CRTOverlay
 
 var _planet: Control
 var _settings_menu: Node
 var _hangar_menu: Node
 var _launch_bay: Node
+var _flight_school: Node
+var _pending_launch_after_school := false
 var _launching := false
 var _pulse_time := 0.0
 var _intro_played := false
@@ -56,15 +61,19 @@ func _ready() -> void:
 	play_button.pressed.connect(_on_play_pressed)
 	hangar_button.pressed.connect(_on_hangar_pressed)
 	settings_button.pressed.connect(_on_settings_pressed)
+	help_button.pressed.connect(_on_help_pressed)
 	play_button.pressed.connect(AudioManager.play_ui_click)
 	hangar_button.pressed.connect(AudioManager.play_ui_click)
 	settings_button.pressed.connect(AudioManager.play_ui_click)
+	help_button.pressed.connect(AudioManager.play_ui_click)
 	play_button.mouse_entered.connect(play_button.grab_focus)
 	hangar_button.mouse_entered.connect(hangar_button.grab_focus)
 	settings_button.mouse_entered.connect(settings_button.grab_focus)
+	help_button.mouse_entered.connect(help_button.grab_focus)
 	play_button.focus_entered.connect(_on_button_focus_entered.bind(play_button))
 	hangar_button.focus_entered.connect(_on_button_focus_entered.bind(hangar_button))
 	settings_button.focus_entered.connect(_on_button_focus_entered.bind(settings_button))
+	help_button.focus_entered.connect(_on_button_focus_entered.bind(help_button))
 	ship_rig.connect("launch_finished", _on_ship_launch_finished)
 	resized.connect(_on_resized)
 	if not SaveManager.settings_changed.is_connected(_apply_visual_settings):
@@ -83,6 +92,7 @@ func _process(delta: float) -> void:
 func _finish_setup() -> void:
 	_layout_scene(true)
 	_apply_visual_settings()
+	_update_status()
 	play_button.grab_focus()
 	_play_title_intro()
 
@@ -221,6 +231,17 @@ func _apply_arcade_styles() -> void:
 	settings_button.add_theme_color_override("font_hover_color", Color(0.82, 1.0, 1.0))
 	settings_button.add_theme_color_override("font_focus_color", Color(0.82, 1.0, 1.0))
 
+	var help_normal := _make_style(INK, GREEN, 2, 2)
+	var help_hover := _make_style(Color(0.02, 0.13, 0.10, 0.98), Color(0.62, 1.0, 0.72), 2, 3)
+	var help_pressed := _make_style(Color(0.03, 0.18, 0.12, 1.0), GREEN, 2, 2)
+	help_button.add_theme_stylebox_override("normal", help_normal)
+	help_button.add_theme_stylebox_override("hover", help_hover)
+	help_button.add_theme_stylebox_override("focus", help_hover)
+	help_button.add_theme_stylebox_override("pressed", help_pressed)
+	help_button.add_theme_color_override("font_color", GREEN)
+	help_button.add_theme_color_override("font_hover_color", Color(0.82, 1.0, 0.86))
+	help_button.add_theme_color_override("font_focus_color", Color(0.82, 1.0, 0.86))
+
 
 func _make_style(
 	fill: Color,
@@ -274,10 +295,38 @@ func _apply_visual_settings() -> void:
 func _on_play_pressed() -> void:
 	if _launching or _any_overlay_open():
 		return
+	if not SaveManager.has_seen_flight_school:
+		_show_flight_school(true)
+		return
+	_open_launch_bay()
+
+
+func _open_launch_bay() -> void:
+	if _launching or _any_overlay_open():
+		return
 	_launch_bay = LAUNCH_BAY_SCENE.instantiate()
 	_launch_bay.connect("launch_confirmed", _on_launch_bay_confirmed)
 	_launch_bay.connect("closed", _on_launch_bay_closed)
 	add_child(_launch_bay)
+
+
+func _show_flight_school(auto_launch: bool) -> void:
+	if _launching or _any_overlay_open():
+		return
+	_pending_launch_after_school = auto_launch
+	_flight_school = FLIGHT_SCHOOL_SCENE.instantiate()
+	_flight_school.finished.connect(_on_flight_school_finished)
+	add_child(_flight_school)
+
+
+func _on_flight_school_finished() -> void:
+	var should_launch := _pending_launch_after_school
+	_pending_launch_after_school = false
+	_flight_school = null
+	if should_launch:
+		_open_launch_bay()
+	else:
+		help_button.grab_focus()
 
 
 func _on_launch_bay_confirmed() -> void:
@@ -296,6 +345,7 @@ func _begin_launch() -> void:
 	play_button.disabled = true
 	hangar_button.disabled = true
 	settings_button.disabled = true
+	help_button.disabled = true
 
 	var viewport_size := size if size.x > 1.0 else get_viewport_rect().size
 	if is_instance_valid(_planet) and _planet.has_method("set_rotates"):
@@ -311,7 +361,13 @@ func _on_ship_launch_finished() -> void:
 
 
 func _any_overlay_open() -> bool:
-	return is_instance_valid(_settings_menu) or is_instance_valid(_hangar_menu) or is_instance_valid(_launch_bay)
+	return is_instance_valid(_settings_menu) or is_instance_valid(_hangar_menu) or is_instance_valid(_launch_bay) or is_instance_valid(_flight_school)
+
+
+func _on_help_pressed() -> void:
+	if _launching or _any_overlay_open():
+		return
+	_show_flight_school(false)
 
 
 func _on_hangar_pressed() -> void:
@@ -344,3 +400,8 @@ func _on_resized() -> void:
 	if not is_node_ready():
 		return
 	_layout_scene(false)
+
+
+func _update_status() -> void:
+	var version := str(ProjectSettings.get_setting("application/config/version", "0.5.0"))
+	status_label.text = "BUILD  %s      SIGNAL  LOCKED   ▂▄▆█" % version

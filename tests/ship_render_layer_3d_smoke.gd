@@ -121,7 +121,10 @@ func _check_structure(
 		visible_size
 		+ Vector2i.ONE * ShipRenderLayer3D.RENDER_OVERSCAN_PIXELS * 2
 	)
-	var expected_buffer_size := expected_render_size / ShipRenderLayer3D.PIXELATION
+	var expected_buffer_size := Vector2i(
+		floori(float(expected_render_size.x) / float(ShipRenderLayer3D.PIXELATION)),
+		floori(float(expected_render_size.y) / float(ShipRenderLayer3D.PIXELATION))
+	)
 	_expect(viewport.transparent_bg, "3D ship viewport must preserve the 2D background")
 	_expect(
 		viewport.size == expected_buffer_size,

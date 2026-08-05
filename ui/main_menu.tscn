@@ -204,21 +204,35 @@ focus_neighbor_left = NodePath("../HangarButton")
 text = "SETTINGS"
 theme_override_font_sizes/font_size = 20
 
+[node name="HelpButton" type="Button" parent="CabinetLayout"]
+custom_minimum_size = Vector2(390, 46)
+layout_mode = 0
+offset_left = 88.0
+offset_top = 490.0
+offset_right = 478.0
+offset_bottom = 536.0
+rotation = -0.0523599
+pivot_offset = Vector2(195, 23)
+focus_neighbor_top = NodePath("../HangarButton")
+focus_neighbor_bottom = NodePath("../Controls")
+text = "FLIGHT SCHOOL"
+theme_override_font_sizes/font_size = 16
+
 [node name="FooterRule" type="ColorRect" parent="CabinetLayout"]
 layout_mode = 0
 offset_left = 10.0
-offset_top = 555.0
+offset_top = 576.0
 offset_right = 484.0
-offset_bottom = 557.0
+offset_bottom = 578.0
 mouse_filter = 2
 color = Color(1, 0.19, 0.37, 0.75)
 
 [node name="Controls" type="Label" parent="CabinetLayout"]
 layout_mode = 0
 offset_left = 10.0
-offset_top = 518.0
+offset_top = 546.0
 offset_right = 570.0
-offset_bottom = 552.0
+offset_bottom = 570.0
 text = "MOVE   WASD / ARROWS      FIRE   SPACE      BOOST   SHIFT"
 vertical_alignment = 1
 theme_override_colors/font_color = Color(0.24, 0.92, 1, 1)
@@ -227,10 +241,10 @@ theme_override_font_sizes/font_size = 13
 [node name="Status" type="Label" parent="CabinetLayout"]
 layout_mode = 0
 offset_left = 10.0
-offset_top = 566.0
+offset_top = 586.0
 offset_right = 560.0
-offset_bottom = 602.0
-text = "BUILD  01.04      SIGNAL  LOCKED   ▂▄▆█"
+offset_bottom = 622.0
+text = "BUILD  0.5.0      SIGNAL  LOCKED   ▂▄▆█"
 vertical_alignment = 1
 theme_override_colors/font_color = Color(0.32, 1, 0.55, 1)
 theme_override_font_sizes/font_size = 13
