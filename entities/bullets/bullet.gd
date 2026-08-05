@@ -52,8 +52,8 @@ func pool_activate(spawn_position: Vector2, new_direction: Vector2, scale_multip
 ## Updates the local shader instance so projectile upgrades are readable at a
 ## glance without changing collision, damage, or pooled-resource behavior.
 func _configure_projectile_shader(spawn_position: Vector2) -> void:
-	var material := sprite.material as ShaderMaterial
-	if material == null:
+	var shader_material := sprite.material as ShaderMaterial
+	if shader_material == null:
 		return
 	var core_color := Color(0.82, 1.0, 1.0)
 	var glow_color := Color(0.02, 0.72, 1.0)
@@ -63,12 +63,12 @@ func _configure_projectile_shader(spawn_position: Vector2) -> void:
 	if explosive:
 		core_color = core_color.lerp(Color(1.0, 0.9, 0.55), 0.62)
 		glow_color = glow_color.lerp(Color(1.0, 0.18, 0.025), 0.72)
-	material.set_shader_parameter(&"core_color", core_color)
-	material.set_shader_parameter(&"glow_color", glow_color)
-	material.set_shader_parameter(&"piercing_amount", 1.0 if piercing else 0.0)
-	material.set_shader_parameter(&"explosive_amount", 1.0 if explosive else 0.0)
-	material.set_shader_parameter(&"zigzag_amount", clampf(float(zigzag_stacks) / 5.0, 0.0, 1.0))
-	material.set_shader_parameter(
+	shader_material.set_shader_parameter(&"core_color", core_color)
+	shader_material.set_shader_parameter(&"glow_color", glow_color)
+	shader_material.set_shader_parameter(&"piercing_amount", 1.0 if piercing else 0.0)
+	shader_material.set_shader_parameter(&"explosive_amount", 1.0 if explosive else 0.0)
+	shader_material.set_shader_parameter(&"zigzag_amount", clampf(float(zigzag_stacks) / 5.0, 0.0, 1.0))
+	shader_material.set_shader_parameter(
 		&"phase_offset",
 		fposmod(spawn_position.x * 0.071 + spawn_position.y * 0.037, TAU)
 	)

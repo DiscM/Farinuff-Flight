@@ -37,3 +37,63 @@ jobs:
             echo "=== $test_scene ==="
             ./Godot_v4.6.3-stable_linux.x86_64 --headless --path . "res://tests/${test_scene}.tscn"
           done
+
+  release-artifacts:
+    needs: smoke-tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Download Godot 4.6.3 headless
+        run: |
+          curl -fsSL -o godot.zip https://github.com/godotengine/godot/releases/download/4.6.3-stable/Godot_v4.6.3-stable_linux.x86_64.zip
+          unzip -q godot.zip
+          chmod +x Godot_v4.6.3-stable_linux.x86_64
+
+      - name: Install Godot export templates
+        run: |
+          curl -fsSL -o export_templates.tpz https://github.com/godotengine/godot/releases/download/4.6.3-stable/Godot_v4.6.3-stable_export_templates.tpz
+          mkdir -p "$HOME/.local/share/godot/export_templates/4.6.3.stable"
+          unzip -q export_templates.tpz -d export_templates
+          unzip -q export_templates/templates.tpz -d "$HOME/.local/share/godot/export_templates/4.6.3.stable"
+
+      - name: Import project
+        run: ./Godot_v4.6.3-stable_linux.x86_64 --headless --path . --import
+
+      - name: Read release version
+        run: |
+          release_version=$(sed -n 's/^config\/version="\([^"]*\)"/\1/p' project.godot)
+          test -n "$release_version"
+          echo "RELEASE_VERSION=$release_version" >> "$GITHUB_ENV"
+
+      - name: Export Linux and Windows release artifacts
+        run: |
+          mkdir -p build
+          ./Godot_v4.6.3-stable_linux.x86_64 --headless --path . --export-release "Linux" "build/Farinuff Flight.x86_64"
+          ./Godot_v4.6.3-stable_linux.x86_64 --headless --path . --export-release "Windows Desktop" "build/Farinuff Flight.exe"
+          test -f "build/Farinuff Flight.x86_64"
+          test -f "build/Farinuff Flight.pck"
+          test -f "build/Farinuff Flight.exe"
+
+      - name: Package Linux artifact
+        run: |
+          mkdir -p packages/linux
+          cp "build/Farinuff Flight.x86_64" "build/Farinuff Flight.pck" packages/linux/
+          tar -czf "Farinuff Flight-${RELEASE_VERSION}-linux.tar.gz" -C packages/linux .
+
+      - name: Package Windows artifact
+        run: |
+          mkdir -p packages/windows
+          cp "build/Farinuff Flight.exe" "build/Farinuff Flight.pck" packages/windows/
+          cd packages/windows
+          zip -q -r "../../Farinuff Flight-${RELEASE_VERSION}-windows.zip" .
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: farinuff-flight-release
+          path: |
+            Farinuff Flight-*-linux.tar.gz
+            Farinuff Flight-*-windows.zip

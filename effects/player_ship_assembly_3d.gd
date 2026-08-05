@@ -293,7 +293,7 @@ func _make_surface_material(
 	return material
 
 
-func _make_outline_material(energy_color: Color, animate_shader: bool) -> ShaderMaterial:
+func _make_outline_material(_energy_color: Color, _animate_shader: bool) -> ShaderMaterial:
 	var material := ShaderMaterial.new()
 	material.shader = OUTLINE_SHADER
 	# Shared void rim, one low-res buffer pixel thick (see the material

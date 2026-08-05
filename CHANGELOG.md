@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.0] - 2026-08-04
+
+### Added
+- **Release Product Identity:** Renamed the shipped product to Farinuff Flight, established semantic version `0.5.0`, surfaced the version on the title screen, and populated Windows executable metadata.
+- **Flight School:** Added a replayable first-run onboarding modal covering movement, aim, boost reflection, orb/life recovery, build decisions, and the Wave-20 Expedition target. Completion persists in the versioned save.
+- **Expedition Climax:** Wave 20 now completes a finite first-clear journey with a victory screen and an explicit Continue to Endless / End Run choice. Bosses on every fifth wave now advance correctly after defeat.
+- **Resilient Saves:** Save writes now use a temporary file promotion with a `.bak` recovery copy. Version 1 and pre-versioning files remain loadable, future-version files stay intact and read-only, and the new Flight School field migrates additively.
+
+### Changed
+- **Release Export Hygiene:** Linux and Windows presets now use Farinuff Flight output names and exclude design mockups, tests, and generator tooling from distributable content.
+
 ## [Unreleased] - 2026-07-28
 
 ### Added

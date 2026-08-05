@@ -422,9 +422,9 @@ func _check_death_pause_flush(
 	_expect(visual != null, "Elite boss death check requires a live proxy")
 	if visual == null:
 		return
-	# Wave 20 still exercises the real elite-upgrade + allocation pause path,
-	# without also starting the unrelated Wave 11 evolution-banner coroutine.
-	GameManager.current_wave = 20
+	# Wave 10 exercises the real elite-upgrade + allocation pause path. Wave 20
+	# is now reserved for the Expedition finale and shows a victory modal.
+	GameManager.current_wave = 10
 	GameManager.boss_active = true
 	elite_boss.rewards_enabled = false
 	elite_boss.suppress_death_effects = true

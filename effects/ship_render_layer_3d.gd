@@ -182,8 +182,8 @@ func _resize_render_target() -> void:
 	# Render into a 1/PIXELATION buffer; the TextureRect stretches it back to
 	# the full composite size with NEAREST filtering (the chunky pixel grid).
 	var buffer_size := Vector2i(
-		maxi(1, target_size.x / PIXELATION),
-		maxi(1, target_size.y / PIXELATION)
+		maxi(1, floori(float(target_size.x) / float(PIXELATION))),
+		maxi(1, floori(float(target_size.y) / float(PIXELATION)))
 	)
 	ship_viewport.size = buffer_size
 	# The oversized composite is positioned beyond the playfield. The main

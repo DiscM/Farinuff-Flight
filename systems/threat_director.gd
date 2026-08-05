@@ -31,7 +31,11 @@ func set_generation(value: int) -> void:
 ## (0 at/below wave 15, +1 per 5 waves after, max +3).
 func get_late_pressure_bonus(wave_number: int = GameManager.current_wave) -> int:
 	var past := maxi(0, wave_number - LATE_PRESSURE_START_WAVE)
-	return clampi(past / LATE_PRESSURE_WAVES_PER_STEP, 0, LATE_PRESSURE_MAX_BONUS)
+	return clampi(
+		floori(float(past) / float(LATE_PRESSURE_WAVES_PER_STEP)),
+		0,
+		LATE_PRESSURE_MAX_BONUS
+	)
 
 
 func can_spawn(archetype: StringName) -> bool:

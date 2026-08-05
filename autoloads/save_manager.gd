@@ -3,10 +3,17 @@ extends Node
 
 signal settings_changed
 
-const SAVE_PATH := "user://save_data.json"
+const SAVE_FILE_NAME := "save_data.json"
+const SAVE_TEMP_FILE_NAME := "save_data.json.tmp"
+const SAVE_BACKUP_FILE_NAME := "save_data.json.bak"
+const SAVE_PATH := "user://" + SAVE_FILE_NAME
+const SAVE_TEMP_PATH := "user://" + SAVE_TEMP_FILE_NAME
+const SAVE_BACKUP_PATH := "user://" + SAVE_BACKUP_FILE_NAME
 ## Schema version of the save file. Bump when the layout changes and add a
-## migration path in _load_data.
-const SAVE_VERSION := 1
+## migration path in _load_data. Version 2 adds the first-run Flight School
+## flag while keeping all v1 fields compatible.
+const SAVE_VERSION := 2
+const LEGACY_SAVE_VERSION := 1
 const DEFAULT_SETTINGS: Dictionary = {
 	"master_volume": 0.8,
 	"music_volume": 0.8,
@@ -36,6 +43,12 @@ var claimed_milestones: Array[int] = []
 var stat_total_runs: int = 0
 var stat_total_kills: int = 0
 var stat_best_wave: int = 0
+## First-run onboarding state. Kept in the save so the player sees Flight
+## School once, but can reopen it from the main menu at any time.
+var has_seen_flight_school: bool = false
+## A newer build's save is preserved read-only until a compatible migration
+## exists. This prevents a settings change from replacing buyer progress.
+var _save_read_only_due_to_future_version := false
 
 ## Loads saved data from disk on startup and applies the persisted audio
 ## and control-scheme settings.
@@ -77,6 +90,13 @@ func reset_high_score() -> void:
 	high_score = 0
 	_save_data()
 
+## Marks the first-run Flight School as complete and persists the flag.
+func mark_flight_school_seen() -> void:
+	if has_seen_flight_school:
+		return
+	has_seen_flight_school = true
+	_save_data()
+
 ## Stores the meta-progression wallet, unlock levels, run-loadout selections,
 ## consumable stockpile, claimed milestones, and lifetime stats, then persists
 ## them. Called by the MetaProgression autoload whenever any of these change.
@@ -98,18 +118,8 @@ func save_meta(state: Dictionary) -> void:
 ## or contains malformed data. Only overwrites settings keys that exist
 ## in DEFAULT_SETTINGS to avoid stale/invalid entries.
 func _load_data() -> void:
-	if not FileAccess.file_exists(SAVE_PATH):
-		return
-	var file := FileAccess.open(SAVE_PATH, FileAccess.READ)
-	if file == null:
-		return
-	var parsed: Variant = JSON.parse_string(file.get_as_text())
-	if not parsed is Dictionary:
-		return
-	var data := parsed as Dictionary
-	# Missing version means a pre-versioning save, which matches v1. A
-	# different explicit version falls back to defaults until a migration exists.
-	if int(data.get("version", SAVE_VERSION)) != SAVE_VERSION:
+	var data := _select_load_data()
+	if data.is_empty():
 		return
 	high_score = maxi(int(data.get("high_score", 0)), 0)
 	# Meta-progression keys are additive to the v1 schema: absent keys keep
@@ -161,6 +171,9 @@ func _load_data() -> void:
 		var stored_stat: Variant = data.get(stat_key, null)
 		if stored_stat is int or stored_stat is float:
 			set(stat_key, maxi(int(stored_stat), 0))
+	var stored_flight_school: Variant = data.get("has_seen_flight_school", null)
+	if stored_flight_school is bool:
+		has_seen_flight_school = stored_flight_school
 	var stored_settings: Variant = data.get("settings", {})
 	if stored_settings is Dictionary:
 		for key in DEFAULT_SETTINGS:
@@ -172,14 +185,58 @@ func _load_data() -> void:
 				if typeof(value) == typeof(DEFAULT_SETTINGS[key]):
 					settings[key] = value
 
+
+## Reads and validates one save candidate. Returning null rather than an empty
+## dictionary lets the caller distinguish malformed data from a valid payload.
+func _read_save_data(path: String) -> Variant:
+	if not FileAccess.file_exists(path):
+		return null
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		return null
+	var parsed: Variant = JSON.parse_string(file.get_as_text())
+	return parsed if parsed is Dictionary else null
+
+
+## Selects the live save when it is valid, otherwise falls back to the last
+## atomic backup. Unsupported future versions are not loaded from either file.
+func _select_load_data() -> Dictionary:
+	_save_read_only_due_to_future_version = false
+	var primary: Variant = _read_save_data(SAVE_PATH)
+	if primary is Dictionary and _is_supported_save_version(primary as Dictionary):
+		return primary as Dictionary
+	if primary is Dictionary:
+		var primary_version := int((primary as Dictionary).get("version", LEGACY_SAVE_VERSION))
+		if primary_version > SAVE_VERSION:
+			_save_read_only_due_to_future_version = true
+			push_warning(
+				"Save version %d is newer than this build; preserving it read-only." % primary_version
+			)
+			var future_backup: Variant = _read_save_data(SAVE_BACKUP_PATH)
+			if future_backup is Dictionary and _is_supported_save_version(future_backup as Dictionary):
+				push_warning("Using the last compatible backup until the save can be migrated.")
+				return future_backup as Dictionary
+			return {}
+
+	var backup: Variant = _read_save_data(SAVE_BACKUP_PATH)
+	if backup is Dictionary and _is_supported_save_version(backup as Dictionary):
+		push_warning("Primary save was invalid; recovered save_data.json.bak.")
+		return backup as Dictionary
+	return {}
+
+
+func _is_supported_save_version(data: Dictionary) -> bool:
+	# Missing version is the original pre-versioning format and is treated as v1.
+	var version := int(data.get("version", LEGACY_SAVE_VERSION))
+	return version >= LEGACY_SAVE_VERSION and version <= SAVE_VERSION
+
 ## Writes the current high score and settings dictionary to the JSON
 ## save file, formatted with tabs for readability.
 func _save_data() -> void:
-	var file := FileAccess.open(SAVE_PATH, FileAccess.WRITE)
-	if file == null:
-		push_warning("Unable to save player data.")
+	if _save_read_only_due_to_future_version:
+		push_warning("Save remains read-only because it was created by a newer build.")
 		return
-	var data := {
+	var payload := {
 		"version": SAVE_VERSION,
 		"high_score": high_score,
 		"salvage": salvage,
@@ -192,9 +249,40 @@ func _save_data() -> void:
 		"stat_total_runs": stat_total_runs,
 		"stat_total_kills": stat_total_kills,
 		"stat_best_wave": stat_best_wave,
+		"has_seen_flight_school": has_seen_flight_school,
 		"settings": settings,
 	}
-	file.store_string(JSON.stringify(data, "\t"))
+	var file := FileAccess.open(SAVE_TEMP_PATH, FileAccess.WRITE)
+	if file == null:
+		push_warning("Unable to save player data.")
+		return
+	file.store_string(JSON.stringify(payload, "\t"))
+	file.flush()
+	file.close()
+
+	var directory := DirAccess.open("user://")
+	if directory == null:
+		push_warning("Unable to access the save directory.")
+		return
+
+	# Rotate the known-good live copy before promoting the complete temporary
+	# file. A failed rename never leaves a half-written primary save.
+	if FileAccess.file_exists(SAVE_PATH):
+		if FileAccess.file_exists(SAVE_BACKUP_PATH):
+			directory.remove(SAVE_BACKUP_FILE_NAME)
+		var backup_error := directory.rename(SAVE_FILE_NAME, SAVE_BACKUP_FILE_NAME)
+		if backup_error != OK:
+			push_warning("Unable to rotate the previous player save.")
+			directory.remove(SAVE_TEMP_FILE_NAME)
+			return
+
+	var promote_error := directory.rename(SAVE_TEMP_FILE_NAME, SAVE_FILE_NAME)
+	if promote_error != OK:
+		push_warning("Unable to finalize the player save.")
+		# If rotation succeeded but promotion failed, restore the old live copy.
+		if not FileAccess.file_exists(SAVE_PATH) and FileAccess.file_exists(SAVE_BACKUP_PATH):
+			directory.rename(SAVE_BACKUP_FILE_NAME, SAVE_FILE_NAME)
+		directory.remove(SAVE_TEMP_FILE_NAME)
 
 ## Applies the current master_volume and music_volume settings to their
 ## audio buses. Mutes a bus when its volume is effectively zero, otherwise
