@@ -1,0 +1,64 @@
+{
+  "schema_version": 1,
+  "id": "gen3-corrupted-void-detail-v2",
+  "mode": "revision",
+  "status": "draft",
+  "characters": [
+    "redjack-enemy"
+  ],
+  "intent": "Gen III detail revision of the existing Redjack corrupted-void candidate: add structured fractured conduits, layered energy nodes, secondary filaments, and localized red-to-violet bleed while preserving all pixels and composition outside the shader detail treatment.",
+  "view_direction": "front",
+  "delta": {
+    "targeted_correction": "Increase shader-surface detail and distinctiveness while keeping the existing Gen III Redjack candidate's geometry, composition, background, and palette roles unchanged.",
+    "canvas": "",
+    "expression": "",
+    "pose": "",
+    "action": "",
+    "camera_angle": "",
+    "framing": "",
+    "background": "",
+    "scene": "",
+    "lighting_override": "",
+    "wardrobe_override": "",
+    "object_override": "",
+    "resolution": "",
+    "detail": "Change only the shader detail: add a structured fractured-conduit network that follows the existing fuselage and wing planes, with multiple branching circuit channels, brighter energy nodes at facet intersections, short broken secondary filaments, localized red-to-violet bleed, a layered reactor with a hot red/pink core and violet outer shell, a stronger one-sided magenta fringe, and a few small pixel sparks at fracture endpoints. Keep all geometry, proportions, reactor placement, composition, background, and dark body planes unchanged and readable."
+  },
+  "allowed_changes": ["targeted_correction", "detail"],
+  "object_overrides": [],
+  "placement_notes": [],
+  "reference_images": [
+    {
+      "path": "renders/drafts/gen3-corrupted-void.png",
+      "role": "edit_target",
+      "description": "Existing Gen III candidate to revise; preserve composition and geometry while increasing shader detail."
+    }
+  ],
+  "visual_context": null,
+  "constraints": [
+    "no watermark",
+    "no unrequested text",
+    "preserve the exact Redjack silhouette, reactor placement, wing geometry, engine blocks, scale, orientation, composition, and deep navy starfield",
+    "preserve the current Redjack red energy and pale red accent palette with violet as the corruption layer",
+    "change only shader-surface detail; keep all other pixels and design relationships stable"
+  ],
+  "avoid": [
+    "added geometry",
+    "weapons",
+    "player cyan/lime identity",
+    "random crack wallpaper",
+    "fractures crossing the reactor or erasing the silhouette",
+    "smooth painterly gradients",
+    "photorealism"
+  ],
+  "output": {
+    "asset_type": "Godot enemy shader mockup",
+    "aspect_ratio": "1:1",
+    "template_type": "single-asset",
+    "resolution_mode": "quick",
+    "detail_level": "standard",
+    "background_policy": "match-reference"
+  },
+  "render_group": null,
+  "board": null
+}

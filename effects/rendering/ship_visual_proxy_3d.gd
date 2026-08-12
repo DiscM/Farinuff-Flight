@@ -12,6 +12,7 @@ var meshes: Array[MeshInstance3D] = []
 var outlines: Array[MeshInstance3D] = []
 var source_materials: Dictionary = {}
 var engine_trail: MeshInstance3D
+var evolution_aura: MeshInstance3D
 var source_visual: CanvasItem
 var player_assembly: PlayerShipAssembly3D
 var suppressed_visuals: Array[CanvasItem] = []

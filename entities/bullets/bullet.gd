@@ -3,6 +3,9 @@ extends Area2D
 ## Supports piercing (pass through) and explosive (area damage) upgrades.
 
 const EXPLOSION_SCENE := preload("res://effects/explosion.tscn")
+const ShipCatalog := preload("res://effects/rendering/ship_render_catalog_3d.gd")
+const PIXEL_BOLT_SHADER: Shader = preload("res://effects/shaders/projectiles/player_bolt.gdshader")
+const VOXEL_BOLT_SHADER: Shader = preload("res://effects/shaders/projectiles/voxel_player_bolt.gdshader")
 
 @export var speed: float = 800.0
 var direction: Vector2 = Vector2.UP
@@ -19,6 +22,7 @@ var _is_despawning: bool = false
 func _ready() -> void:
 	if sprite.material != null:
 		sprite.material = sprite.material.duplicate(true)
+	_select_projectile_shader()
 	var notifier := VisibleOnScreenNotifier2D.new()
 	add_child(notifier)
 	notifier.screen_exited.connect(_on_screen_exited)
@@ -52,7 +56,7 @@ func pool_activate(spawn_position: Vector2, new_direction: Vector2, scale_multip
 ## Updates the local shader instance so projectile upgrades are readable at a
 ## glance without changing collision, damage, or pooled-resource behavior.
 func _configure_projectile_shader(spawn_position: Vector2) -> void:
-	var shader_material := sprite.material as ShaderMaterial
+	var shader_material := _select_projectile_shader()
 	if shader_material == null:
 		return
 	var core_color := Color(0.82, 1.0, 1.0)
@@ -72,6 +76,18 @@ func _configure_projectile_shader(spawn_position: Vector2) -> void:
 		&"phase_offset",
 		fposmod(spawn_position.x * 0.071 + spawn_position.y * 0.037, TAU)
 	)
+
+
+func _select_projectile_shader() -> ShaderMaterial:
+	var shader_material := sprite.material as ShaderMaterial
+	if shader_material == null:
+		return null
+	var voxel_enabled := ShipCatalog.voxel_style_enabled()
+	shader_material.shader = VOXEL_BOLT_SHADER if voxel_enabled else PIXEL_BOLT_SHADER
+	if voxel_enabled:
+		shader_material.set_shader_parameter(&"voxel_cell_scale", 8.0)
+		shader_material.set_shader_parameter(&"voxel_face_contrast", 0.12)
+	return shader_material
 
 ## Returns the bullet to the pool after disabling its collision and physics.
 func despawn() -> void:

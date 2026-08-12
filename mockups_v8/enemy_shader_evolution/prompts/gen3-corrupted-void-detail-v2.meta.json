@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "shot_id": "gen3-corrupted-void-detail-v2",
+  "mode": "revision",
+  "prompt": "prompts/gen3-corrupted-void-detail-v2.txt",
+  "prompt_sha256": "fba0d2a667c2a3f023400dfed159d5e9211c1ff68430172fa2586bddbacef241",
+  "manifest_sha256": "33172f51da8fc3f88a4361920693008be600604b0aa73dee095e0c2c8dcf5edd",
+  "shot_sha256": "2a0400be89018d772c9290c59db342d2127601b59022563048561dab83e8af71",
+  "style_profile": {
+    "id": "corrupted-void-violet",
+    "name": "Corrupted Void Violet",
+    "source": "hybrid",
+    "brief": "A near-black, palette-tinted enemy silhouette with a bright reactor, hard stepped facets, one-sided violet fringe, and escalating corrupted fracture energy.",
+    "application": "Apply the corrupted-void material language to the same enemy identity at four sequential evolution stages. Preserve geometry and current archetype colors; add only the declared shader delta for each stage.",
+    "must_preserve": [
+      "Redjack identity and exact silhouette",
+      "Current energy/accent color relationships",
+      "Pixel-locked edges and high-contrast reactor focus",
+      "Incremental evolution from the base treatment rather than four unrelated looks"
+    ]
+  },
+  "visual_context": null,
+  "references": [
+    {
+      "index": 1,
+      "path": "renders/drafts/gen3-corrupted-void.png",
+      "role": "edit_target",
+      "also_roles": [],
+      "description": "Existing Gen III candidate to revise; preserve composition and geometry while increasing shader detail.",
+      "sha256": "75781dd5a02d96073c7f49734bd4efb10fd199bb697fcaad014897cbb12e8d5e"
+    },
+    {
+      "index": 2,
+      "path": "references/characters/redjack-enemy/redjack-geometry-anchor.png",
+      "role": "identity_anchor",
+      "also_roles": [],
+      "description": "Tight crop of the current Redjack Mk II model preview used as the fixed geometry reference; excludes presentation labels.",
+      "sha256": "77c3ccbc7c8f8ca5501ec6f321f1be70cb73df2eeb0d29b0c33205c76e7bb761"
+    },
+    {
+      "index": 3,
+      "path": "references/style/corrupted-void-violet.png",
+      "role": "style_anchor",
+      "also_roles": [],
+      "description": "Approved corrupted-void violet enemy treatment from the earlier shader comparison.",
+      "sha256": "5fb1540f030d5197ab3883bbeb8a20f5e543ccc2d78b692e3e2acf4b564b22c4"
+    }
+  ]
+}

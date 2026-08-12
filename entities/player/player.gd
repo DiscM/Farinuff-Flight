@@ -2,7 +2,10 @@ extends Area2D
 ## Player ship — handles movement, shooting, power-ups, and taking damage.
 
 const BULLET_SCENE := preload("res://entities/bullets/bullet.tscn")
-const ORBITAL_PROJECTILE_SHADER := preload("res://effects/shaders/projectiles/player_orbital.gdshader")
+const ShipCatalog := preload("res://effects/rendering/ship_render_catalog_3d.gd")
+const PIXEL_ORBITAL_PROJECTILE_SHADER: Shader = preload("res://effects/shaders/projectiles/player_orbital.gdshader")
+const VOXEL_ORBITAL_PROJECTILE_SHADER: Shader = preload("res://effects/shaders/projectiles/voxel_player_orbital.gdshader")
+const ORBITAL_PROJECTILE_SHADER: Shader = PIXEL_ORBITAL_PROJECTILE_SHADER
 const RETICLE_TEXTURE := preload("res://assets/ui/cursor_crosshair.png")
 const PIXEL_EFFECT_SCENE := preload("res://effects/pixel_sprite_effect.tscn")
 
@@ -1060,7 +1063,13 @@ func _spawn_orbitals() -> void:
 		var spr := Sprite2D.new()
 		spr.name = "Sprite2D"
 		var orbital_material := ShaderMaterial.new()
-		orbital_material.shader = ORBITAL_PROJECTILE_SHADER
+		var voxel_enabled := ShipCatalog.voxel_style_enabled()
+		orbital_material.shader = (
+			VOXEL_ORBITAL_PROJECTILE_SHADER if voxel_enabled else PIXEL_ORBITAL_PROJECTILE_SHADER
+		)
+		if voxel_enabled:
+			orbital_material.set_shader_parameter(&"voxel_cell_scale", 8.0)
+			orbital_material.set_shader_parameter(&"voxel_face_contrast", 0.14)
 		orbital_material.set_shader_parameter(&"phase_offset", TAU * float(i) / float(count))
 		spr.material = orbital_material
 		spr.modulate = Color.WHITE

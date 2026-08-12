@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "id": "gen3-corrupted-void",
+  "mode": "variant",
+  "status": "draft",
+  "characters": [
+    "redjack-enemy"
+  ],
+  "intent": "Gen III evolved corrupted void shader for the same Redjack enemy: preserve prior treatment, deepen the void body, add structured branching conduits and layered fracture detail, strengthen the one-sided magenta fringe, and make the reactor feel actively unstable.",
+  "view_direction": "front",
+  "delta": {
+    "targeted_correction": "",
+    "canvas": "",
+    "expression": "",
+    "pose": "",
+    "action": "",
+    "camera_angle": "",
+    "framing": "",
+    "background": "",
+    "scene": "",
+    "lighting_override": "Same high-contrast top-down lighting as Gen II; the reactor and corrupted rim may bloom harder.",
+    "wardrobe_override": "",
+    "object_override": "",
+    "resolution": "",
+    "detail": "Build directly on Gen II without changing geometry: make the hull read as a structured fractured-conduit network, with multiple branching circuit channels that follow the existing fuselage and wing planes, brighter nodes at major facet intersections, short broken secondary filaments, localized red-to-violet energy bleed, and a clearly layered reactor with a hot red/pink core and violet outer shell. Increase the one-sided magenta fringe and add small pixel sparks at a few fracture endpoints, but keep the silhouette, background, and dark body planes readable."
+  },
+  "allowed_changes": ["detail", "lighting_override"],
+  "object_overrides": [],
+  "placement_notes": [],
+  "reference_images": [],
+  "visual_context": null,
+  "constraints": [
+    "no watermark",
+    "no unrequested text",
+    "preserve the exact Redjack silhouette, reactor placement, wing geometry, engine blocks, scale, and orientation",
+    "use the existing Redjack red energy and pale red accent palette with violet as the corruption layer",
+    "one centered enemy on the same deep navy starfield treatment as Gen I and Gen II",
+    "Gen III must visibly build on Gen II rather than introduce a new material language"
+  ],
+  "avoid": [
+    "added geometry",
+    "weapons",
+    "player cyan/lime identity",
+    "random crack wallpaper",
+    "fractures that cross the reactor or erase the silhouette",
+    "smooth painterly gradients",
+    "photorealism"
+  ],
+  "output": {
+    "asset_type": "Godot enemy shader mockup",
+    "aspect_ratio": "1:1",
+    "template_type": "single-asset",
+    "resolution_mode": "quick",
+    "detail_level": "standard",
+    "background_policy": "match-reference"
+  },
+  "render_group": null,
+  "board": null
+}

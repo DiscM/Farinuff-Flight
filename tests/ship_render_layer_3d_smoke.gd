@@ -20,9 +20,16 @@ const EXPECTED_MODEL_PATHS := [
 	"res://assets/models/mockups/tank_enemy_mockup.glb",
 	"res://assets/models/mockups/sniper_enemy_mockup.glb",
 ]
-const EXPECTED_CIRCUITS := [0.05, 0.72, 0.18, 0.45]
-const EXPECTED_HEAT := [0.0, 0.08, 0.90, 0.20]
-const EXPECTED_APEX := [0.0, 0.0, 0.0, 1.0]
+const EXPECTED_CIRCUITS := [0.05, 0.58, 0.76, 0.88]
+const EXPECTED_HEAT := [0.0, 0.06, 0.72, 0.38]
+const EXPECTED_APEX := [0.0, 0.0, 0.18, 1.0]
+const EXPECTED_SHADERS := [
+	"res://effects/shaders/models/corrupted_void_enemy_3d.gdshader",
+	"res://effects/shaders/models/corrupted_void_enemy_gen2_3d.gdshader",
+	"res://effects/shaders/models/corrupted_void_enemy_gen3_3d.gdshader",
+	"res://effects/shaders/models/corrupted_void_enemy_gen4_3d.gdshader",
+]
+const EXPECTED_AURA_STRENGTH := [0.08, 0.14, 0.22, 0.65]
 
 var _failures: Array[String] = []
 
@@ -243,7 +250,7 @@ func _check_shader_profiles(layer: ShipRenderLayer3D, enemies: Array[BaseEnemy])
 				if material == null:
 					continue
 				_expect(
-					material.shader.resource_path == "res://effects/shaders/models/pixel_toon_3d.gdshader",
+					material.shader.resource_path == EXPECTED_SHADERS[generation_index],
 					"%s hull surface %d uses the wrong spatial shader" % [enemy.name, surface_index]
 				)
 				_expect(
@@ -269,7 +276,7 @@ func _check_shader_profiles(layer: ShipRenderLayer3D, enemies: Array[BaseEnemy])
 			var outline_material := outline.material_override as ShaderMaterial
 			_expect(
 				outline_material != null
-				and outline_material.shader.resource_path == "res://effects/shaders/models/pixel_outline_3d.gdshader",
+				and outline_material.shader.resource_path == "res://effects/shaders/models/corrupted_void_enemy_outline_3d.gdshader",
 				"%s outline uses the wrong spatial shader" % enemy.name
 			)
 		var visual := layer.get_visual_for(enemy)
@@ -283,6 +290,23 @@ func _check_shader_profiles(layer: ShipRenderLayer3D, enemies: Array[BaseEnemy])
 				and trail_material.shader.resource_path == "res://effects/shaders/models/pixel_trail_3d.gdshader",
 				"%s must use the integrated 3D engine-trail shader" % enemy.name
 			)
+			var aura := visual.get_node_or_null("EvolutionRadialAura") as MeshInstance3D
+			_expect(aura != null and aura.visible, "%s must own a visible evolution aura" % enemy.name)
+			if aura != null:
+				var aura_material := aura.material_override as ShaderMaterial
+				_expect(
+					aura_material != null
+					and aura_material.shader.resource_path == "res://effects/shaders/models/corrupted_void_enemy_radial_3d.gdshader",
+					"%s must use the corrupted-void radial aura shader" % enemy.name
+				)
+				if aura_material != null:
+					_expect(
+						is_equal_approx(
+							float(aura_material.get_shader_parameter("aura_strength")),
+							float(EXPECTED_AURA_STRENGTH[generation_index])
+						),
+						"%s has the wrong radial aura strength" % enemy.name
+					)
 
 
 func _check_feedback(
@@ -337,9 +361,13 @@ func _check_generation_refresh(layer: ShipRenderLayer3D, enemy: BaseEnemy) -> vo
 	var controller := enemy.get_node("VisualRoot/Evolution") as EnemyEvolutionController
 	var visual := layer.get_visual_for(enemy)
 	var trail := visual.get_node_or_null("EngineTrails") as MeshInstance3D
+	var aura := visual.get_node_or_null("EvolutionRadialAura") as MeshInstance3D
 	var previous_trail_material: Material = null
+	var previous_aura_material: Material = null
 	if trail != null:
 		previous_trail_material = trail.material_override
+	if aura != null:
+		previous_aura_material = aura.material_override
 	enemy.generation = 4
 	controller.apply_generation(enemy, 4)
 	layer.sync_now()
@@ -349,8 +377,20 @@ func _check_generation_refresh(layer: ShipRenderLayer3D, enemy: BaseEnemy) -> vo
 		return
 	var material := meshes[0].get_surface_override_material(0) as ShaderMaterial
 	_expect(
+		material.shader.resource_path == EXPECTED_SHADERS[3],
+		"Changing a live enemy to Generation IV must select the Gen IV shader"
+	)
+	_expect(
 		is_equal_approx(float(material.get_shader_parameter("apex_amount")), 1.0),
 		"Changing a live enemy to Generation IV must refresh its 3D material"
+	)
+	var aura_material: Material = null
+	if aura != null:
+		aura_material = aura.material_override
+	_expect(
+		aura_material != null
+		and aura_material != previous_aura_material,
+		"Changing generation must refresh the evolution aura material"
 	)
 	_expect(
 		trail != null

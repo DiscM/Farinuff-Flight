@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "id": "gen4-corrupted-void-radial-v3",
+  "mode": "revision",
+  "status": "draft",
+  "characters": [
+    "redjack-enemy"
+  ],
+  "intent": "Gen IV radial-glow revision of the existing apex Redjack corrupted-void candidate: add a reactor-centered radial corruption aura with a controlled red-to-violet falloff while preserving the detailed void-breach shader, silhouette, palette, composition, and background.",
+  "view_direction": "front",
+  "delta": {
+    "targeted_correction": "Add a radial glow layer to the existing Gen IV shader while keeping the detailed void-breach treatment, geometry, composition, background, and palette roles unchanged.",
+    "canvas": "",
+    "expression": "",
+    "pose": "",
+    "action": "",
+    "camera_angle": "",
+    "framing": "",
+    "background": "",
+    "scene": "",
+    "lighting_override": "",
+    "wardrobe_override": "",
+    "object_override": "",
+    "resolution": "",
+    "detail": "Change only the shader detail: add a reactor-centered radial corruption aura behind and through the existing Redjack silhouette. The glow should be strongest at the reactor, red/pink near the source, transition through hot magenta, and fall off into a violet pixel-dithered halo around the hull. Use a stepped radial falloff with a few broken scanline rings and interference ripples, but keep the existing fracture network, offset echoes, and void-breach detail visible. The radial layer must feel shader-driven, remain contained around the enemy, and never wash out the silhouette or deep navy starfield."
+  },
+  "allowed_changes": ["targeted_correction", "detail"],
+  "object_overrides": [],
+  "placement_notes": [],
+  "reference_images": [
+    {
+      "path": "renders/drafts/gen4-corrupted-void-detail-v2.png",
+      "role": "edit_target",
+      "description": "Existing detailed Gen IV candidate to revise; preserve its composition, void-breach detail, and geometry while adding only the radial glow layer."
+    }
+  ],
+  "visual_context": null,
+  "constraints": [
+    "no watermark",
+    "no unrequested text",
+    "preserve the exact Redjack silhouette, reactor placement, wing geometry, engine blocks, scale, orientation, composition, and deep navy starfield",
+    "preserve the current Redjack red energy and pale red accent palette with violet as the corruption layer",
+    "preserve the existing Gen IV fracture network, scanlines, offset echoes, and void-breach detail",
+    "change only the radial glow shader layer"
+  ],
+  "avoid": [
+    "added geometry",
+    "weapons",
+    "player cyan/lime identity",
+    "uniform circular neon ring",
+    "soft white bloom that erases the silhouette",
+    "glow spilling across the whole background",
+    "smooth painterly gradients",
+    "photorealism"
+  ],
+  "output": {
+    "asset_type": "Godot enemy shader mockup",
+    "aspect_ratio": "1:1",
+    "template_type": "single-asset",
+    "resolution_mode": "quick",
+    "detail_level": "standard",
+    "background_policy": "match-reference"
+  },
+  "render_group": null,
+  "board": null
+}

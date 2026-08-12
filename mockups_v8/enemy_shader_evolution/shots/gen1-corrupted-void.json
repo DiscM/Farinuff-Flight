@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "id": "gen1-corrupted-void",
+  "mode": "variant",
+  "status": "draft",
+  "characters": [
+    "redjack-enemy"
+  ],
+  "intent": "Gen I base corrupted void shader for the Redjack enemy: near-black palette-tinted body, restrained accent rim, bright reactor, minimal fracture energy.",
+  "view_direction": "front",
+  "delta": {
+    "targeted_correction": "",
+    "canvas": "",
+    "expression": "",
+    "pose": "",
+    "action": "",
+    "camera_angle": "",
+    "framing": "",
+    "background": "",
+    "scene": "",
+    "lighting_override": "High-contrast top-down key light with the reactor and silhouette edge emitting against a deep navy starfield.",
+    "wardrobe_override": "",
+    "object_override": "",
+    "resolution": "",
+    "detail": "Base corrupted-void shader only: near-black palette-tinted body, restrained current-palette rim, bright reactor, minimal fracture energy, and a small violet/magenta fringe."
+  },
+  "allowed_changes": ["detail", "lighting_override"],
+  "object_overrides": [],
+  "placement_notes": [],
+  "reference_images": [],
+  "visual_context": null,
+  "constraints": [
+    "no watermark",
+    "no unrequested text",
+    "preserve the exact Redjack silhouette, reactor placement, wing geometry, engine blocks, scale, and orientation",
+    "use the existing Redjack red energy and pale red accent palette",
+    "one centered enemy on a consistent deep navy starfield",
+    "this is the base stage for the later three incremental shader evolutions"
+  ],
+  "avoid": [
+    "added geometry",
+    "weapons",
+    "player cyan/lime identity",
+    "smooth painterly gradients",
+    "photorealism"
+  ],
+  "output": {
+    "asset_type": "Godot enemy shader mockup",
+    "aspect_ratio": "1:1",
+    "template_type": "single-asset",
+    "resolution_mode": "quick",
+    "detail_level": "low",
+    "background_policy": "match-reference"
+  },
+  "render_group": null,
+  "board": null
+}

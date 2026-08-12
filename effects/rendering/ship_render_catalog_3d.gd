@@ -166,6 +166,17 @@ const CAMERA_HEIGHT := 45.0
 const CAMERA_DEPTH := 28.125
 const INVINCIBILITY_VISIBLE_ALPHA := 0.5
 const RENDER_OVERSCAN_PIXELS := 32
+const VOXEL_STYLE_SETTING := "rendering/voxel_style_enabled"
+const VOXEL_STYLE_ARG := "--voxel-style"
+
+
+static func voxel_style_enabled() -> bool:
+	# Keep the shipped renderer unchanged by default. The user argument makes
+	# the experimental path selectable from headless smoke tests and local
+	# captures without requiring an editor-only toggle.
+	if OS.get_cmdline_user_args().has(VOXEL_STYLE_ARG):
+		return true
+	return bool(ProjectSettings.get_setting(VOXEL_STYLE_SETTING, false))
 
 
 static func instantiate_model(archetype: StringName) -> Node3D:

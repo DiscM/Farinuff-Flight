@@ -8,14 +8,99 @@ const VisualProxy := preload(
 	"res://effects/rendering/ship_visual_proxy_3d.gd"
 )
 
-const SHIP_SHADER: Shader = preload("res://effects/shaders/models/pixel_toon_3d.gdshader")
+const PIXEL_SHIP_SHADER: Shader = preload("res://effects/shaders/models/pixel_toon_3d.gdshader")
+const VOXEL_SHIP_SHADER: Shader = preload("res://effects/shaders/models/voxel_toon_3d.gdshader")
+const CORRUPTED_ENEMY_SHIP_SHADER: Shader = preload("res://effects/shaders/models/corrupted_void_enemy_3d.gdshader")
+const CORRUPTED_ENEMY_GEN2_SHADER: Shader = preload("res://effects/shaders/models/corrupted_void_enemy_gen2_3d.gdshader")
+const CORRUPTED_ENEMY_GEN3_SHADER: Shader = preload("res://effects/shaders/models/corrupted_void_enemy_gen3_3d.gdshader")
+const CORRUPTED_ENEMY_GEN4_SHADER: Shader = preload("res://effects/shaders/models/corrupted_void_enemy_gen4_3d.gdshader")
+const CORRUPTED_ENEMY_RADIAL_SHADER: Shader = preload("res://effects/shaders/models/corrupted_void_enemy_radial_3d.gdshader")
 const OUTLINE_SHADER: Shader = preload("res://effects/shaders/models/pixel_outline_3d.gdshader")
+const CORRUPTED_ENEMY_OUTLINE_SHADER: Shader = preload("res://effects/shaders/models/corrupted_void_enemy_outline_3d.gdshader")
 const ENGINE_TRAIL_SHADER: Shader = preload("res://effects/shaders/models/pixel_trail_3d.gdshader")
+
+const CORRUPTED_ENEMY_ARCHETYPES := [
+	&"basic",
+	&"fast",
+	&"bomber",
+	&"tank",
+	&"sniper",
+]
+
+const CORRUPTED_VOID_PROFILES := [
+	{
+		"evolution_level": 0.0,
+		"circuit_amount": 0.05,
+		"heat_amount": 0.0,
+		"apex_amount": 0.0,
+		"emission_strength": 0.74,
+		"fracture_density": 0.10,
+		"node_amount": 0.0,
+		"reactor_focus": 0.12,
+		"aura_strength": 0.08,
+		"ring_strength": 0.0,
+		"ring_count": 4.0,
+	},
+	{
+		"evolution_level": 0.333333,
+		"circuit_amount": 0.58,
+		"heat_amount": 0.06,
+		"apex_amount": 0.0,
+		"emission_strength": 0.92,
+		"fracture_density": 0.46,
+		"node_amount": 0.38,
+		"reactor_focus": 0.30,
+		"aura_strength": 0.14,
+		"ring_strength": 0.14,
+		"ring_count": 4.0,
+	},
+	{
+		"evolution_level": 0.666667,
+		"circuit_amount": 0.76,
+		"heat_amount": 0.72,
+		"apex_amount": 0.18,
+		"emission_strength": 1.18,
+		"fracture_density": 0.82,
+		"node_amount": 0.70,
+		"reactor_focus": 0.62,
+		"aura_strength": 0.22,
+		"ring_strength": 0.46,
+		"ring_count": 5.0,
+	},
+	{
+		"evolution_level": 1.0,
+		"circuit_amount": 0.88,
+		"heat_amount": 0.38,
+		"apex_amount": 1.0,
+		"emission_strength": 1.45,
+		"fracture_density": 0.96,
+		"node_amount": 0.88,
+		"reactor_focus": 0.95,
+		"aura_strength": 0.65,
+		"ring_strength": 0.98,
+		"ring_count": 7.0,
+	},
+]
+
+# Kept as a compatibility alias for diagnostics and older callers. Materials
+# are selected per library instance through _ship_shader().
+const SHIP_SHADER: Shader = PIXEL_SHIP_SHADER
 
 var _surface_material_cache: Dictionary = {}
 var _outline_material_cache: Dictionary = {}
 var _trail_mesh_cache: Dictionary = {}
 var _trail_material_cache: Dictionary = {}
+var _evolution_aura_material_cache: Dictionary = {}
+var _evolution_aura_mesh: QuadMesh
+var _voxel_style_enabled := false
+
+
+func _init() -> void:
+	_voxel_style_enabled = Catalog.voxel_style_enabled()
+
+
+func is_voxel_style_enabled() -> bool:
+	return _voxel_style_enabled
 
 
 func configure_proxy(proxy: VisualProxy) -> void:
@@ -76,6 +161,7 @@ func apply_proxy_materials(proxy: VisualProxy) -> void:
 		mesh_instance.get_parent().add_child(outline)
 		proxy.outlines.append(outline)
 
+	ensure_evolution_aura(proxy)
 	ensure_engine_trail(proxy)
 
 
@@ -126,7 +212,7 @@ func _get_surface_material(
 
 	var style := _get_style(archetype, generation)
 	var material := ShaderMaterial.new()
-	material.shader = SHIP_SHADER
+	material.shader = _ship_shader(archetype, generation)
 	material.set_shader_parameter("base_color", base_color)
 	material.set_shader_parameter("energy_color", style["energy_color"])
 	material.set_shader_parameter("accent_color", style["accent_color"])
@@ -138,6 +224,10 @@ func _get_surface_material(
 	material.set_shader_parameter("circuit_amount", style["circuit_amount"])
 	material.set_shader_parameter("heat_amount", style["heat_amount"])
 	material.set_shader_parameter("apex_amount", style["apex_amount"])
+	if CORRUPTED_ENEMY_ARCHETYPES.has(archetype) and not _voxel_style_enabled:
+		material.set_shader_parameter("fracture_density", style["fracture_density"])
+		material.set_shader_parameter("node_amount", style["node_amount"])
+		material.set_shader_parameter("reactor_focus", style["reactor_focus"])
 	material.set_shader_parameter(
 		"pattern_scale",
 		float(style.get("pattern_scale", 3.6))
@@ -151,8 +241,28 @@ func _get_surface_material(
 		0.0 if archetype == &"drone_escort" else 1.0
 	)
 	material.set_shader_parameter("phase_offset", 0.0)
+	if _voxel_style_enabled:
+		material.set_shader_parameter("voxel_normal_steps", 4.0)
+		material.set_shader_parameter("voxel_palette_variation", 0.08)
+		material.set_shader_parameter("voxel_edge_strength", 0.06)
 	_surface_material_cache[cache_key] = material
 	return material
+
+
+func _ship_shader(archetype: StringName, generation: int) -> Shader:
+	if _voxel_style_enabled:
+		return VOXEL_SHIP_SHADER
+	if CORRUPTED_ENEMY_ARCHETYPES.has(archetype):
+		match clampi(generation, 1, 4):
+			2:
+				return CORRUPTED_ENEMY_GEN2_SHADER
+			3:
+				return CORRUPTED_ENEMY_GEN3_SHADER
+			4:
+				return CORRUPTED_ENEMY_GEN4_SHADER
+			_:
+				return CORRUPTED_ENEMY_SHIP_SHADER
+	return PIXEL_SHIP_SHADER
 
 
 func _get_outline_material(
@@ -163,14 +273,91 @@ func _get_outline_material(
 	if _outline_material_cache.has(cache_key):
 		return _outline_material_cache[cache_key] as ShaderMaterial
 	var material := ShaderMaterial.new()
-	material.shader = OUTLINE_SHADER
+	var corrupted_style := CORRUPTED_ENEMY_ARCHETYPES.has(archetype)
+	material.shader = (
+		CORRUPTED_ENEMY_OUTLINE_SHADER
+		if corrupted_style and not _voxel_style_enabled
+		else OUTLINE_SHADER
+	)
 	# The pixel style shares one void rim across every ship: the dark limb of
 	# the planet shaders, exactly one low-res buffer pixel thick.
 	material.set_shader_parameter(
 		"outline_width",
 		float(Catalog.PIXELATION) / Catalog.PIXELS_PER_MODEL_UNIT
 	)
+	if corrupted_style and not _voxel_style_enabled:
+		var style := _get_style(archetype, generation)
+		material.set_shader_parameter("energy_color", style["energy_color"])
+		material.set_shader_parameter("accent_color", style["accent_color"])
+		material.set_shader_parameter("violet_fringe", Color(0.90, 0.04, 1.0, 1.0))
+		material.set_shader_parameter(
+			"outline_energy",
+			1.25 + float(style["evolution_level"]) * 0.55
+		)
+		material.set_shader_parameter("fringe_strength", 0.72)
 	_outline_material_cache[cache_key] = material
+	return material
+
+
+func ensure_evolution_aura(proxy: VisualProxy) -> void:
+	var corrupted_style := (
+		CORRUPTED_ENEMY_ARCHETYPES.has(proxy.archetype)
+		and not _voxel_style_enabled
+	)
+	if not corrupted_style:
+		if is_instance_valid(proxy.evolution_aura):
+			proxy.evolution_aura.visible = false
+		return
+
+	if proxy.evolution_aura == null:
+		var aura := MeshInstance3D.new()
+		aura.name = "EvolutionRadialAura"
+		aura.mesh = _get_evolution_aura_mesh()
+		aura.rotation_degrees = Vector3(90.0, 0.0, 0.0)
+		# Move the back-plate slightly away from the fixed camera so the opaque
+		# hull depth-test clips the aura cleanly inside the silhouette.
+		aura.position = Vector3(0.0, -0.14, -0.10)
+		aura.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		proxy.root.add_child(aura)
+		proxy.root.move_child(aura, 0)
+		proxy.evolution_aura = aura
+
+	proxy.evolution_aura.material_override = _get_evolution_aura_material(
+		proxy.archetype,
+		proxy.generation
+	)
+	proxy.evolution_aura.visible = true
+
+
+func _get_evolution_aura_mesh() -> QuadMesh:
+	if _evolution_aura_mesh != null:
+		return _evolution_aura_mesh
+	_evolution_aura_mesh = QuadMesh.new()
+	_evolution_aura_mesh.size = Vector2(6.0, 6.0)
+	return _evolution_aura_mesh
+
+
+func _get_evolution_aura_material(
+	archetype: StringName,
+	generation: int
+) -> ShaderMaterial:
+	var cache_key := "%s:%d" % [archetype, generation]
+	if _evolution_aura_material_cache.has(cache_key):
+		return _evolution_aura_material_cache[cache_key] as ShaderMaterial
+	var style := _get_style(archetype, generation)
+	var material := ShaderMaterial.new()
+	material.shader = CORRUPTED_ENEMY_RADIAL_SHADER
+	material.set_shader_parameter("energy_color", style["energy_color"])
+	material.set_shader_parameter("accent_color", style["accent_color"])
+	material.set_shader_parameter("violet_fringe", Color(0.90, 0.04, 1.0, 1.0))
+	material.set_shader_parameter("evolution_level", style["evolution_level"])
+	material.set_shader_parameter("aura_strength", style["aura_strength"])
+	material.set_shader_parameter("ring_strength", style["ring_strength"])
+	material.set_shader_parameter("ring_count", style["ring_count"])
+	material.set_shader_parameter("emission_strength", style["emission_strength"])
+	material.set_shader_parameter("phase_offset", 0.0)
+	material.set_shader_parameter("animation_speed", 1.0)
+	_evolution_aura_material_cache[cache_key] = material
 	return material
 
 
@@ -276,27 +463,21 @@ func _get_style(archetype: StringName, generation: int) -> Dictionary:
 		}
 
 	var clamped_generation := clampi(generation, 1, 4)
-	var profile: Dictionary = (
-		EnemyEvolutionController.SHADER_PROFILES[clamped_generation - 1]
-	)
-	var evolution_level := float(clamped_generation - 1) / 3.0
-	var palette_blend := evolution_level * 0.46
+	var profile: Dictionary = CORRUPTED_VOID_PROFILES[clamped_generation - 1]
 	return {
-		"energy_color": (
-			Catalog.CLASS_ENERGY[archetype] as Color
-		).lerp(
-			profile["energy_color"] as Color,
-			palette_blend
-		),
-		"accent_color": (
-			Catalog.CLASS_ACCENT[archetype] as Color
-		).lerp(
-			profile["accent_color"] as Color,
-			0.28 + evolution_level * 0.42
-		),
-		"evolution_level": evolution_level,
+		# Keep each regular archetype's current palette intact. Violet is the
+		# corruption treatment, not a replacement for class identity.
+		"energy_color": Catalog.CLASS_ENERGY[archetype],
+		"accent_color": Catalog.CLASS_ACCENT[archetype],
+		"evolution_level": profile["evolution_level"],
 		"circuit_amount": profile["circuit_amount"],
 		"heat_amount": profile["heat_amount"],
 		"apex_amount": profile["apex_amount"],
-		"emission_strength": 0.58 + float(profile["emission_strength"]) * 1.8,
+		"emission_strength": profile["emission_strength"],
+		"fracture_density": profile["fracture_density"],
+		"node_amount": profile["node_amount"],
+		"reactor_focus": profile["reactor_focus"],
+		"aura_strength": profile["aura_strength"],
+		"ring_strength": profile["ring_strength"],
+		"ring_count": profile["ring_count"],
 	}

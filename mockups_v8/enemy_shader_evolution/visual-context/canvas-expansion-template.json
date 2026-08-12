@@ -1,0 +1,65 @@
+{
+  "source_image": "renders/drafts/replace-source-image.png",
+  "user_phrase": "expand the canvas to the right and continue the scene",
+  "targets": [
+    {
+      "id": "source-edge-landmark",
+      "label": "Source feature that should continue across the old edge",
+      "kind": "point",
+      "box": null,
+      "point": [0.92, 0.48],
+      "radius": 0.025,
+      "aliases": [
+        "this edge feature",
+        "the feature near the right edge"
+      ],
+      "instruction": "Use this protected source feature as a continuity landmark without repainting it.",
+      "preserve_outside": true
+    }
+  ],
+  "canvas_transform": {
+    "operation": "expand",
+    "target_size": [1536, 1024],
+    "source_box": [0.0, 0.0, 0.6666666667, 1.0],
+    "preserve_source_pixels": true,
+    "expansion_targets": [
+      {
+        "id": "right-side-content",
+        "label": "New content in the right expansion",
+        "kind": "box",
+        "box": [0.6666666667, 0.0, 1.0, 1.0],
+        "point": null,
+        "radius": null,
+        "aliases": [
+          "the new right side",
+          "the expanded area"
+        ],
+        "instruction": "Continue the source scene naturally into this new area while matching perspective, lighting, palette, texture, and background.",
+        "preserve_outside": false
+      },
+      {
+        "id": "new-subject-placement",
+        "label": "Optional focal feature in the new area",
+        "kind": "point",
+        "box": null,
+        "point": [0.84, 0.62],
+        "radius": 0.04,
+        "aliases": [
+          "put it here",
+          "this point in the expansion"
+        ],
+        "instruction": "Place the specifically requested new feature around this point; omit it when no new feature was requested.",
+        "preserve_outside": false
+      }
+    ],
+    "continuity_links": [
+      {
+        "id": "edge-continuation",
+        "label": "Visual continuation from the old right edge",
+        "source_point": [1.0, 0.48],
+        "target_point": [0.82, 0.48],
+        "instruction": "Continue the edge-crossing structure smoothly from the mapped source boundary toward this target point."
+      }
+    ]
+  }
+}
