@@ -1,0 +1,85 @@
+Use case: identity-preserve
+Asset type: Godot enemy shader mockup
+Operation: revision
+Primary request: Gen III detail revision of the existing Redjack corrupted-void candidate: add structured fractured conduits, layered energy nodes, secondary filaments, and localized red-to-violet bleed while preserving all pixels and composition outside the shader detail treatment.
+Canonical view direction: front (0 degrees)
+Input images (use in this exact order):
+- Image 1: edit_target; Existing Gen III candidate to revise; preserve composition and geometry while increasing shader detail.; file: renders/drafts/gen3-corrupted-void.png
+- Image 2: identity_anchor; Tight crop of the current Redjack Mk II model preview used as the fixed geometry reference; excludes presentation labels.; file: references/characters/redjack-enemy/redjack-geometry-anchor.png
+- Image 3: style_anchor; Approved corrupted-void violet enemy treatment from the earlier shader comparison.; file: references/style/corrupted-void-violet.png
+Reference authority:
+- Edit targets control pixels and composition that must remain unchanged during revision.
+- Canvas-grounding images control target dimensions and exact 1:1 source placement during outpainting; transparent pixels are the only expansion area.
+- Visual-context overlays and coordinates localize the user's words only; never copy their markers into the output.
+- Identity anchors control canonical identity; turnaround/expression references refine the relevant view.
+- Style anchors control medium, palette relationships, edges, texture, and rendering.
+- Lower-priority composition or continuity references must not redesign identity or style.
+Identity lock — Redjack Enemy (redjack-enemy):
+- silhouette: A single pointed triangular spacecraft with a long central fuselage, two broad swept side wings, and two short rectangular engine blocks at the bottom edge.
+- proportions: The central fuselage occupies roughly the middle half of the width and most of the height; the side wings extend symmetrically to either side; the reactor sits in the upper-middle third.
+- face/head geometry: Not applicable; the centered faceted reactor is the focal feature and must remain centered on the fuselage.
+- surface and markings: Low-poly faceted red hull panels, a faceted central reactor, dark engine blocks, and clean hard seams between the fuselage and wings.
+- character color placement: Redjack base energy: current red energy palette, approximately #FF0920.; Redjack accent: current pale red/pink accent palette, approximately #FF94AD.; The reactor may retain a hot amber-to-white center as an authored focal surface while the shader edge follows the current class palette.
+- signature features: Pointed triangular fuselage; Symmetrical swept lateral wings; Centered diamond/hexagonal reactor; Two compact bottom engine blocks
+- personality read: Hostile, direct, and disposable; the shader should make the enemy feel increasingly corrupted and dangerous without changing its silhouette.
+- hard locks: Do not change the Redjack silhouette or orientation.; Do not move, resize, duplicate, or remove the central reactor.; Do not add weapons, antennae, fins, or other geometry.; Do not replace the current red class palette with the player's cyan/lime palette.
+Costume/construction lock — Redjack Enemy:
+- silhouette: No costume; the spacecraft hull and its shader treatment are the subject.
+Style application profile — Corrupted Void Violet (corrupted-void-violet):
+- source: hybrid
+- style brief: A near-black, palette-tinted enemy silhouette with a bright reactor, hard stepped facets, one-sided violet fringe, and escalating corrupted fracture energy.
+- application rule: Apply the corrupted-void material language to the same enemy identity at four sequential evolution stages. Preserve geometry and current archetype colors; add only the declared shader delta for each stage.
+- style-transfer invariants: Redjack identity and exact silhouette; Current energy/accent color relationships; Pixel-locked edges and high-contrast reactor focus; Incremental evolution from the base treatment rather than four unrelated looks
+- Apply this profile to the rendered subject and every generated shot.
+- Style references control medium, rendering, palette, edges, texture, lighting, and brush behavior only.
+- Do not copy identity, anatomy, objects, accessory placement, pose, or composition from a style reference unless the written locks explicitly request it.
+- Preserve the character identity lock, costume lock, required objects, and subject-space placement locks while transferring the style.
+Style lock:
+- medium: Low-poly 3D spacecraft rendered through a pixel-locked Godot spatial shader.
+- rendering: Crisp stepped/toon bands, near-black corrupted body planes, bright emissive reactor, restrained bloom, and nearest-neighbor low-resolution presentation.
+- line and edge behavior: Hard faceted edges with a dark inverted-hull separation band, palette-driven electric contour, and a one-sided violet/magenta fringe.
+- shape language: Compact, symmetrical, faceted enemy silhouettes with a pointed central fuselage, swept lateral wings, centered reactor, and small engine blocks.
+- series palette: Current archetype energy color drives the shadow tint and primary glow.; Current archetype accent color drives fractures, reactor highlights, and most of the contour.; Corrupted void shadow: #17032E; violet fringe: #E609FF; deep space separation: #020309; reactor highlights may reach white-hot.; Do not make cyan/lime the dominant enemy identity; those colors belong to the player treatment.
+- lighting convention: Top-down arcade key light with high contrast; the reactor and silhouette edge emit while the body stays materially dark.
+- texture/brushwork: Pixel dithering, sparse scanlines, discrete material bands, and fracture/circuit marks that increase with generation.
+- composition convention: One centered front-facing enemy per square panel against a consistent deep navy starfield, generous margin, no HUD or explanatory text.
+- hard locks: Preserve the Redjack outer silhouette, orientation, proportions, reactor placement, and engine-block placement across all four stages.; Preserve the current enemy palette roles; evolution changes shader intensity and complexity, not class identity.; Each stage must build on the previous stage with no abrupt model redesign or added geometry.; Keep the series readable at small gameplay size and distinct from the player's cyan/lime void silhouette.
+Requested delta (the only intended changes):
+- targeted correction: Increase shader-surface detail and distinctiveness while keeping the existing Gen III Redjack candidate's geometry, composition, background, and palette roles unchanged.
+- detail: Change only the shader detail: add a structured fractured-conduit network that follows the existing fuselage and wing planes, with multiple branching circuit channels, brighter energy nodes at facet intersections, short broken secondary filaments, localized red-to-violet bleed, a layered reactor with a hot red/pink core and violet outer shell, a stronger one-sided magenta fringe, and a few small pixel sparks at fracture endpoints. Keep all geometry, proportions, reactor placement, composition, background, and dark body planes unchanged and readable.
+Allowed changes: targeted correction, detail
+Constraints:
+- Preserve every identity, costume/construction, and style hard lock not explicitly allowed to change.
+- Do not average conflicting references or invent a redesign.
+- Keep topology, color placement, signature details, and material behavior coherent under occlusion and perspective.
+- This is the same canonical character, not a reinterpretation or lookalike.
+- Change only the named defect; keep all other pixels, composition, and design unchanged as far as the edit tool permits.
+- no watermark
+- no unrequested text
+- preserve the exact Redjack silhouette, reactor placement, wing geometry, engine blocks, scale, orientation, composition, and deep navy starfield
+- preserve the current Redjack red energy and pale red accent palette with violet as the corruption layer
+- change only shader-surface detail; keep all other pixels and design relationships stable
+Avoid:
+- watermarks
+- unrequested text
+- unrequested redesigns
+- photorealism
+- smooth painterly gradients
+- extra weapons or geometry
+- generic fighter silhouettes
+- dominant cyan/lime enemy palettes
+- added geometry
+- weapons
+- player cyan/lime identity
+- random crack wallpaper
+- fractures crossing the reactor or erasing the silhouette
+- smooth painterly gradients
+- photorealism
+Resolution mode: quick
+Detail level: standard
+Resolution policy: Use a fast lower-resolution first pass; prioritize silhouette, identity, style, placement, and large readable forms. Do not upscale or add micro-detail.
+Aspect ratio: 1:1
+Background policy: match-reference
+- Match the controlling reference image background exactly in treatment: color family, texture, horizon/ground treatment, and contact shadow. Do not default to white or invent a new environment.
+- Preserve the matched background consistently across every member of this shot or render group.
+Output intent: produce one candidate image for this shot; no contact sheet, alternatives, labels, or explanatory text unless explicitly requested.

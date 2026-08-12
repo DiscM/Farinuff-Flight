@@ -1,0 +1,58 @@
+{
+  "schema_version": 1,
+  "id": "gen2-corrupted-void",
+  "mode": "variant",
+  "status": "draft",
+  "characters": [
+    "redjack-enemy"
+  ],
+  "intent": "Gen II evolved corrupted void shader for the same Redjack enemy: preserve Gen I treatment, add a stronger palette rim, sparse animated fracture lines, and slightly brighter reactor energy.",
+  "view_direction": "front",
+  "delta": {
+    "targeted_correction": "",
+    "canvas": "",
+    "expression": "",
+    "pose": "",
+    "action": "",
+    "camera_angle": "",
+    "framing": "",
+    "background": "",
+    "scene": "",
+    "lighting_override": "Same high-contrast top-down lighting as Gen I; increase contour emission only.",
+    "wardrobe_override": "",
+    "object_override": "",
+    "resolution": "",
+    "detail": "Build directly on Gen I: strengthen the current-palette contour, add sparse animated fracture lines, lift the reactor energy slightly, and keep the body and silhouette equally dark."
+  },
+  "allowed_changes": ["detail", "lighting_override"],
+  "object_overrides": [],
+  "placement_notes": [],
+  "reference_images": [],
+  "visual_context": null,
+  "constraints": [
+    "no watermark",
+    "no unrequested text",
+    "preserve the exact Redjack silhouette, reactor placement, wing geometry, engine blocks, scale, and orientation",
+    "use the existing Redjack red energy and pale red accent palette",
+    "one centered enemy on the same deep navy starfield treatment as Gen I",
+    "Gen II must visibly build on Gen I rather than introduce a new material language"
+  ],
+  "avoid": [
+    "added geometry",
+    "weapons",
+    "player cyan/lime identity",
+    "dense crack clutter",
+    "smooth painterly gradients",
+    "photorealism"
+  ],
+  "output": {
+    "asset_type": "Godot enemy shader mockup",
+    "aspect_ratio": "1:1",
+    "template_type": "single-asset",
+    "resolution_mode": "quick",
+    "detail_level": "low",
+    "background_policy": "match-reference"
+  },
+  "render_group": null,
+  "board": null
+}

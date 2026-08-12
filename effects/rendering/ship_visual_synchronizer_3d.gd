@@ -172,6 +172,27 @@ func sync_proxy(
 				"instance_outline_override",
 				outline_override
 			)
+		if is_instance_valid(proxy.evolution_aura):
+			proxy.evolution_aura.set_instance_shader_parameter(
+				"instance_modulate",
+				instance_tint
+			)
+			proxy.evolution_aura.set_instance_shader_parameter(
+				"instance_flash",
+				flash
+			)
+			proxy.evolution_aura.set_instance_shader_parameter(
+				"instance_phase_offset",
+				proxy.phase_offset
+			)
+			proxy.evolution_aura.set_instance_shader_parameter(
+				"instance_energy_override",
+				energy_override
+			)
+			proxy.evolution_aura.set_instance_shader_parameter(
+				"instance_accent_override",
+				accent_override
+			)
 	if is_instance_valid(proxy.engine_trail):
 		proxy.engine_trail.set_instance_shader_parameter(
 			"instance_phase_offset",

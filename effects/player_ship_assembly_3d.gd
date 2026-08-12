@@ -6,8 +6,12 @@ class_name PlayerShipAssembly3D
 ## enabling one is an immediate visibility change. No animation-frame offsets,
 ## transform interpolation, or attachment tweens are involved.
 
-const SHIP_SHADER: Shader = preload("res://effects/shaders/models/pixel_toon_3d.gdshader")
+const ShipCatalog := preload("res://effects/rendering/ship_render_catalog_3d.gd")
+const PIXEL_SHIP_SHADER: Shader = preload("res://effects/shaders/models/pixel_toon_3d.gdshader")
+const VOXEL_SHIP_SHADER: Shader = preload("res://effects/shaders/models/voxel_toon_3d.gdshader")
 const OUTLINE_SHADER: Shader = preload("res://effects/shaders/models/pixel_outline_3d.gdshader")
+const VOID_SHIP_SHADER: Shader = preload("res://effects/shaders/models/void_silhouette_3d.gdshader")
+const VOID_OUTLINE_SHADER: Shader = preload("res://effects/shaders/models/void_silhouette_outline_3d.gdshader")
 const HULL_SCENE: PackedScene = preload("res://assets/models/redesign/player_butterfly.glb")
 const DRONE_SCENE: PackedScene = preload("res://assets/models/redesign/butterfly_elites/bf_elite_drone_escort.glb")
 
@@ -82,6 +86,11 @@ var _show_preview_drone := false
 var _runtime_modulate := Color.WHITE
 var _runtime_flash := 0.0
 var _phase_offset := 0.0
+var _voxel_style_enabled := false
+
+
+func _init() -> void:
+	_voxel_style_enabled = ShipCatalog.voxel_style_enabled()
 
 
 func build() -> void:
@@ -274,7 +283,7 @@ func _make_surface_material(
 	if style_id == &"afterburner" or style_id == &"overclock":
 		heat_amount = 0.16
 	var material := ShaderMaterial.new()
-	material.shader = SHIP_SHADER
+	material.shader = VOXEL_SHIP_SHADER if _voxel_style_enabled else VOID_SHIP_SHADER
 	material.set_shader_parameter("base_color", base_color)
 	material.set_shader_parameter("energy_color", energy_color)
 	material.set_shader_parameter("accent_color", accent_color)
@@ -290,18 +299,45 @@ func _make_surface_material(
 	material.set_shader_parameter("pattern_scale", 3.6 if style_id == &"player" else 4.8)
 	material.set_shader_parameter("animation_speed", 1.0 if animate_shader else 0.0)
 	material.set_shader_parameter("phase_offset", 0.0)
+	if not _voxel_style_enabled:
+		material.set_shader_parameter(
+			"silhouette_color",
+			Color(0.005, 0.008, 0.024, 1.0)
+		)
+		material.set_shader_parameter(
+			"rim_color",
+			energy_color.lerp(Color(0.12, 1.0, 0.72), 0.55)
+		)
+		material.set_shader_parameter("fringe_color", Color(1.0, 0.03, 0.55, 1.0))
+		material.set_shader_parameter("rim_power", 2.2)
+		material.set_shader_parameter("rim_threshold", 0.38)
+		material.set_shader_parameter("rim_strength", 1.45)
+		material.set_shader_parameter("fringe_strength", 0.72)
+		material.set_shader_parameter("scan_amount", 0.08)
+	if _voxel_style_enabled:
+		material.set_shader_parameter("voxel_normal_steps", 4.0)
+		material.set_shader_parameter("voxel_palette_variation", 0.08)
+		material.set_shader_parameter("voxel_edge_strength", 0.06)
 	return material
 
 
-func _make_outline_material(_energy_color: Color, _animate_shader: bool) -> ShaderMaterial:
+func _make_outline_material(energy_color: Color, _animate_shader: bool) -> ShaderMaterial:
 	var material := ShaderMaterial.new()
-	material.shader = OUTLINE_SHADER
+	material.shader = VOID_OUTLINE_SHADER if not _voxel_style_enabled else OUTLINE_SHADER
 	# Shared void rim, one low-res buffer pixel thick (see the material
 	# library); energy_color/animate_shader kept for signature parity.
 	material.set_shader_parameter(
 		"outline_width",
 		float(ShipRenderCatalog3D.PIXELATION) / ShipRenderCatalog3D.PIXELS_PER_MODEL_UNIT
 	)
+	if not _voxel_style_enabled:
+		material.set_shader_parameter(
+			"rim_color",
+			energy_color.lerp(Color(0.12, 1.0, 0.72), 0.55)
+		)
+		material.set_shader_parameter("fringe_color", Color(1.0, 0.03, 0.55, 1.0))
+		material.set_shader_parameter("outline_energy", 1.25)
+		material.set_shader_parameter("fringe_strength", 0.72)
 	return material
 
 

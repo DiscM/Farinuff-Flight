@@ -3,6 +3,9 @@ extends Area2D
 
 @export var speed: float = 400.0
 static var _visibility_ring_texture: Texture2D
+const ShipCatalog := preload("res://effects/rendering/ship_render_catalog_3d.gd")
+const PIXEL_PLASMA_SHADER: Shader = preload("res://effects/shaders/projectiles/enemy_plasma_orb.gdshader")
+const VOXEL_PLASMA_SHADER: Shader = preload("res://effects/shaders/projectiles/voxel_enemy_plasma_orb.gdshader")
 const PLAYER_PROJECTILE_COLOR := Color(0.2, 1.0, 0.6, 1.0)
 const DEFAULT_BULLET_COLOR := Color(3.0, 0.8, 0.1, 1.0)
 var direction: Vector2 = Vector2.DOWN
@@ -16,6 +19,7 @@ var _is_despawning: bool = false
 func _ready() -> void:
 	if sprite.material != null:
 		sprite.material = sprite.material.duplicate(true)
+	_select_projectile_shader()
 	if has_meta("direction"):
 		direction = get_meta("direction")
 	if has_meta("custom_speed"):
@@ -60,7 +64,7 @@ func pool_activate(spawn_position: Vector2, new_direction: Vector2 = Vector2.DOW
 ## Gives every pooled orb a stable animation phase and resets its reflected
 ## state without allocating a new material on every shot.
 func _configure_projectile_shader(spawn_position: Vector2, reflected: bool) -> void:
-	var shader_material := sprite.material as ShaderMaterial
+	var shader_material := _select_projectile_shader()
 	if shader_material == null:
 		return
 	shader_material.set_shader_parameter(
@@ -68,6 +72,18 @@ func _configure_projectile_shader(spawn_position: Vector2, reflected: bool) -> v
 		fposmod(spawn_position.x * 0.053 + spawn_position.y * 0.031, TAU)
 	)
 	shader_material.set_shader_parameter(&"reflected_amount", 1.0 if reflected else 0.0)
+
+
+func _select_projectile_shader() -> ShaderMaterial:
+	var shader_material := sprite.material as ShaderMaterial
+	if shader_material == null:
+		return null
+	var voxel_enabled := ShipCatalog.voxel_style_enabled()
+	shader_material.shader = VOXEL_PLASMA_SHADER if voxel_enabled else PIXEL_PLASMA_SHADER
+	if voxel_enabled:
+		shader_material.set_shader_parameter(&"voxel_cell_scale", 8.0)
+		shader_material.set_shader_parameter(&"voxel_face_contrast", 0.16)
+	return shader_material
 
 ## Returns the enemy bullet to the pool after disabling its collision and
 ## physics so it can be safely reused later.

@@ -7,6 +7,9 @@ const ELITE_UPGRADE_SCENE := preload("res://ui/elite_upgrade_popup.tscn")
 const PAUSE_MENU_SCENE := preload("res://ui/pause_menu.tscn")
 const TRY_AGAIN_SCENE := preload("res://ui/try_again_popup.tscn")
 const EXPEDITION_VICTORY_SCENE := preload("res://ui/expedition_victory.tscn")
+const ShipCatalog := preload("res://effects/rendering/ship_render_catalog_3d.gd")
+const PIXEL_BACKGROUND_SHADER: Shader = preload("res://effects/shaders/galactic_starfield.gdshader")
+const VOXEL_BACKGROUND_SHADER: Shader = preload("res://effects/shaders/voxel_galactic_starfield.gdshader")
 
 const BACKGROUND_PALETTE_TRANSITION_DURATION := 2.4
 const BACKGROUND_EVOLUTION_PALETTES: Array[Dictionary] = [
@@ -92,6 +95,7 @@ var _boss_black_hole: Node2D = null
 func _ready() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	GameManager.start_game()
+	_configure_background_shader()
 	hud.update_all()
 	hud.layer = 10 # Lift above post-processing
 
@@ -229,6 +233,18 @@ func _ready() -> void:
 		add_child(_distort_layer)
 
 	_apply_visual_settings()
+
+
+func _configure_background_shader() -> void:
+	var shader_material := background.material as ShaderMaterial
+	if shader_material == null:
+		return
+	var voxel_enabled := ShipCatalog.voxel_style_enabled()
+	shader_material.shader = VOXEL_BACKGROUND_SHADER if voxel_enabled else PIXEL_BACKGROUND_SHADER
+	if voxel_enabled:
+		shader_material.set_shader_parameter("voxel_grid_size", 90.0)
+		shader_material.set_shader_parameter("voxel_palette_steps", 8.0)
+		shader_material.set_shader_parameter("voxel_edge_strength", 0.08)
 
 
 ## Sizes the shader host explicitly because its parent is a Node2D, which

@@ -1,0 +1,120 @@
+{
+  "schema_version": 1,
+  "project": {
+    "id": "redjack-corrupted-void-evolution",
+    "name": "Redjack Corrupted Void Evolution",
+    "purpose": "Reference-locked shader-evolution mockups for the Godot top-down space shooter enemy fleet.",
+    "audience": "Game design and rendering review; readable at small gameplay scale.",
+    "default_aspect_ratio": "1:1",
+    "notes": []
+  },
+  "visual_context_awareness": {
+    "enabled": true,
+    "coordinate_space": "normalized",
+    "origin": "top-left",
+    "box_format": "xyxy",
+    "point_format": "xy",
+    "default_point_radius": 0.03,
+    "generate_overlay": true
+  },
+  "style_lock": {
+    "medium": "Low-poly 3D spacecraft rendered through a pixel-locked Godot spatial shader.",
+    "rendering": "Crisp stepped/toon bands, near-black corrupted body planes, bright emissive reactor, restrained bloom, and nearest-neighbor low-resolution presentation.",
+    "line_and_edge": "Hard faceted edges with a dark inverted-hull separation band, palette-driven electric contour, and a one-sided violet/magenta fringe.",
+    "shape_language": "Compact, symmetrical, faceted enemy silhouettes with a pointed central fuselage, swept lateral wings, centered reactor, and small engine blocks.",
+    "palette": [
+      "Current archetype energy color drives the shadow tint and primary glow.",
+      "Current archetype accent color drives fractures, reactor highlights, and most of the contour.",
+      "Corrupted void shadow: #17032E; violet fringe: #E609FF; deep space separation: #020309; reactor highlights may reach white-hot.",
+      "Do not make cyan/lime the dominant enemy identity; those colors belong to the player treatment."
+    ],
+    "lighting": "Top-down arcade key light with high contrast; the reactor and silhouette edge emit while the body stays materially dark.",
+    "texture": "Pixel dithering, sparse scanlines, discrete material bands, and fracture/circuit marks that increase with generation.",
+    "composition": "One centered front-facing enemy per square panel against a consistent deep navy starfield, generous margin, no HUD or explanatory text.",
+    "must_not_change": [
+      "Preserve the Redjack outer silhouette, orientation, proportions, reactor placement, and engine-block placement across all four stages.",
+      "Preserve the current enemy palette roles; evolution changes shader intensity and complexity, not class identity.",
+      "Each stage must build on the previous stage with no abrupt model redesign or added geometry.",
+      "Keep the series readable at small gameplay size and distinct from the player's cyan/lime void silhouette."
+    ],
+    "avoid": [
+      "watermarks",
+      "unrequested text",
+      "unrequested redesigns",
+      "photorealism",
+      "smooth painterly gradients",
+      "extra weapons or geometry",
+      "generic fighter silhouettes",
+      "dominant cyan/lime enemy palettes"
+    ]
+  },
+  "style_profile": {
+    "id": "corrupted-void-violet",
+    "name": "Corrupted Void Violet",
+    "source": "hybrid",
+    "brief": "A near-black, palette-tinted enemy silhouette with a bright reactor, hard stepped facets, one-sided violet fringe, and escalating corrupted fracture energy.",
+    "application": "Apply the corrupted-void material language to the same enemy identity at four sequential evolution stages. Preserve geometry and current archetype colors; add only the declared shader delta for each stage.",
+    "must_preserve": [
+      "Redjack identity and exact silhouette",
+      "Current energy/accent color relationships",
+      "Pixel-locked edges and high-contrast reactor focus",
+      "Incremental evolution from the base treatment rather than four unrelated looks"
+    ]
+  },
+  "style_reference_images": [
+    {
+      "path": "references/style/corrupted-void-violet.png",
+      "role": "style_anchor",
+      "description": "Approved corrupted-void violet enemy treatment from the earlier shader comparison.",
+      "approved": true
+    }
+  ],
+  "characters": [
+    {
+      "id": "redjack-enemy",
+      "name": "Redjack Enemy",
+      "identity_lock": {
+        "silhouette": "A single pointed triangular spacecraft with a long central fuselage, two broad swept side wings, and two short rectangular engine blocks at the bottom edge.",
+        "proportions": "The central fuselage occupies roughly the middle half of the width and most of the height; the side wings extend symmetrically to either side; the reactor sits in the upper-middle third.",
+        "face_and_head": "Not applicable; the centered faceted reactor is the focal feature and must remain centered on the fuselage.",
+        "surface_details": "Low-poly faceted red hull panels, a faceted central reactor, dark engine blocks, and clean hard seams between the fuselage and wings.",
+        "palette": [
+          "Redjack base energy: current red energy palette, approximately #FF0920.",
+          "Redjack accent: current pale red/pink accent palette, approximately #FF94AD.",
+          "The reactor may retain a hot amber-to-white center as an authored focal surface while the shader edge follows the current class palette."
+        ],
+        "signature_features": [
+          "Pointed triangular fuselage",
+          "Symmetrical swept lateral wings",
+          "Centered diamond/hexagonal reactor",
+          "Two compact bottom engine blocks"
+        ],
+        "personality_read": "Hostile, direct, and disposable; the shader should make the enemy feel increasingly corrupted and dangerous without changing its silhouette.",
+        "must_not_change": [
+          "Do not change the Redjack silhouette or orientation.",
+          "Do not move, resize, duplicate, or remove the central reactor.",
+          "Do not add weapons, antennae, fins, or other geometry.",
+          "Do not replace the current red class palette with the player's cyan/lime palette."
+        ]
+      },
+      "costume_lock": {
+        "silhouette": "No costume; the spacecraft hull and its shader treatment are the subject.",
+        "pieces": [],
+        "materials": [],
+        "palette": [],
+        "accessories": [],
+        "must_not_change": []
+      },
+      "accessory_lock": [],
+      "object_lock": [],
+      "reference_images": [
+        {
+          "path": "references/characters/redjack-enemy/redjack-geometry-anchor.png",
+          "role": "identity_anchor",
+          "description": "Tight crop of the current Redjack Mk II model preview used as the fixed geometry reference; excludes presentation labels.",
+          "approved": true
+        }
+      ]
+    }
+  ]
+}

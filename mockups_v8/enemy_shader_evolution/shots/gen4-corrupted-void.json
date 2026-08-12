@@ -1,0 +1,60 @@
+{
+  "schema_version": 1,
+  "id": "gen4-corrupted-void",
+  "mode": "variant",
+  "status": "draft",
+  "characters": [
+    "redjack-enemy"
+  ],
+  "intent": "Gen IV apex corrupted void shader for the same Redjack enemy: preserve prior treatment, push the palette-tinted silhouette to near-black, add a dense layered void-breach network, pronounced violet/magenta interference, controlled scanline distortion, and an almost white-hot reactor core.",
+  "view_direction": "front",
+  "delta": {
+    "targeted_correction": "",
+    "canvas": "",
+    "expression": "",
+    "pose": "",
+    "action": "",
+    "camera_angle": "",
+    "framing": "",
+    "background": "",
+    "scene": "",
+    "lighting_override": "Same high-contrast top-down lighting as Gen III with apex-level reactor and interference bloom.",
+    "wardrobe_override": "",
+    "object_override": "",
+    "resolution": "",
+    "detail": "Build directly on Gen III without changing geometry: make the shader visibly unstable and distinct through layered void-breach detail—deep black panel voids beneath segmented red/pink fracture channels, branching multi-scale crack paths, offset ghost contours, sparse chromatic violet/magenta echoes, horizontal scanline bands, tiny phase-shifted pixel breaks, and localized energy shedding around the silhouette. The reactor should have a white-hot center, a red/pink containment layer, and a violet interference halo, while the outer hull remains readable and the corruption stays shader-driven rather than adding parts."
+  },
+  "allowed_changes": ["detail", "lighting_override"],
+  "object_overrides": [],
+  "placement_notes": [],
+  "reference_images": [],
+  "visual_context": null,
+  "constraints": [
+    "no watermark",
+    "no unrequested text",
+    "preserve the exact Redjack silhouette, reactor placement, wing geometry, engine blocks, scale, and orientation",
+    "use the existing Redjack red energy and pale red accent palette with violet as the corruption layer",
+    "one centered enemy on the same deep navy starfield treatment as the earlier stages",
+    "Gen IV must be the apex of the same material family, not a new model or unrelated effect"
+  ],
+  "avoid": [
+    "added geometry",
+    "weapons",
+    "player cyan/lime identity",
+    "overexposed bloom that erases the silhouette",
+    "flat uniform glow",
+    "fracture noise that destroys the Redjack silhouette",
+    "smooth painterly gradients",
+    "photorealism"
+  ],
+  "output": {
+    "asset_type": "Godot enemy shader mockup",
+    "aspect_ratio": "1:1",
+    "template_type": "single-asset",
+    "resolution_mode": "quick",
+    "detail_level": "standard",
+    "background_policy": "match-reference"
+  },
+  "render_group": null,
+  "board": null
+}

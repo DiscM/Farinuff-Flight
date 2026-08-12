@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "shot_id": "gen3-corrupted-void",
+  "mode": "variant",
+  "prompt": "prompts/gen3-corrupted-void.txt",
+  "prompt_sha256": "31815e35e31f5280c797fce8ef23cffac11e498d4ddeb9f7d756b027440493bb",
+  "manifest_sha256": "33172f51da8fc3f88a4361920693008be600604b0aa73dee095e0c2c8dcf5edd",
+  "shot_sha256": "9620ecd0bf7db4199b871318836c34fa814aba1bd106f8a0388ad357fb93a1a5",
+  "style_profile": {
+    "id": "corrupted-void-violet",
+    "name": "Corrupted Void Violet",
+    "source": "hybrid",
+    "brief": "A near-black, palette-tinted enemy silhouette with a bright reactor, hard stepped facets, one-sided violet fringe, and escalating corrupted fracture energy.",
+    "application": "Apply the corrupted-void material language to the same enemy identity at four sequential evolution stages. Preserve geometry and current archetype colors; add only the declared shader delta for each stage.",
+    "must_preserve": [
+      "Redjack identity and exact silhouette",
+      "Current energy/accent color relationships",
+      "Pixel-locked edges and high-contrast reactor focus",
+      "Incremental evolution from the base treatment rather than four unrelated looks"
+    ]
+  },
+  "visual_context": null,
+  "references": [
+    {
+      "index": 1,
+      "path": "references/characters/redjack-enemy/redjack-geometry-anchor.png",
+      "role": "identity_anchor",
+      "also_roles": [],
+      "description": "Tight crop of the current Redjack Mk II model preview used as the fixed geometry reference; excludes presentation labels.",
+      "sha256": "77c3ccbc7c8f8ca5501ec6f321f1be70cb73df2eeb0d29b0c33205c76e7bb761"
+    },
+    {
+      "index": 2,
+      "path": "references/style/corrupted-void-violet.png",
+      "role": "style_anchor",
+      "also_roles": [],
+      "description": "Approved corrupted-void violet enemy treatment from the earlier shader comparison.",
+      "sha256": "5fb1540f030d5197ab3883bbeb8a20f5e543ccc2d78b692e3e2acf4b564b22c4"
+    }
+  ]
+}
