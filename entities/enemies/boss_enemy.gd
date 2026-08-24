@@ -7,12 +7,12 @@ class_name BossEnemy
 ## hits-to-kill after the double-damage collision bug was fixed.)
 
 const TEMPEST_SECTION_SCRIPT := preload("res://entities/enemies/tempest_section.gd")
-const TEMPEST_CORE_TEXTURE := preload("res://assets/sprites/generated/tempest_core_idle_strip.png")
-const ASSAULT_TEXTURE := preload("res://assets/sprites/generated/boss_assault_idle_strip.png")
-const BULWARK_TEXTURE := preload("res://assets/sprites/generated/boss_bulwark_idle_strip.png")
-const TEMPEST_TEXTURE := preload("res://assets/sprites/generated/boss_tempest_idle_strip.png")
-const HARBINGER_TEXTURE := preload("res://assets/sprites/generated/boss_void_harbinger_idle_strip.png")
-const CORE_TEXTURE := preload("res://assets/sprites/generated/boss_tempest_core_idle_strip.png")
+const TEMPEST_CORE_TEXTURE := preload("res://assets/sprites/generated/v2p5d_boss_tempest_core_idle_strip.png")
+const ASSAULT_TEXTURE := preload("res://assets/sprites/generated/v2p5d_boss_assault_idle_strip.png")
+const BULWARK_TEXTURE := preload("res://assets/sprites/generated/v2p5d_boss_bulwark_idle_strip.png")
+const TEMPEST_TEXTURE := preload("res://assets/sprites/generated/v2p5d_boss_tempest_idle_strip.png")
+const HARBINGER_TEXTURE := preload("res://assets/sprites/generated/v2p5d_boss_void_harbinger_idle_strip.png")
+const CORE_TEXTURE := preload("res://assets/sprites/generated/v2p5d_boss_tempest_core_idle_strip.png")
 const BOSS_HEALTH_SCALE_MULTIPLIER: float = 0.7
 
 static var _telegraph_marker_texture: Texture2D
@@ -34,8 +34,8 @@ var move_timer: float = 0.0
 var move_target: Vector2 = Vector2.ZERO
 var strafe_angle: float = 0.0
 # Overwritten in _ready with the live viewport size; the default only guards
-# against reads before _ready and matches the 360x720 design viewport.
-var viewport_size: Vector2 = Vector2(360.0, 720.0)
+# against reads before _ready and matches the 1280x720 gameplay viewport.
+var viewport_size: Vector2 = Vector2(1280.0, 720.0)
 
 var is_telegraphing: bool = false
 var telegraph_timer: float = 0.0

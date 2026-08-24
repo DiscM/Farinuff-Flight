@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://7ln60ie1rip4" path="res://entities/player/player.gd" id="1_player"]
 [ext_resource type="Script" path="res://assets/sprites/generated/strip_animator.gd" id="2_strip_animator"]
-[ext_resource type="Texture2D" path="res://assets/sprites/generated/player_idle_strip.png" id="3_player_strip"]
+[ext_resource type="Texture2D" path="res://assets/sprites/generated/v2p5d_player_idle_strip.png" id="3_player_strip"]
 [ext_resource type="Script" path="res://entities/player/ship_upgrade_visuals.gd" id="4_upgrade_visuals"]
 [ext_resource type="Script" path="res://entities/player/ship_afterimage_cache.gd" id="5_afterimage_cache"]
 

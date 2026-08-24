@@ -12,7 +12,7 @@ var boss_enemy_scene: PackedScene = preload("res://entities/enemies/boss_enemy.t
 @onready var threat_director: ThreatDirector = $ThreatDirector
 @onready var special_attack_coordinator: SpecialAttackCoordinator = $SpecialAttackCoordinator
 
-var viewport_width := 360.0
+var viewport_width := 1280.0
 var viewport_height := 720.0
 var edge_padding := 34.0
 var spawn_distance := 80.0

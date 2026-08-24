@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "shot_id": "boss-palette-revisions",
+  "candidate": "assets/sprites/generated/v2p5d_boss_{tempest,tempest_core,void_harbinger}_idle_strip.png",
+  "decision": "approved",
+  "hard_failures": [],
+  "checks": {
+    "identity_silhouette": {"score": 2, "notes": "All three boss silhouettes, module counts, radial/crown geometry, and core placement remain unchanged."},
+    "identity_proportions": {"score": 2, "notes": "The 128x128 frame cells, 64x64 anchors, and compact gameplay extents are unchanged."},
+    "identity_surface_and_palette": {"score": 2, "notes": "Only palette was changed: Tempest storm cyan/blue, Tempest Core amber/gold, Void Harbinger spectral acid green."},
+    "identity_signature_features": {"score": 2, "notes": "Tempest radial modules, Tempest Core ring, and Void Harbinger pointed crown and side pods remain readable."},
+    "costume_construction": {"score": 2, "notes": "Hard-surface planes, recessed structure, and emissive core hierarchy remain coherent."},
+    "placement_and_handedness": {"score": 2, "notes": "No placement-locked accessories apply; all frames remain centered."},
+    "style_medium_and_rendering": {"score": 2, "notes": "Nearest-neighbor pixel finish, stepped toon bands, hard occlusion, and controlled halos remain consistent."},
+    "style_palette_texture_lighting": {"score": 2, "notes": "The three new palettes remain inside the approved deep-space pixel-fleet language while separating boss forms."},
+    "style_profile_application": {"score": 2, "notes": "The active written style profile remains applied; only the explicitly requested boss palette identities changed."},
+    "background_policy": {"score": 2, "notes": "All three strips retain transparent RGBA backgrounds."},
+    "requested_delta": {"score": 2, "notes": "The requested color separation is applied to both the sprite strips and live 3D render catalog."}
+  },
+  "unapproved_changes": [],
+  "next_action": "Keep the three palettes as the boss-family color lock for future effects and model material passes."
+}

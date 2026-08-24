@@ -1,0 +1,230 @@
+{
+  "schema_version": 1,
+  "project": {
+    "id": "farinuff-flight-25d-sprites",
+    "name": "Farinuff Flight 2.5D Sprite Direction",
+    "purpose": "Reference-lock the 2.5D pixel rendering direction and update the runtime player, enemy, and boss sprite families without losing role readability or the 1280x720 gameplay scale.",
+    "audience": "Game art, gameplay, and rendering implementation",
+    "default_aspect_ratio": "16:9",
+    "notes": [
+      "The supplied gameplay render is a style anchor only; current runtime strips are identity anchors.",
+      "Sprite output contract: 128x128 logical cells, 64x64 center anchor, four horizontal idle frames, true transparency.",
+      "Keep the player visually small enough to preserve playfield readability in the 1280x720 viewport."
+    ]
+  },
+  "visual_context_awareness": {
+    "enabled": true,
+    "coordinate_space": "normalized",
+    "origin": "top-left",
+    "box_format": "xyxy",
+    "point_format": "xy",
+    "default_point_radius": 0.03,
+    "generate_overlay": true
+  },
+  "style_lock": {
+    "medium": "Stylized low-poly 3D hard-surface spacecraft presented as crisp pixel-art sprite renders, with geometry readable through stepped planes rather than painterly brushwork.",
+    "rendering": "Nearest-neighbor pixel presentation with compact 4-5 step toon bands, selective one-pixel dithering, dark occlusion pockets, and controlled emissive bloom around engines, weapons, and reactor cores.",
+    "line_and_edge": "Hard faceted contours with a near-black navy outline or occlusion rim, stepped diagonal edges, pixel stair-stepping, and no anti-aliased vector linework.",
+    "shape_language": "Compact readable spacecraft built from pointed fuselages, swept wings, modular armor plates, inset reactor cores, and small engine blocks; each gameplay role receives a distinct silhouette before color is considered.",
+    "palette": [
+      "background and occlusion: near-black #020309 through deep navy #071129",
+      "player: ice white #D7EEFF, cyan #6BD7FF and electric cyan #00C8FF over dark navy structural planes",
+      "basic and assault: scarlet #FF3B24, ember orange #FF6B24, and reactor gold #FFC14D",
+      "fast: hot orange #FF8A24 with small cyan-white targeting accents",
+      "bomber: toxic green #6CFF7A, lime #B7FF4A, and restrained warm core highlights",
+      "sniper: cyan-blue #28BFFF with red-orange reactor contrast",
+      "tank and bosses: deep violet #35106E, electric purple #7A2BFF, magenta #FF3CCF, and white-hot reactor centers",
+      "powerups and high-value accents: gold #FFC04D or pink-white #FFB6F5"
+    ],
+    "lighting": "Cool cyan key light from upper left, deep violet fill and rim from the surrounding space, hard planar occlusion, and small white-hot emissive cores that bloom only a few pixels beyond the source.",
+    "texture": "Sparse pixel dithering, subtle CRT scanline breakup, tiny star-like specular pixels, and stepped emissive halos; surfaces remain clean and game-readable with no smooth photographic noise or soft gradients.",
+    "composition": "For sprite assets, one centered isolated spacecraft per logical frame on true transparency, with generous empty margin and a visually stable 64x64 anchor; gameplay staging belongs to the 1280x720 scene and must not be baked into the sprites.",
+    "must_not_change": [
+      "the existing runtime sprite families or their gameplay roles",
+      "the logical frame size, centered anchor, horizontal four-frame strip contract, or transparent background",
+      "the readable silhouette hierarchy between player, basic, fast, bomber, sniper, tank, and boss classes",
+      "the distinction between player cyan-white energy, enemy role colors, and the separate assault, bulwark, Tempest, Tempest Core, and Void Harbinger boss palettes",
+      "the user's 1280x720 gameplay viewport assumption"
+    ],
+    "avoid": [
+      "watermarks",
+      "unrequested text or UI baked into sprite assets",
+      "backgrounds, stars, planets, beams, or HUD elements in transparent sprites",
+      "photorealistic rendering, smooth gradients, painterly brushwork, or anti-aliased vector edges",
+      "overly large player or enemy silhouettes that reduce playfield readability",
+      "unrequested topology changes, extra weapons, or copied boss/player compositions from the style anchor"
+    ]
+  },
+  "style_profile": {
+    "id": "farinuff-25d-pixel-fleet",
+    "name": "Farinuff 2.5D Pixel Fleet",
+    "source": "hybrid",
+    "brief": "Low-poly 3D spacecraft translated into compact transparent pixel-art sprites: hard faceted planes, stepped toon shading, near-black silhouettes, and hot cyan, orange, green, or magenta emissive cores against the deep-space palette of the supplied gameplay render.",
+    "application": "Apply this visual treatment to every player, enemy, and boss sprite while preserving each existing runtime role, silhouette, proportions, generation family, frame anchor, and transparent sprite-strip layout.",
+    "must_preserve": [
+      "the supplied gameplay render as a style anchor for medium, rendering, palette relationships, edge treatment, texture, and lighting only",
+      "the current player and enemy sprite identities as separate identity anchors",
+      "128x128 logical frame cells, centered 64x64 anchors, four-frame horizontal strips, and transparent backgrounds",
+      "role-readable silhouettes and the existing player, enemy, and boss family distinctions"
+    ]
+  },
+  "style_reference_images": [
+    {
+      "path": "references/style/farinuff-25d-pixel-fleet-01-exec-59f3f7d9-9026-4477-9999-6bdaca55f5b0.png",
+      "role": "style_anchor",
+      "description": "User-approved 1280x720 gameplay render controlling the 2.5D low-poly spacecraft finish, deep-space contrast, cyan HUD-adjacent energy, violet boss materials, magenta emissive effects, crisp pixel edges, and small player read; do not copy its exact identities, layout, or object topology.",
+      "approved": true
+    }
+  ],
+  "characters": [
+    {
+      "id": "player-ship",
+      "name": "Player Ship",
+      "identity_lock": {
+        "silhouette": "Small compact forward-facing interceptor with a pointed central fuselage, short swept side wings, and a narrow lower engine cluster.",
+        "proportions": "Width slightly greater than height; the ship stays compact inside the frame with generous transparent margin so it reads as a small 1280x720 gameplay object.",
+        "face_and_head": "A centered dark cockpit/inset panel above a bright vertical cyan reactor or weapon channel; no humanoid face.",
+        "surface_details": "Light hull planes, dark navy recesses, small angular wing plates, and three compact cyan engine/energy points.",
+        "palette": ["ice white", "cool gray", "dark navy", "electric cyan"],
+        "signature_features": ["pointed interceptor nose", "short swept wings", "centered cyan energy channel", "compact triple-engine read"],
+        "personality_read": "Precise, agile, and player-readable at a glance.",
+        "must_not_change": ["small playfield footprint", "forward-facing silhouette", "centered cyan energy signature", "transparent four-frame strip contract"]
+      },
+      "costume_lock": {"silhouette": "", "pieces": [], "materials": [], "palette": [], "accessories": [], "must_not_change": []},
+      "accessory_lock": [],
+      "object_lock": [],
+      "reference_images": [
+        {"path": "references/characters/player-ship/current-runtime-strip.png", "role": "identity_anchor", "description": "Current runtime player strip; preserves the player silhouette, anchor, and frame spacing while the approved style changes the rendering finish.", "approved": true}
+      ]
+    },
+    {
+      "id": "basic-enemy",
+      "name": "Basic Enemy",
+      "identity_lock": {
+        "silhouette": "Small pointed red-orange enemy with a diamond-like nose, compact lateral fins, and a centered reactor.",
+        "proportions": "Short, symmetric, and slightly wider than tall; clearly smaller than bosses and distinct from the thin fast class.",
+        "face_and_head": "No face; a centered warm reactor aperture is the visual focal point.",
+        "surface_details": "Angular red hull wedges, ember-orange bevels, dark crimson recesses, and small side fins.",
+        "palette": ["scarlet", "ember orange", "dark crimson", "reactor gold"],
+        "signature_features": ["pointed diamond silhouette", "warm center reactor", "small swept side fins"],
+        "personality_read": "Common, direct, and aggressive.",
+        "must_not_change": ["red-orange role color", "compact pointed silhouette", "center reactor", "generation family identity"]
+      },
+      "costume_lock": {"silhouette": "", "pieces": [], "materials": [], "palette": [], "accessories": [], "must_not_change": []},
+      "accessory_lock": [],
+      "object_lock": [],
+      "reference_images": [
+        {"path": "references/characters/basic-enemy/current-gen1-strip.png", "role": "identity_anchor", "description": "Current basic enemy entry silhouette.", "approved": true},
+        {"path": "references/characters/basic-enemy/current-gen4-strip.png", "role": "continuity", "description": "Current evolved basic enemy silhouette and escalation reference.", "approved": true}
+      ]
+    },
+    {
+      "id": "fast-enemy",
+      "name": "Fast Enemy",
+      "identity_lock": {
+        "silhouette": "Very narrow elongated orange dart with a pointed nose, minimal side fins, and a small centered energy point.",
+        "proportions": "Tall and slim with a strong vertical axis; substantially narrower than basic, bomber, or tank classes.",
+        "face_and_head": "No face; a tiny high-contrast center or nose light communicates targeting and speed.",
+        "surface_details": "Long orange-red central body, tiny swept fins, bright cyan-white targeting accent, and dark underside.",
+        "palette": ["hot orange", "scarlet", "dark red", "cyan-white accent"],
+        "signature_features": ["needle-like silhouette", "minimal fins", "small targeting light"],
+        "personality_read": "Fast, sharp, and evasive.",
+        "must_not_change": ["thin dart profile", "orange speed-class identity", "small footprint", "vertical centerline"]
+      },
+      "costume_lock": {"silhouette": "", "pieces": [], "materials": [], "palette": [], "accessories": [], "must_not_change": []},
+      "accessory_lock": [],
+      "object_lock": [],
+      "reference_images": [
+        {"path": "references/characters/fast-enemy/current-gen1-strip.png", "role": "identity_anchor", "description": "Current fast enemy entry silhouette.", "approved": true},
+        {"path": "references/characters/fast-enemy/current-gen4-strip.png", "role": "continuity", "description": "Current evolved fast enemy silhouette and escalation reference.", "approved": true}
+      ]
+    },
+    {
+      "id": "bomber-enemy",
+      "name": "Bomber Enemy",
+      "identity_lock": {
+        "silhouette": "Broad green enemy with a wide wing or payload span, a compact central body, and visible side-mounted mass.",
+        "proportions": "Wider than tall with the largest lateral spread among regular enemies; retains a readable central core.",
+        "face_and_head": "No face; a pale central payload/reactor aperture sits inside the broad wing structure.",
+        "surface_details": "Green hull planes, lime highlights, heavy side plates or payload pods, and dark structural joints.",
+        "palette": ["toxic green", "lime", "deep green", "pale reactor"],
+        "signature_features": ["wide wing span", "central payload core", "heavy side mass"],
+        "personality_read": "Heavy, deliberate, and area-control oriented.",
+        "must_not_change": ["broad lateral silhouette", "green bomber identity", "center payload/core", "heavier visual mass than basic and fast"]
+      },
+      "costume_lock": {"silhouette": "", "pieces": [], "materials": [], "palette": [], "accessories": [], "must_not_change": []},
+      "accessory_lock": [],
+      "object_lock": [],
+      "reference_images": [
+        {"path": "references/characters/bomber-enemy/current-gen1-strip.png", "role": "identity_anchor", "description": "Current bomber enemy entry silhouette.", "approved": true},
+        {"path": "references/characters/bomber-enemy/current-gen4-strip.png", "role": "continuity", "description": "Current evolved bomber enemy silhouette and escalation reference.", "approved": true}
+      ]
+    },
+    {
+      "id": "sniper-enemy",
+      "name": "Sniper Enemy",
+      "identity_lock": {
+        "silhouette": "Tall narrow cyan-blue enemy with a pointed or antenna-like top, a long central body, and small stabilizer fins.",
+        "proportions": "Tall and slender, between fast and basic in width, with a strong vertical profile and clear centerline.",
+        "face_and_head": "No face; a small warm red-orange center aperture breaks the cool blue body.",
+        "surface_details": "Cyan and blue vertical planes, tiny top antenna/fins, dark body recesses, and a warm reactor/aiming core.",
+        "palette": ["cyan-blue", "deep blue", "dark navy", "red-orange core"],
+        "signature_features": ["long vertical profile", "top antenna/fins", "warm center aperture"],
+        "personality_read": "Controlled, precise, and dangerous at range.",
+        "must_not_change": ["narrow vertical silhouette", "cyan-blue sniper identity", "warm center contrast", "small stabilizer details"]
+      },
+      "costume_lock": {"silhouette": "", "pieces": [], "materials": [], "palette": [], "accessories": [], "must_not_change": []},
+      "accessory_lock": [],
+      "object_lock": [],
+      "reference_images": [
+        {"path": "references/characters/sniper-enemy/current-gen1-strip.png", "role": "identity_anchor", "description": "Current sniper enemy entry silhouette.", "approved": true},
+        {"path": "references/characters/sniper-enemy/current-gen4-strip.png", "role": "continuity", "description": "Current evolved sniper enemy silhouette and escalation reference.", "approved": true}
+      ]
+    },
+    {
+      "id": "tank-enemy",
+      "name": "Tank Enemy",
+      "identity_lock": {
+        "silhouette": "Bulky purple armored enemy with a wide blocky chassis, layered outer plates, and a centered circular or square reactor.",
+        "proportions": "Broad and heavy, with more armor mass and lower visual speed than all regular classes.",
+        "face_and_head": "No face; the bright central reactor aperture sits deep inside a dark armored housing.",
+        "surface_details": "Deep-violet armor slabs, electric-purple bevels, dark occlusion between plates, and compact lower engine blocks.",
+        "palette": ["deep violet", "electric purple", "near-black violet", "white-cyan or pink reactor"],
+        "signature_features": ["blocky armored mass", "layered plates", "inset central reactor", "lower engine blocks"],
+        "personality_read": "Slow, durable, and imposing.",
+        "must_not_change": ["broad armored chassis", "purple tank identity", "inset center reactor", "heaviest regular-enemy read"]
+      },
+      "costume_lock": {"silhouette": "", "pieces": [], "materials": [], "palette": [], "accessories": [], "must_not_change": []},
+      "accessory_lock": [],
+      "object_lock": [],
+      "reference_images": [
+        {"path": "references/characters/tank-enemy/current-gen1-strip.png", "role": "identity_anchor", "description": "Current tank enemy entry silhouette.", "approved": true},
+        {"path": "references/characters/tank-enemy/current-gen4-strip.png", "role": "continuity", "description": "Current evolved tank enemy silhouette and escalation reference.", "approved": true}
+      ]
+    },
+    {
+      "id": "boss-enemy",
+      "name": "Boss Enemy Family",
+      "identity_lock": {
+        "silhouette": "Large mechanically layered boss family built from a dominant central core and readable radial, shield, or pointed modules depending on the current boss form.",
+        "proportions": "Substantially larger and more complex than regular enemies, but still centered and legible in the playfield with a clear outer contour.",
+        "face_and_head": "No face; the central reactor or weapon aperture is the boss focal point and remains the brightest anchor.",
+        "surface_details": "Faceted dark-violet armor, near-black recessed planes, form-specific energy channels, modular side weapons, radial plates, and controlled white-hot cores.",
+        "palette": ["deep violet structure", "near-black recesses", "assault scarlet/ember", "bulwark violet/magenta", "Tempest storm cyan/blue", "Tempest Core amber/gold", "Void Harbinger spectral acid green", "white-hot cores"],
+        "signature_features": ["dominant center core", "layered boss modules", "form-specific energy color", "distinct assault/bulwark/tempest/void forms"],
+        "personality_read": "Threatening, engineered, and high-value.",
+        "must_not_change": ["dark-violet structural family", "center-core hierarchy", "distinct current boss forms", "distinct per-form palette identities", "larger visual mass than regular enemies"]
+      },
+      "costume_lock": {"silhouette": "", "pieces": [], "materials": [], "palette": [], "accessories": [], "must_not_change": []},
+      "accessory_lock": [],
+      "object_lock": [],
+      "reference_images": [
+        {"path": "references/characters/boss-enemy/current-assault-strip.png", "role": "identity_anchor", "description": "Current assault boss form.", "approved": true},
+        {"path": "references/characters/boss-enemy/current-bulwark-strip.png", "role": "continuity", "description": "Current bulwark boss form.", "approved": true},
+        {"path": "references/characters/boss-enemy/current-tempest-strip.png", "role": "continuity", "description": "Current tempest boss form.", "approved": true},
+        {"path": "references/characters/boss-enemy/current-tempest-core-strip.png", "role": "continuity", "description": "Current tempest core boss form.", "approved": true},
+        {"path": "references/characters/boss-enemy/current-void-harbinger-strip.png", "role": "continuity", "description": "Current void harbinger boss form.", "approved": true}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "id": "boss-void-harbinger-palette-revision",
+  "mode": "revision",
+  "status": "approved",
+  "characters": [
+    "boss-enemy"
+  ],
+  "intent": "Palette-only revision for the Void Harbinger: spectral acid green energy over the locked silhouette.",
+  "view_direction": "",
+  "delta": {
+    "targeted_correction": "Change palette only: spectral acid green and emerald energy over near-black indigo structure; preserve every silhouette, module, core placement, frame, and transparent pixel outside the recolor.",
+    "canvas": "",
+    "expression": "",
+    "pose": "",
+    "action": "",
+    "camera_angle": "",
+    "framing": "",
+    "background": "",
+    "scene": "",
+    "lighting_override": "",
+    "wardrobe_override": "",
+    "object_override": "",
+    "resolution": "",
+    "detail": ""
+  },
+  "allowed_changes": ["targeted_correction"],
+  "object_overrides": [],
+  "placement_notes": [],
+  "reference_images": [
+    {"path": "assets/sprites/generated/v2p5d_boss_void_harbinger_idle_strip.png", "role": "edit_target", "description": "Current approved Void Harbinger strip; identity and pixel placement authority.", "approved": true},
+    {"path": "references/characters/boss-enemy/current-void-harbinger-strip.png", "role": "identity_anchor", "description": "Original Void Harbinger pointed crown and side-weapon layout.", "approved": true}
+  ],
+  "visual_context": null,
+  "constraints": [
+    "no watermark",
+    "no unrequested text"
+  ],
+  "avoid": [],
+  "output": {
+    "asset_type": "character illustration",
+    "aspect_ratio": "project default",
+    "template_type": "single-asset",
+    "resolution_mode": "quick",
+    "detail_level": "low",
+    "background_policy": "transparent"
+  },
+  "render_group": null,
+  "board": null
+}

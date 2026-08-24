@@ -5,10 +5,10 @@
 [ext_resource type="Script" path="res://entities/enemies/enemy_evolution_controller.gd" id="3"]
 [ext_resource type="Script" path="res://entities/enemies/enemy_evolution_stage.gd" id="4"]
 [ext_resource type="Script" path="res://entities/enemies/enemy_ability.gd" id="5"]
-[ext_resource type="Texture2D" path="res://assets/sprites/generated/fast_enemy_gen1_idle_strip.png" id="6"]
-[ext_resource type="Texture2D" path="res://assets/sprites/generated/fast_enemy_gen2_idle_strip.png" id="7"]
-[ext_resource type="Texture2D" path="res://assets/sprites/generated/fast_enemy_gen3_idle_strip.png" id="8"]
-[ext_resource type="Texture2D" path="res://assets/sprites/generated/fast_enemy_gen4_idle_strip.png" id="9"]
+[ext_resource type="Texture2D" path="res://assets/sprites/generated/v2p5d_fast_enemy_gen1_idle_strip.png" id="6"]
+[ext_resource type="Texture2D" path="res://assets/sprites/generated/v2p5d_fast_enemy_gen1_idle_strip.png" id="7"]
+[ext_resource type="Texture2D" path="res://assets/sprites/generated/v2p5d_fast_enemy_gen1_idle_strip.png" id="8"]
+[ext_resource type="Texture2D" path="res://assets/sprites/generated/v2p5d_fast_enemy_gen1_idle_strip.png" id="9"]
 
 [sub_resource type="RectangleShape2D" id="shape1"]
 size = Vector2(20, 20)

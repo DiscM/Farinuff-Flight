@@ -1,0 +1,72 @@
+Use case: identity-preserve
+Asset type: character illustration
+Operation: revision
+Primary request: Palette-only revision for the Tempest boss: storm cyan and blue energy over the locked silhouette.
+Input images (use in this exact order):
+- Image 1: edit_target; Current approved Tempest strip; identity and pixel placement authority.; file: assets/sprites/generated/v2p5d_boss_tempest_idle_strip.png
+- Image 2: identity_anchor, continuity; Original Tempest family silhouette and module layout.; file: references/characters/boss-enemy/current-tempest-strip.png
+- Image 3: identity_anchor; Current assault boss form.; file: references/characters/boss-enemy/current-assault-strip.png
+- Image 4: style_anchor; User-approved 1280x720 gameplay render controlling the 2.5D low-poly spacecraft finish, deep-space contrast, cyan HUD-adjacent energy, violet boss materials, magenta emissive effects, crisp pixel edges, and small player read; do not copy its exact identities, layout, or object topology.; file: references/style/farinuff-25d-pixel-fleet-01-exec-59f3f7d9-9026-4477-9999-6bdaca55f5b0.png
+- Image 5: continuity; Current bulwark boss form.; file: references/characters/boss-enemy/current-bulwark-strip.png
+- Image 6: continuity; Current void harbinger boss form.; file: references/characters/boss-enemy/current-void-harbinger-strip.png
+Reference authority:
+- Edit targets control pixels and composition that must remain unchanged during revision.
+- Canvas-grounding images control target dimensions and exact 1:1 source placement during outpainting; transparent pixels are the only expansion area.
+- Visual-context overlays and coordinates localize the user's words only; never copy their markers into the output.
+- Identity anchors control canonical identity; turnaround/expression references refine the relevant view.
+- Style anchors control medium, palette relationships, edges, texture, and rendering.
+- Lower-priority composition or continuity references must not redesign identity or style.
+Identity lock — Boss Enemy Family (boss-enemy):
+- silhouette: Large mechanically layered boss family built from a dominant central core and readable radial, shield, or pointed modules depending on the current boss form.
+- proportions: Substantially larger and more complex than regular enemies, but still centered and legible in the playfield with a clear outer contour.
+- face/head geometry: No face; the central reactor or weapon aperture is the boss focal point and remains the brightest anchor.
+- surface and markings: Faceted purple armor, near-black recessed planes, magenta energy channels, modular side weapons, radial plates, and controlled white-hot cores.
+- character color placement: deep violet; electric purple; magenta; near-black; white-hot core; restrained orange weapon accents
+- signature features: dominant center core; layered boss modules; violet-magenta energy; distinct assault/bulwark/tempest/void forms
+- personality read: Threatening, engineered, and high-value.
+- hard locks: violet-magenta boss family; center-core hierarchy; distinct current boss forms; larger visual mass than regular enemies
+Style application profile — Farinuff 2.5D Pixel Fleet (farinuff-25d-pixel-fleet):
+- source: hybrid
+- style brief: Low-poly 3D spacecraft translated into compact transparent pixel-art sprites: hard faceted planes, stepped toon shading, near-black silhouettes, and hot cyan, orange, green, or magenta emissive cores against the deep-space palette of the supplied gameplay render.
+- application rule: Apply this visual treatment to every player, enemy, and boss sprite while preserving each existing runtime role, silhouette, proportions, generation family, frame anchor, and transparent sprite-strip layout.
+- style-transfer invariants: the supplied gameplay render as a style anchor for medium, rendering, palette relationships, edge treatment, texture, and lighting only; the current player and enemy sprite identities as separate identity anchors; 128x128 logical frame cells, centered 64x64 anchors, four-frame horizontal strips, and transparent backgrounds; role-readable silhouettes and the existing player, enemy, and boss family distinctions
+- Apply this profile to the rendered subject and every generated shot.
+- Style references control medium, rendering, palette, edges, texture, lighting, and brush behavior only.
+- Do not copy identity, anatomy, objects, accessory placement, pose, or composition from a style reference unless the written locks explicitly request it.
+- Preserve the character identity lock, costume lock, required objects, and subject-space placement locks while transferring the style.
+Style lock:
+- medium: Stylized low-poly 3D hard-surface spacecraft presented as crisp pixel-art sprite renders, with geometry readable through stepped planes rather than painterly brushwork.
+- rendering: Nearest-neighbor pixel presentation with compact 4-5 step toon bands, selective one-pixel dithering, dark occlusion pockets, and controlled emissive bloom around engines, weapons, and reactor cores.
+- line and edge behavior: Hard faceted contours with a near-black navy outline or occlusion rim, stepped diagonal edges, pixel stair-stepping, and no anti-aliased vector linework.
+- shape language: Compact readable spacecraft built from pointed fuselages, swept wings, modular armor plates, inset reactor cores, and small engine blocks; each gameplay role receives a distinct silhouette before color is considered.
+- series palette: background and occlusion: near-black #020309 through deep navy #071129; player: ice white #D7EEFF, cyan #6BD7FF and electric cyan #00C8FF over dark navy structural planes; basic and assault: scarlet #FF3B24, ember orange #FF6B24, and reactor gold #FFC14D; fast: hot orange #FF8A24 with small cyan-white targeting accents; bomber: toxic green #6CFF7A, lime #B7FF4A, and restrained warm core highlights; sniper: cyan-blue #28BFFF with red-orange reactor contrast; tank and bosses: deep violet #35106E, electric purple #7A2BFF, magenta #FF3CCF, and white-hot reactor centers; powerups and high-value accents: gold #FFC04D or pink-white #FFB6F5
+- lighting convention: Cool cyan key light from upper left, deep violet fill and rim from the surrounding space, hard planar occlusion, and small white-hot emissive cores that bloom only a few pixels beyond the source.
+- texture/brushwork: Sparse pixel dithering, subtle CRT scanline breakup, tiny star-like specular pixels, and stepped emissive halos; surfaces remain clean and game-readable with no smooth photographic noise or soft gradients.
+- composition convention: For sprite assets, one centered isolated spacecraft per logical frame on true transparency, with generous empty margin and a visually stable 64x64 anchor; gameplay staging belongs to the 1280x720 scene and must not be baked into the sprites.
+- hard locks: the existing runtime sprite families or their gameplay roles; the logical frame size, centered anchor, horizontal four-frame strip contract, or transparent background; the readable silhouette hierarchy between player, basic, fast, bomber, sniper, tank, and boss classes; the distinction between player cyan-white energy, enemy role colors, and boss violet-magenta energy; the user's 1280x720 gameplay viewport assumption
+Requested delta (the only intended changes):
+- targeted correction: Change palette only: storm cyan and blue energy over deep indigo structure; preserve every silhouette, module, core placement, frame, and transparent pixel outside the recolor.
+Allowed changes: targeted correction
+Constraints:
+- Preserve every identity, costume/construction, and style hard lock not explicitly allowed to change.
+- Do not average conflicting references or invent a redesign.
+- Keep topology, color placement, signature details, and material behavior coherent under occlusion and perspective.
+- This is the same canonical character, not a reinterpretation or lookalike.
+- Change only the named defect; keep all other pixels, composition, and design unchanged as far as the edit tool permits.
+- no watermark
+- no unrequested text
+Avoid:
+- watermarks
+- unrequested text or UI baked into sprite assets
+- backgrounds, stars, planets, beams, or HUD elements in transparent sprites
+- photorealistic rendering, smooth gradients, painterly brushwork, or anti-aliased vector edges
+- overly large player or enemy silhouettes that reduce playfield readability
+- unrequested topology changes, extra weapons, or copied boss/player compositions from the style anchor
+Resolution mode: quick
+Detail level: low
+Resolution policy: Use a fast lower-resolution first pass; prioritize silhouette, identity, style, placement, and large readable forms. Do not upscale or add micro-detail.
+Aspect ratio: 16:9
+Background policy: transparent
+- Isolate the subject on a transparent/alpha background with no painted environment, backdrop, floor plane, paper, vignette, or cast shadow unless an explicit identity/style lock requires it.
+- Prefer a true transparent PNG when the provider supports alpha. If the provider cannot return alpha, report that limitation and use the cleanest removable isolation available; do not silently substitute a white background.
+Output intent: produce one candidate image for this shot; no contact sheet, alternatives, labels, or explanatory text unless explicitly requested.

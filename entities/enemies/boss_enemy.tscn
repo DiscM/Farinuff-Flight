@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://entities/enemies/boss_enemy.gd" id="1"]
 [ext_resource type="Script" path="res://assets/sprites/generated/strip_animator.gd" id="2"]
-[ext_resource type="Texture2D" path="res://assets/sprites/generated/boss_assault_idle_strip.png" id="3"]
+[ext_resource type="Texture2D" path="res://assets/sprites/generated/v2p5d_boss_assault_idle_strip.png" id="3"]
 
 [sub_resource type="RectangleShape2D" id="shape"]
 size = Vector2(76, 88)

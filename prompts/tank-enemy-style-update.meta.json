@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "shot_id": "tank-enemy-style-update",
+  "mode": "variant",
+  "prompt": "prompts/tank-enemy-style-update.txt",
+  "prompt_sha256": "13389348464d5a86b498bf3226e884aff3d8f7d98af5252dc50223fa9ff8343d",
+  "manifest_sha256": "d8c1c4fc15b72c4f81cf1e9b123b68ee010f08a617e36f57fc8cca840bd5043d",
+  "shot_sha256": "797a3aa821563ee600ec5a7506aa2cbce6aa1141a88a27916944fd01856e8ca8",
+  "style_profile": {
+    "id": "farinuff-25d-pixel-fleet",
+    "name": "Farinuff 2.5D Pixel Fleet",
+    "source": "hybrid",
+    "brief": "Low-poly 3D spacecraft translated into compact transparent pixel-art sprites: hard faceted planes, stepped toon shading, near-black silhouettes, and hot cyan, orange, green, or magenta emissive cores against the deep-space palette of the supplied gameplay render.",
+    "application": "Apply this visual treatment to every player, enemy, and boss sprite while preserving each existing runtime role, silhouette, proportions, generation family, frame anchor, and transparent sprite-strip layout.",
+    "must_preserve": [
+      "the supplied gameplay render as a style anchor for medium, rendering, palette relationships, edge treatment, texture, and lighting only",
+      "the current player and enemy sprite identities as separate identity anchors",
+      "128x128 logical frame cells, centered 64x64 anchors, four-frame horizontal strips, and transparent backgrounds",
+      "role-readable silhouettes and the existing player, enemy, and boss family distinctions"
+    ]
+  },
+  "visual_context": null,
+  "references": [
+    {
+      "index": 1,
+      "path": "references/characters/tank-enemy/current-gen1-strip.png",
+      "role": "identity_anchor",
+      "also_roles": [],
+      "description": "Current tank enemy entry silhouette.",
+      "sha256": "57ee740c85a0ff2fcb1bdc09284ca0f8faadcac083978dd03c94f13bcf0b42ca"
+    },
+    {
+      "index": 2,
+      "path": "references/style/farinuff-25d-pixel-fleet-01-exec-59f3f7d9-9026-4477-9999-6bdaca55f5b0.png",
+      "role": "style_anchor",
+      "also_roles": [],
+      "description": "User-approved 1280x720 gameplay render controlling the 2.5D low-poly spacecraft finish, deep-space contrast, cyan HUD-adjacent energy, violet boss materials, magenta emissive effects, crisp pixel edges, and small player read; do not copy its exact identities, layout, or object topology.",
+      "sha256": "a0ce2b1b622ed72fe612bdc8d475791af637b44bbf0475d50f656796ebe07a1f"
+    },
+    {
+      "index": 3,
+      "path": "references/characters/tank-enemy/current-gen4-strip.png",
+      "role": "continuity",
+      "also_roles": [],
+      "description": "Current evolved tank enemy silhouette and escalation reference.",
+      "sha256": "690793eab4c78da1f64e2faa60f61d298341b85bd30257a1cb3c62c73144f4e2"
+    }
+  ]
+}

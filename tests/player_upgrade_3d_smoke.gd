@@ -406,12 +406,12 @@ func _count_triangles(meshes: Array[MeshInstance3D]) -> int:
 				surface_index
 			)
 			if index_count > 0:
-			triangles += floori(float(index_count) / 3.0)
+				triangles += floori(float(index_count) / 3.0)
 			else:
 				var vertex_count: int = mesh_instance.mesh.surface_get_array_len(
 					surface_index
 				)
-			triangles += floori(float(vertex_count) / 3.0)
+				triangles += floori(float(vertex_count) / 3.0)
 	return triangles
 
 

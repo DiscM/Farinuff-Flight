@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "shot_id": "",
+  "candidate": "",
+  "decision": "pending",
+  "hard_failures": [],
+  "checks": {
+    "identity_silhouette": {"score": null, "notes": ""},
+    "identity_proportions": {"score": null, "notes": ""},
+    "identity_face_and_head": {"score": null, "notes": ""},
+    "identity_surface_and_palette": {"score": null, "notes": ""},
+    "identity_signature_features": {"score": null, "notes": ""},
+    "costume_construction": {"score": null, "notes": ""},
+    "subject_objects": {"score": null, "notes": ""},
+    "placement_and_handedness": {"score": null, "notes": ""},
+    "style_medium_and_rendering": {"score": null, "notes": ""},
+    "style_edges_and_shapes": {"score": null, "notes": ""},
+    "style_palette_texture_lighting": {"score": null, "notes": ""},
+    "style_profile_application": {"score": null, "notes": ""},
+    "visual_context_localization": {"score": null, "notes": ""},
+    "canvas_grounding": {"score": null, "notes": ""},
+    "background_policy": {"score": null, "notes": ""},
+    "requested_delta": {"score": null, "notes": ""}
+  },
+  "unapproved_changes": [],
+  "next_action": ""
+}
