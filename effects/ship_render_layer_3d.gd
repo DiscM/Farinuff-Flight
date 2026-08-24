@@ -45,7 +45,7 @@ const RENDER_OVERSCAN_PIXELS := Catalog.RENDER_OVERSCAN_PIXELS
 var _proxies: Dictionary = {}
 var _materials := MaterialLibrary.new()
 var _synchronizer := VisualSynchronizer.new()
-var _viewport_rect := Rect2(Vector2.ZERO, Vector2(360.0, 720.0))
+var _viewport_rect := Rect2(Vector2.ZERO, Vector2(1280.0, 720.0))
 
 
 func _ready() -> void:

@@ -8,8 +8,8 @@ var drift_dir: float = 1.0
 var drop_interval: float = 2.0
 var drop_timer: float = 0.0
 # Overwritten in _ready with the live viewport size; the default only guards
-# against reads before _ready and matches the 360x720 design viewport.
-var viewport_size: Vector2 = Vector2(360.0, 720.0)
+# against reads before _ready and matches the 1280x720 gameplay viewport.
+var viewport_size: Vector2 = Vector2(1280.0, 720.0)
 var mine_timer := 5.0
 var mine_count := 0
 

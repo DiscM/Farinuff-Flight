@@ -1,0 +1,7 @@
+Use case: precise-object-edit
+Asset type: controlled revision of the bomber enemy 3D concept render
+Input image: bomber-enemy.png as the sole edit target
+Requested change: replace only the existing central reactor treatment with the shared enemy core design: a recessed circular armored housing, concentric segmented bezel, bright white-hot center, and tight amber/gold energy ring.
+Preserve: outer silhouette, wings, side payload pods, engine clusters, armor panels outside the reactor bay, camera, composition, green/lime palette, lighting, and background.
+Avoid: second reactor, extra weapons, altered proportions, changed camera, new ships, text, UI, or a floating/unattached core.
+Status: pending-user-review

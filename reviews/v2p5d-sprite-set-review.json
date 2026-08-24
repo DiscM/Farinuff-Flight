@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "shot_id": "v2p5d-sprite-set",
+  "candidate": "assets/sprites/generated/v2p5d_*_idle_strip.png",
+  "decision": "approved",
+  "hard_failures": [],
+  "checks": {
+    "identity_silhouette": {"score": 2, "notes": "Each player, regular-enemy, and boss candidate preserves its current family silhouette and role read."},
+    "identity_proportions": {"score": 2, "notes": "Logical frame contract and compact gameplay footprint are preserved; the player remains intentionally small."},
+    "identity_face_and_head": {"score": 2, "notes": "No humanoid faces were introduced; cockpit, reactor, and aperture landmarks remain role-specific."},
+    "identity_surface_and_palette": {"score": 2, "notes": "Current role color relationships are preserved and translated into the approved palette."},
+    "identity_signature_features": {"score": 2, "notes": "Pointed, narrow, broad, tall, armored, radial, and spiked signatures remain distinct."},
+    "costume_construction": {"score": 2, "notes": "For spacecraft, construction layers and attached modules remain coherent; no unrelated accessories were added."},
+    "subject_objects": {"score": 2, "notes": "No separately locked subject objects apply to this sprite set."},
+    "placement_and_handedness": {"score": 2, "notes": "No placement-locked accessories apply; all sprites remain centered on the 64x64 anchor."},
+    "style_medium_and_rendering": {"score": 2, "notes": "Low-poly hard-surface construction, stepped toon bands, and nearest-neighbor pixel finish are visible."},
+    "style_edges_and_shapes": {"score": 2, "notes": "Faceted contours, dark occlusion rims, stepped diagonals, and compact role silhouettes hold at logical size."},
+    "style_palette_texture_lighting": {"score": 2, "notes": "Cyan/violet lighting, role-coded emissive cores, sparse dithering, and controlled glow match the approved style anchor."},
+    "style_profile_application": {"score": 2, "notes": "The supplied gameplay image transfers rendering language only; its HUD, scene layout, planets, beam, and exact identities are not copied."},
+    "visual_context_localization": {"score": null, "notes": "No visual-context overlay was used."},
+    "canvas_grounding": {"score": null, "notes": "No canvas expansion was used."},
+    "background_policy": {"score": 2, "notes": "All versioned runtime strips are RGBA with true transparency outside the isolated spacecraft."},
+    "requested_delta": {"score": 2, "notes": "The requested reference-locked style update is applied and wired into the runtime scenes."}
+  },
+  "unapproved_changes": [],
+  "next_action": "Run the 1280x720 Godot playtest and tune only scale or collision if the live combat read requires it."
+}

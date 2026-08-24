@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "id": "farinuff-25d-pixel-fleet",
+  "name": "Farinuff 2.5D Pixel Fleet",
+  "source": "hybrid",
+  "brief": "Low-poly 3D spacecraft translated into compact transparent pixel-art sprites: hard faceted planes, stepped toon shading, near-black silhouettes, and hot cyan, orange, green, or magenta emissive cores against the deep-space palette of the supplied gameplay render.",
+  "application": "Apply this visual treatment to every player, enemy, and boss sprite while preserving each existing runtime role, silhouette, proportions, generation family, frame anchor, and transparent sprite-strip layout.",
+  "must_preserve": [
+    "the supplied gameplay render as a style anchor for medium, rendering, palette relationships, edge treatment, texture, and lighting only",
+    "the current player and enemy sprite identities as separate identity anchors",
+    "128x128 logical frame cells, centered 64x64 anchors, four-frame horizontal strips, and transparent backgrounds",
+    "role-readable silhouettes and the existing player, enemy, and boss family distinctions"
+  ],
+  "lock": {
+    "medium": "Stylized low-poly 3D hard-surface spacecraft presented as crisp pixel-art sprite renders, with geometry readable through stepped planes rather than painterly brushwork.",
+    "rendering": "Nearest-neighbor pixel presentation with compact 4-5 step toon bands, selective one-pixel dithering, dark occlusion pockets, and controlled emissive bloom around engines, weapons, and reactor cores.",
+    "line_and_edge": "Hard faceted contours with a near-black navy outline or occlusion rim, stepped diagonal edges, pixel stair-stepping, and no anti-aliased vector linework.",
+    "shape_language": "Compact readable spacecraft built from pointed fuselages, swept wings, modular armor plates, inset reactor cores, and small engine blocks; each gameplay role receives a distinct silhouette before color is considered.",
+    "palette": [
+      "background and occlusion: near-black #020309 through deep navy #071129",
+      "player: ice white #D7EEFF, cyan #6BD7FF and electric cyan #00C8FF over dark navy structural planes",
+      "basic and assault: scarlet #FF3B24, ember orange #FF6B24, and reactor gold #FFC14D",
+      "fast: hot orange #FF8A24 with small cyan-white targeting accents",
+      "bomber: toxic green #6CFF7A, lime #B7FF4A, and restrained warm core highlights",
+      "sniper: cyan-blue #28BFFF with red-orange reactor contrast",
+      "tank and boss structure: deep violet #35106E, electric purple #7A2BFF, and near-black recessed planes",
+      "boss form accents: assault scarlet/ember, bulwark violet/magenta, Tempest storm cyan/blue, Tempest Core amber/gold, Void Harbinger spectral acid green, all with white-hot reactor centers",
+      "powerups and high-value accents: gold #FFC04D or pink-white #FFB6F5"
+    ],
+    "lighting": "Cool cyan key light from upper left, deep violet fill and rim from the surrounding space, hard planar occlusion, and small white-hot emissive cores that bloom only a few pixels beyond the source.",
+    "texture": "Sparse pixel dithering, subtle CRT scanline breakup, tiny star-like specular pixels, and stepped emissive halos; surfaces remain clean and game-readable with no smooth photographic noise or soft gradients.",
+    "composition": "For sprite assets, one centered isolated spacecraft per logical frame on true transparency, with generous empty margin and a visually stable 64x64 anchor; gameplay staging belongs to the 1280x720 scene and must not be baked into the sprites.",
+    "must_not_change": [
+      "the existing runtime sprite families or their gameplay roles",
+      "the logical frame size, centered anchor, horizontal four-frame strip contract, or transparent background",
+      "the readable silhouette hierarchy between player, basic, fast, bomber, sniper, tank, and boss classes",
+      "the distinction between player cyan-white energy, enemy role colors, and the separate assault, bulwark, Tempest, Tempest Core, and Void Harbinger boss palettes",
+      "the user's 1280x720 gameplay viewport assumption"
+    ],
+    "avoid": [
+      "watermarks",
+      "unrequested text or UI baked into sprite assets",
+      "backgrounds, stars, planets, beams, or HUD elements in transparent sprites",
+      "photorealistic rendering, smooth gradients, painterly brushwork, or anti-aliased vector edges",
+      "overly large player or enemy silhouettes that reduce playfield readability",
+      "unrequested topology changes, extra weapons, or copied boss/player compositions from the style anchor"
+    ]
+  },
+  "reference_images": [
+    {
+      "path": "/Users/steve/.codex/generated_images/01a03150-f51b-78d1-b21f-b35532a82e94/exec-59f3f7d9-9026-4477-9999-6bdaca55f5b0.png",
+      "role": "style_anchor",
+      "description": "User-approved 1280x720 gameplay render controlling the 2.5D low-poly spacecraft finish, deep-space contrast, cyan HUD-adjacent energy, violet boss materials, magenta emissive effects, crisp pixel edges, and small player read; do not copy its exact identities, layout, or object topology."
+    }
+  ]
+}

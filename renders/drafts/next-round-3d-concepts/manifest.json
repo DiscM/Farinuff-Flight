@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "set_id": "next-round-3d-concepts",
+  "status": "pending-user-review",
+  "purpose": "Visual silhouette review before rebuilding approved designs as GLB meshes and wiring them into the 3D render layer.",
+  "generator": "Codex built-in image_gen",
+  "style_source": "STYLE_REFERENCE.md and style-profile.json (written locks)",
+  "runtime_ready": false,
+  "runtime_contract": {
+    "model_format": "GLB",
+    "sprite_contract": "128x128 logical cells, four-frame horizontal strips, true transparency",
+    "current_drafts_are": "raster concept renders with inconsistent backgrounds and no animation strip"
+  },
+  "assets": [
+    {"id": "player-interceptor", "file": "player-interceptor.png", "role": "compact cyan-white interceptor"},
+    {"id": "basic-enemy", "file": "basic-enemy.png", "role": "scarlet pointed common attacker"},
+    {"id": "fast-enemy", "file": "fast-enemy.png", "role": "narrow hot-orange dart"},
+    {"id": "bomber-enemy", "file": "bomber-enemy.png", "role": "broad toxic-green payload carrier"},
+    {"id": "sniper-enemy", "file": "sniper-enemy.png", "role": "tall cyan-blue precision enemy"},
+    {"id": "tank-enemy", "file": "tank-enemy.png", "role": "bulky deep-violet armored enemy"},
+    {"id": "bomber-enemy-core-variant", "file": "bomber-enemy-core-variant.png", "role": "bomber with shared circular enemy reactor design", "edit_target": "bomber-enemy.png"}
+  ],
+  "review_focus": [
+    "silhouette reads at small gameplay scale",
+    "role distinction between basic, fast, bomber, sniper, and tank",
+    "player remains compact and clearly separate from enemies",
+    "central reactor/weapon focal point",
+    "faceted low-poly construction that can be rebuilt as a real mesh"
+  ]
+}

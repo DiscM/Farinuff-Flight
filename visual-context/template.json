@@ -1,0 +1,35 @@
+{
+  "source_image": "renders/drafts/replace-source-image.png",
+  "user_phrase": "the part of the image I am referring to",
+  "targets": [
+    {
+      "id": "replace-box-target",
+      "label": "Named region enclosed by a box",
+      "kind": "box",
+      "box": [0.1, 0.1, 0.4, 0.4],
+      "point": null,
+      "radius": null,
+      "aliases": [
+        "this area",
+        "the boxed region"
+      ],
+      "instruction": "Describe exactly what should change or receive attention inside this region.",
+      "preserve_outside": true
+    },
+    {
+      "id": "replace-point-target",
+      "label": "Named feature centered on a point",
+      "kind": "point",
+      "box": null,
+      "point": [0.7, 0.6],
+      "radius": 0.03,
+      "aliases": [
+        "this spot",
+        "the pointed feature"
+      ],
+      "instruction": "Describe exactly what should change or receive attention around this point.",
+      "preserve_outside": true
+    }
+  ],
+  "canvas_transform": null
+}

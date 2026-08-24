@@ -1,0 +1,94 @@
+{
+  "schema_version": 1,
+  "template_id": "character-reference-board",
+  "name": "Visual Character Reference Board",
+  "description": "A wide editorial art sheet assembled from approved or draft render groups, including a signature-action panel. It documents visual identity and role behavior without requiring generated prose, labels, or notes.",
+  "canvas": {
+    "aspect_ratio": "16:9",
+    "background": "#202326",
+    "panel_background": "#F6F5F2",
+    "background_policy": "match-source",
+    "panel_background_policy": "match-source",
+    "accent": "#4D9CB7",
+    "outer_padding": 0.025,
+    "gutter": 0.018
+  },
+  "written_details": false,
+  "written_notes": false,
+  "slots": [
+    {
+      "id": "turnaround",
+      "kind": "render_group",
+      "source_group": "turnaround",
+      "rect": [0.025, 0.045, 0.49, 0.91],
+      "fit": "contain"
+    },
+    {
+      "id": "detail-callouts",
+      "kind": "render_group",
+      "source_group": "details",
+      "rect": [0.535, 0.035, 0.18, 0.25],
+      "fit": "contain"
+    },
+    {
+      "id": "palette",
+      "kind": "palette",
+      "rect": [0.535, 0.305, 0.18, 0.105],
+      "fit": "contain"
+    },
+    {
+      "id": "expressions",
+      "kind": "render_group",
+      "source_group": "expressions",
+      "rect": [0.535, 0.445, 0.18, 0.155],
+      "fit": "contain"
+    },
+    {
+      "id": "action-panel",
+      "kind": "render_group",
+      "source_group": "action",
+      "rect": [0.535, 0.625, 0.18, 0.295],
+      "fit": "contain"
+    },
+    {
+      "id": "hero-portrait",
+      "kind": "render_group",
+      "source_group": "hero",
+      "rect": [0.735, 0.035, 0.24, 0.925],
+      "fit": "contain"
+    }
+  ],
+  "render_groups": [
+    {
+      "id": "turnaround",
+      "strategy": "sequential",
+      "members": ["front", "front-right-3q", "back"],
+      "path": ""
+    },
+    {
+      "id": "hero",
+      "strategy": "single",
+      "members": ["hero-portrait"],
+      "path": ""
+    },
+    {
+      "id": "expressions",
+      "strategy": "sequential",
+      "members": ["neutral", "determined", "joyful"],
+      "path": ""
+    },
+    {
+      "id": "details",
+      "strategy": "sequential",
+      "members": ["costume-detail", "signature-object-detail"],
+      "path": ""
+    },
+    {
+      "id": "action",
+      "strategy": "single",
+      "members": ["signature-action"],
+      "path": ""
+    }
+  ],
+  "palette": []
+}

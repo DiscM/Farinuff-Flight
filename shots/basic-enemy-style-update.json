@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "id": "basic-enemy-style-update",
+  "mode": "variant",
+  "status": "approved",
+  "characters": [
+    "basic-enemy"
+  ],
+  "intent": "Reference-locked 2.5D style update for the basic enemy runtime sprite",
+  "view_direction": "",
+  "delta": {
+    "targeted_correction": "",
+    "canvas": "",
+    "expression": "",
+    "pose": "",
+    "action": "",
+    "camera_angle": "",
+    "framing": "",
+    "background": "",
+    "scene": "",
+    "lighting_override": "",
+    "wardrobe_override": "",
+    "object_override": "",
+    "resolution": "",
+    "detail": ""
+  },
+  "allowed_changes": [],
+  "object_overrides": [],
+  "placement_notes": [],
+  "reference_images": [],
+  "visual_context": null,
+  "constraints": [
+    "no watermark",
+    "no unrequested text"
+  ],
+  "avoid": [],
+  "output": {
+    "asset_type": "character illustration",
+    "aspect_ratio": "project default",
+    "template_type": "single-asset",
+    "resolution_mode": "quick",
+    "detail_level": "low",
+    "background_policy": "transparent"
+  },
+  "render_group": null,
+  "board": null
+}
