@@ -101,8 +101,4 @@ boost={
 [rendering]
 
 anti_aliasing/quality/msaa_3d=2
-anti_aliasing/quality/use_taa=false
-renderer/rendering_method="forward_plus"
-renderer/rendering_method.mobile="mobile"
-scaling_3d/scale=1.0
 voxel_style_enabled=false
