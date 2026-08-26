@@ -18,6 +18,7 @@ This checklist tracks the migration from the current 2D gameplay runtime to a na
 - GLB models are the canonical runtime assets.
 - Initial animation uses rigid model parts, procedural transforms, shaders, and limited `AnimationPlayer` tracks; richer animation is a later polish phase.
 - Initial gameplay hitboxes use dedicated primitive shapes, not visual-mesh-derived collision.
+- Global simulation-time hit-stop is not used. If boss-defeat slow motion is introduced later, it must be a deliberate four-second cinematic sequence that zooms in on the exploding boss rather than a subsecond whole-game time-scale jolt.
 - Combat lighting uses a shared global rig and capped pooled local lights.
 - Combat VFX become native 3D, but the first slice uses lightweight pooled placeholders because the current VFX are scheduled for replacement.
 - The backdrop, HUD, and screen-space post-processing remain 2D initially and receive an explicit resolution audit.
@@ -54,6 +55,7 @@ This checklist tracks the migration from the current 2D gameplay runtime to a na
 - The existing headless smoke scenes produced `PASS` in seven scenes. `enemy_evolution_shader_smoke` did not reach its pass sentinel, while `player_upgrade_3d_smoke` and `visual_upgrade_smoke` failed shared-shader identity assertions.
 - The same three failures reproduce when forced back to `gl_compatibility`; they are retained baseline test/import issues rather than regressions introduced by the renderer switch.
 - The user-owned manual Forward+ baseline playtest remains the Phase 0 approval gate.
+- Manual baseline QA identified the legacy boss/nuke/game-over hit-stop as jittery. The shared time-scale mechanism and all of its callers were removed; the boss-defeat cinematic described above remains optional future work.
 
 ## Phase 1 — Native 3D flight-space foundation
 

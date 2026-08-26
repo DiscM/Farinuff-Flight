@@ -44,7 +44,7 @@ This document serves as an internalized skill set to better understand, architec
 
 ### Game Feel ("Juice")
 - The tactile sensation of interacting with the game. 
-- **Techniques to implement**: Screen shake, hit-stop (briefly pausing the game on a heavy impact), particle systems, tweening for smooth scaling/movement, and multi-layered sound effects.
+- **Techniques to implement**: Screen shake, deliberate cinematic camera framing for major events, particle systems, tweening for smooth scaling/movement, and multi-layered sound effects. Do not alter global simulation speed for impact feedback.
 
 ### Readability and Affordance
 - A player should be able to look at a screenshot and immediately know what is dangerous, what is interactive, and where the player character is.
