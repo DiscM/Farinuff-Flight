@@ -18,6 +18,7 @@ var visible_time: float = 0.0
 var special_attack_coordinator: SpecialAttackCoordinator
 var evolution_stage: EnemyEvolutionStage
 var _dying: bool = false
+var _is_render_warmup: bool = false
 
 const HEALTH_SCALE_PER_WAVE: float = 0.045
 const SCORE_MULTIPLIERS := [1.0, 1.5, 2.25, 3.25]
@@ -38,9 +39,10 @@ var spawn_direction: Vector2 = Vector2.DOWN
 ## wave progression, sets current health, connects collision handling, attaches
 ## a screen-exit notifier, and starts a looping squash-and-stretch tween on the sprite.
 func _ready() -> void:
-	add_to_group("enemies")
-	if is_regular_enemy:
-		add_to_group("regular_enemies")
+	if not _is_render_warmup:
+		add_to_group("enemies")
+		if is_regular_enemy:
+			add_to_group("regular_enemies")
 	if generation <= 0:
 		generation = GameManager.get_enemy_generation()
 	generation = clampi(generation, 1, 4)
@@ -82,6 +84,24 @@ func _ready() -> void:
 		tw.tween_property(visual_root, "scale", Vector2(1.05, 0.95), 0.6).set_trans(Tween.TRANS_SINE)
 		tw.tween_property(visual_root, "scale", Vector2(0.95, 1.05), 0.6).set_trans(Tween.TRANS_SINE)
 	rotation = spawn_direction.angle() + PI * 0.5
+
+
+## Makes this instance safe to enter the scene tree solely to warm its render
+## pipeline. Call before add_child(); gameplay groups, collision detection,
+## rewards, processing, and death effects remain disabled for its lifetime.
+func prepare_render_warmup(warmup_generation: int, coordinator: SpecialAttackCoordinator) -> void:
+	_is_render_warmup = true
+	remove_from_group("enemies")
+	remove_from_group("regular_enemies")
+	generation = warmup_generation
+	special_attack_coordinator = coordinator
+	rewards_enabled = false
+	suppress_death_effects = true
+	collision_layer = 0
+	collision_mask = 0
+	monitoring = false
+	monitorable = false
+	process_mode = Node.PROCESS_MODE_DISABLED
 
 ## Called every physics frame. Delegates to _move() if the game is active.
 func _physics_process(delta: float) -> void:
