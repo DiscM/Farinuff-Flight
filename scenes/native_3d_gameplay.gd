@@ -1,6 +1,7 @@
 extends Node
 class_name Native3DGameplay
-## Isolated native 3D world shell. Gameplay actors arrive in later slices.
+## Isolated native 3D world shell with the first Player Craft wrapper slice.
+## Player controls, weapons, and encounter coordinators arrive in later slices.
 
 @onready var hud: CanvasLayer = $HUD
 
