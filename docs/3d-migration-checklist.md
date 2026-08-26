@@ -1,6 +1,6 @@
 # Native 3D Migration Checklist
 
-**Status**: implementation in progress; Phase 0 is at the Forward+ manual-playtest gate
+**Status**: implementation in progress; Phase 1 world shell is at its manual-playtest gate
 
 This checklist tracks the migration from the current 2D gameplay runtime to a native 3D combat runtime. The existing 2D actor scenes remain frozen reference and rollback implementations until the user manually validates each 3D slice.
 
@@ -32,11 +32,11 @@ This checklist tracks the migration from the current 2D gameplay runtime to a na
 - [x] Preserve the current 2D runtime as the baseline.
 - [x] Create the annotated Git tag `verified-2d-baseline` at commit `a4c488f8` before switching renderer settings or the active gameplay entry.
 - [x] Switch the project renderer from GL Compatibility to Forward+.
-- [ ] Run a manual baseline playtest of the current 2D runtime under Forward+.
-- [ ] Resolve renderer-related regressions before building native 3D actors.
+- [x] Run a manual baseline playtest of the current 2D runtime under Forward+.
+- [x] Resolve renderer-related regressions before building native 3D actors.
 - [x] Remove the reduced-resolution 3D ship output path from the final-runtime design.
 - [x] Configure native 3D rendering at a `1.0` scale against the active backbuffer or viewport resolution.
-- [ ] Render the native 3D validation scene directly through its `Camera3D`; do not load `ShipRenderLayer3D` or another reduced-resolution ship `SubViewport` in that scene.
+- [x] Render the native 3D validation scene directly through its `Camera3D`; do not load `ShipRenderLayer3D` or another reduced-resolution ship `SubViewport` in that scene.
 - [x] Start native 3D with 4× MSAA; keep TAA/FSR2 deferred until art and performance validation.
 - [ ] Audit retained 2D backdrop and HUD assets for accidental low-resolution upscaling.
 - [ ] Preserve intentional pixel-art assets with explicit scale and filtering rules.
@@ -54,28 +54,28 @@ This checklist tracks the migration from the current 2D gameplay runtime to a na
 - Godot 4.6.3 launched the main menu and current 2D gameplay on Metal Forward+ at 1280×720 with no project runtime errors reported after the gameplay transition.
 - The existing headless smoke scenes produced `PASS` in seven scenes. `enemy_evolution_shader_smoke` did not reach its pass sentinel, while `player_upgrade_3d_smoke` and `visual_upgrade_smoke` failed shared-shader identity assertions.
 - The same three failures reproduce when forced back to `gl_compatibility`; they are retained baseline test/import issues rather than regressions introduced by the renderer switch.
-- The user-owned manual Forward+ baseline playtest remains the Phase 0 approval gate.
+- The user-owned Forward+ baseline playtest completed; the reported hit-stop and first-enemy-spawn issues were resolved before Phase 1 began.
 - Manual baseline QA identified the legacy boss/nuke/game-over hit-stop as jittery. The shared time-scale mechanism and all of its callers were removed; the boss-defeat cinematic described above remains optional future work.
 - Forward+ profiling isolated a 25–31 ms first-enemy frame to cold evolution-shader and actor setup rather than collision detection. The 2D spawner now warms that path with an inert off-plane craft before starting its timer; the measured first natural spawn fell below the 16.7 ms frame budget with no enemy-group membership, collision pair, reward, or threat-history entry from warm-up.
 
 ## Phase 1 — Native 3D flight-space foundation
 
-- [ ] Add a separate top-level native 3D gameplay scene that owns the active `Camera3D`, 3D world, pooled gameplay managers, native 3D actors, and retained `CanvasLayer` HUD.
-- [ ] Make each validation entry point load either the existing 2D gameplay scene or the native 3D gameplay scene, never both.
+- [x] Add a separate top-level native 3D gameplay scene that owns the active `Camera3D`, 3D world, pooled gameplay managers, native 3D actors, and retained `CanvasLayer` HUD.
+- [x] Make each validation entry point load either the existing 2D gameplay scene or the native 3D gameplay scene, never both.
 - [ ] When the first native 3D slice is ready for personal playtesting, switch the active gameplay entry directly to it; do not add an in-app 2D/3D selector.
-- [ ] Add the native 3D world shell without loading 2D and 3D gameplay actors together.
+- [x] Add the native 3D world shell without loading 2D and 3D gameplay actors together.
 - [ ] Port the enemy spawner, power-up spawner, threat director, and special-attack coordinator to target native 3D scenes and pools.
-- [ ] Ensure the native 3D validation scene does not run the corresponding 2D coordinator implementations.
+- [x] Ensure the native 3D validation scene does not run the corresponding 2D coordinator implementations.
 - [ ] Create a dedicated wrapper `.tscn` for each runtime craft; instantiate the wrapper from gameplay code rather than instantiating imported GLB files directly.
 - [ ] Use the standard actor hierarchy inside each wrapper: `Area3D` root, sibling `CollisionShape3D`, `Visuals` `Node3D`, instanced GLB, and wrapper-owned `Attachments`/`Sockets` `Node3D` with named `Marker3D` points.
 - [ ] Preserve modular player upgrade assembly as child GLB scenes attached through `Marker3D` points.
 - [ ] Represent standard enemy evolution with material and modular attachment changes before authoring separate GLBs.
-- [ ] Add the fixed orthographic `Camera3D` and preserve the current combat framing.
-- [ ] Add a visual camera rig for screen shake using local camera position/rotation offsets without changing gameplay coordinates or bounds.
-- [ ] Centralize the 11-pixels-per-world-unit scale.
-- [ ] Add a scene-owned plain `FlightSpace3D` `Node` service with an active `Camera3D` reference and optional configuration `Resource`.
-- [ ] Keep `FlightSpace3D` free of rendering, collision, UI, autoload, and continuously running responsibilities.
-- [ ] Add separate adapter methods for screen positions and directional input within the same Combat Plane coordinate system.
+- [x] Add the fixed orthographic `Camera3D` and preserve the current combat framing.
+- [x] Add a visual camera rig for screen shake using local camera position/rotation offsets without changing gameplay coordinates or bounds.
+- [x] Centralize the 11-pixels-per-world-unit scale.
+- [x] Add a scene-owned plain `FlightSpace3D` `Node` service with an active `Camera3D` reference and optional configuration `Resource`.
+- [x] Keep `FlightSpace3D` free of rendering, collision, UI, autoload, and continuously running responsibilities.
+- [x] Add separate adapter methods for screen positions and directional input within the same Combat Plane coordinate system.
 - [ ] Move mouse aiming onto the Y=0 Combat Plane through `Camera3D` ray projection.
 - [ ] Convert keyboard/gamepad movement through the camera's projected right/forward basis onto world X/Z without synthetic rays.
 - [ ] Map aim and movement direction to world-Y yaw while keeping pitch and roll visual-only.
@@ -83,24 +83,37 @@ This checklist tracks the migration from the current 2D gameplay runtime to a na
 - [ ] Add optional visual banking beneath the gameplay transform without rotating gameplay hitboxes.
 - [ ] Normalize every actor gameplay root to `(x, 0, z)` on the Combat Plane and apply GLB centering/height corrections below `Visuals`.
 - [ ] Keep the aim reticle in the 2D HUD and position it from the projected native 3D aim point.
-- [ ] Define fixed combat-plane bounds equivalent to the current visible viewport limits.
-- [ ] Derive combat bounds, off-screen spawn margins, and despawn margins from the active orthographic camera projected onto `Y=0` rather than hard-coding screen-pixel rectangles.
-- [ ] Preserve the 16:9 baseline vertical orthographic framing, expand wider viewports horizontally, and avoid stretching native 3D models.
-- [ ] Configure named 3D physics layers and masks for Player Craft, Enemy Craft, Player Projectile, Enemy Projectile, Pickup, and Hostile Ordnance, preserving the existing interaction semantics.
+- [x] Define fixed combat-plane bounds equivalent to the current visible viewport limits.
+- [x] Derive combat bounds, off-screen spawn margins, and despawn margins from the active orthographic camera projected onto `Y=0` rather than hard-coding screen-pixel rectangles.
+- [x] Preserve the 16:9 baseline vertical orthographic framing, expand wider viewports horizontally, and avoid stretching native 3D models.
+- [x] Configure named 3D physics layers and masks for Player Craft, Enemy Craft, Player Projectile, Enemy Projectile, Pickup, and Hostile Ordnance, preserving the existing interaction semantics.
 - [ ] Add primitive gameplay hitboxes and keep them separate from GLB visual geometry.
 - [ ] Use `Area3D` gameplay roots for the initial player, enemy, projectile, and pickup scenes; defer `CharacterBody3D` until solid physics is required.
-- [ ] Add the shared Forward+ environment, key light, ambient fill, emission, and bloom setup.
-- [ ] Enable moderate shadows on the shared `DirectionalLight3D` for craft depth and self-shadowing; keep routine projectiles and minor effects free of individual dynamic lights.
+- [x] Add the shared Forward+ environment, key light, ambient fill, emission, and bloom setup.
+- [x] Enable moderate shadows on the shared `DirectionalLight3D` for craft depth and self-shadowing; keep routine projectiles and minor effects free of individual dynamic lights.
 - [ ] Configure only Player Craft, Enemy Craft, bosses, and major 3D set pieces to cast/receive dynamic shadows; disable shadow participation for projectiles, pickups, particles, and minor effects.
-- [ ] Use one reusable environment/lighting configuration in each active native 3D gameplay scene, allowing only deliberate localized boss/effect overrides.
-- [ ] Activate the shared environment through a scene-owned `WorldEnvironment`; leave menus and 2D-only scenes outside that configuration.
-- [ ] Keep the existing 2D backdrop, HUD, and screen-space overlays available.
+- [x] Use one reusable environment/lighting configuration in each active native 3D gameplay scene, allowing only deliberate localized boss/effect overrides.
+- [x] Activate the shared environment through a scene-owned `WorldEnvironment`; leave menus and 2D-only scenes outside that configuration.
+- [x] Keep the existing 2D backdrop, HUD, and screen-space overlays available.
 - [ ] Reuse the existing HUD, pause, game-over, allocation, upgrade, retry, and victory scenes through `CanvasLayer` integration; preserve `GameManager` and `SignalBus` as run-state authorities.
-- [ ] Configure the native 3D `WorldEnvironment` to use Canvas background mode where needed for selective HDR 2D/glow processing.
-- [ ] Route Canvas layers so backdrop processing does not unintentionally glow, blur, or grade the HUD and other UI.
-- [ ] Retain the existing galaxy, parallax, and celestial 2D shaders during the first 3D slice.
-- [ ] Defer SSAO, SSIL, SSR, volumetric fog, GI, decals, and reflection-probe treatment of the backdrop until a deliberate 3D backplate is designed and validated.
-- [ ] Do not add a visible 3D floor/backplate in the first slice; use craft shading and self-shadowing, deferring contact shadows and depth-aware fog.
+- [x] Configure the native 3D `WorldEnvironment` to use Canvas background mode where needed for selective HDR 2D/glow processing.
+- [x] Route Canvas layers so backdrop processing does not unintentionally glow, blur, or grade the HUD and other UI.
+- [x] Retain the existing galaxy, parallax, and celestial 2D shaders during the first 3D slice.
+- [x] Defer SSAO, SSIL, SSR, volumetric fog, GI, decals, and reflection-probe treatment of the backdrop until a deliberate 3D backplate is designed and validated.
+- [x] Do not add a visible 3D floor/backplate in the first slice; use craft shading and self-shadowing, deferring contact shadows and depth-aware fog.
+
+### Phase 1 world-shell validation record
+
+- `res://scenes/native_3d_gameplay.tscn` launched directly on Metal Forward+ at 1280×720 with 4× MSAA, scene-owned HDR 2D, the retained backdrop at Canvas layer -10, the retained HUD at layer 10, and the shared CRT/distortion passes at layers 1 and 100.
+- The isolated scene contains no `SubViewport`, `Area2D`, `Area3D`, gameplay collision shape, 2D actor, or 2D coordinator. Its disabled, hidden `PoolRoot3D` remains empty until the projectile slice.
+- The center viewport ray resolves to the Combat Plane origin, directional input maps right to world +X and down to world +Z, and world-to-screen HUD projection follows the active rendered camera.
+- The baseline camera-derived Combat Plane is 109.35×65.45 world units. At 1920×720, it expands horizontally to 164.02 units while preserving the 65.45-unit vertical span.
+- Screen shake moved only the active camera's local presentation offset; screen projection followed that rendered camera while the separate stable camera kept directional input and camera-derived Combat Plane bounds unchanged.
+- The Player Projectile mask preserves the 2D interaction set while excluding its own layer, preventing projectile-to-projectile pair checks.
+- HDR 2D is enabled only while the native scene is active and restores to its prior value when returning to the menu. Runtime inspection reported no project errors; the only warnings came from the temporary MCP interaction bridge.
+- The complete existing 10-scene smoke suite preserved its baseline: seven scenes reached their PASS sentinel; `enemy_evolution_shader_smoke`, `player_upgrade_3d_smoke`, and `visual_upgrade_smoke` retained their three documented pre-existing failures, with no new failure introduced by this slice.
+- `FoundationReference3D` is non-gameplay validation geometry for scale, lighting, shadow, HDR emission, and direct-camera output. Remove it when the first native craft wrapper enters the scene.
+- This scene now requires explicit user playtest approval before the next Phase 1 scene or coordinator slice begins.
 
 ## Phase 2 — Pooled 3D projectiles
 

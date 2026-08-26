@@ -1,0 +1,39 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://effects/combat_screen_overlays_2d.gd" id="1_overlays"]
+[ext_resource type="Shader" path="res://effects/shaders/crt_overlay.gdshader" id="2_crt"]
+[ext_resource type="Shader" path="res://effects/shaders/distortion_only.gdshader" id="3_distortion"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_crt"]
+shader = ExtResource("2_crt")
+shader_parameter/apply_distortion = false
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_distortion"]
+shader = ExtResource("3_distortion")
+
+[node name="CombatScreenOverlays2D" type="Node"]
+script = ExtResource("1_overlays")
+
+[node name="CRTScanlines" type="CanvasLayer" parent="."]
+layer = 1
+
+[node name="FullscreenPass" type="ColorRect" parent="CRTScanlines"]
+material = SubResource("ShaderMaterial_crt")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="ScreenDistortion" type="CanvasLayer" parent="."]
+layer = 100
+
+[node name="FullscreenPass" type="ColorRect" parent="ScreenDistortion"]
+material = SubResource("ShaderMaterial_distortion")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2

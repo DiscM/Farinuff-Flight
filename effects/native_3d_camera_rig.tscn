@@ -1,0 +1,26 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://effects/native_3d_camera_rig.gd" id="1_rig"]
+[ext_resource type="Resource" path="res://systems/flight_space_3d_config.tres" id="2_config"]
+
+[node name="CameraRig3D" type="Node3D"]
+script = ExtResource("1_rig")
+configuration = ExtResource("2_config")
+
+[node name="ProjectionCamera3D" type="Camera3D" parent="."]
+projection = 1
+current = false
+size = 61.51
+near = 0.1
+far = 200.0
+keep_aspect = 1
+
+[node name="ShakeOffset" type="Node3D" parent="."]
+
+[node name="Camera3D" type="Camera3D" parent="ShakeOffset"]
+projection = 1
+current = true
+size = 61.51
+near = 0.1
+far = 200.0
+keep_aspect = 1

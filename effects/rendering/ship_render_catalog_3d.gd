@@ -4,6 +4,9 @@ class_name ShipRenderCatalog3D
 ## gameplay renderer. Keeping these definitions out of the layer makes the
 ## runtime coordinator easier to navigate without changing its public API.
 
+const FlightConfig := preload("res://systems/flight_space_3d_config.gd")
+const VisualStyle := preload("res://effects/rendering/visual_style_settings.gd")
+
 const MODEL_SCENES := {
 	&"player": preload("res://assets/models/redesign/player_butterfly.glb"),
 	&"basic": preload("res://assets/models/mockups/basic_enemy_mockup.glb"),
@@ -157,7 +160,7 @@ const ENGINE_LAYOUTS := {
 	},
 }
 
-const PIXELS_PER_MODEL_UNIT := 11.0
+const PIXELS_PER_MODEL_UNIT := FlightConfig.DEFAULT_PIXELS_PER_WORLD_UNIT
 # The ship SubViewport renders at 1/PIXELATION of the composite size and is
 # upscaled with NEAREST filtering, giving the 3D fleet the same chunky pixel
 # grid as the PixelPlanets background shaders.
@@ -166,17 +169,14 @@ const CAMERA_HEIGHT := 45.0
 const CAMERA_DEPTH := 28.125
 const INVINCIBILITY_VISIBLE_ALPHA := 0.5
 const RENDER_OVERSCAN_PIXELS := 32
-const VOXEL_STYLE_SETTING := "rendering/voxel_style_enabled"
-const VOXEL_STYLE_ARG := "--voxel-style"
+const VOXEL_STYLE_SETTING := VisualStyle.VOXEL_STYLE_SETTING
+const VOXEL_STYLE_ARG := VisualStyle.VOXEL_STYLE_ARG
 
 
 static func voxel_style_enabled() -> bool:
-	# Keep the shipped renderer unchanged by default. The user argument makes
-	# the experimental path selectable from headless smoke tests and local
-	# captures without requiring an editor-only toggle.
-	if OS.get_cmdline_user_args().has(VOXEL_STYLE_ARG):
-		return true
-	return bool(ProjectSettings.get_setting(VOXEL_STYLE_SETTING, false))
+	# Compatibility API for existing 2D actors and renderer smoke tests. Keep
+	# visual-style policy in VisualStyleSettings while those callers migrate.
+	return VisualStyle.voxel_style_enabled()
 
 
 static func instantiate_model(archetype: StringName) -> Node3D:

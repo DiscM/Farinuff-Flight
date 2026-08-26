@@ -1,0 +1,83 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://effects/combat_backdrop_2d.gd" id="1_backdrop"]
+[ext_resource type="Shader" path="res://effects/shaders/galactic_starfield.gdshader" id="2_galaxy"]
+[ext_resource type="Script" path="res://effects/parallax_layer.gd" id="3_stars"]
+[ext_resource type="Script" path="res://effects/planet_background.gd" id="4_planet"]
+[ext_resource type="Script" path="res://effects/rendering/galaxy_shader_clock.gd" id="5_clock"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_galaxy"]
+shader = ExtResource("2_galaxy")
+shader_parameter/u_time = 0.0
+shader_parameter/drift_speed = 0.035
+shader_parameter/nebula_strength = 1.1
+shader_parameter/star_brightness = 1.0
+shader_parameter/space_color = Color(0.003, 0.009, 0.042, 1)
+shader_parameter/nebula_blue = Color(0.02, 0.32, 0.82, 1)
+shader_parameter/nebula_violet = Color(0.08, 0.12, 0.62, 1)
+shader_parameter/nebula_pink = Color(0.12, 0.72, 0.92, 1)
+
+[node name="CombatBackdrop2D" type="CanvasLayer"]
+layer = -10
+script = ExtResource("1_backdrop")
+
+[node name="Background" type="ColorRect" parent="."]
+z_index = -100
+material = SubResource("ShaderMaterial_galaxy")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="BackgroundShaderClock" type="Node" parent="."]
+script = ExtResource("5_clock")
+shader_host_path = NodePath("../Background")
+
+[node name="DeepStars" type="Parallax2D" parent="."]
+z_index = -90
+autoscroll = Vector2(0, 15)
+repeat_size = Vector2(1280, 720)
+
+[node name="Stars" type="Node2D" parent="DeepStars"]
+script = ExtResource("3_stars")
+star_count = 120
+min_size = 0.5
+max_size = 1.2
+base_color = Color(0.6, 0.7, 1, 1)
+repeat_size = Vector2(1280, 720)
+
+[node name="MidStars" type="Parallax2D" parent="."]
+z_index = -89
+autoscroll = Vector2(0, 40)
+repeat_size = Vector2(1280, 720)
+
+[node name="Stars" type="Node2D" parent="MidStars"]
+script = ExtResource("3_stars")
+star_count = 80
+min_size = 1.0
+max_size = 2.2
+base_color = Color(0.8, 0.88, 1, 1)
+repeat_size = Vector2(1280, 720)
+
+[node name="NearStars" type="Parallax2D" parent="."]
+z_index = -88
+autoscroll = Vector2(0, 80)
+repeat_size = Vector2(1280, 720)
+
+[node name="Stars" type="Node2D" parent="NearStars"]
+script = ExtResource("3_stars")
+star_count = 35
+min_size = 1.8
+max_size = 3.5
+base_color = Color(0.9, 0.95, 1, 1)
+repeat_size = Vector2(1280, 720)
+
+[node name="Celestial" type="Node2D" parent="."]
+texture_filter = 1
+z_index = -30
+scale = Vector2(1.45, 1.45)
+script = ExtResource("4_planet")
+type_index = 8
+planet_seed = 417

@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3 uid="uid://dd67s6bc4xvjy"]
+[gd_scene load_steps=13 format=3 uid="uid://dd67s6bc4xvjy"]
 
 [ext_resource type="Script" uid="uid://k78vdvgqtcv0" path="res://scenes/game.gd" id="1_game"]
 [ext_resource type="PackedScene" uid="uid://bpv3rwt1k4f2i" path="res://entities/player/player.tscn" id="2_player"]
@@ -9,6 +9,7 @@
 [ext_resource type="Script" path="res://systems/special_attack_coordinator.gd" id="7_special"]
 [ext_resource type="Shader" path="res://effects/shaders/galactic_starfield.gdshader" id="8_galaxy"]
 [ext_resource type="PackedScene" path="res://effects/ship_render_layer_3d.tscn" id="9_ship_3d"]
+[ext_resource type="Script" path="res://effects/rendering/galaxy_shader_clock.gd" id="10_clock"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_galaxy"]
 shader = ExtResource("8_galaxy")
@@ -32,6 +33,10 @@ offset_top = -32.0
 offset_right = 392.0
 offset_bottom = 752.0
 color = Color(1, 1, 1, 1)
+
+[node name="BackgroundShaderClock" type="Node" parent="."]
+script = ExtResource("10_clock")
+shader_host_path = NodePath("../Background")
 
 [node name="StarField" type="Node2D" parent="." unique_id=884997156]
 z_index = -90

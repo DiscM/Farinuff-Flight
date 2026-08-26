@@ -7,9 +7,8 @@ const ELITE_UPGRADE_SCENE := preload("res://ui/elite_upgrade_popup.tscn")
 const PAUSE_MENU_SCENE := preload("res://ui/pause_menu.tscn")
 const TRY_AGAIN_SCENE := preload("res://ui/try_again_popup.tscn")
 const EXPEDITION_VICTORY_SCENE := preload("res://ui/expedition_victory.tscn")
-const ShipCatalog := preload("res://effects/rendering/ship_render_catalog_3d.gd")
-const PIXEL_BACKGROUND_SHADER: Shader = preload("res://effects/shaders/galactic_starfield.gdshader")
-const VOXEL_BACKGROUND_SHADER: Shader = preload("res://effects/shaders/voxel_galactic_starfield.gdshader")
+const COMBAT_SCREEN_OVERLAYS := preload("res://effects/combat_screen_overlays_2d.tscn")
+const GalaxyStyle := preload("res://effects/rendering/galaxy_visual_style.gd")
 
 const BACKGROUND_PALETTE_TRANSITION_DURATION := 2.4
 const BACKGROUND_EVOLUTION_PALETTES: Array[Dictionary] = [
@@ -68,10 +67,7 @@ var _evolution_banner_active: bool = false
 # Screen shake state
 var shake_intensity: float = 0.0
 var shake_timer: float = 0.0
-var _bg_time: float = 0.0
 var _background_palette_tween: Tween = null
-var _crt_layer: CanvasLayer = null
-var _distort_layer: CanvasLayer = null
 var _expedition_overlay: CanvasLayer = null
 
 # --- Foreground planet continuous spawning ---
@@ -192,41 +188,8 @@ func _ready() -> void:
 	for i in range(randi_range(1, 2)):
 		_spawn_background_planet(randf_range(-50.0, viewport_size.y + 50.0))
 
-	# --- Shader Injection ---
-	var crt_shader := preload("res://effects/shaders/crt_overlay.gdshader")
-	var distort_shader := preload("res://effects/shaders/distortion_only.gdshader")
-	
-	if crt_shader:
-		var crt_mat := ShaderMaterial.new()
-		crt_mat.shader = crt_shader
-		crt_mat.set_shader_parameter("apply_distortion", false) # Scanlines only on world
-		
-		var crt_rect := ColorRect.new()
-		crt_rect.color = Color.WHITE
-		crt_rect.material = crt_mat
-		crt_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
-		crt_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		
-		_crt_layer = CanvasLayer.new()
-		_crt_layer.layer = 1
-		_crt_layer.add_child(crt_rect)
-		add_child(_crt_layer)
-
-	if distort_shader:
-		var distort_mat := ShaderMaterial.new()
-		distort_mat.shader = distort_shader
-		
-		var distort_rect := ColorRect.new()
-		distort_rect.color = Color.WHITE
-		distort_rect.material = distort_mat
-		distort_rect.set_anchors_preset(Control.PRESET_FULL_RECT)
-		distort_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		
-		# Universal distortion layer (affects everything below it i.e. game world + scanlines + HUD)
-		_distort_layer = CanvasLayer.new()
-		_distort_layer.layer = 100
-		_distort_layer.add_child(distort_rect)
-		add_child(_distort_layer)
+	# Reuse the same retained screen-space passes as the native 3D shell.
+	add_child(COMBAT_SCREEN_OVERLAYS.instantiate())
 
 	_apply_visual_settings()
 
@@ -235,12 +198,7 @@ func _configure_background_shader() -> void:
 	var shader_material := background.material as ShaderMaterial
 	if shader_material == null:
 		return
-	var voxel_enabled := ShipCatalog.voxel_style_enabled()
-	shader_material.shader = VOXEL_BACKGROUND_SHADER if voxel_enabled else PIXEL_BACKGROUND_SHADER
-	if voxel_enabled:
-		shader_material.set_shader_parameter("voxel_grid_size", 90.0)
-		shader_material.set_shader_parameter("voxel_palette_steps", 8.0)
-		shader_material.set_shader_parameter("voxel_edge_strength", 0.08)
+	GalaxyStyle.apply_to(shader_material)
 
 
 ## Sizes the shader host explicitly because its parent is a Node2D, which
@@ -291,9 +249,9 @@ func _set_background_shader_color(color: Color, parameter: StringName) -> void:
 		shader_material.set_shader_parameter(parameter, color)
 
 
-## Per-frame update: handles camera shake decay, feeds time to the background
-## shader, scrolls foreground planets downward, cleans up off-screen planets,
-## and periodically spawns new planets above the viewport.
+## Per-frame update: handles camera shake decay, scrolls foreground planets
+## downward, cleans up off-screen planets, and periodically spawns new planets
+## above the viewport. Background shader time is owned by GalaxyShaderClock.
 func _process(delta: float) -> void:
 	# Camera shake
 	if shake_timer > 0:
@@ -307,11 +265,6 @@ func _process(delta: float) -> void:
 	else:
 		camera.offset = Vector2.ZERO
 		
-	# Feed paused time to the background shader
-	_bg_time += delta
-	if is_instance_valid(background) and background.material:
-		(background.material as ShaderMaterial).set_shader_parameter("u_time", _bg_time)
-
 	# --- Foreground planet continuous spawning ---
 	if is_instance_valid(_planet_container):
 		var vp_size := get_viewport().get_visible_rect().size
@@ -452,14 +405,9 @@ func _on_screen_shake(intensity: float, duration: float) -> void:
 	shake_intensity = intensity
 	shake_timer = duration
 
-## Reads visual preferences from SaveManager and shows/hides the CRT
-## scanline layer and distortion layer accordingly. Also clears any
-## active shake if the setting has been turned off.
+## Clears any active shake if the setting has been turned off. The shared
+## combat overlay scene owns its CRT and distortion visibility settings.
 func _apply_visual_settings() -> void:
-	if is_instance_valid(_crt_layer):
-		_crt_layer.visible = bool(SaveManager.get_setting("crt_effect", true))
-	if is_instance_valid(_distort_layer):
-		_distort_layer.visible = bool(SaveManager.get_setting("screen_distortion", true))
 	if not bool(SaveManager.get_setting("screen_shake", true)):
 		shake_timer = 0.0
 		camera.offset = Vector2.ZERO

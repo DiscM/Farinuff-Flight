@@ -97,6 +97,12 @@ boost={
 2d_physics/layer_4="enemy_bullets"
 2d_physics/layer_5="powerups"
 2d_physics/layer_6="hostile_ordnance"
+3d_physics/layer_1="Player Craft"
+3d_physics/layer_2="Enemy Craft"
+3d_physics/layer_3="Player Projectile"
+3d_physics/layer_4="Enemy Projectile"
+3d_physics/layer_5="Pickup"
+3d_physics/layer_6="Hostile Ordnance"
 
 [rendering]
 
