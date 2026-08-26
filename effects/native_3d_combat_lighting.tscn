@@ -1,0 +1,16 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Environment" path="res://effects/native_3d_combat_environment.tres" id="1_environment"]
+
+[node name="Native3DCombatLighting" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = ExtResource("1_environment")
+
+[node name="KeyLight" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-52, -24, 0)
+light_color = Color(0.72, 0.86, 1, 1)
+light_energy = 2.2
+shadow_enabled = true
+directional_shadow_mode = 2
+directional_shadow_max_distance = 120.0
