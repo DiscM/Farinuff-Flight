@@ -1,6 +1,6 @@
 # Native 3D Migration Checklist
 
-**Status**: implementation in progress; Phase 1 world shell is at its manual-playtest gate
+**Status**: implementation in progress; the Player Craft wrapper is at its manual asset-review gate
 
 This checklist tracks the migration from the current 2D gameplay runtime to a native 3D combat runtime. The existing 2D actor scenes remain frozen reference and rollback implementations until the user manually validates each 3D slice.
 
@@ -112,8 +112,19 @@ This checklist tracks the migration from the current 2D gameplay runtime to a na
 - The Player Projectile mask preserves the 2D interaction set while excluding its own layer, preventing projectile-to-projectile pair checks.
 - HDR 2D is enabled only while the native scene is active and restores to its prior value when returning to the menu. Runtime inspection reported no project errors; the only warnings came from the temporary MCP interaction bridge.
 - The complete existing 10-scene smoke suite preserved its baseline: seven scenes reached their PASS sentinel; `enemy_evolution_shader_smoke`, `player_upgrade_3d_smoke`, and `visual_upgrade_smoke` retained their three documented pre-existing failures, with no new failure introduced by this slice.
-- `FoundationReference3D` is non-gameplay validation geometry for scale, lighting, shadow, HDR emission, and direct-camera output. Remove it when the first native craft wrapper enters the scene.
-- This scene now requires explicit user playtest approval before the next Phase 1 scene or coordinator slice begins.
+- The user explicitly approved the world-shell slice. `FoundationReference3D` was then removed when the first native craft wrapper entered the scene.
+
+### Phase 1 Player Craft wrapper validation record
+
+- `res://entities/player/player_3d.tscn` is the first dedicated native craft wrapper: an `Area3D` root on the Combat Plane, a separate rotated `CapsuleShape3D`, a `Visuals` pivot-correction node containing the canonical `player_butterfly.glb`, and wrapper-owned `Attachments/Sockets` plus `Modules` containers.
+- The source GLB measures 3.91×4.18 world units and projects to 45.77×47.33 pixels at the 1280×720 runtime framing. Its nose points toward world -Z/screen up, its visual pivot is lifted 0.08 world units, and the mesh retains seven authored materials plus dynamic shadow casting.
+- The gameplay capsule preserves the 2D 32×44-screen-pixel contact envelope under the approved runtime camera: radius 1.3668 accounts for the camera's 11.71 horizontal pixels per world unit, while height 4.0 preserves the 11-pixels-per-world-unit vertical span. The capsule is rotated onto the Combat Plane's Z axis.
+- Ten wrapper-owned `Marker3D` sockets provide stable center/left/right muzzles, left/right engines, left/right upgrades, core, shield, and death/effect hooks. Imported socket coordinates were measured from the GLB and copied into the wrapper contract so gameplay does not depend on imported internal node paths.
+- `res://scenes/player_3d_asset_review.tscn` uses the runtime camera, scale, lighting, environment, backdrop, and screen overlays. Its HUD projects the live collision shape through that camera instead of repeating nominal hitbox dimensions. `H` toggles the hitbox envelope and `S` toggles the color-coded socket guides without changing the wrapper.
+- The native gameplay shell now contains exactly one active `Player3D` `Area3D`, one primitive `CollisionShape3D`, no `Area2D`, and no `SubViewport`. The wrapper uses Player Craft layer 1 and mask 58, stays at root Y=0, and deliberately does not join the legacy `player` group until its HUD-facing gameplay contract is ported.
+- Both the asset-review scene and native gameplay shell launched on Metal Forward+ without project runtime errors. The review scene sampled at 145 FPS; controls, movement, aiming, weapons, upgrades, damage, and encounter coordinators remain outside this visual-contract slice.
+- The final existing 10-scene smoke run preserved its accepted baseline: seven scenes reached their PASS sentinel; `enemy_evolution_shader_smoke`, `player_upgrade_3d_smoke`, and `visual_upgrade_smoke` reproduced only their three documented pre-existing failures.
+- This Player Craft wrapper and asset-review scene now require explicit user approval before controls, asset loading, projectiles, Basic Enemy, or another migrated scene is implemented.
 
 ## Phase 2 — Pooled 3D projectiles
 
@@ -147,11 +158,11 @@ This checklist tracks the migration from the current 2D gameplay runtime to a na
 
 - [ ] Scope the first native 3D validation scene to Player Craft, Basic Enemy, and their pooled Projectiles only.
 - [ ] Keep all other enemy roles, bosses, and unported gameplay actors outside the first 3D validation scene.
-- [ ] Create the final `Player3D` scene with a gameplay body, primitive hitbox, `Visuals` `Node3D`, GLB model, sockets, and VFX hooks.
-- [ ] Use existing GLB mockups for the first slice where polished replacement models are not yet ready.
-- [ ] Keep polished GLB replacements drop-in compatible with the established wrapper, origin, material, and `Marker3D` socket contracts.
+- [x] Create the final `Player3D` scene with a gameplay body, primitive hitbox, `Visuals` `Node3D`, GLB model, sockets, and VFX hooks.
+- [x] Use existing GLB mockups for the first slice where polished replacement models are not yet ready.
+- [x] Keep polished GLB replacements drop-in compatible with the established wrapper, origin, material, and `Marker3D` socket contracts.
 - [ ] Keep gameplay animation control in wrapper-local `AnimationPlayer`/procedural transforms; treat imported GLB animations as optional visual inputs rather than gameplay dependencies.
-- [ ] Create a dedicated 3D asset-review scene using runtime scale, orientation, lighting, materials, sockets, and relevant animation presentation.
+- [x] Create a dedicated 3D asset-review scene using runtime scale, orientation, lighting, materials, sockets, and relevant animation presentation.
 - [ ] Obtain manual asset approval in the review scene before swapping a polished replacement into a validated gameplay slice.
 - [ ] Port player controls, movement tuning, aim, rotation, boost, damage, invulnerability, and boundaries.
 - [ ] Reuse shared spatially independent gameplay data for tuning, damage, weapons, upgrades, evolution, and encounter rules instead of duplicating balance constants.

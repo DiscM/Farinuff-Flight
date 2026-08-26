@@ -1,0 +1,58 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://entities/player/player_3d.gd" id="1_player"]
+[ext_resource type="PackedScene" path="res://assets/models/redesign/player_butterfly.glb" id="2_model"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
+radius = 1.366826
+height = 4.0
+
+[node name="Player3D" type="Area3D" groups=["player_craft"]]
+editor_description = "Native Player Craft gameplay root. Root position is always on Y=0; imported-pivot correction belongs under Visuals."
+input_ray_pickable = false
+script = ExtResource("1_player")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+rotation = Vector3(1.570796, 0, 0)
+shape = SubResource("CapsuleShape3D_player")
+
+[node name="Visuals" type="Node3D" parent="."]
+position = Vector3(0, 0.08, 0)
+
+[node name="PlayerHullGLB" parent="Visuals" instance=ExtResource("2_model")]
+
+[node name="Attachments" type="Node3D" parent="."]
+
+[node name="Sockets" type="Node3D" parent="Attachments"]
+
+[node name="MuzzleCenter" type="Marker3D" parent="Attachments/Sockets"]
+position = Vector3(0, 0.165, -1.53)
+
+[node name="MuzzleLeft" type="Marker3D" parent="Attachments/Sockets"]
+position = Vector3(-0.34, 0.12675, -2.312)
+
+[node name="MuzzleRight" type="Marker3D" parent="Attachments/Sockets"]
+position = Vector3(0.34, 0.12675, -2.312)
+
+[node name="EngineLeft" type="Marker3D" parent="Attachments/Sockets"]
+position = Vector3(-1.054, 0.08, 1.8785)
+
+[node name="EngineRight" type="Marker3D" parent="Attachments/Sockets"]
+position = Vector3(1.054, 0.08, 1.8785)
+
+[node name="UpgradeLeft" type="Marker3D" parent="Attachments/Sockets"]
+position = Vector3(-0.527, 0.165, 0.17)
+
+[node name="UpgradeRight" type="Marker3D" parent="Attachments/Sockets"]
+position = Vector3(0.527, 0.165, 0.17)
+
+[node name="Core" type="Marker3D" parent="Attachments/Sockets"]
+position = Vector3(0, 0.2, 0)
+
+[node name="Shield" type="Marker3D" parent="Attachments/Sockets"]
+position = Vector3(0, 0.2, 0)
+
+[node name="Death" type="Marker3D" parent="Attachments/Sockets"]
+position = Vector3(0, 0.2, 0)
+
+[node name="Modules" type="Node3D" parent="Attachments"]

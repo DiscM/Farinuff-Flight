@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3]
+[gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://scenes/native_3d_gameplay.gd" id="1_game"]
 [ext_resource type="Resource" path="res://systems/flight_space_3d_config.tres" id="2_config"]
@@ -8,36 +8,7 @@
 [ext_resource type="Script" path="res://systems/flight_space_3d.gd" id="6_flight"]
 [ext_resource type="PackedScene" path="res://ui/hud.tscn" id="7_hud"]
 [ext_resource type="PackedScene" path="res://effects/combat_screen_overlays_2d.tscn" id="8_overlays"]
-
-[sub_resource type="StandardMaterial3D" id="Material_reference_ring"]
-albedo_color = Color(0.035, 0.22, 0.34, 1)
-metallic = 0.72
-roughness = 0.26
-emission_enabled = true
-emission = Color(0.02, 0.62, 1, 1)
-emission_energy_multiplier = 1.35
-
-[sub_resource type="TorusMesh" id="Mesh_reference_ring"]
-material = SubResource("Material_reference_ring")
-inner_radius = 2.35
-outer_radius = 2.85
-rings = 32
-ring_segments = 12
-
-[sub_resource type="StandardMaterial3D" id="Material_reference_core"]
-albedo_color = Color(0.35, 0.02, 0.24, 1)
-metallic = 0.38
-roughness = 0.22
-emission_enabled = true
-emission = Color(1, 0.04, 0.62, 1)
-emission_energy_multiplier = 3.0
-
-[sub_resource type="SphereMesh" id="Mesh_reference_core"]
-material = SubResource("Material_reference_core")
-radius = 0.7
-height = 1.4
-radial_segments = 24
-rings = 12
+[ext_resource type="PackedScene" path="res://entities/player/player_3d.tscn" id="9_player"]
 
 [node name="Native3DGameplay" type="Node"]
 script = ExtResource("1_game")
@@ -50,18 +21,9 @@ script = ExtResource("1_game")
 
 [node name="CameraRig3D" parent="World3D" instance=ExtResource("5_camera")]
 
-[node name="FoundationReference3D" type="Node3D" parent="World3D" groups=["foundation_validation_geometry"]]
-editor_description = "Non-gameplay scale, lighting, glow, and direct-Camera3D reference. Remove when the first native craft wrapper enters this scene."
-
-[node name="ScaleRing" type="MeshInstance3D" parent="World3D/FoundationReference3D"]
-position = Vector3(0, 0.2, 0)
-mesh = SubResource("Mesh_reference_ring")
-
-[node name="EmissionCore" type="MeshInstance3D" parent="World3D/FoundationReference3D"]
-position = Vector3(0, 0.9, 0)
-mesh = SubResource("Mesh_reference_core")
-
 [node name="Actors3D" type="Node3D" parent="World3D"]
+
+[node name="Player3D" parent="World3D/Actors3D" instance=ExtResource("9_player")]
 
 [node name="PoolRoot3D" type="Node3D" parent="World3D"]
 process_mode = 4
