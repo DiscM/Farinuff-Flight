@@ -18,10 +18,12 @@ config/name="Farinuff Flight"
 config/description="A deep-space survival run with boost-reflection combat, transformative builds, and an optional Endless tail."
 config/version="0.5.0"
 run/main_scene="res://ui/main_menu.tscn"
-config/features=PackedStringArray("4.6", "GL Compatibility")
+config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 
 [autoload]
+
+
 
 SignalBus="*res://autoloads/signal_bus.gd"
 SaveManager="*res://autoloads/save_manager.gd"
@@ -98,6 +100,9 @@ boost={
 
 [rendering]
 
-renderer/rendering_method="gl_compatibility"
-renderer/rendering_method.mobile="gl_compatibility"
+anti_aliasing/quality/msaa_3d=2
+anti_aliasing/quality/use_taa=false
+renderer/rendering_method="forward_plus"
+renderer/rendering_method.mobile="mobile"
+scaling_3d/scale=1.0
 voxel_style_enabled=false

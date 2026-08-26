@@ -35,7 +35,7 @@ Before each run, the launch bay offers a loadout choice: pick an unlocked ship v
 
 ## Tech Stack
 
-- Engine: Godot 4.6 project format with GL Compatibility rendering
+- Engine: Godot 4.6 project format with Forward+ rendering; the verified 2D gameplay baseline remains active while native 3D migration is in progress
 - Language: GDScript 2.0 with typed scripts across gameplay systems
 - Architecture: scene-based composition with reusable player, enemy, bullet, power-up, HUD, menu, and popup scenes
 - Global state: autoload singletons for `GameManager`, `MetaProgression`, `SignalBus`, and `SaveManager`
