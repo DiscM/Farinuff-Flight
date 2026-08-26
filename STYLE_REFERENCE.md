@@ -1,6 +1,6 @@
 # Farinuff Flight 2.5D Pixel Fleet Style Reference
 
-Status: approved working reference
+Status: preserved reference for the verified 2D baseline; superseded for new gameplay assets by the native 3D migration
 
 Primary visual anchor: `references/style/farinuff-25d-pixel-fleet-01-exec-59f3f7d9-9026-4477-9999-6bdaca55f5b0.png`
 
@@ -8,11 +8,17 @@ Supporting visual anchors: current runtime strips under `assets/sprites/generate
 
 Visible sprite board: `renders/approved/farinuff-25d-sprite-reference-board.png`
 
+## Native 3D migration scope
+
+This document remains authoritative for the verified 2D rollback baseline and any maintenance of its sprite assets. For the target native 3D runtime, `docs/3d-migration-checklist.md` and ADRs 0001–0002 supersede the sprite-strip, logical-cell, anchor, and nearest-neighbor output requirements below. The role-readable silhouettes, faceted construction, palette relationships, controlled emission, and small-on-screen gameplay readability remain visual direction for the replacement GLBs unless a later approved art reference changes them.
+
+Native 3D craft use canonical GLB assets and render directly at the active backbuffer or viewport resolution. They are not baked into four-frame gameplay strips.
+
 ## Style fingerprint
 
 Stylized low-poly 3D spacecraft rendered as compact transparent pixel sprites. The visual target is the supplied 1280x720 gameplay render: hard faceted planes, stepped toon shading, near-black occlusion, restrained CRT/pixel breakup, and bright emissive cores against deep navy space. The supplied screenshot is a style anchor only; its boss, player, escorts, beam, HUD, and composition are not canon identities for the sprite set.
 
-## Hard style locks
+## Verified 2D baseline hard style locks
 
 - Use low-poly 3D hard-surface construction translated into crisp nearest-neighbor pixels.
 - Keep silhouettes compact, role-readable, and centered in a 128x128 logical cell with a 64x64 anchor.
@@ -70,4 +76,4 @@ Do not copy the reference image's exact identity, topology, pose, composition, H
 
 ## Project usage
 
-The machine-readable companions are `art-project.json` and `style-profile.json`. Runtime assets live under `assets/sprites/generated/`; versioned replacement strips should be recorded in the art-project ledger and wired into scenes only after visual and import validation.
+The machine-readable companions are `art-project.json` and `style-profile.json`. Verified 2D baseline assets live under `assets/sprites/generated/`; versioned replacement strips should be recorded in the art-project ledger and wired into the baseline scenes only after visual and import validation. Native 3D asset requirements and validation are tracked by the migration checklist and ADRs.
