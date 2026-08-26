@@ -56,6 +56,7 @@ This checklist tracks the migration from the current 2D gameplay runtime to a na
 - The same three failures reproduce when forced back to `gl_compatibility`; they are retained baseline test/import issues rather than regressions introduced by the renderer switch.
 - The user-owned manual Forward+ baseline playtest remains the Phase 0 approval gate.
 - Manual baseline QA identified the legacy boss/nuke/game-over hit-stop as jittery. The shared time-scale mechanism and all of its callers were removed; the boss-defeat cinematic described above remains optional future work.
+- Forward+ profiling isolated a 25–31 ms first-enemy frame to cold evolution-shader and actor setup rather than collision detection. The 2D spawner now warms that path with an inert off-plane craft before starting its timer; the measured first natural spawn fell below the 16.7 ms frame budget with no enemy-group membership, collision pair, reward, or threat-history entry from warm-up.
 
 ## Phase 1 — Native 3D flight-space foundation
 

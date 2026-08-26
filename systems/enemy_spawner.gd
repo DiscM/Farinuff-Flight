@@ -21,8 +21,12 @@ var spawn_distance := 80.0
 ## enemy can't materialize right on top of the ship with no reaction time.
 var player_safe_distance := 160.0
 const MAX_SPAWN_ROLLS := 6
+enum SpawnWarmupState { NOT_STARTED, IN_PROGRESS, COMPLETE }
+
 var evolution_hold := false
 var grace_time := 0.0
+var _spawn_warmup_state := SpawnWarmupState.NOT_STARTED
+var _spawning_requested := false
 
 
 func _ready() -> void:
@@ -43,12 +47,53 @@ func _refresh_viewport_size() -> void:
 
 
 func start_spawning() -> void:
-	if not evolution_hold:
-		spawn_timer.start()
+	if evolution_hold:
+		return
+	_spawning_requested = true
+	match _spawn_warmup_state:
+		SpawnWarmupState.COMPLETE:
+			spawn_timer.start()
+		SpawnWarmupState.NOT_STARTED:
+			_spawn_warmup_state = SpawnWarmupState.IN_PROGRESS
+			_warm_first_spawn_pipeline.call_deferred()
 
 
 func stop_spawning() -> void:
+	_spawning_requested = false
 	spawn_timer.stop()
+
+
+## Compiles the shared enemy-evolution canvas shader and warms first-use actor
+## setup on the active gameplay scene before the spawn timer starts. The craft
+## remains inert just beyond the combat plane for one frame and never enters
+## gameplay groups, collision detection, rewards, or threat accounting.
+func _warm_first_spawn_pipeline() -> void:
+	var scene_root := get_tree().current_scene
+	if scene_root == null:
+		_finish_spawn_warmup()
+		return
+	var warm_enemy := basic_enemy_scene.instantiate() as BaseEnemy
+	if warm_enemy == null:
+		_finish_spawn_warmup()
+		return
+	warm_enemy.name = "EnemyRenderPipelineWarmup"
+	warm_enemy.position = Vector2(-spawn_distance, viewport_height * 0.5)
+	warm_enemy.spawn_direction = Vector2.RIGHT
+	warm_enemy.prepare_render_warmup(threat_director.generation, special_attack_coordinator)
+	scene_root.add_child(warm_enemy)
+
+	await get_tree().process_frame
+	if is_instance_valid(warm_enemy):
+		warm_enemy.queue_free()
+	await get_tree().process_frame
+	_finish_spawn_warmup()
+
+
+func _finish_spawn_warmup() -> void:
+	_spawn_warmup_state = SpawnWarmupState.COMPLETE
+	if _spawning_requested and not evolution_hold \
+			and GameManager.is_game_active and not GameManager.boss_active:
+		spawn_timer.start()
 
 
 func set_evolution_hold(enabled: bool) -> void:
