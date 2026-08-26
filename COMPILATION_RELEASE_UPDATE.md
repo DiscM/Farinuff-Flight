@@ -218,7 +218,7 @@ Required for the compilation:
 - Controller-only navigation across title, settings, Hangar, Launch Bay, pause, upgrades, allocation, try-again, game over, and credits.
 - Separate SFX and music sliders; consider additional combat/UI channels after an audio mix pass.
 - Text/UI scale options and tests at the smallest supported viewport.
-- Independent toggles or sliders for screen shake, hit stop, CRT, distortion, bloom/flash intensity, and aim assist.
+- Independent toggles or sliders for screen shake, CRT, distortion, bloom/flash intensity, and aim assist. If cinematic camera motion is implemented, include a reduced-motion option for it.
 - Reduced-flashing audit of every boss, nuke, upgrade, damage, and evolution effect—not only the explosion/effect helpers.
 - Color-independent threat communication through silhouette, motion, outline, or icon.
 - Pause behavior that never consumes a selection input on resume.

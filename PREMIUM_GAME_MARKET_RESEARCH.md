@@ -195,7 +195,7 @@ The current try-again prompt has a time-limited decision path. Timed UI should b
 
 ### 4.5 Feedback and “juice” without visual overload
 
-Screen shake, hit stop, CRT effects, distortion, flashing reduction, and audio infrastructure already exist or are recorded in the project ([CHANGELOG.md](CHANGELOG.md), [autoloads/save_manager.gd](autoloads/save_manager.gd)). The design backlog correctly identifies distinct hit, death, reward, and boss cues as incomplete ([GAME_DESIGN.md](GAME_DESIGN.md)).
+Screen shake, CRT effects, distortion, flashing reduction, and audio infrastructure already exist or are recorded in the project ([CHANGELOG.md](CHANGELOG.md), [autoloads/save_manager.gd](autoloads/save_manager.gd)). Global hit-stop was removed after manual validation found the whole-game slowdown jittery. The design backlog correctly identifies distinct hit, death, reward, and boss cues as incomplete ([GAME_DESIGN.md](GAME_DESIGN.md)).
 
 Prioritize information-bearing feedback:
 

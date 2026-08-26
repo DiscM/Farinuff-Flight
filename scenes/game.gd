@@ -68,9 +68,6 @@ var _evolution_banner_active: bool = false
 # Screen shake state
 var shake_intensity: float = 0.0
 var shake_timer: float = 0.0
-## Sequence id for overlapping hit-stop calls — the latest call wins the
-## time_scale restore.
-var _hit_stop_seq: int = 0
 var _bg_time: float = 0.0
 var _background_palette_tween: Tween = null
 var _crt_layer: CanvasLayer = null
@@ -109,7 +106,6 @@ func _ready() -> void:
 	SignalBus.expedition_completed.connect(_on_expedition_completed)
 	SignalBus.allocation_triggered.connect(_on_allocation_triggered)
 	SignalBus.elite_upgrade_triggered.connect(_on_elite_upgrade_triggered)
-	SignalBus.power_up_collected.connect(_on_power_up_collected_hit_stop)
 	SignalBus.evolution_transition_pending.connect(_on_evolution_transition_pending)
 	SaveManager.settings_changed.connect(_apply_visual_settings)
 
@@ -384,23 +380,6 @@ func _fizzle_out_planets() -> void:
 ## pre-fight value, so generation continues right where it left off.
 func _on_boss_died_resume_planets(_points: int) -> void:
 	_planets_suspended = false
-	_hit_stop(0.25, 0.05)
-
-## Adds a small hit-stop punch to nuke pickups.
-func _on_power_up_collected_hit_stop(type: int, _pos: Vector2) -> void:
-	if type == PowerUp.Type.NUKE:
-		_hit_stop(0.15, 0.1)
-
-## Briefly freezes the action for impact emphasis ("hit-stop"). The timer
-## ignores the slowed time scale and always processes, so it resolves even
-## if a popup pauses the tree mid-effect. Overlapping calls: latest wins.
-func _hit_stop(duration: float, time_scale: float) -> void:
-	_hit_stop_seq += 1
-	var seq := _hit_stop_seq
-	Engine.time_scale = time_scale
-	await get_tree().create_timer(duration, true, false, true).timeout
-	if seq == _hit_stop_seq:
-		Engine.time_scale = 1.0
 
 ## Consolidates all pause sources (pause menu, allocation popup, elite upgrade,
 ## try-again screen) into a single paused state for the scene tree.
@@ -492,7 +471,6 @@ func _on_game_over(final_score: int) -> void:
 	if game_over_shown:
 		return
 	_final_score_cache = final_score
-	_hit_stop(0.3, 0.15)
 
 	if GameManager.try_again_stocks > 0 and not try_again_active:
 		# Intercept — offer a try-again before the true game over
