@@ -23,8 +23,6 @@ config/icon="res://icon.svg"
 
 [autoload]
 
-
-
 SignalBus="*res://autoloads/signal_bus.gd"
 SaveManager="*res://autoloads/save_manager.gd"
 MetaProgression="*res://autoloads/meta_progression.gd"
@@ -92,16 +90,16 @@ boost={
 [layer_names]
 
 2d_physics/layer_1="player"
-2d_physics/layer_2="enemies"
-2d_physics/layer_3="player_bullets"
-2d_physics/layer_4="enemy_bullets"
-2d_physics/layer_5="powerups"
-2d_physics/layer_6="hostile_ordnance"
 3d_physics/layer_1="Player Craft"
+2d_physics/layer_2="enemies"
 3d_physics/layer_2="Enemy Craft"
+2d_physics/layer_3="player_bullets"
 3d_physics/layer_3="Player Projectile"
+2d_physics/layer_4="enemy_bullets"
 3d_physics/layer_4="Enemy Projectile"
+2d_physics/layer_5="powerups"
 3d_physics/layer_5="Pickup"
+2d_physics/layer_6="hostile_ordnance"
 3d_physics/layer_6="Hostile Ordnance"
 
 [rendering]
