@@ -116,9 +116,10 @@ func _apply_stage(enemy_host: Node, stage: EnemyEvolutionStage) -> void:
 		collision.shape = stage.collision_shape
 
 	if not Engine.is_editor_hint():
-		enemy_host.max_health = stage.max_health
-		enemy_host.speed = stage.move_speed
-		enemy_host.points = stage.base_points
+		var stats := stage.gameplay_stats
+		enemy_host.max_health = stats.max_health if stats != null else stage.max_health
+		enemy_host.speed = stats.move_speed if stats != null else stage.move_speed
+		enemy_host.points = stats.base_points if stats != null else stage.base_points
 		preview_generation = stage.generation
 
 

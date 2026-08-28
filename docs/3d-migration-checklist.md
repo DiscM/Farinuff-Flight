@@ -1,6 +1,6 @@
 # Native 3D Migration Checklist
 
-**Status**: implementation in progress; the pooled native Enemy Projectile slice is at its manual-playtest gate
+**Status**: implementation in progress; the native Generation I Basic Enemy slice is at its manual-playtest gate
 
 This checklist tracks the migration from the current 2D gameplay runtime to a native 3D combat runtime. The existing 2D actor scenes remain frozen reference and rollback implementations until the user manually validates each 3D slice.
 
@@ -169,7 +169,7 @@ This checklist tracks the migration from the current 2D gameplay runtime to a na
 - [ ] Import native 3D textures at appropriate target-view resolution with mipmaps and standard 3D filtering; declare nearest filtering only for intentional pixel-art textures.
 - [ ] Use appropriately low-poly GLBs for the first slice and defer runtime LOD variants until profiling demonstrates geometry, shadow, or draw-call pressure.
 - [ ] Preserve bounded pools for pickups, XP orbs, special-attack fragments, and transient effects in the native 3D port.
-- [ ] Keep Player Craft and Basic Enemy scene-managed initially; leave bosses and rare set pieces directly instantiated.
+- [x] Keep Player Craft and Basic Enemy scene-managed initially; leave bosses and rare set pieces directly instantiated.
 - [ ] Add regular-enemy pooling only if profiling demonstrates meaningful spawn/despawn churn savings after accounting for retained memory.
 
 ### Phase 2 Player Projectile validation record
@@ -201,31 +201,53 @@ This checklist tracks the migration from the current 2D gameplay runtime to a na
 - The full existing 10-scene regression run retained seven PASS sentinels and the same three known failures: `enemy_evolution_shader_smoke` did not complete its legacy enemy-import path; `player_upgrade_3d_smoke` and `visual_upgrade_smoke` failed shared-shader identity checks. The balance scene still emitted its known enemy-import diagnostics despite reaching PASS. Tests used a temporary mirrored project with a verified, distinct `user://` profile. Both live save files retained SHA-256 `6c70248833464a39995ee83a6754d4836ab3cc33daebe9b21577284ecc992f5f`. No new automated migration suite was added.
 - **Manual gate:** run `res://scenes/projectile_3d_review.tscn` directly. Check orange incoming-projectile readability, movement/boost through normal and fast volleys, stable arming near the range guides, continued Player Projectile firing, boundary cleanup, and pause/restart. Confirm the pool-growth counter stays at zero; contacts should increment without health loss or deflection. Implementation pauses here for explicit approval before Basic Enemy, native damage/deflection, menu loading, VFX, or another migration slice. The main gameplay entry remains unchanged.
 
+### Phase 2 Enemy Projectile approval record
+
+- The user's 2026-08-28 continuation approves moving past the Enemy Projectile gate. This next bounded slice covers the Generation I Basic Enemy wrapper, straight movement, receiving Player Projectile damage, and kill/contact/despawn lifecycle. Player damage/deflection, rewards/orbs, later-generation abilities, other enemies, VFX, menu asset loading, and production cutover remain deferred.
+
 ## Phase 3 — Player/BasicEnemy vertical slice
 
-- [ ] Scope the first native 3D validation scene to Player Craft, Basic Enemy, and their pooled Projectiles only.
-- [ ] Keep all other enemy roles, bosses, and unported gameplay actors outside the first 3D validation scene.
+- [x] Scope the first native 3D validation scene to Player Craft, Basic Enemy, and their pooled Projectiles only.
+- [x] Keep all other enemy roles, bosses, and unported gameplay actors outside the first 3D validation scene.
 - [x] Create the final `Player3D` scene with a gameplay body, primitive hitbox, `Visuals` `Node3D`, GLB model, sockets, and VFX hooks.
 - [x] Use existing GLB mockups for the first slice where polished replacement models are not yet ready.
 - [x] Keep polished GLB replacements drop-in compatible with the established wrapper, origin, material, and `Marker3D` socket contracts.
-- [ ] Keep gameplay animation control in wrapper-local `AnimationPlayer`/procedural transforms; treat imported GLB animations as optional visual inputs rather than gameplay dependencies.
+- [x] Keep first-slice gameplay animation control in wrapper-local `AnimationPlayer`/procedural transforms; treat imported GLB animations as optional visual inputs rather than gameplay dependencies.
 - [x] Create a dedicated 3D asset-review scene using runtime scale, orientation, lighting, materials, sockets, and relevant animation presentation.
 - [ ] Obtain manual asset approval in the review scene before swapping a polished replacement into a validated gameplay slice.
 - [x] Port player controls, movement tuning, aim, rotation, boost/drift, and boundaries.
 - [x] Port base Player Craft firing through the center socket into the pooled Player Projectile manager; weapon upgrades remain deferred.
 - [ ] Port player damage, invulnerability, and projectile-dependent boost deflection/chain behavior.
-- [ ] Reuse shared spatially independent gameplay data for tuning, damage, weapons, upgrades, evolution, and encounter rules instead of duplicating balance constants.
-- [ ] Keep 3D-specific scene references, model scale, sockets, primitive hitboxes, and visual parameters in native 3D scenes or dedicated 3D resources.
+- [x] Share base Player flight/weapon tuning, base Projectile damage, Generation I Basic Enemy stats, and spawn/despawn margins with the 2D reference.
+- [ ] Migrate the remaining shared upgrade, evolution, damage, and encounter data as their dependent actors are ported.
+- [x] Keep first-slice 3D-specific scene references, model scale, sockets, primitive hitboxes, and visual parameters in native 3D scenes or dedicated 3D resources.
+- [x] Emit native Projectile hit and Basic Enemy finish events with canonical `Vector3` combat positions at `Y=0`.
 - [ ] Migrate position-bearing gameplay signals to canonical `Vector3` combat positions with `Y=0`.
 - [ ] Add temporary 2D boundary conversions for the reference scene and remove them during final 2D gameplay cleanup; keep UI layout coordinates as `Vector2`.
-- [ ] Create the final `BasicEnemy3D` scene with its native 3D gameplay and visual structure.
-- [ ] Port Basic Enemy movement, targeting, attack timing, damage, death, reward, and despawn behavior.
-- [ ] Connect pooled player and enemy projectiles to native 3D hit detection.
+- [x] Create the `BasicEnemy3D` wrapper with its native Generation I gameplay and visual structure.
+- [x] Port Generation I Basic Enemy straight movement, damage reception, nonlethal hit flash, death, unrewarded player contact, and directional boundary despawn. Generation I has no shooting attack.
+- [ ] Port later Basic Enemy generation targeting, charge timing, and fragment release.
+- [ ] Port Basic Enemy score rewards, XP orbs, and death effects.
+- [x] Connect pooled player and enemy projectiles to native 3D hit detection; Player damage and deflection remain separate pending work above.
 - [ ] Add lightweight pooled placeholder muzzle, impact, death, and boost effects.
 - [ ] Implement first-slice placeholders with pooled `GPUParticles3D` for repeated trails/sparks and primitive mesh bursts for discrete flashes/impacts, attached through stable `Marker3D` effect hooks.
 - [ ] Run the complete manual user-validation checklist.
 - [ ] Pause implementation and wait for explicit user approval before continuing.
 - [ ] Record explicit user acceptance before production cutover or legacy cleanup.
+
+### Phase 3 Generation I Basic Enemy validation record
+
+- `res://entities/enemies/basic_enemy_3d.tscn` is a scene-managed `Area3D` with a dedicated `BoxShape3D`, `Visuals/BasicHullGLB`, and wrapper-owned `Attachments/Sockets` markers for MuzzleCenter, EngineLeft, EngineRight, Core, and Death. The existing Basic Enemy GLB is unchanged. Its imported socket nodes are visual-source data, not gameplay dependencies. Breathing affects `Visuals` only; combat roots and finish-event positions stay on `Y=0`.
+- `basic_enemy_generation_1.tres` is the shared source of 1 HP, 150 baseline-pixels/second, and 100 base points. The reference Gen I stage and native wrapper both use it; other reference generation values remain unchanged. Shared spawn/despawn margins remain 80/60 baseline pixels, and base Player Projectile damage remains 1 plus `GameManager.bonus_damage`. Points are authored for future reward routing but are not awarded in this review.
+- The primitive is authored for the shared 70-degree camera. Its X/Z cross-section projects to 26×26 baseline pixels at all four cardinal headings; the box stays world-aligned while the hull and sockets face the entry direction. This preserves Gen I's cardinal square envelope, not an arbitrary-angle steering contract for future generations.
+- Four authored shared surface overrides reuse the current Gen I corrupted-void shader and palette. No mesh-derived hitbox, material duplication, GLB normalization, proxy catalog, or extra local light is created at spawn. Per-instance shader time and flash isolate enemy feedback; native materials disable global shader-time animation while the reference materials keep their unchanged default clock.
+- `res://scenes/basic_enemy_3d_review.tscn` composes the actual `Native3DGameplay` controller. It adds deterministic cardinal entries, an eight-enemy cap, hitbox/socket guides, and destroyed/contact/escaped counters. Gen I does not fire; the already warmed Enemy Projectile pool is idle. Other enemy roles, 2D gameplay actors, and ship `SubViewport` proxies are absent. The earlier projectile-only review still loads without real enemy actors.
+- The first enemy is scene-authored, visible but inert during transition: no collision layer, monitoring, physics processing, or active enemy group. A live reload with the ordinary render loop disabled reached readiness on frame 33 through the existing forced transition draw, then activated the same enemy instance. Subsequent enemies are directly instantiated and freed; they are not pooled. Full menu-threaded asset loading remains pending.
+- Godot 4.6.3 imported and inspected both new scenes successfully. Live Metal/Forward+ checks confirmed 1-HP normal hits from all four headings, a surviving 24-pixel off-center miss, and one kill from a 12,000-pixels/second diagnostic crossing. Player firing through the actual input/controller/pool path also destroyed an enemy. Repeated damage/contact callbacks emitted only one finish event. Each outgoing edge cleaned up once, and offscreen incoming actors survived until entry. Player contact removed the enemy without changing lives or score; no rewards or orbs were created.
+- A temporary wave-41 diagnostic preserved the reference's two-step health rounding and capped late-game speed: 2 HP and 195 baseline-pixels/second. A nonlethal hit flashed only that enemy while its material resources remained shared. Escape pause froze movement, breathing, shader time, and hit flash; resume/restart worked. The actual Restart Run button rebuilt this review with reset counters and 64+64 projectile nodes. Main Menu restored non-HDR UI, unpaused the tree, and removed native actors/managers. Inspection mistakes in temporary runtime probes were discarded; the clean restarted run reported no gameplay errors. MCP's generated bridge still reports its own shadowing/enum warnings.
+- **Performance remains an open gate.** Eight warmed spawns measured 0.146 ms median and 2.016 ms maximum for instantiate/add/activate, with zero new pipeline compilations across all five tracked categories and zero projectile-pool growth. Short 180-frame debug samples at 1280×720 measured 10.015 ms median / 10.745 ms p95 with eight enemies, versus 9.996 / 11.482 ms without enemies. At an image-readback-confirmed 1920×1080, eight enemies measured 22.145 / 26.145 ms versus 20.010 / 25.168 ms without enemies; neither held 60 FPS. Reported physics maxima were 1.123 ms with enemies and 0.281 ms without. These are local debug observations, not a worst-wave/boss benchmark or evidence that final performance acceptance is complete. Use captured image dimensions when verifying output: `ViewportTexture.get_size()` overstated the 1920×1080 capture as 2880×1620 in this session.
+- Independent Standards and Spec reviews against turn-start commit `e461ee3f5f9321280b2c5ab9f704bdc595426a64` reported zero findings on each axis. The existing ten-scene regression suite ran once with a verified isolated save profile. Seven scenes reported PASS; `balance_ttk_smoke` still printed its known legacy `BaseEnemy` import errors despite PASS. `enemy_evolution_shader_smoke` again produced no PASS before the frame cap, while `player_upgrade_3d_smoke` and `visual_upgrade_smoke` reproduced their known shared-shader identity failures. Expected save-corruption checks and existing exit-resource warnings remain. No dedicated migration test suite or permanent diagnostic fixture was added. Logs are retained outside the repo at `/private/tmp/farinuff-basic-enemy-regression.x90Os0`; live save and backup hashes remained unchanged.
+- **Manual gate:** run `res://scenes/basic_enemy_3d_review.tscn` directly. Check Gen I silhouette/color, cardinal facing, movement, hitbox and socket alignment, firing hits/misses, contacts, cleanup, pause, and restart. Keys **1–4** spawn from top/right/bottom/left, **V** toggles automatic entries, **H** toggles hitboxes, and **G** toggles sockets; flight/fire/boost controls are unchanged. Destroyed, contact, and escape counters should each reflect their own outcome once; score and lives deliberately do not change. Explicit user acceptance is still required before the next slice. Player damage/deflection, rewards/orbs, later generations, VFX, menu loading, production cutover, legacy cleanup, and the 1080p 60-FPS acceptance gate remain open.
 
 ## Phase 4 — Remaining gameplay actor migration
 

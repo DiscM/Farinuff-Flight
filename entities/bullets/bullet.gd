@@ -133,7 +133,7 @@ func _on_area_entered(area: Area2D) -> void:
 			or area.is_in_group("enemy_armor") or area.is_in_group("hostile_ordnance"):
 		if not area.has_method("take_damage"):
 			return
-		var dmg := 1 + GameManager.bonus_damage
+		var dmg := WeaponTuning.BASE_DAMAGE + GameManager.bonus_damage
 		area.take_damage(dmg)
 
 		if explosive:
@@ -148,7 +148,7 @@ func _on_area_entered(area: Area2D) -> void:
 ## a pooled impact burst at the bullet's position.
 func _explode() -> void:
 	var blast_radius_sq := 80.0 * 80.0
-	var damage := 1 + GameManager.bonus_damage
+	var damage := WeaponTuning.BASE_DAMAGE + GameManager.bonus_damage
 	for enemy in get_tree().get_nodes_in_group("enemies"):
 		if is_instance_valid(enemy) and global_position.distance_squared_to(enemy.global_position) < blast_radius_sq:
 			enemy.take_damage(damage)

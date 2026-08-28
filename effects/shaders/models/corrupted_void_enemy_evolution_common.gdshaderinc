@@ -39,6 +39,9 @@ uniform vec4 glow_color : source_color = vec4(0.0);
 instance uniform vec4 instance_modulate : source_color = vec4(1.0);
 instance uniform float instance_flash : hint_range(0.0, 1.0) = 0.0;
 instance uniform float instance_phase_offset = 0.0;
+// Native wrappers set animation_speed=0 and advance this pause-aware clock.
+// The reference materials keep TIME with the default instance clock of zero.
+instance uniform float instance_animation_time = 0.0;
 instance uniform vec4 instance_energy_override : source_color = vec4(0.0);
 instance uniform vec4 instance_accent_override : source_color = vec4(0.0);
 
@@ -60,7 +63,7 @@ void vertex() {
 void fragment() {
 	float stage = float(VOID_STAGE);
 	float stage_level = clamp((stage - 1.0) / 3.0, 0.0, 1.0);
-	float time = TIME * animation_speed + phase_offset + instance_phase_offset;
+	float time = TIME * animation_speed + phase_offset + instance_phase_offset + instance_animation_time;
 	float pulse = 0.78 + 0.22 * sin(time * (2.2 + stage_level * 2.6));
 	vec3 active_energy = mix(
 		energy_color.rgb,

@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=3 uid="uid://cqwk2m8xh7y3a"]
+[gd_scene load_steps=17 format=3 uid="uid://cqwk2m8xh7y3a"]
 
 [ext_resource type="Script" path="res://entities/enemies/basic_enemy.gd" id="1"]
 [ext_resource type="Script" path="res://assets/sprites/generated/strip_animator.gd" id="2"]
@@ -9,6 +9,7 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/generated/v2p5d_basic_enemy_gen1_idle_strip.png" id="7"]
 [ext_resource type="Texture2D" path="res://assets/sprites/generated/v2p5d_basic_enemy_gen1_idle_strip.png" id="8"]
 [ext_resource type="Texture2D" path="res://assets/sprites/generated/v2p5d_basic_enemy_gen1_idle_strip.png" id="9"]
+[ext_resource type="Resource" path="res://entities/enemies/basic_enemy_generation_1.tres" id="10_stats"]
 
 [sub_resource type="RectangleShape2D" id="shape1"]
 size = Vector2(26, 26)
@@ -38,9 +39,7 @@ generation = 1
 display_name = "Standard"
 texture = ExtResource("6")
 collision_shape = SubResource("shape1")
-max_health = 1
-move_speed = 150.0
-base_points = 100
+gameplay_stats = ExtResource("10_stats")
 [node name="Origins" type="Node2D" parent="VisualRoot/Evolution/GenerationI"]
 [node name="FragmentLeft" type="Marker2D" parent="VisualRoot/Evolution/GenerationI/Origins"]
 position = Vector2(-9, 5)

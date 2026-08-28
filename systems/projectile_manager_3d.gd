@@ -1,7 +1,7 @@
 extends Node
 class_name ProjectileManager3D
 ## Scene-owned projectile policy around the shared ObjectPool.
-## Damage and deflection routing belong to the later native combat slice.
+## Damage routing belongs to the native gameplay controller; deflection is deferred.
 
 signal player_projectile_hit(target: Area3D, combat_position: Vector3)
 signal enemy_projectile_hit(target: Area3D, combat_position: Vector3)

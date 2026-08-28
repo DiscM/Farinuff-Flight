@@ -1,0 +1,113 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://entities/enemies/basic_enemy_3d.gd" id="1_enemy"]
+[ext_resource type="PackedScene" path="res://assets/models/mockups/basic_enemy_mockup.glb" id="2_model"]
+[ext_resource type="Resource" path="res://entities/enemies/basic_enemy_generation_1.tres" id="3_stats"]
+[ext_resource type="Shader" path="res://effects/shaders/models/corrupted_void_enemy_3d.gdshader" id="4_shader"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_hitbox"]
+size = Vector3(2.221092, 0.5, 2.363636)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_energy"]
+shader = ExtResource("4_shader")
+shader_parameter/base_color = Color(0.9261, 0.1718, 0.722, 1)
+shader_parameter/metallic = 0.24
+shader_parameter/roughness = 0.2
+shader_parameter/energy_color = Color(1, 0.231, 0.141, 1)
+shader_parameter/accent_color = Color(1, 0.757, 0.302, 1)
+shader_parameter/circuit_amount = 0.05
+shader_parameter/emission_strength = 2.19
+shader_parameter/fracture_density = 0.1
+shader_parameter/reactor_focus = 0.12
+shader_parameter/emissive_surface = 1.0
+shader_parameter/glow_color = Color(0.65, 0.0258, 0.4731, 1)
+shader_parameter/animation_speed = 0.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_hull"]
+shader = ExtResource("4_shader")
+shader_parameter/base_color = Color(0.8095, 0.1718, 0.3035, 1)
+shader_parameter/metallic = 0.6
+shader_parameter/roughness = 0.32
+shader_parameter/energy_color = Color(1, 0.231, 0.141, 1)
+shader_parameter/accent_color = Color(1, 0.757, 0.302, 1)
+shader_parameter/circuit_amount = 0.05
+shader_parameter/emission_strength = 0.74
+shader_parameter/fracture_density = 0.1
+shader_parameter/reactor_focus = 0.12
+shader_parameter/animation_speed = 0.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_gunmetal"]
+shader = ExtResource("4_shader")
+shader_parameter/base_color = Color(0.4845, 0.5564, 0.6422, 1)
+shader_parameter/metallic = 0.82
+shader_parameter/roughness = 0.29
+shader_parameter/energy_color = Color(1, 0.231, 0.141, 1)
+shader_parameter/accent_color = Color(1, 0.757, 0.302, 1)
+shader_parameter/circuit_amount = 0.05
+shader_parameter/emission_strength = 0.74
+shader_parameter/fracture_density = 0.1
+shader_parameter/reactor_focus = 0.12
+shader_parameter/animation_speed = 0.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_reactor"]
+shader = ExtResource("4_shader")
+shader_parameter/base_color = Color(0.9731, 0.8267, 0.206, 1)
+shader_parameter/metallic = 0.3
+shader_parameter/roughness = 0.22
+shader_parameter/energy_color = Color(1, 0.231, 0.141, 1)
+shader_parameter/accent_color = Color(1, 0.757, 0.302, 1)
+shader_parameter/circuit_amount = 0.05
+shader_parameter/emission_strength = 2.19
+shader_parameter/fracture_density = 0.1
+shader_parameter/reactor_focus = 0.12
+shader_parameter/emissive_surface = 1.0
+shader_parameter/glow_color = Color(0.6343, 0.4614, 0.0507, 1)
+shader_parameter/animation_speed = 0.0
+
+[node name="BasicEnemy3D" type="Area3D"]
+editor_description = "Scene-managed Gen I. Inert until activate(); Y=0 combat root. Box is a 26x26 baseline-pixel envelope for cardinal entries under the shared 70-degree camera."
+collision_layer = 0
+collision_mask = 0
+monitoring = false
+monitorable = false
+input_ray_pickable = false
+script = ExtResource("1_enemy")
+gameplay_stats = ExtResource("3_stats")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_hitbox")
+disabled = true
+
+[node name="Visuals" type="Node3D" parent="."]
+position = Vector3(0, 0.08, 0)
+
+[node name="BasicHullGLB" parent="Visuals" instance=ExtResource("2_model")]
+
+[node name="BASIC __ REDJACK Mk II" parent="Visuals/BasicHullGLB" index="0"]
+surface_material_override/0 = SubResource("ShaderMaterial_energy")
+surface_material_override/1 = SubResource("ShaderMaterial_hull")
+surface_material_override/2 = SubResource("ShaderMaterial_gunmetal")
+surface_material_override/3 = SubResource("ShaderMaterial_reactor")
+
+[node name="Attachments" type="Node3D" parent="."]
+
+[node name="Sockets" type="Node3D" parent="Attachments"]
+
+[node name="MuzzleCenter" type="Marker3D" parent="Attachments/Sockets"]
+position = Vector3(0, 0.16, -1.84)
+
+[node name="EngineLeft" type="Marker3D" parent="Attachments/Sockets"]
+position = Vector3(-0.25, 0.07, 1.17)
+
+[node name="EngineRight" type="Marker3D" parent="Attachments/Sockets"]
+position = Vector3(0.25, 0.07, 1.17)
+
+[node name="Core" type="Marker3D" parent="Attachments/Sockets"]
+position = Vector3(0, 0.2, 0)
+
+[node name="Death" type="Marker3D" parent="Attachments/Sockets"]
+position = Vector3(0, 0.2, 0)
+
+[node name="Modules" type="Node3D" parent="Attachments"]
+
+[editable path="Visuals/BasicHullGLB"]
