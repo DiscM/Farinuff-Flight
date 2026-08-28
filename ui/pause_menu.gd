@@ -128,7 +128,7 @@ func _on_dev_tools() -> void:
 ## Unpauses the game and reloads the game scene for a fresh retry.
 func _on_retry() -> void:
 	get_tree().paused = false
-	get_tree().change_scene_to_file("res://scenes/game.tscn")
+	get_tree().reload_current_scene()
 
 ## Unpauses the game and returns to the main menu.
 func _on_menu() -> void:

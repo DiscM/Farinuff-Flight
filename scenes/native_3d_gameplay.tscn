@@ -1,4 +1,4 @@
-[gd_scene load_steps=10 format=3]
+[gd_scene load_steps=11 format=3]
 
 [ext_resource type="Script" path="res://scenes/native_3d_gameplay.gd" id="1_game"]
 [ext_resource type="Resource" path="res://systems/flight_space_3d_config.tres" id="2_config"]
@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" path="res://ui/hud.tscn" id="7_hud"]
 [ext_resource type="PackedScene" path="res://effects/combat_screen_overlays_2d.tscn" id="8_overlays"]
 [ext_resource type="PackedScene" path="res://entities/player/player_3d.tscn" id="9_player"]
+[ext_resource type="Texture2D" path="res://assets/ui/cursor_crosshair.png" id="10_reticle"]
 
 [node name="Native3DGameplay" type="Node"]
 script = ExtResource("1_game")
@@ -39,5 +40,42 @@ configuration = ExtResource("2_config")
 
 [node name="HUD" parent="." instance=ExtResource("7_hud")]
 layer = 10
+
+[node name="AimReticle" type="Sprite2D" parent="HUD"]
+visible = false
+texture_filter = 1
+modulate = Color(0.38, 0.88, 1, 0.9)
+scale = Vector2(0.375, 0.375)
+texture = ExtResource("10_reticle")
+
+[node name="FlightInstructions" type="Label" parent="HUD"]
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -28.0
+offset_bottom = -8.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.72, 0.88, 1, 1)
+theme_override_font_sizes/font_size = 12
+text = "FLIGHT REVIEW  •  WASD / ARROWS / LEFT STICK MOVE  •  MOUSE / RIGHT STICK AIM  •  SHIFT / B / LT BOOST  •  ESC PAUSE"
+horizontal_alignment = 1
+
+[node name="BoostStatus" type="Label" parent="HUD"]
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -52.0
+offset_bottom = -32.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.35, 1, 0.65, 1)
+theme_override_font_sizes/font_size = 12
+text = "BOOST READY"
+horizontal_alignment = 1
 
 [node name="ScreenOverlays" parent="." instance=ExtResource("8_overlays")]

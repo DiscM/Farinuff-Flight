@@ -1,6 +1,6 @@
 # Native 3D Migration Checklist
 
-**Status**: implementation in progress; the Player Craft wrapper is at its manual asset-review gate
+**Status**: implementation in progress; native Player Craft flight controls are at their manual-playtest gate
 
 This checklist tracks the migration from the current 2D gameplay runtime to a native 3D combat runtime. The existing 2D actor scenes remain frozen reference and rollback implementations until the user manually validates each 3D slice.
 
@@ -76,13 +76,13 @@ This checklist tracks the migration from the current 2D gameplay runtime to a na
 - [x] Add a scene-owned plain `FlightSpace3D` `Node` service with an active `Camera3D` reference and optional configuration `Resource`.
 - [x] Keep `FlightSpace3D` free of rendering, collision, UI, autoload, and continuously running responsibilities.
 - [x] Add separate adapter methods for screen positions and directional input within the same Combat Plane coordinate system.
-- [ ] Move mouse aiming onto the Y=0 Combat Plane through `Camera3D` ray projection.
-- [ ] Convert keyboard/gamepad movement through the camera's projected right/forward basis onto world X/Z without synthetic rays.
-- [ ] Map aim and movement direction to world-Y yaw while keeping pitch and roll visual-only.
-- [ ] Preserve existing InputMap action names and keyboard/gamepad semantics while converting them through `FlightSpace3D`.
+- [x] Move mouse aiming onto the Y=0 Combat Plane through `Camera3D` ray projection.
+- [x] Convert keyboard/gamepad movement through the camera's projected right/forward basis onto world X/Z without synthetic rays.
+- [x] Map aim and movement direction to world-Y yaw while keeping pitch and roll visual-only.
+- [x] Preserve existing InputMap action names and keyboard/gamepad semantics while converting them through `FlightSpace3D`.
 - [ ] Add optional visual banking beneath the gameplay transform without rotating gameplay hitboxes.
 - [ ] Normalize every actor gameplay root to `(x, 0, z)` on the Combat Plane and apply GLB centering/height corrections below `Visuals`.
-- [ ] Keep the aim reticle in the 2D HUD and position it from the projected native 3D aim point.
+- [x] Keep the aim reticle in the 2D HUD and position it from the projected native 3D aim point.
 - [x] Define fixed combat-plane bounds equivalent to the current visible viewport limits.
 - [x] Derive combat bounds, off-screen spawn margins, and despawn margins from the active orthographic camera projected onto `Y=0` rather than hard-coding screen-pixel rectangles.
 - [x] Preserve the 16:9 baseline vertical orthographic framing, expand wider viewports horizontally, and avoid stretching native 3D models.
@@ -124,7 +124,23 @@ This checklist tracks the migration from the current 2D gameplay runtime to a na
 - The native gameplay shell now contains exactly one active `Player3D` `Area3D`, one primitive `CollisionShape3D`, no `Area2D`, and no `SubViewport`. The wrapper uses Player Craft layer 1 and mask 58, stays at root Y=0, and deliberately does not join the legacy `player` group until its HUD-facing gameplay contract is ported.
 - Both the asset-review scene and native gameplay shell launched on Metal Forward+ without project runtime errors. The review scene sampled at 145 FPS; controls, movement, aiming, weapons, upgrades, damage, and encounter coordinators remain outside this visual-contract slice.
 - The final existing 10-scene smoke run preserved its accepted baseline: seven scenes reached their PASS sentinel; `enemy_evolution_shader_smoke`, `player_upgrade_3d_smoke`, and `visual_upgrade_smoke` reproduced only their three documented pre-existing failures.
-- This Player Craft wrapper and asset-review scene now require explicit user approval before controls, asset loading, projectiles, Basic Enemy, or another migrated scene is implemented.
+- The user explicitly approved continuation from the Player Craft wrapper and asset-review gate. The next bounded slice adds flight controls only; combat, loading, and additional actors remain deferred.
+
+### Phase 1 Player Craft flight-controls validation record
+
+- `Player3D` now implements keyboard/left-stick movement, mouse/right-stick aiming, world-Y yaw, steerable boost, cooldown, post-boost drift/braking, and camera-derived boundary clamping. Existing InputMap actions remain unchanged. Weapons, damage, invulnerability, deflection/chain boosts, enemies, loading, and placeholder VFX are not part of this controls-only slice.
+- Spatially independent movement, boost, drift, and aim constants live in `PlayerFlightTuning`. The 2D reference reads the same unchanged values; it is never instantiated by the native scene. `FlightSpace3D` converts baseline screen-equivalent velocities and distances through the stable camera basis, including foreshortening, while preserving analog magnitude and keeping motion independent of cursor rays or screen shake.
+- At 1280×720 with speed bonuses neutralized, timed live checks measured 261.33 pixels traveled during the first second of acceleration in both cardinal and diagonal directions, a 280-pixels/second terminal speed, and half that travel/speed at half-strength input. A stationary boost covered 340.00 pixels, respected its 0.85-second cooldown, and entered the retained 0.4-second drift window. Mid-boost steering retained the 500-pixels/second speed; opposing input reduced drift speed more than coasting in a controlled 0.4-second comparison. Simulation time remained at 1×.
+- Mouse aiming used the rendered camera's ray onto Y=0; the projected nose matched the cursor direction. The right-stick deadzone and left-stick analog InputMap path were exercised with input events. The retained 2D reticle is a 60-baseline-pixel facing marker projected from the Combat Plane; its pixel-art texture explicitly uses nearest filtering.
+- Gameplay root Y stayed zero, with no pitch or roll. The wrapper's 45.184-baseline-pixel boundary inset preserves the reference's displayed-frame margin and scales with output resolution to keep its world-space distance fixed. Resizing from 1280×720 to 1920×720 expanded the horizontal Combat Plane without changing its vertical span or world speed; clamping refreshed from the camera on viewport resize.
+- Review identified that margins also need to scale if the logical viewport height changes. Normal 1080p/1440p window resizing retains the configured 720-pixel logical height; a separate temporary runtime check exercised actual logical viewports of 1280×720, 1920×1080, and 2560×1440. All three preserved the same 101.626×57.239-world-unit movement bounds and 3.860/4.108-world-unit X/Z inset, with edge projection error below 0.001 pixel. No project stretch setting was changed.
+- The existing HUD and pause menu are reused through `CanvasLayer`. Escape froze movement and cooldowns, resume restored input, Restart Run rebuilt the native scene with fresh movement/boost state, and Main Menu removed the native actor and restored the prior HDR 2D setting. The shared retry action now reloads its current gameplay scene instead of hard-coding the 2D entry.
+- This non-combat review calls `GameManager.start_game(false)` so run/loadout state is initialized without spending persistent Hangar field supplies. Ordinary 2D runs retain the default consumption behavior; native combat entry must re-enable it when field supplies can actually be used.
+- The native runtime still contains one `Area3D`, no `Area2D`, no `SubViewport`, no legacy `player` group member, and an empty inert pool root. The asset-review scene keeps controls disabled even if run state was previously active, preserving its static model/hitbox/socket review contract.
+- Metal Forward+ runtime checks and the headless editor import completed without project script errors. No dedicated migration test scenes or harness were added; live diagnostics do not replace user acceptance.
+- The final existing 10-scene regression run retained seven PASS sentinels and the same three known failures: `enemy_evolution_shader_smoke` could not complete its legacy enemy-import path, while `player_upgrade_3d_smoke` and `visual_upgrade_smoke` failed shared-shader identity checks. The balance scene still emitted its existing legacy enemy-import diagnostics despite reaching PASS. Separate Standards and Spec reviews have no outstanding findings after the viewport-inset correction.
+- Save comparison caught a legacy regression-fixture side effect: 60 salvage was awarded and the normal save backup rotated. The active save was restored byte-for-byte to its pre-test hash; the backup now contains that same pre-test save. Future legacy regression runs should isolate `user://` or preserve both save files separately before execution.
+- **Manual gate:** run `res://scenes/native_3d_gameplay.tscn` directly and approve movement feel, aiming, boost steering/drift, edge limits, reticle, and pause/restart behavior. Implementation is paused here. The main gameplay entry remains unchanged, and explicit user approval is required before asset loading, projectiles, Basic Enemy, or another migrated slice.
 
 ## Phase 2 — Pooled 3D projectiles
 
@@ -164,7 +180,8 @@ This checklist tracks the migration from the current 2D gameplay runtime to a na
 - [ ] Keep gameplay animation control in wrapper-local `AnimationPlayer`/procedural transforms; treat imported GLB animations as optional visual inputs rather than gameplay dependencies.
 - [x] Create a dedicated 3D asset-review scene using runtime scale, orientation, lighting, materials, sockets, and relevant animation presentation.
 - [ ] Obtain manual asset approval in the review scene before swapping a polished replacement into a validated gameplay slice.
-- [ ] Port player controls, movement tuning, aim, rotation, boost, damage, invulnerability, and boundaries.
+- [x] Port player controls, movement tuning, aim, rotation, boost/drift, and boundaries.
+- [ ] Port player damage, invulnerability, and projectile-dependent boost deflection/chain behavior.
 - [ ] Reuse shared spatially independent gameplay data for tuning, damage, weapons, upgrades, evolution, and encounter rules instead of duplicating balance constants.
 - [ ] Keep 3D-specific scene references, model scale, sockets, primitive hitboxes, and visual parameters in native 3D scenes or dedicated 3D resources.
 - [ ] Migrate position-bearing gameplay signals to canonical `Vector3` combat positions with `Y=0`.

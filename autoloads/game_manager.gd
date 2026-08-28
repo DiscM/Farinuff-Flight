@@ -451,8 +451,9 @@ func finalize_run() -> void:
 ## Entry point for starting a new game. Resets all game state to initial
 ## values for a new run — clears score, combo, lives, waves, stat
 ## allocations, orb meter, damage history, try-again stocks, and chosen
-## upgrades — then emits signals to refresh the HUD.
-func start_game() -> void:
+## upgrades — then emits signals to refresh the HUD. Isolated non-combat
+## reviews can keep persistent Hangar consumables intact.
+func start_game(consume_field_supplies: bool = true) -> void:
 	score = 0
 	combo = 0
 	lives = 3
@@ -491,8 +492,10 @@ func start_game() -> void:
 
 	# Consume Hangar field supply: stockpiled try-again stocks and an armed
 	# drop pod (the game scene applies the random power-up at spawn).
-	try_again_stocks += MetaProgression.consume_stockpile()
-	pending_start_powerup = MetaProgression.consume_powerup_pod()
+	pending_start_powerup = false
+	if consume_field_supplies:
+		try_again_stocks += MetaProgression.consume_stockpile()
+		pending_start_powerup = MetaProgression.consume_powerup_pod()
 
 	# Apply the launch-bay loadout: ship-variant profile and Damaged Hull.
 	var profile := MetaProgression.get_selected_ship_profile()
