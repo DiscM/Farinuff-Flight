@@ -11,6 +11,7 @@ height = 4.0
 editor_description = "Native Player Craft gameplay root. Root position is always on Y=0; imported-pivot correction belongs under Visuals."
 input_ray_pickable = false
 script = ExtResource("1_player")
+boundary_margin_pixels = 45.184
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 rotation = Vector3(1.570796, 0, 0)

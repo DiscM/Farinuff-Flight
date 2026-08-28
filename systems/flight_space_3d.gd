@@ -42,17 +42,41 @@ func _screen_to_combat_plane(source_camera: Camera3D, screen_position: Vector2) 
 
 
 ## Converts the existing screen-oriented input convention (right=+X,
-## down=+Y) into the camera-relative X/Z Combat Plane convention.
+## down=+Y) into a world direction, including camera foreshortening.
 func input_to_combat_direction(input_direction: Vector2) -> Vector3:
-	if stable_camera == null or input_direction.is_zero_approx():
+	return screen_motion_to_combat(input_direction).normalized()
+
+
+## Converts screen-equivalent tuning/input vectors without casting a ray.
+## Unlike a direction, this preserves analog magnitude, speed, and distance.
+## The baseline vertical span is fixed, so resizing never changes world speed.
+func screen_motion_to_combat(screen_motion: Vector2) -> Vector3:
+	if stable_camera == null or configuration == null:
 		return Vector3.ZERO
+	return _screen_motion_basis() * Vector3(screen_motion.x, 0.0, screen_motion.y)
+
+
+func combat_motion_to_screen(combat_motion: Vector3) -> Vector2:
+	if stable_camera == null or configuration == null:
+		return Vector2.ZERO
+	var motion := _screen_motion_basis().inverse() * combat_motion
+	return Vector2(motion.x, motion.z)
+
+
+func _screen_motion_basis() -> Basis:
 	var camera_right := stable_camera.global_basis.x
 	camera_right.y = 0.0
 	camera_right = camera_right.normalized()
 	var camera_down := stable_camera.global_basis.z
 	camera_down.y = 0.0
 	camera_down = camera_down.normalized()
-	return (camera_right * input_direction.x + camera_down * input_direction.y).normalized()
+	var units_per_pixel := stable_camera.size / float(configuration.baseline_viewport_size.y)
+	var foreshortening := absf(stable_camera.global_basis.y.dot(camera_down))
+	return Basis(
+		camera_right * units_per_pixel,
+		Vector3.UP,
+		camera_down * (units_per_pixel / maxf(foreshortening, 0.001))
+	)
 
 
 func combat_to_screen(combat_position: Vector3) -> Vector2:
@@ -62,13 +86,15 @@ func combat_to_screen(combat_position: Vector3) -> Vector2:
 	return active_camera.unproject_position(combat_position)
 
 
-## Returns camera-derived bounds in X/Z coordinates. A positive screen margin
-## expands the projected rectangle for off-plane spawning and despawning.
-func get_combat_bounds(screen_margin_pixels: float = 0.0) -> Rect2:
-	if stable_camera == null:
+## Returns camera-derived bounds in X/Z coordinates. A positive baseline-pixel
+## margin expands the rectangle for off-plane spawning and despawning. Scale
+## that margin with viewport height so its world-space distance stays fixed.
+func get_combat_bounds(baseline_margin_pixels: float = 0.0) -> Rect2:
+	if stable_camera == null or configuration == null:
 		return Rect2()
 	var viewport_rect := stable_camera.get_viewport().get_visible_rect()
-	var margin := Vector2.ONE * screen_margin_pixels
+	var pixel_scale := viewport_rect.size.y / float(configuration.baseline_viewport_size.y)
+	var margin := Vector2.ONE * baseline_margin_pixels * pixel_scale
 	var screen_min := viewport_rect.position - margin
 	var screen_max := viewport_rect.position + viewport_rect.size + margin
 	var screen_corners: Array[Vector2] = [

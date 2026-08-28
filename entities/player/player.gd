@@ -8,8 +8,9 @@ const VOXEL_ORBITAL_PROJECTILE_SHADER: Shader = preload("res://effects/shaders/p
 const ORBITAL_PROJECTILE_SHADER: Shader = PIXEL_ORBITAL_PROJECTILE_SHADER
 const RETICLE_TEXTURE := preload("res://assets/ui/cursor_crosshair.png")
 const PIXEL_EFFECT_SCENE := preload("res://effects/pixel_sprite_effect.tscn")
+const FlightTuning := preload("res://entities/player/player_flight_tuning.gd")
 
-@export var speed: float = 280.0
+@export var speed: float = FlightTuning.SPEED
 @export var base_fire_rate: float = 0.22  # seconds between shots
 
 # Power-up state (temporary)
@@ -94,10 +95,10 @@ var boost_distance_remaining: float = 0.0
 var boost_chain_window_timer: float = 0.0
 var afterimage_spawn_timer: float = 0.0
 const AF_SPAWN_LIMIT: float = 0.04
-const BOOST_DURATION: float = 0.68
-const BOOST_DISTANCE: float = 340.0
-const BOOST_STEER_RATE: float = 10.0
-const BOOST_COOLDOWN: float = 0.85
+const BOOST_DURATION: float = FlightTuning.BOOST_DURATION
+const BOOST_DISTANCE: float = FlightTuning.BOOST_DISTANCE
+const BOOST_STEER_RATE: float = FlightTuning.BOOST_STEER_RATE
+const BOOST_COOLDOWN: float = FlightTuning.BOOST_COOLDOWN
 const BOOST_REFLECT_COOLDOWN: float = 0.35
 const BOOST_REFLECT_COOLDOWN_STEP: float = 0.08
 const BOOST_REFLECT_COOLDOWN_MIN: float = 0.10
@@ -105,20 +106,20 @@ const BOOST_CHAIN_REFLECT_THRESHOLD: int = 3
 const BOOST_CHAIN_WINDOW: float = 0.18
 const BOOST_DEFLECT_RADIUS: float = 74.0
 const BOOST_DEFLECT_RADIUS_SQ: float = BOOST_DEFLECT_RADIUS * BOOST_DEFLECT_RADIUS
-const POST_BOOST_SLIDE_DURATION: float = 0.4
+const POST_BOOST_SLIDE_DURATION: float = FlightTuning.POST_BOOST_SLIDE_DURATION
 
 # --- Drift Params ---
 var drift_speed_bonus: float = 1.0
 var post_boost_slide_timer: float = 0.0
-const DRIFT_BONUS_MAX: float = 2.0
-const DRIFT_BONUS_RATE: float = 0.45
-const DRIFT_DECAY_RATE: float = 0.8
-const DRIFT_DRAG_BASE: float = 1.6
-const DRIFT_ACCEL_BASE: float = 2.4
+const DRIFT_BONUS_MAX: float = FlightTuning.DRIFT_BONUS_MAX
+const DRIFT_BONUS_RATE: float = FlightTuning.DRIFT_BONUS_RATE
+const DRIFT_DECAY_RATE: float = FlightTuning.DRIFT_DECAY_RATE
+const DRIFT_DRAG_BASE: float = FlightTuning.DRIFT_DRAG_BASE
+const DRIFT_ACCEL_BASE: float = FlightTuning.DRIFT_ACCEL_BASE
 
 # Movement feel
-@export var acceleration: float = 12.0   # how fast we reach top speed
-@export var drag: float = 14.0          # how fast we decelerate (higher = tighter/snappier stop)
+@export var acceleration: float = FlightTuning.ACCELERATION   # how fast we reach top speed
+@export var drag: float = FlightTuning.DRAG          # how fast we decelerate (higher = tighter/snappier stop)
 var _base_speed_without_afterburner: float
 var _base_acceleration_without_afterburner: float
 
@@ -173,7 +174,7 @@ func _setup_reticle() -> void:
 	dot.scale = Vector2(0.375, 0.375)  # scale 64px asset down to ~24px
 	dot.modulate = Color(0.38, 0.88, 1.0, 0.9)  # neon cyan tint to match HUD
 	reticle.add_child(dot)
-	dot.position = Vector2(0, -60) # distance from player
+	dot.position = Vector2(0, -FlightTuning.AIM_RETICLE_DISTANCE)
 	reticle.visible = false # hide until free aim is used
 
 
@@ -220,20 +221,20 @@ func _physics_process(delta: float) -> void:
 		current_drag = DRIFT_DRAG_BASE
 		
 		# Scale based on current speed ratio
-		var speed_ratio = clampf(velocity.length() / (speed * 2.5), 0.0, 1.0)
-		current_drag *= lerpf(1.0, 0.15, speed_ratio)
-		current_accel *= lerpf(1.0, 0.4, speed_ratio)
+		var speed_ratio = clampf(velocity.length() / (speed * FlightTuning.DRIFT_SPEED_RATIO), 0.0, 1.0)
+		current_drag *= lerpf(1.0, FlightTuning.DRIFT_MIN_DRAG_FACTOR, speed_ratio)
+		current_accel *= lerpf(1.0, FlightTuning.DRIFT_MIN_ACCEL_FACTOR, speed_ratio)
 		
 		post_boost_slide_timer -= delta
 		
 		# --- Braking Logic ---
-		if input_dir.length() > 0.1 and velocity.length() > 100.0:
+		if input_dir.length() > FlightTuning.BRAKE_INPUT_THRESHOLD and velocity.length() > FlightTuning.BRAKE_MIN_SPEED:
 			var dot = input_dir.dot(velocity.normalized())
-			if dot < -0.7:
+			if dot < FlightTuning.BRAKE_OPPOSITION_DOT:
 				# Opposite input! Apply heavy braking
-				current_drag = 22.0
-				current_accel = 2.0 # Heavy to reverse
-				drift_speed_bonus = move_toward(drift_speed_bonus, 1.0, 5.0 * delta)
+				current_drag = FlightTuning.BRAKE_DRAG
+				current_accel = FlightTuning.BRAKE_ACCELERATION # Heavy to reverse
+				drift_speed_bonus = move_toward(drift_speed_bonus, 1.0, FlightTuning.BRAKE_BONUS_DECAY * delta)
 				# Visual feedback: flash red/orange — only write RGB so alpha (invincibility blink) is preserved
 				sprite.modulate.r = 1.8
 				sprite.modulate.g = 0.7
@@ -382,7 +383,7 @@ func _begin_boost() -> void:
 	boost_duration_timer = BOOST_DURATION
 	boost_reflected_projectiles = 0
 	boost_chain_window_timer = 0.0
-	boost_direction = velocity.normalized() if velocity.length() > 1.0 else Vector2.UP
+	boost_direction = velocity.normalized() if velocity.length() > FlightTuning.BOOST_HEADING_MIN_SPEED else Vector2.UP
 	boost_distance_remaining = BOOST_DISTANCE
 	afterimage_spawn_timer = 0.0 # spawn immediately
 	_spawn_warp_effect(global_position, boost_direction)
@@ -513,7 +514,7 @@ func _update_aiming(_delta: float) -> void:
 		Input.get_joy_axis(0, JOY_AXIS_RIGHT_X),
 		Input.get_joy_axis(0, JOY_AXIS_RIGHT_Y)
 	)
-	if joy_dir.length() > 0.4:
+	if joy_dir.length() > FlightTuning.AIM_STICK_DEADZONE:
 		last_aim_direction = joy_dir.normalized()
 		is_using_free_aim = true
 	
@@ -521,8 +522,8 @@ func _update_aiming(_delta: float) -> void:
 	var mouse_pos := get_global_mouse_position()
 	var to_mouse := (mouse_pos - global_position).normalized()
 	# Only use mouse if it's far enough away or moving, to avoid jitter
-	if (mouse_pos - global_position).length() > 30.0:
-		if Input.get_last_mouse_velocity().length() > 10.0 or Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
+	if (mouse_pos - global_position).length() > FlightTuning.AIM_MOUSE_MIN_DISTANCE:
+		if Input.get_last_mouse_velocity().length() > FlightTuning.AIM_MOUSE_MIN_SPEED or Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT):
 			last_aim_direction = to_mouse
 			is_using_free_aim = true
 			
