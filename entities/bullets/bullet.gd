@@ -6,8 +6,9 @@ const EXPLOSION_SCENE := preload("res://effects/explosion.tscn")
 const ShipCatalog := preload("res://effects/rendering/ship_render_catalog_3d.gd")
 const PIXEL_BOLT_SHADER: Shader = preload("res://effects/shaders/projectiles/player_bolt.gdshader")
 const VOXEL_BOLT_SHADER: Shader = preload("res://effects/shaders/projectiles/voxel_player_bolt.gdshader")
+const WeaponTuning := preload("res://entities/player/player_weapon_tuning.gd")
 
-@export var speed: float = 800.0
+@export var speed: float = WeaponTuning.PROJECTILE_SPEED
 var direction: Vector2 = Vector2.UP
 var piercing: bool = false
 var explosive: bool = false

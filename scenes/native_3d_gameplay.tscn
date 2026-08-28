@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=12 format=3]
 
 [ext_resource type="Script" path="res://scenes/native_3d_gameplay.gd" id="1_game"]
 [ext_resource type="Resource" path="res://systems/flight_space_3d_config.tres" id="2_config"]
@@ -10,6 +10,7 @@
 [ext_resource type="PackedScene" path="res://effects/combat_screen_overlays_2d.tscn" id="8_overlays"]
 [ext_resource type="PackedScene" path="res://entities/player/player_3d.tscn" id="9_player"]
 [ext_resource type="Texture2D" path="res://assets/ui/cursor_crosshair.png" id="10_reticle"]
+[ext_resource type="Script" path="res://systems/projectile_manager_3d.gd" id="11_projectiles"]
 
 [node name="Native3DGameplay" type="Node"]
 script = ExtResource("1_game")
@@ -26,6 +27,8 @@ script = ExtResource("1_game")
 
 [node name="Player3D" parent="World3D/Actors3D" instance=ExtResource("9_player")]
 
+[node name="Projectiles3D" type="Node3D" parent="World3D"]
+
 [node name="PoolRoot3D" type="Node3D" parent="World3D"]
 process_mode = 4
 visible = false
@@ -37,6 +40,9 @@ stable_camera_path = NodePath("../World3D/CameraRig3D/ProjectionCamera3D")
 configuration = ExtResource("2_config")
 
 [node name="GameplayManagers" type="Node" parent="."]
+
+[node name="ProjectileManager3D" type="Node" parent="GameplayManagers"]
+script = ExtResource("11_projectiles")
 
 [node name="HUD" parent="." instance=ExtResource("7_hud")]
 layer = 10
@@ -60,7 +66,7 @@ grow_vertical = 0
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.72, 0.88, 1, 1)
 theme_override_font_sizes/font_size = 12
-text = "FLIGHT REVIEW  •  WASD / ARROWS / LEFT STICK MOVE  •  MOUSE / RIGHT STICK AIM  •  SHIFT / B / LT BOOST  •  ESC PAUSE"
+text = "PROJECTILE REVIEW  •  WASD / STICK MOVE  •  MOUSE / RIGHT STICK AIM  •  SPACE / A / RT FIRE  •  SHIFT / B / LT BOOST  •  ESC PAUSE"
 horizontal_alignment = 1
 
 [node name="BoostStatus" type="Label" parent="HUD"]
@@ -78,4 +84,43 @@ theme_override_font_sizes/font_size = 12
 text = "BOOST READY"
 horizontal_alignment = 1
 
+[node name="ProjectileStatus" type="Label" parent="HUD"]
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -76.0
+offset_bottom = -56.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.72, 0.88, 1, 1)
+theme_override_font_sizes/font_size = 12
+text = "PREPARING PROJECTILES"
+horizontal_alignment = 1
+
 [node name="ScreenOverlays" parent="." instance=ExtResource("8_overlays")]
+
+[node name="TransitionOverlay" type="CanvasLayer" parent="."]
+layer = 110
+
+[node name="Cover" type="ColorRect" parent="TransitionOverlay"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.005, 0.015, 0.03, 1)
+
+[node name="Message" type="Label" parent="TransitionOverlay"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.72, 0.88, 1, 1)
+theme_override_font_sizes/font_size = 18
+text = "PREPARING PROJECTILES…"
+horizontal_alignment = 1
+vertical_alignment = 1

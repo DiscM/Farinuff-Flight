@@ -1,20 +1,25 @@
 extends Node
 class_name Native3DGameplay
-## Isolated native Player Craft flight-controls slice.
-## Weapons, enemies, damage, and encounter coordinators arrive in later slices.
+## Isolated native Player Craft and pooled Player Projectile slice.
+## Enemy projectiles, damage, upgrades, and encounters arrive in later slices.
 
 const PlayerCraft := preload("res://entities/player/player_3d.gd")
 const FlightSpace := preload("res://systems/flight_space_3d.gd")
 const PAUSE_MENU_SCENE := preload("res://ui/pause_menu.tscn")
+const ProjectileManager := preload("res://systems/projectile_manager_3d.gd")
 
 @onready var hud: CanvasLayer = $HUD
 @onready var player: PlayerCraft = $World3D/Actors3D/Player3D
 @onready var flight_space: FlightSpace = $FlightSpace3D
 @onready var aim_reticle: Sprite2D = $HUD/AimReticle
 @onready var boost_status: Label = $HUD/BoostStatus
+@onready var projectile_status: Label = $HUD/ProjectileStatus
+@onready var projectile_manager: ProjectileManager = $GameplayManagers/ProjectileManager3D
+@onready var transition_overlay: CanvasLayer = $TransitionOverlay
 
 var _previous_hdr_2d: bool = false
 var _pause_overlay: CanvasLayer
+var _metrics_timer := 0.0
 
 
 func _enter_tree() -> void:
@@ -25,14 +30,21 @@ func _enter_tree() -> void:
 func _ready() -> void:
 	add_to_group(&"native_3d_gameplay")
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	GameManager.is_game_active = false
+	projectile_manager.configure(flight_space, $World3D/Projectiles3D, $World3D/PoolRoot3D)
+	if not await projectile_manager.warm_player_pool():
+		$TransitionOverlay/Message.text = "Projectile preparation failed. See the debugger."
+		return
+	player.fire_requested.connect(projectile_manager.fire_player_projectile)
 	# This review has no pickups or retry rewards; do not spend Hangar supplies.
 	GameManager.start_game(false)
 	player.configure_flight_space(flight_space)
+	transition_overlay.hide()
 	if hud.has_method("update_all"):
 		hud.update_all()
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	aim_reticle.visible = player.is_using_free_aim and GameManager.is_game_active
 	if aim_reticle.visible:
 		aim_reticle.position = flight_space.combat_to_screen(player.get_aim_reticle_combat_position())
@@ -42,6 +54,13 @@ func _process(_delta: float) -> void:
 		boost_status.text = "BOOST RECHARGING"
 	else:
 		boost_status.text = "BOOST READY"
+	_metrics_timer -= delta
+	if _metrics_timer <= 0.0 and projectile_manager.is_ready:
+		_metrics_timer = 0.25
+		var metrics := projectile_manager.get_metrics()
+		projectile_status.text = "PROJECTILES %d / %d  •  ARMED %d  •  POOL GROWTH %d" % [
+			metrics["active"], metrics["pool_size"], metrics["armed"], metrics["pool_growth_after_warmup"],
+		]
 
 
 func _unhandled_input(event: InputEvent) -> void:
