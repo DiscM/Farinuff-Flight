@@ -4,27 +4,27 @@
 [ext_resource type="Shader" path="res://effects/shaders/models/pixel_toon_3d.gdshader" id="2_shader"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_hitbox"]
-radius = 0.427133
-height = 0.909091
+radius = 0.341707
+height = 0.727273
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_bolt"]
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_orb"]
 shader = ExtResource("2_shader")
-shader_parameter/base_color = Color(0.14, 0.85, 1, 1)
-shader_parameter/energy_color = Color(0.02, 0.72, 1, 1)
-shader_parameter/accent_color = Color(0.82, 1, 1, 1)
-shader_parameter/glow_color = Color(0.02, 0.72, 1, 1)
+shader_parameter/base_color = Color(1, 0.35, 0.04, 1)
+shader_parameter/energy_color = Color(1, 0.14, 0.02, 1)
+shader_parameter/accent_color = Color(1, 0.9, 0.52, 1)
+shader_parameter/glow_color = Color(1, 0.2, 0.02, 1)
 shader_parameter/emissive_surface = 1.0
-shader_parameter/emission_strength = 2.0
+shader_parameter/emission_strength = 1.4
 shader_parameter/circuit_amount = 0.0
 shader_parameter/animation_speed = 0.0
 
-[sub_resource type="CapsuleMesh" id="CapsuleMesh_bolt"]
-radius = 0.22
-height = 1.6
-radial_segments = 6
-rings = 2
+[sub_resource type="SphereMesh" id="SphereMesh_orb"]
+radius = 0.7
+height = 1.4
+radial_segments = 12
+rings = 6
 
-[node name="PlayerProjectile3D" type="Area3D"]
+[node name="EnemyProjectile3D" type="Area3D"]
 process_physics_priority = 2
 process_mode = 4
 visible = false
@@ -34,6 +34,7 @@ monitoring = false
 monitorable = false
 input_ray_pickable = false
 script = ExtResource("1_projectile")
+kind = 1
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 rotation = Vector3(1.570796, 0, 0)
@@ -45,7 +46,7 @@ rotation = Vector3(1.570796, 0, 0)
 enabled = false
 shape = SubResource("CapsuleShape3D_hitbox")
 target_position = Vector3(0, 0, 0)
-collision_mask = 34
+collision_mask = 1
 max_results = 1
 collide_with_areas = true
 collide_with_bodies = false
@@ -53,8 +54,7 @@ collide_with_bodies = false
 [node name="Visuals" type="Node3D" parent="."]
 
 [node name="ProjectileMesh" type="MeshInstance3D" parent="Visuals"]
-rotation = Vector3(1.570796, 0, 0)
 cast_shadow = 0
 gi_mode = 0
-mesh = SubResource("CapsuleMesh_bolt")
-material_override = SubResource("ShaderMaterial_bolt")
+mesh = SubResource("SphereMesh_orb")
+material_override = SubResource("ShaderMaterial_orb")

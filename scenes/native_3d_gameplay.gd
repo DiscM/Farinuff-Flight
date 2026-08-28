@@ -1,7 +1,9 @@
 extends Node
 class_name Native3DGameplay
-## Isolated native Player Craft and pooled Player Projectile slice.
-## Enemy projectiles, damage, upgrades, and encounters arrive in later slices.
+## Isolated native Player Craft with pooled Player and Enemy Projectiles.
+## Damage, deflection, upgrades, and encounters arrive in later slices.
+
+signal gameplay_ready
 
 const PlayerCraft := preload("res://entities/player/player_3d.gd")
 const FlightSpace := preload("res://systems/flight_space_3d.gd")
@@ -31,8 +33,8 @@ func _ready() -> void:
 	add_to_group(&"native_3d_gameplay")
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	GameManager.is_game_active = false
-	projectile_manager.configure(flight_space, $World3D/Projectiles3D, $World3D/PoolRoot3D)
-	if not await projectile_manager.warm_player_pool():
+	projectile_manager.configure(flight_space, $World3D/Projectiles3D, $World3D/PoolRoot3D, player)
+	if not await projectile_manager.warm_projectile_pools():
 		$TransitionOverlay/Message.text = "Projectile preparation failed. See the debugger."
 		return
 	player.fire_requested.connect(projectile_manager.fire_player_projectile)
@@ -42,6 +44,7 @@ func _ready() -> void:
 	transition_overlay.hide()
 	if hud.has_method("update_all"):
 		hud.update_all()
+	gameplay_ready.emit()
 
 
 func _process(delta: float) -> void:
@@ -58,8 +61,10 @@ func _process(delta: float) -> void:
 	if _metrics_timer <= 0.0 and projectile_manager.is_ready:
 		_metrics_timer = 0.25
 		var metrics := projectile_manager.get_metrics()
-		projectile_status.text = "PROJECTILES %d / %d  •  ARMED %d  •  POOL GROWTH %d" % [
-			metrics["active"], metrics["pool_size"], metrics["armed"], metrics["pool_growth_after_warmup"],
+		projectile_status.text = "PLAYER %d / %d  •  ENEMY %d / %d  •  ARMED %d  •  POOL GROWTH %d" % [
+			metrics["player"]["active"], metrics["player"]["pool_size"],
+			metrics["enemy"]["active"], metrics["enemy"]["pool_size"],
+			metrics["armed"], metrics["pool_growth_after_warmup"],
 		]
 
 

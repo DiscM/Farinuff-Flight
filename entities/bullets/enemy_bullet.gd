@@ -1,7 +1,9 @@
 extends Area2D
 ## Enemy bullet — moves in a direction (default: straight down). Damages player on contact.
 
-@export var speed: float = 400.0
+const ProjectileTuning := preload("res://entities/projectiles/enemy_projectile_tuning.gd")
+
+@export var speed: float = ProjectileTuning.DEFAULT_SPEED
 static var _visibility_ring_texture: Texture2D
 const ShipCatalog := preload("res://effects/rendering/ship_render_catalog_3d.gd")
 const PIXEL_PLASMA_SHADER: Shader = preload("res://effects/shaders/projectiles/enemy_plasma_orb.gdshader")
@@ -39,7 +41,7 @@ func _ready() -> void:
 	area_entered.connect(_on_area_entered)
 
 ## Reuses the enemy bullet from the pool with fresh spawn values.
-func pool_activate(spawn_position: Vector2, new_direction: Vector2 = Vector2.DOWN, new_speed: float = 400.0, bullet_color: Color = DEFAULT_BULLET_COLOR) -> void:
+func pool_activate(spawn_position: Vector2, new_direction: Vector2 = Vector2.DOWN, new_speed: float = ProjectileTuning.DEFAULT_SPEED, bullet_color: Color = DEFAULT_BULLET_COLOR) -> void:
 	_is_despawning = false
 	global_position = spawn_position
 	direction = new_direction.normalized() if not new_direction.is_zero_approx() else Vector2.DOWN

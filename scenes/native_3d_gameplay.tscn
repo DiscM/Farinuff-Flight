@@ -42,6 +42,7 @@ configuration = ExtResource("2_config")
 [node name="GameplayManagers" type="Node" parent="."]
 
 [node name="ProjectileManager3D" type="Node" parent="GameplayManagers"]
+process_physics_priority = 1
 script = ExtResource("11_projectiles")
 
 [node name="HUD" parent="." instance=ExtResource("7_hud")]
