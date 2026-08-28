@@ -21,6 +21,7 @@ var _dying: bool = false
 var _is_render_warmup: bool = false
 
 const HEALTH_SCALE_PER_WAVE: float = 0.045
+const SpawnTuning := preload("res://entities/enemies/enemy_spawn_tuning.gd")
 const SCORE_MULTIPLIERS := [1.0, 1.5, 2.25, 3.25]
 
 const XP_ORB_SCENE := preload("res://entities/collectibles/xp_orb.tscn")
@@ -193,13 +194,13 @@ func _on_screen_exited() -> void:
 	var vp := get_viewport_rect()
 	var pos := global_position
 	var past_edge := false
-	if spawn_direction.y > 0.3 and pos.y > vp.size.y + 60:
+	if spawn_direction.y > 0.3 and pos.y > vp.size.y + SpawnTuning.DESPAWN_MARGIN:
 		past_edge = true
-	elif spawn_direction.y < -0.3 and pos.y < -60:
+	elif spawn_direction.y < -0.3 and pos.y < -SpawnTuning.DESPAWN_MARGIN:
 		past_edge = true
-	elif spawn_direction.x > 0.3 and pos.x > vp.size.x + 60:
+	elif spawn_direction.x > 0.3 and pos.x > vp.size.x + SpawnTuning.DESPAWN_MARGIN:
 		past_edge = true
-	elif spawn_direction.x < -0.3 and pos.x < -60:
+	elif spawn_direction.x < -0.3 and pos.x < -SpawnTuning.DESPAWN_MARGIN:
 		past_edge = true
 	if past_edge:
 		queue_free()

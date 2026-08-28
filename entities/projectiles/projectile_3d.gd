@@ -1,7 +1,7 @@
 extends Area3D
 class_name Projectile3D
 ## Shared pooled native projectile lifecycle and overlap/sweep detection;
-## damage routing belongs to the later native combat slice.
+## damage routing belongs to the native gameplay controller.
 
 signal hit(target: Area3D, combat_position: Vector3)
 signal returned_to_pool(projectile: Area3D)

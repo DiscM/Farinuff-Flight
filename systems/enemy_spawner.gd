@@ -1,6 +1,8 @@
 extends Node
 ## Generation-aware edge spawner governed by scene-local threat systems.
 
+const SpawnTuning := preload("res://entities/enemies/enemy_spawn_tuning.gd")
+
 var basic_enemy_scene: PackedScene = preload("res://entities/enemies/basic_enemy.tscn")
 var fast_enemy_scene: PackedScene = preload("res://entities/enemies/fast_enemy.tscn")
 var tank_enemy_scene: PackedScene = preload("res://entities/enemies/tank_enemy.tscn")
@@ -15,7 +17,7 @@ var boss_enemy_scene: PackedScene = preload("res://entities/enemies/boss_enemy.t
 var viewport_width := 1280.0
 var viewport_height := 720.0
 var edge_padding := 34.0
-var spawn_distance := 80.0
+var spawn_distance := SpawnTuning.SPAWN_MARGIN
 ## Minimum distance between a fresh spawn point and the player. Spawn rolls
 ## closer than this are re-rolled (up to MAX_SPAWN_ROLLS attempts) so an
 ## enemy can't materialize right on top of the ship with no reaction time.

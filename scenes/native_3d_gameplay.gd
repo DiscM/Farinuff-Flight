@@ -1,7 +1,7 @@
 extends Node
 class_name Native3DGameplay
-## Isolated native Player Craft with pooled Player and Enemy Projectiles.
-## Damage, deflection, upgrades, and encounters arrive in later slices.
+## Isolated native Player Craft, pooled Projectiles, and Basic Enemy hit routing.
+## Player damage, deflection, rewards, and production encounters remain deferred.
 
 signal gameplay_ready
 
@@ -9,6 +9,8 @@ const PlayerCraft := preload("res://entities/player/player_3d.gd")
 const FlightSpace := preload("res://systems/flight_space_3d.gd")
 const PAUSE_MENU_SCENE := preload("res://ui/pause_menu.tscn")
 const ProjectileManager := preload("res://systems/projectile_manager_3d.gd")
+const BasicEnemy := preload("res://entities/enemies/basic_enemy_3d.gd")
+const WeaponTuning := preload("res://entities/player/player_weapon_tuning.gd")
 
 @onready var hud: CanvasLayer = $HUD
 @onready var player: PlayerCraft = $World3D/Actors3D/Player3D
@@ -38,6 +40,7 @@ func _ready() -> void:
 		$TransitionOverlay/Message.text = "Projectile preparation failed. See the debugger."
 		return
 	player.fire_requested.connect(projectile_manager.fire_player_projectile)
+	projectile_manager.player_projectile_hit.connect(_on_player_projectile_hit)
 	# This review has no pickups or retry rewards; do not spend Hangar supplies.
 	GameManager.start_game(false)
 	player.configure_flight_space(flight_space)
@@ -45,6 +48,11 @@ func _ready() -> void:
 	if hud.has_method("update_all"):
 		hud.update_all()
 	gameplay_ready.emit()
+
+
+func _on_player_projectile_hit(target: Area3D, _combat_position: Vector3) -> void:
+	if target is BasicEnemy:
+		(target as BasicEnemy).take_damage(WeaponTuning.BASE_DAMAGE + GameManager.bonus_damage)
 
 
 func _process(delta: float) -> void:

@@ -4,6 +4,7 @@ class_name PlayerWeaponTuning
 ## Pixel distances and speeds use the baseline viewport's coordinate system.
 
 const BASE_FIRE_INTERVAL := 0.22
+const BASE_DAMAGE := 1
 const MIN_FIRE_INTERVAL := 0.05
 const MIN_FIRE_RATE_MULTIPLIER := 0.15
 const PROJECTILE_SPEED := 800.0
