@@ -1,6 +1,6 @@
 # Native 3D Migration Checklist
 
-**Status**: implementation in progress; native Player Craft flight controls are at their manual-playtest gate
+**Status**: implementation in progress; the pooled native Player Projectile slice is at its manual-playtest gate
 
 This checklist tracks the migration from the current 2D gameplay runtime to a native 3D combat runtime. The existing 2D actor scenes remain frozen reference and rollback implementations until the user manually validates each 3D slice.
 
@@ -140,27 +140,29 @@ This checklist tracks the migration from the current 2D gameplay runtime to a na
 - Metal Forward+ runtime checks and the headless editor import completed without project script errors. No dedicated migration test scenes or harness were added; live diagnostics do not replace user acceptance.
 - The final existing 10-scene regression run retained seven PASS sentinels and the same three known failures: `enemy_evolution_shader_smoke` could not complete its legacy enemy-import path, while `player_upgrade_3d_smoke` and `visual_upgrade_smoke` failed shared-shader identity checks. The balance scene still emitted its existing legacy enemy-import diagnostics despite reaching PASS. Separate Standards and Spec reviews have no outstanding findings after the viewport-inset correction.
 - Save comparison caught a legacy regression-fixture side effect: 60 salvage was awarded and the normal save backup rotated. The active save was restored byte-for-byte to its pre-test hash; the backup now contains that same pre-test save. Future legacy regression runs should isolate `user://` or preserve both save files separately before execution.
-- **Manual gate:** run `res://scenes/native_3d_gameplay.tscn` directly and approve movement feel, aiming, boost steering/drift, edge limits, reticle, and pause/restart behavior. Implementation is paused here. The main gameplay entry remains unchanged, and explicit user approval is required before asset loading, projectiles, Basic Enemy, or another migrated slice.
+- The user explicitly approved continuation from the flight-controls gate. The next bounded slice adds base Player Craft firing and pooled Player Projectiles only; enemy projectiles, Basic Enemy, damage, upgrades, menu asset loading, and production cutover remain deferred.
 
 ## Phase 2 — Pooled 3D projectiles
 
-- [ ] Add a `ProjectileManager3D` with prewarmed player and enemy projectile pools.
-- [ ] Keep pooled `Area3D` projectile wrappers as the first-slice collision authority; let the manager coordinate acquisition, activation, lifetime, movement where practical, and collision arming.
-- [ ] Reuse the existing generic `ObjectPool` for 3D wrapper scenes and keep 3D-specific policy in `ProjectileManager3D` rather than duplicating pool infrastructure.
-- [ ] Require pooled 3D objects to implement `pool_activate()`/`despawn()` and reset transforms, visibility, processing, collision, timers, movement, material parameters, and effect state on reuse.
-- [ ] Add a scene-owned inert `PoolRoot3D` and reparent idle pooled nodes beneath it with rendering, processing, monitoring, and collision disabled.
-- [ ] Reuse projectile nodes without per-shot instantiate/free churn.
-- [ ] Separate projectile visual state from collision state.
+- [x] Add a `ProjectileManager3D` with a prewarmed Player Projectile pool.
+- [ ] Add the prewarmed Enemy Projectile pool and incoming-projectile policy.
+- [x] Keep pooled `Area3D` Player Projectile wrappers as the collision authority; let the manager coordinate acquisition and activation while wrappers own movement, lifetime, and swept/overlap detection.
+- [x] Reuse the existing generic `ObjectPool` for 3D wrapper scenes and keep 3D-specific policy in `ProjectileManager3D` rather than duplicating pool infrastructure.
+- [x] Implement the `pool_activate()`/`despawn()` contract for Player Projectiles, resetting transforms, visibility, processing, collision, timers, movement, and material instance parameters on reuse.
+- [x] Add a scene-owned inert `PoolRoot3D` and reparent idle pooled nodes beneath it with rendering, processing, monitoring, and collision disabled.
+- [x] Reuse Player Projectile nodes without per-shot instantiate/free churn.
+- [x] Separate Player Projectile visual state from collision state.
 - [ ] Keep visible projectile motion and lifetime updates active while far from the player.
 - [ ] Arm incoming projectile `Area3D` collision only within Interaction Range plus a speed margin.
 - [ ] Use hysteresis and swept-distance protection to prevent fast projectiles from tunneling through the player.
-- [ ] Keep player projectile collision active while it remains inside the visible Combat Plane bounds.
-- [ ] Use primitive sphere or capsule projectile hitboxes.
-- [ ] Flatten projectile spawn, movement, collision, and hit-event positions to `Y=0` while allowing muzzle/launch presentation effects to use 3D socket height.
-- [ ] Share projectile meshes, textures, shaders, and materials; pool projectile nodes and collision proxies only.
+- [x] Keep Player Projectile collision active while it remains inside the visible Combat Plane bounds.
+- [x] Use a primitive capsule Player Projectile hitbox with a swept-distance check for thin targets.
+- [x] Flatten Player Projectile spawn, movement, collision, and hit-event positions to `Y=0` while retaining the muzzle socket's 3D presentation height.
+- [x] Share the Player Projectile mesh, shader, material, and shape resource; pool wrapper nodes only.
 - [ ] Pool projectile impact placeholders and avoid per-projectile dynamic lights.
 - [ ] Reserve `MultiMeshInstance3D` projectile visuals for a profiling-driven optimization pass.
-- [ ] Instrument active projectiles, armed collision shapes, pool growth, frame time, and allocations.
+- [x] Instrument Player Projectile counts, armed collision shapes, pool growth, projectile-step CPU time, frame/physics time, and live memory/object-count snapshots.
+- [ ] Extend instrumentation and performance validation to Enemy Projectiles and the complete combat workload.
 - [ ] Share native 3D meshes, textures, shaders, and base materials across compatible craft and projectile families.
 - [ ] Apply evolution, palette, and damage-state variation through per-instance shader parameters or node-level overrides without mutating shared resources.
 - [ ] Reuse existing compatible toon, voxel, neon, and outline shader materials as the first native 3D visual baseline.
@@ -169,6 +171,20 @@ This checklist tracks the migration from the current 2D gameplay runtime to a na
 - [ ] Preserve bounded pools for pickups, XP orbs, special-attack fragments, and transient effects in the native 3D port.
 - [ ] Keep Player Craft and Basic Enemy scene-managed initially; leave bosses and rare set pieces directly instantiated.
 - [ ] Add regular-enemy pooling only if profiling demonstrates meaningful spawn/despawn churn savings after accounting for retained memory.
+
+### Phase 2 Player Projectile validation record
+
+- `res://entities/projectiles/player_projectile_3d.tscn` is the first native projectile wrapper: an `Area3D` root, a dedicated approximately 10×10-baseline-pixel capsule, a matching `ShapeCast3D`, and a low-poly emissive capsule beneath `Visuals`. All instances share one mesh, material, shader, and shape resource. The temporary visual reuses `pixel_toon_3d.gdshader`, casts no shadows, and adds no dynamic lights; polished projectile/impact VFX remain deferred.
+- `ProjectileManager3D` warms 64 wrappers in batches of eight behind a transition cover before enabling controls. It uses the existing `ObjectPool`, whose optional idle parent now keeps native nodes under the scene-owned inert `PoolRoot3D`. The pool never grows on a normal or saturated firing path; a request beyond capacity is rejected and counted. Deferred returns remain checked out until reset and reparenting finish, so a same-frame request cannot allocate a replacement prematurely.
+- Base firing uses the existing `shoot` action and center `Marker3D` muzzle. Spatially independent weapon constants live in `PlayerWeaponTuning`; the 2D reference reads the same unchanged values. With modifiers neutralized, held fire produced nine projectiles over two seconds (the 0.22-second timer quantizes to 14 physics ticks at 60 Hz). Travel measured 160 baseline pixels over 12 physics ticks, matching 800 pixels/second. Gamepad A and right-trigger input each fired through the unchanged InputMap.
+- Active wrappers use Player Projectile layer 4 and mask 50, excluding their own layer. Sweeps target Enemy Craft and Hostile Ordnance only; Pickup overlap remains non-blocking. A temporary thin `Area3D` target placed between movement endpoints received exactly one hit, and a spawn-overlap check also emitted only one hit. Spawn, motion, and hit positions remained at Y=0. No real Enemy Craft, damage routing, rewards, or impact effects were introduced by these diagnostics.
+- A 64-projectile burst armed 64 shapes with zero pool growth; the 65th request was rejected. Double despawn and a fire request during deferred return did not duplicate or allocate nodes. Reuse restored root/visual transforms, instance shader parameters, velocity, lifetime, visibility, processing, and collision state. Bounds exit, out-of-bounds spawn, six-second fallback expiry, and viewport-resize bounds refresh all returned nodes correctly. Idle nodes had monitoring, monitorability, layers, shapes, physics processing, and visibility disabled.
+- The transition's render warmup initially waited for `frame_post_draw`, which can stop arriving when macOS fully covers the game window. A live restart diagnostic reproduced a stuck loading cover with 64 allocated nodes and no draw events. Warmup now performs one transition-only `RenderingServer.force_draw(false)` before returning nodes. The same pause/restart check passed with the normal render loop deliberately disabled, and the actual pause-menu restart also completed normally. No permanent diagnostic harness or migration smoke suite was added.
+- A controlled post-warmup first activation started at zero fired projectiles, took 154 microseconds on the local Metal Forward+ run, allocated no new projectile node, and caused no additional canvas/draw/mesh/surface/specialization pipeline compilation. A separate 64-active-projectile sample measured at most 1.229 ms of summed projectile-step CPU time. These narrow development samples do not establish the final 1080p combat performance target; full-scene frame-time and cold-start acceptance remain manual gates.
+- Escape froze projectile motion, lifetime, and firing cooldown with no extra shots; resume restored them. Restart created a fresh 64-node pool and removed the previous scene's nodes. Main Menu freed all native projectile nodes, left no active native group or `Area3D`, and restored HDR 2D. The static Player Craft asset-review scene kept controls and its firing timer disabled even with run state temporarily active.
+- The native gameplay scene contains one Player Craft plus 64 pooled `Area3D` wrappers, with no `Area2D`, `SubViewport`, legacy projectile-group member, or 2D gameplay coordinator. The retained HUD includes active/armed/pool-growth counters and firing instructions. Live Metal Forward+ checks ended with no project runtime errors; temporary MCP bridge warnings are not gameplay errors.
+- Separate Standards and Spec reviews found no issues in this bounded slice. The full existing 10-scene regression run retained seven PASS sentinels and the same three documented failures: `enemy_evolution_shader_smoke` did not complete its legacy enemy-import path; `player_upgrade_3d_smoke` and `visual_upgrade_smoke` failed shared-shader identity checks. The balance scene still emitted its existing enemy-import diagnostics despite reaching PASS. Tests ran against a temporary mirrored project with a verified, distinct `user://` profile; both live save files retained their pre-test SHA-256 hash (`6c70248833464a39995ee83a6754d4836ab3cc33daebe9b21577284ecc992f5f`).
+- **Manual gate:** run `res://scenes/native_3d_gameplay.tscn` directly. Check Space / gamepad A / right-trigger firing, muzzle alignment and aim, projectile readability and cadence, movement/boost while firing, boundary cleanup, and pause/restart. Confirm the pool-growth counter stays at zero. Implementation pauses here; explicit approval is required before enemy projectiles, Basic Enemy, damage, menu loading, VFX, or another migration slice. The main gameplay entry remains unchanged.
 
 ## Phase 3 — Player/BasicEnemy vertical slice
 
@@ -181,6 +197,7 @@ This checklist tracks the migration from the current 2D gameplay runtime to a na
 - [x] Create a dedicated 3D asset-review scene using runtime scale, orientation, lighting, materials, sockets, and relevant animation presentation.
 - [ ] Obtain manual asset approval in the review scene before swapping a polished replacement into a validated gameplay slice.
 - [x] Port player controls, movement tuning, aim, rotation, boost/drift, and boundaries.
+- [x] Port base Player Craft firing through the center socket into the pooled Player Projectile manager; weapon upgrades remain deferred.
 - [ ] Port player damage, invulnerability, and projectile-dependent boost deflection/chain behavior.
 - [ ] Reuse shared spatially independent gameplay data for tuning, damage, weapons, upgrades, evolution, and encounter rules instead of duplicating balance constants.
 - [ ] Keep 3D-specific scene references, model scale, sockets, primitive hitboxes, and visual parameters in native 3D scenes or dedicated 3D resources.

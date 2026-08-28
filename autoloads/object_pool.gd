@@ -1,6 +1,7 @@
 extends Node
 
 const POOL_KEY_META := "_pool_key"
+const POOL_IDLE_META := "_pool_idle"
 ## Maximum idle nodes retained per scene. Boss-wave spikes would otherwise
 ## keep hundreds of idle nodes alive for the rest of the run.
 const MAX_IDLE_PER_SCENE := 128
@@ -19,14 +20,16 @@ func acquire(scene: PackedScene, parent: Node) -> Node:
 		node.set_meta(POOL_KEY_META, key)
 	elif node.get_parent() != null:
 		node.get_parent().remove_child(node)
+	node.set_meta(POOL_IDLE_META, false)
 	parent.add_child(node)
 	return node
 
-## Returns a node to the pool immediately.
-func release(node: Node) -> void:
+## Returns a node to the pool immediately. A scene-owned idle parent can keep
+## pooled nodes within that scene's lifetime; the default remains this autoload.
+func release(node: Node, idle_parent: Node = null) -> void:
 	if not is_instance_valid(node):
 		return
-	if node.get_parent() == self:
+	if node.get_meta(POOL_IDLE_META, false):
 		return
 	var key := ""
 	if node.has_meta(POOL_KEY_META):
@@ -41,7 +44,9 @@ func release(node: Node) -> void:
 	if bucket.size() >= MAX_IDLE_PER_SCENE:
 		node.queue_free()
 		return
-	add_child(node)
+	var destination := idle_parent if is_instance_valid(idle_parent) else self
+	node.set_meta(POOL_IDLE_META, true)
+	destination.add_child(node)
 	bucket.append(weakref(node))
 	_available[key] = bucket
 

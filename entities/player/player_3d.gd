@@ -1,15 +1,19 @@
 extends Area3D
 class_name Player3D
 ## Native Player Craft flight, visual, hitbox, attachment, and socket contract.
-## Combat behavior arrives in the projectile/Basic Enemy slices.
+## Damage, upgrades, and enemy interactions arrive in later combat slices.
+
+signal fire_requested(combat_position: Vector3, direction: Vector3)
 
 const PhysicsLayers := preload("res://systems/native_3d_physics_layers.gd")
 const FlightSpace := preload("res://systems/flight_space_3d.gd")
 const FlightTuning := preload("res://entities/player/player_flight_tuning.gd")
+const WeaponTuning := preload("res://entities/player/player_weapon_tuning.gd")
 
 @export var speed_pixels: float = FlightTuning.SPEED
 @export var acceleration: float = FlightTuning.ACCELERATION
 @export var drag: float = FlightTuning.DRAG
+@export var base_fire_interval: float = WeaponTuning.BASE_FIRE_INTERVAL
 ## Baseline-pixel boundary inset owned by the wrapper, not the imported GLB.
 @export_range(0.0, 128.0, 0.001) var boundary_margin_pixels: float = 0.0
 
@@ -17,6 +21,7 @@ const FlightTuning := preload("res://entities/player/player_flight_tuning.gd")
 @onready var visuals: Node3D = $Visuals
 @onready var attachments: Node3D = $Attachments
 @onready var sockets: Node3D = $Attachments/Sockets
+@onready var shoot_timer: Timer = $ShootTimer
 
 var _socket_names: Array[StringName] = []
 var _flight_space: FlightSpace
@@ -68,6 +73,26 @@ func _physics_process(delta: float) -> void:
 	_clamp_to_flight_bounds()
 	_update_boost(delta)
 	_update_aiming()
+	_update_shooting()
+
+
+func _update_shooting() -> void:
+	if not Input.is_action_pressed("shoot") or not shoot_timer.is_stopped():
+		return
+	var muzzle := get_socket(&"MuzzleCenter")
+	if muzzle == null:
+		return
+	var rate_multiplier := maxf(
+		1.0 - GameManager.bonus_fire_rate_pct - GameManager.meta_fire_rate_pct - GameManager.ship_fire_rate_pct,
+		WeaponTuning.MIN_FIRE_RATE_MULTIPLIER
+	)
+	shoot_timer.start(maxf(base_fire_interval * rate_multiplier, WeaponTuning.MIN_FIRE_INTERVAL))
+	var screen_direction := _flight_space.combat_motion_to_screen(last_aim_direction).normalized()
+	var spawn_position := muzzle.global_position + _flight_space.screen_motion_to_combat(
+		screen_direction * WeaponTuning.MUZZLE_CLEARANCE
+	)
+	spawn_position.y = 0.0
+	fire_requested.emit(spawn_position, last_aim_direction)
 
 
 func _update_movement(input_direction: Vector2, delta: float) -> void:

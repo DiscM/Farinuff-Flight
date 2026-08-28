@@ -9,9 +9,10 @@ const ORBITAL_PROJECTILE_SHADER: Shader = PIXEL_ORBITAL_PROJECTILE_SHADER
 const RETICLE_TEXTURE := preload("res://assets/ui/cursor_crosshair.png")
 const PIXEL_EFFECT_SCENE := preload("res://effects/pixel_sprite_effect.tscn")
 const FlightTuning := preload("res://entities/player/player_flight_tuning.gd")
+const WeaponTuning := preload("res://entities/player/player_weapon_tuning.gd")
 
 @export var speed: float = FlightTuning.SPEED
-@export var base_fire_rate: float = 0.22  # seconds between shots
+@export var base_fire_rate: float = WeaponTuning.BASE_FIRE_INTERVAL
 
 # Power-up state (temporary)
 var bullet_scale_level: int = 0  # 0 = normal, up to 3 (bullet size)
@@ -274,10 +275,10 @@ func _physics_process(delta: float) -> void:
 			var rate_factor := 0.4
 			if _rapid_fire_active() and overclock_active:
 				rate_factor = 0.15  # stacking: rapid fire + overclock = ultra fast
-			effective_rate = base_fire_rate * rate_factor * maxf(1.0 - GameManager.bonus_fire_rate_pct - GameManager.meta_fire_rate_pct - GameManager.ship_fire_rate_pct, 0.15)
+			effective_rate = base_fire_rate * rate_factor * maxf(1.0 - GameManager.bonus_fire_rate_pct - GameManager.meta_fire_rate_pct - GameManager.ship_fire_rate_pct, WeaponTuning.MIN_FIRE_RATE_MULTIPLIER)
 		else:
-			effective_rate = base_fire_rate * maxf(1.0 - GameManager.bonus_fire_rate_pct - GameManager.meta_fire_rate_pct - GameManager.ship_fire_rate_pct, 0.15)
-		shoot_timer.wait_time = maxf(effective_rate, 0.05)
+			effective_rate = base_fire_rate * maxf(1.0 - GameManager.bonus_fire_rate_pct - GameManager.meta_fire_rate_pct - GameManager.ship_fire_rate_pct, WeaponTuning.MIN_FIRE_RATE_MULTIPLIER)
+		shoot_timer.wait_time = maxf(effective_rate, WeaponTuning.MIN_FIRE_INTERVAL)
 		_fire()
 
 	# --- Magnet: attract power-ups ---
@@ -615,7 +616,7 @@ func _spawn_bullet(
 	var bs := 1.0
 	if bullet_scale_level > 0:
 		bs = 1.0 + bullet_scale_level * 0.5
-	var spawn_position := to_global(local_muzzle) + dir * 3.0
+	var spawn_position := to_global(local_muzzle) + dir * WeaponTuning.MUZZLE_CLEARANCE
 	bullet.pool_activate(
 		spawn_position,
 		dir,

@@ -1,0 +1,59 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://entities/projectiles/player_projectile_3d.gd" id="1_projectile"]
+[ext_resource type="Shader" path="res://effects/shaders/models/pixel_toon_3d.gdshader" id="2_shader"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_hitbox"]
+radius = 0.427133
+height = 0.909091
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_bolt"]
+shader = ExtResource("2_shader")
+shader_parameter/base_color = Color(0.14, 0.85, 1, 1)
+shader_parameter/energy_color = Color(0.02, 0.72, 1, 1)
+shader_parameter/accent_color = Color(0.82, 1, 1, 1)
+shader_parameter/glow_color = Color(0.02, 0.72, 1, 1)
+shader_parameter/emissive_surface = 1.0
+shader_parameter/emission_strength = 2.0
+shader_parameter/circuit_amount = 0.0
+shader_parameter/animation_speed = 0.0
+
+[sub_resource type="CapsuleMesh" id="CapsuleMesh_bolt"]
+radius = 0.22
+height = 1.6
+radial_segments = 6
+rings = 2
+
+[node name="PlayerProjectile3D" type="Area3D"]
+process_mode = 4
+visible = false
+collision_layer = 0
+collision_mask = 0
+monitoring = false
+monitorable = false
+input_ray_pickable = false
+script = ExtResource("1_projectile")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+rotation = Vector3(1.570796, 0, 0)
+shape = SubResource("CapsuleShape3D_hitbox")
+disabled = true
+
+[node name="Sweep" type="ShapeCast3D" parent="."]
+rotation = Vector3(1.570796, 0, 0)
+enabled = false
+shape = SubResource("CapsuleShape3D_hitbox")
+target_position = Vector3(0, 0, 0)
+collision_mask = 34
+max_results = 1
+collide_with_areas = true
+collide_with_bodies = false
+
+[node name="Visuals" type="Node3D" parent="."]
+
+[node name="Bolt" type="MeshInstance3D" parent="Visuals"]
+rotation = Vector3(1.570796, 0, 0)
+cast_shadow = 0
+gi_mode = 0
+mesh = SubResource("CapsuleMesh_bolt")
+material_override = SubResource("ShaderMaterial_bolt")
