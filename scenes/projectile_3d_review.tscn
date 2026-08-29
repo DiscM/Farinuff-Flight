@@ -1,12 +1,16 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scenes/projectile_3d_review.gd" id="1_review"]
 [ext_resource type="PackedScene" path="res://scenes/native_3d_gameplay.tscn" id="2_gameplay"]
+[ext_resource type="PackedScene" path="res://entities/enemies/basic_enemy_3d.tscn" id="3_enemy"]
 
 [node name="Projectile3DReview" type="Node"]
 script = ExtResource("1_review")
 
 [node name="Gameplay" parent="." instance=ExtResource("2_gameplay")]
+
+[node name="FirstReflectionTarget3D" parent="Gameplay/World3D/Actors3D" instance=ExtResource("3_enemy")]
+position = Vector3(0, 0, -12)
 
 [node name="VolleyTimer" type="Timer" parent="."]
 wait_time = 1.2
@@ -41,7 +45,7 @@ offset_bottom = 24.0
 mouse_filter = 2
 theme_override_colors/font_color = Color(1, 0.73, 0.38, 1)
 theme_override_font_sizes/font_size = 16
-text = "ENEMY PROJECTILE DAMAGE • 2 S INVULNERABILITY • DEFLECTION DEFERRED"
+text = "BOOST DEFLECTION • 3-REFLECTION CHAIN • ORDINARY HITS STILL DAMAGE"
 horizontal_alignment = 1
 
 [node name="Legend" type="Label" parent="ReviewHUD/Panel"]
@@ -54,33 +58,38 @@ theme_override_font_sizes/font_size = 11
 horizontal_alignment = 1
 
 [node name="Controls" type="HBoxContainer" parent="ReviewHUD/Panel"]
-offset_left = 40.0
+offset_left = 10.0
 offset_top = 54.0
-offset_right = 690.0
+offset_right = 720.0
 offset_bottom = 90.0
 mouse_filter = 2
-theme_override_constants/separation = 10
+theme_override_constants/separation = 8
 alignment = 1
 
 [node name="NormalVolley" type="Button" parent="ReviewHUD/Panel/Controls"]
 layout_mode = 2
 focus_mode = 0
-text = "NORMAL VOLLEY"
+text = "1 NORMAL"
 
 [node name="FastVolley" type="Button" parent="ReviewHUD/Panel/Controls"]
 layout_mode = 2
 focus_mode = 0
-text = "FAST VOLLEY (6×)"
+text = "2 FAST 6×"
+
+[node name="ChainBurst" type="Button" parent="ReviewHUD/Panel/Controls"]
+layout_mode = 2
+focus_mode = 0
+text = "3 CHAIN + TARGET"
 
 [node name="AutoVolleys" type="CheckButton" parent="ReviewHUD/Panel/Controls"]
 layout_mode = 2
 focus_mode = 0
-text = "AUTO VOLLEYS"
+text = "V AUTO"
 
 [node name="RestoreLives" type="Button" parent="ReviewHUD/Panel/Controls"]
 layout_mode = 2
 focus_mode = 0
-text = "R RESTORE LIVES"
+text = "R RESTORE"
 
 [node name="ContactStatus" type="Label" parent="ReviewHUD/Panel"]
 offset_top = 100.0
@@ -88,5 +97,5 @@ offset_right = 730.0
 offset_bottom = 120.0
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.75, 0.9, 1, 1)
-theme_override_font_sizes/font_size = 12
+theme_override_font_sizes/font_size = 11
 horizontal_alignment = 1

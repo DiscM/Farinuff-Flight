@@ -1,9 +1,10 @@
 extends Area3D
 class_name Player3D
-## Native Player Craft flight, damage, visual, hitbox, attachment, and socket contract.
-## Shields, upgrades, projectile deflection, and chains arrive in later slices.
+## Native Player Craft flight, damage, boost-chain, visual, hitbox, attachment,
+## and socket contract. Shields and upgrades arrive in later slices.
 
 signal fire_requested(combat_position: Vector3, direction: Vector3)
+signal deflection_requested(deflector_position: Vector3, deflector_velocity: Vector3)
 signal damage_taken(combat_position: Vector3, source: DamageSource, remaining_lives: int)
 signal invulnerability_changed(active: bool)
 
@@ -41,6 +42,8 @@ var boost_direction := Vector3.FORWARD
 var boost_duration_timer := 0.0
 var boost_cooldown_timer := 0.0
 var boost_distance_remaining_pixels := 0.0
+var boost_reflected_projectiles := 0
+var boost_chain_window_timer := 0.0
 var post_boost_slide_timer := 0.0
 var drift_speed_bonus := 1.0
 var is_invincible := false
@@ -111,6 +114,17 @@ func reset_damage_state() -> void:
 	visuals.show()
 	if was_invincible:
 		invulnerability_changed.emit(false)
+
+
+## Counts successful reflections only during an active boost. Reflections in
+## the short post-boost window remain defensive but do not build a new chain.
+func register_boost_reflection() -> void:
+	if is_boosting:
+		boost_reflected_projectiles += 1
+
+
+func can_deflect_projectiles() -> bool:
+	return is_boosting or boost_chain_window_timer > 0.0
 
 
 func _on_area_entered(area: Area3D) -> void:
@@ -224,15 +238,26 @@ func _move_boost(input_direction: Vector2, delta: float) -> void:
 func _update_boost(delta: float) -> void:
 	if is_boosting:
 		boost_duration_timer -= delta
+		deflection_requested.emit(global_position, velocity)
+		if Input.is_action_just_pressed("boost") and _has_boost_chain():
+			_begin_boost()
+			return
 		drift_speed_bonus = move_toward(
 			drift_speed_bonus, FlightTuning.DRIFT_BONUS_MAX, FlightTuning.DRIFT_BONUS_RATE * delta
 		)
 		if boost_duration_timer <= 0.0 or boost_distance_remaining_pixels <= 0.0:
 			is_boosting = false
 			boost_distance_remaining_pixels = 0.0
-			boost_cooldown_timer = FlightTuning.BOOST_COOLDOWN
+			if _has_boost_chain():
+				boost_chain_window_timer = FlightTuning.BOOST_CHAIN_WINDOW
+				boost_cooldown_timer = 0.0
+			else:
+				boost_cooldown_timer = _get_boost_cooldown()
 			post_boost_slide_timer = FlightTuning.POST_BOOST_SLIDE_DURATION
 	else:
+		if boost_chain_window_timer > 0.0:
+			boost_chain_window_timer = maxf(boost_chain_window_timer - delta, 0.0)
+			deflection_requested.emit(global_position, velocity)
 		drift_speed_bonus = move_toward(drift_speed_bonus, 1.0, FlightTuning.DRIFT_DECAY_RATE * delta)
 		boost_cooldown_timer = maxf(boost_cooldown_timer - delta, 0.0)
 		if Input.is_action_just_pressed("boost") and boost_cooldown_timer <= 0.0:
@@ -242,6 +267,8 @@ func _update_boost(delta: float) -> void:
 func _begin_boost() -> void:
 	is_boosting = true
 	boost_duration_timer = FlightTuning.BOOST_DURATION
+	boost_reflected_projectiles = 0
+	boost_chain_window_timer = 0.0
 	boost_distance_remaining_pixels = FlightTuning.BOOST_DISTANCE
 	var screen_velocity := _flight_space.combat_motion_to_screen(velocity)
 	var screen_direction := (
@@ -251,6 +278,21 @@ func _begin_boost() -> void:
 	)
 	boost_direction = _flight_space.input_to_combat_direction(screen_direction)
 	AudioManager.play_boost()
+
+
+func _has_boost_chain() -> bool:
+	return boost_reflected_projectiles >= FlightTuning.BOOST_CHAIN_REFLECT_THRESHOLD
+
+
+func _get_boost_cooldown() -> float:
+	if boost_reflected_projectiles <= 0:
+		return FlightTuning.BOOST_COOLDOWN
+	var additional_reflections := boost_reflected_projectiles - 1
+	return maxf(
+		FlightTuning.BOOST_REFLECT_COOLDOWN
+		- float(additional_reflections) * FlightTuning.BOOST_REFLECT_COOLDOWN_STEP,
+		FlightTuning.BOOST_REFLECT_COOLDOWN_MIN
+	)
 
 
 func _update_aiming() -> void:

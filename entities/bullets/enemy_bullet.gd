@@ -131,9 +131,14 @@ func deflect(deflector_position: Vector2, deflector_velocity: Vector2) -> bool:
 	if reflected_direction.is_zero_approx():
 		reflected_direction = -direction
 	if not deflector_velocity.is_zero_approx():
-		reflected_direction = reflected_direction.lerp(deflector_velocity.normalized(), 0.32).normalized()
+		reflected_direction = reflected_direction.lerp(
+			deflector_velocity.normalized(), ProjectileTuning.DEFLECT_VELOCITY_BIAS
+		).normalized()
 	direction = reflected_direction
-	speed = maxf(speed * 1.35, 560.0)
+	speed = maxf(
+		speed * ProjectileTuning.DEFLECT_SPEED_MULTIPLIER,
+		ProjectileTuning.DEFLECT_MIN_SPEED
+	)
 	remove_from_group("enemy_bullets")
 	collision_layer = 0
 	collision_mask = 2
