@@ -39,7 +39,7 @@ offset_bottom = 24.0
 mouse_filter = 2
 theme_override_colors/font_color = Color(1, 0.48, 0.38, 1)
 theme_override_font_sizes/font_size = 16
-text = "BASIC ENEMY • GENERATION I • NO PLAYER DAMAGE / REWARDS"
+text = "BASIC ENEMY • GEN I CONTACT DAMAGE • 3 S INVULNERABILITY • NO REWARDS"
 horizontal_alignment = 1
 
 [node name="Legend" type="Label" parent="ReviewHUD/Panel"]
@@ -49,13 +49,13 @@ offset_bottom = 48.0
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.85, 0.9, 1, 1)
 theme_override_font_sizes/font_size = 11
-text = "1–4 EDGE ENTRY  •  V AUTO  •  H HITBOXES  •  G SOCKETS  •  SHOOT TO DESTROY"
+text = "1–4 EDGE ENTRY  •  V AUTO  •  H HITBOXES  •  G SOCKETS  •  R RESTORE LIVES"
 horizontal_alignment = 1
 
 [node name="Controls" type="HBoxContainer" parent="ReviewHUD/Panel"]
-offset_left = 60.0
+offset_left = 35.0
 offset_top = 54.0
-offset_right = 720.0
+offset_right = 745.0
 offset_bottom = 90.0
 mouse_filter = 2
 theme_override_constants/separation = 12
@@ -84,8 +84,12 @@ text = "4 LEFT"
 [node name="AutoSpawns" type="CheckButton" parent="ReviewHUD/Panel/Controls"]
 layout_mode = 2
 focus_mode = 0
-button_pressed = true
 text = "AUTO"
+
+[node name="RestoreLives" type="Button" parent="ReviewHUD/Panel/Controls"]
+layout_mode = 2
+focus_mode = 0
+text = "R RESTORE LIVES"
 
 [node name="Status" type="Label" parent="ReviewHUD/Panel"]
 offset_top = 100.0
