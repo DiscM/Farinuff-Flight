@@ -11,6 +11,7 @@ const PIXEL_EFFECT_SCENE := preload("res://effects/pixel_sprite_effect.tscn")
 const FlightTuning := preload("res://entities/player/player_flight_tuning.gd")
 const WeaponTuning := preload("res://entities/player/player_weapon_tuning.gd")
 const DamageTuning := preload("res://entities/player/player_damage_tuning.gd")
+const CombatCoordinates := preload("res://systems/combat_coordinates.gd")
 
 @export var speed: float = FlightTuning.SPEED
 @export var base_fire_rate: float = WeaponTuning.BASE_FIRE_INTERVAL
@@ -718,8 +719,8 @@ func _on_invincibility_ended() -> void:
 # Types are the PowerUp.Type enum (entities/powerups/power_up.gd).
 
 ## Routes a collected power-up to the appropriate handler based on its type.
-func _on_power_up_collected(type: int, pos: Vector2) -> void:
-	_spawn_sparkle_effect(pos)
+func _on_power_up_collected(type: int, pos: Vector3) -> void:
+	_spawn_sparkle_effect(CombatCoordinates.to_2d(pos))
 	AudioManager.play_powerup()
 	match type:
 		PowerUp.Type.SCALE_UP:

@@ -62,3 +62,9 @@ cast_shadow = 0
 gi_mode = 0
 mesh = SubResource("SphereMesh_orb")
 material_override = SubResource("ShaderMaterial_orb")
+
+[node name="Attachments" type="Node3D" parent="."]
+
+[node name="Sockets" type="Node3D" parent="Attachments"]
+
+[node name="Impact" type="Marker3D" parent="Attachments/Sockets"]

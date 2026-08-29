@@ -13,6 +13,7 @@ const BULWARK_TEXTURE := preload("res://assets/sprites/generated/v2p5d_boss_bulw
 const TEMPEST_TEXTURE := preload("res://assets/sprites/generated/v2p5d_boss_tempest_idle_strip.png")
 const HARBINGER_TEXTURE := preload("res://assets/sprites/generated/v2p5d_boss_void_harbinger_idle_strip.png")
 const CORE_TEXTURE := preload("res://assets/sprites/generated/v2p5d_boss_tempest_core_idle_strip.png")
+const CombatCoordinates := preload("res://systems/combat_coordinates.gd")
 const BOSS_HEALTH_SCALE_MULTIPLIER: float = 0.7
 
 static var _telegraph_marker_texture: Texture2D
@@ -822,7 +823,7 @@ func _die(_award_rewards: bool = true) -> void:
 	# Spawn death orbs and explosion (mirrors base_enemy._die() without queue_free)
 	var scene_root := get_tree().current_scene
 	if rewards_enabled:
-		SignalBus.enemy_killed.emit(points, global_position)
+		SignalBus.enemy_killed.emit(points, CombatCoordinates.from_2d(global_position))
 		if guaranteed_orb or randf() < 0.6:
 			call_deferred("_spawn_orb", global_position, orb_value, spawn_direction)
 	if not suppress_death_effects:

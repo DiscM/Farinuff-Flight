@@ -65,7 +65,7 @@ shader_parameter/glow_color = Color(0.6343, 0.4614, 0.0507, 1)
 shader_parameter/animation_speed = 0.0
 
 [node name="BasicEnemy3D" type="Area3D"]
-editor_description = "Scene-managed Gen I. Inert until activate(); Y=0 combat root. Box is a 26x26 baseline-pixel envelope for cardinal entries under the shared 70-degree camera."
+editor_description = "Scene-managed Basic Enemy Generations I–IV. Inert until activate(); Y=0 combat root. Box is a 26x26 baseline-pixel envelope for cardinal entries under the shared 70-degree camera. Generation III charge and Generation IV fragments use wrapper-owned sockets."
 collision_layer = 0
 collision_mask = 0
 monitoring = false
@@ -107,6 +107,12 @@ position = Vector3(0, 0.2, 0)
 
 [node name="Death" type="Marker3D" parent="Attachments/Sockets"]
 position = Vector3(0, 0.2, 0)
+
+[node name="FragmentLeft" type="Marker3D" parent="Attachments/Sockets"]
+position = Vector3(-0.22, 0.18, 0.42)
+
+[node name="FragmentRight" type="Marker3D" parent="Attachments/Sockets"]
+position = Vector3(0.22, 0.18, 0.42)
 
 [node name="Modules" type="Node3D" parent="Attachments"]
 

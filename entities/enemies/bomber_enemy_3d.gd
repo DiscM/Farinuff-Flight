@@ -23,6 +23,10 @@ var _drop_timer := 0.0
 var _drop_left := true
 
 
+func _is_basic_lineage() -> bool:
+	return false
+
+
 func _configure_movement() -> void:
 	_screen_travel_direction = _flight_space.combat_motion_to_screen(_heading).normalized()
 	_screen_perpendicular = Vector2(-_screen_travel_direction.y, _screen_travel_direction.x)

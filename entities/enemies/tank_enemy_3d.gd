@@ -18,6 +18,10 @@ const SHOT_SPEED_VARIANCE_PIXELS := 8.0
 var _burst_timer := 0.0
 
 
+func _is_basic_lineage() -> bool:
+	return false
+
+
 func _configure_movement() -> void:
 	super._configure_movement()
 	_burst_timer = randf_range(FIRST_BURST_MIN_SECONDS, burst_interval)

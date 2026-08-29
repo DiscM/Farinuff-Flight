@@ -9,6 +9,7 @@
 script = ExtResource("1_review")
 
 [node name="Gameplay" parent="." instance=ExtResource("2_gameplay")]
+rewards_enabled = true
 
 [node name="FirstEnemy3D" parent="Gameplay/World3D/Actors3D" instance=ExtResource("3_enemy")]
 position = Vector3(0, 0, -12)
@@ -39,7 +40,7 @@ offset_bottom = 24.0
 mouse_filter = 2
 theme_override_colors/font_color = Color(1, 0.48, 0.38, 1)
 theme_override_font_sizes/font_size = 16
-text = "BASIC ENEMY • GEN I CONTACT DAMAGE • 3 S INVULNERABILITY • NO REWARDS"
+text = "BASIC ENEMY • GENERATIONS I–IV • REWARDS + FX"
 horizontal_alignment = 1
 
 [node name="Legend" type="Label" parent="ReviewHUD/Panel"]
@@ -49,7 +50,7 @@ offset_bottom = 48.0
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.85, 0.9, 1, 1)
 theme_override_font_sizes/font_size = 11
-text = "1–4 EDGE ENTRY  •  V AUTO  •  H HITBOXES  •  G SOCKETS  •  R RESTORE LIVES"
+text = "1–4 EDGE ENTRY  •  Q CYCLE GEN  •  V AUTO  •  H HITBOXES  •  G SOCKETS  •  R RESTORE LIVES"
 horizontal_alignment = 1
 
 [node name="Controls" type="HBoxContainer" parent="ReviewHUD/Panel"]
@@ -85,6 +86,20 @@ text = "4 LEFT"
 layout_mode = 2
 focus_mode = 0
 text = "AUTO"
+
+[node name="Generation" type="OptionButton" parent="ReviewHUD/Panel/Controls"]
+layout_mode = 2
+focus_mode = 0
+item_count = 4
+selected = 0
+popup/item_0/text = "GEN 1"
+popup/item_0/id = 1
+popup/item_1/text = "GEN 2"
+popup/item_1/id = 2
+popup/item_2/text = "GEN 3"
+popup/item_2/id = 3
+popup/item_3/text = "GEN 4"
+popup/item_3/id = 4
 
 [node name="RestoreLives" type="Button" parent="ReviewHUD/Panel/Controls"]
 layout_mode = 2

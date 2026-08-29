@@ -1,20 +1,22 @@
 extends Area3D
 class_name Player3D
 ## Native Player Craft flight, damage, boost-chain, visual, hitbox, attachment,
-## and socket contract. Shields and upgrades arrive in later slices.
+## socket, and first-slice power-up contract.
 
 signal fire_requested(combat_position: Vector3, direction: Vector3)
 signal deflection_requested(deflector_position: Vector3, deflector_velocity: Vector3)
+signal boost_started(combat_position: Vector3, direction: Vector3)
 signal damage_taken(combat_position: Vector3, source: DamageSource, remaining_lives: int)
 signal invulnerability_changed(active: bool)
 
-enum DamageSource { ENEMY_CONTACT, ENEMY_PROJECTILE }
+enum DamageSource { ENEMY_CONTACT, ENEMY_PROJECTILE, HOSTILE_ORDNANCE }
 
 const PhysicsLayers := preload("res://systems/native_3d_physics_layers.gd")
 const FlightSpace := preload("res://systems/flight_space_3d.gd")
 const FlightTuning := preload("res://entities/player/player_flight_tuning.gd")
 const WeaponTuning := preload("res://entities/player/player_weapon_tuning.gd")
 const DamageTuning := preload("res://entities/player/player_damage_tuning.gd")
+const PowerUpTypes := preload("res://entities/powerups/power_up.gd")
 
 @export var speed_pixels: float = FlightTuning.SPEED
 @export var acceleration: float = FlightTuning.ACCELERATION
@@ -25,6 +27,7 @@ const DamageTuning := preload("res://entities/player/player_damage_tuning.gd")
 
 @onready var collision_shape: CollisionShape3D = $CollisionShape3D
 @onready var visuals: Node3D = $Visuals
+@onready var shield_visual: MeshInstance3D = $Visuals/ShieldVisual
 @onready var attachments: Node3D = $Attachments
 @onready var sockets: Node3D = $Attachments/Sockets
 @onready var shoot_timer: Timer = $ShootTimer
@@ -49,6 +52,17 @@ var drift_speed_bonus := 1.0
 var is_invincible := false
 var _invincibility_visual_elapsed := 0.0
 
+# First-slice temporary power-up state. The type enum and collection signal
+# remain shared with the reference Player through PowerUp/SignalBus.
+var bullet_scale_level := 0
+var has_shield := false
+var has_rapid_fire := false
+var has_spread_shot := false
+var has_magnet := false
+var rapid_fire_remaining := 0.0
+var spread_shot_remaining := 0.0
+var magnet_remaining := 0.0
+
 
 func _init() -> void:
 	collision_layer = PhysicsLayers.PLAYER_CRAFT
@@ -60,6 +74,8 @@ func _ready() -> void:
 	set_combat_position(global_position)
 	area_entered.connect(_on_area_entered)
 	invincibility_timer.timeout.connect(_on_invincibility_ended)
+	SignalBus.power_up_collected.connect(_on_power_up_collected)
+	shield_visual.visible = false
 	# Asset review remains inert, even if an earlier run left GameManager active.
 	set_physics_process(false)
 
@@ -87,13 +103,21 @@ func _physics_process(delta: float) -> void:
 	_clamp_to_flight_bounds()
 	_update_boost(delta)
 	_update_aiming()
+	_update_power_ups(delta)
 	_update_shooting()
 
 
-## Applies one life of damage through the shared GameManager/SignalBus authority.
-## Returns true only when this call consumed a life.
+## Applies damage through the shared GameManager/SignalBus authority. A native
+## Shield absorbs the hit and opens the reference's short immunity window;
+## returns true only when this call consumed a life.
 func receive_damage(combat_position: Vector3, source: DamageSource) -> bool:
 	if not GameManager.is_game_active or is_invincible or GameManager.lives <= 0:
+		return false
+	if has_shield:
+		has_shield = false
+		shield_visual.visible = false
+		AudioManager.play_shield()
+		_start_invincibility(DamageTuning.SHIELD_INVULNERABILITY)
 		return false
 	combat_position.y = 0.0
 	var survives_hit := GameManager.lives > 1
@@ -116,6 +140,32 @@ func reset_damage_state() -> void:
 		invulnerability_changed.emit(false)
 
 
+## Clears temporary native power-up state for review reset and run restart.
+func reset_power_up_state() -> void:
+	bullet_scale_level = 0
+	has_shield = false
+	has_rapid_fire = false
+	has_spread_shot = false
+	has_magnet = false
+	rapid_fire_remaining = 0.0
+	spread_shot_remaining = 0.0
+	magnet_remaining = 0.0
+	shield_visual.visible = false
+
+
+func get_power_up_status() -> Dictionary:
+	return {
+		"scale": bullet_scale_level,
+		"shield": has_shield,
+		"rapid": has_rapid_fire,
+		"spread": has_spread_shot,
+		"magnet": has_magnet,
+		"rapid_remaining": rapid_fire_remaining,
+		"spread_remaining": spread_shot_remaining,
+		"magnet_remaining": magnet_remaining,
+	}
+
+
 ## Counts successful reflections only during an active boost. Reflections in
 ## the short post-boost window remain defensive but do not build a new chain.
 func register_boost_reflection() -> void:
@@ -129,7 +179,12 @@ func can_deflect_projectiles() -> bool:
 
 func _on_area_entered(area: Area3D) -> void:
 	# Projectile hits route once through ProjectileManager3D/Native3DGameplay.
-	if area.collision_layer & PhysicsLayers.ENEMY_CRAFT:
+	if area.collision_layer & PhysicsLayers.HOSTILE_ORDNANCE:
+		if is_boosting and area.has_method("clear_ordnance"):
+			area.clear_ordnance()
+			return
+		receive_damage(area.global_position, DamageSource.HOSTILE_ORDNANCE)
+	elif area.collision_layer & PhysicsLayers.ENEMY_CRAFT:
 		receive_damage(area.global_position, DamageSource.ENEMY_CONTACT)
 
 
@@ -161,6 +216,8 @@ func _get_invulnerability_duration(source: DamageSource) -> float:
 			return DamageTuning.CONTACT_INVULNERABILITY
 		DamageSource.ENEMY_PROJECTILE:
 			return DamageTuning.PROJECTILE_INVULNERABILITY
+		DamageSource.HOSTILE_ORDNANCE:
+			return DamageTuning.HOSTILE_ORDNANCE_INVULNERABILITY
 	return DamageTuning.PROJECTILE_INVULNERABILITY
 
 
@@ -174,13 +231,101 @@ func _update_shooting() -> void:
 		1.0 - GameManager.bonus_fire_rate_pct - GameManager.meta_fire_rate_pct - GameManager.ship_fire_rate_pct,
 		WeaponTuning.MIN_FIRE_RATE_MULTIPLIER
 	)
+	if has_rapid_fire:
+		rate_multiplier *= 0.4
 	shoot_timer.start(maxf(base_fire_interval * rate_multiplier, WeaponTuning.MIN_FIRE_INTERVAL))
+	for fire_direction in _get_fire_directions():
+		var screen_direction := _flight_space.combat_motion_to_screen(fire_direction).normalized()
+		var spawn_position := muzzle.global_position + _flight_space.screen_motion_to_combat(
+			screen_direction * WeaponTuning.MUZZLE_CLEARANCE
+		)
+		spawn_position.y = 0.0
+		fire_requested.emit(spawn_position, fire_direction)
+
+
+func _get_fire_directions() -> Array[Vector3]:
+	var directions: Array[Vector3] = [last_aim_direction]
+	if not has_spread_shot or _flight_space == null:
+		return directions
 	var screen_direction := _flight_space.combat_motion_to_screen(last_aim_direction).normalized()
-	var spawn_position := muzzle.global_position + _flight_space.screen_motion_to_combat(
-		screen_direction * WeaponTuning.MUZZLE_CLEARANCE
-	)
-	spawn_position.y = 0.0
-	fire_requested.emit(spawn_position, last_aim_direction)
+	for spread_angle in [-deg_to_rad(15.0), deg_to_rad(15.0)]:
+		var spread_screen_direction := screen_direction.rotated(spread_angle)
+		directions.append(_flight_space.input_to_combat_direction(spread_screen_direction))
+	return directions
+
+
+func get_projectile_scale() -> float:
+	return 1.0 + float(bullet_scale_level) * 0.5
+
+
+func _update_power_ups(delta: float) -> void:
+	if has_rapid_fire:
+		rapid_fire_remaining = maxf(rapid_fire_remaining - delta, 0.0)
+		if is_zero_approx(rapid_fire_remaining):
+			has_rapid_fire = false
+	if has_spread_shot:
+		spread_shot_remaining = maxf(spread_shot_remaining - delta, 0.0)
+		if is_zero_approx(spread_shot_remaining):
+			has_spread_shot = false
+	if has_magnet:
+		magnet_remaining = maxf(magnet_remaining - delta, 0.0)
+		if is_zero_approx(magnet_remaining):
+			has_magnet = false
+	if has_magnet:
+		_attract_native_pickups(delta)
+
+
+func _attract_native_pickups(delta: float) -> void:
+	for group_name in [&"native_3d_powerups", &"xp_orbs"]:
+		for pickup in get_tree().get_nodes_in_group(group_name):
+			if is_instance_valid(pickup) and pickup.has_method("magnet_pull_to"):
+				pickup.magnet_pull_to(global_position, delta, 350.0)
+
+
+func _on_power_up_collected(type: int, _combat_position: Vector3) -> void:
+	AudioManager.play_powerup()
+	match type:
+		PowerUpTypes.Type.SCALE_UP:
+			_apply_scale_up()
+		PowerUpTypes.Type.RAPID_FIRE:
+			_apply_rapid_fire()
+		PowerUpTypes.Type.SHIELD:
+			_apply_shield()
+		PowerUpTypes.Type.SPREAD_SHOT:
+			_apply_spread_shot()
+		PowerUpTypes.Type.MAGNET:
+			_apply_magnet()
+		PowerUpTypes.Type.NUKE:
+			_apply_nuke()
+
+
+func _apply_scale_up() -> void:
+	bullet_scale_level = mini(bullet_scale_level + 1, 3)
+
+
+func _apply_rapid_fire() -> void:
+	has_rapid_fire = true
+	rapid_fire_remaining = 8.0
+
+
+func _apply_shield() -> void:
+	has_shield = true
+	shield_visual.visible = true
+
+
+func _apply_spread_shot() -> void:
+	has_spread_shot = true
+	spread_shot_remaining = 8.0
+
+
+func _apply_magnet() -> void:
+	has_magnet = true
+	magnet_remaining = 10.0
+
+
+func _apply_nuke() -> void:
+	get_tree().call_group(&"native_3d_enemies", &"take_damage", 9999)
+	get_tree().call_group(&"native_3d_fragments", &"clear_ordnance")
 
 
 func _update_movement(input_direction: Vector2, delta: float) -> void:
@@ -278,6 +423,7 @@ func _begin_boost() -> void:
 	)
 	boost_direction = _flight_space.input_to_combat_direction(screen_direction)
 	AudioManager.play_boost()
+	boost_started.emit(get_combat_position(), boost_direction)
 
 
 func _has_boost_chain() -> bool:

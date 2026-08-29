@@ -12,6 +12,10 @@ var _screen_perpendicular := Vector2.ZERO
 var _time_alive := 0.0
 
 
+func _is_basic_lineage() -> bool:
+	return false
+
+
 func _configure_movement() -> void:
 	_start_position = global_position
 	_screen_travel_direction = _flight_space.combat_motion_to_screen(_heading).normalized()

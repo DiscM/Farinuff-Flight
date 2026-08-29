@@ -72,8 +72,14 @@ func prepare_visual_warmup() -> void:
 	visible = true
 
 
-func pool_activate(spawn_position: Vector3, new_velocity: Vector3, combat_bounds: Rect2) -> void:
+func pool_activate(
+	spawn_position: Vector3,
+	new_velocity: Vector3,
+	combat_bounds: Rect2,
+	size_multiplier: float = 1.0
+) -> void:
 	transform = Transform3D.IDENTITY
+	scale = Vector3.ONE * maxf(size_multiplier, 1.0)
 	is_deflected = false
 	_reset_faction_contract()
 	global_position = Vector3(spawn_position.x, 0.0, spawn_position.z)

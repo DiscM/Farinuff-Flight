@@ -1,5 +1,6 @@
 extends Area2D
 class_name PowerUp
+const Coordinates := preload("res://systems/combat_coordinates.gd")
 ## Power-up — drifts downward. Collected by shooting it or by direct player contact.
 ## Pooled via ObjectPool: activate with pool_activate() after acquire, and
 ## return it with despawn() instead of queue_free().
@@ -102,7 +103,7 @@ func _on_area_entered(area: Area2D) -> void:
 ## Emits the power_up_collected signal with this power-up's type and position,
 ## spawns a collection particle effect, and returns the node to the pool.
 func _collect() -> void:
-	SignalBus.power_up_collected.emit(type, global_position)
+	SignalBus.power_up_collected.emit(type, Coordinates.from_2d(global_position))
 	_spawn_collect_effect()
 	despawn()
 

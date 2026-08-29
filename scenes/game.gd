@@ -9,6 +9,7 @@ const TRY_AGAIN_SCENE := preload("res://ui/try_again_popup.tscn")
 const EXPEDITION_VICTORY_SCENE := preload("res://ui/expedition_victory.tscn")
 const COMBAT_SCREEN_OVERLAYS := preload("res://effects/combat_screen_overlays_2d.tscn")
 const GalaxyStyle := preload("res://effects/rendering/galaxy_visual_style.gd")
+const CombatCoordinates := preload("res://systems/combat_coordinates.gd")
 
 const BACKGROUND_PALETTE_TRANSITION_DURATION := 2.4
 const BACKGROUND_EVOLUTION_PALETTES: Array[Dictionary] = [
@@ -120,7 +121,7 @@ func _ready() -> void:
 			PowerUp.Type.MAGNET,
 			PowerUp.Type.SCALE_UP,
 		].pick_random()
-		SignalBus.power_up_collected.emit(pod_type, player.global_position)
+		SignalBus.power_up_collected.emit(pod_type, CombatCoordinates.from_2d(player.global_position))
 
 	get_viewport().size_changed.connect(_resize_background)
 	_resize_background()

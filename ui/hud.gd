@@ -293,7 +293,7 @@ func _clear_effect_chips() -> void:
 ## Shows a brief color-coded text indicator when a power-up is collected
 ## (e.g. "NUKE!"), then fades it out after 1.5 seconds. Timed effects and the
 ## shield are skipped here — they get persistent countdown chips instead.
-func _on_power_up_collected(type: int, _pos: Vector2) -> void:
+func _on_power_up_collected(type: int, _pos: Vector3) -> void:
 	if TIMED_POWER_UPS.has(type) or type == SHIELD_TYPE:
 		return
 	# Show brief indicator

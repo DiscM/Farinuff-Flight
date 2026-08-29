@@ -1,0 +1,65 @@
+[gd_scene load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://effects/native_effect_3d.gd" id="1_effect"]
+[ext_resource type="Shader" path="res://effects/shaders/native_effect_3d.gdshader" id="2_shader"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_effect"]
+shader = ExtResource("2_shader")
+
+[sub_resource type="SphereMesh" id="SphereMesh_burst"]
+radius = 0.32
+height = 0.64
+radial_segments = 8
+rings = 4
+material = SubResource("ShaderMaterial_effect")
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_pulse"]
+top_radius = 0.5
+bottom_radius = 0.5
+height = 0.045
+radial_segments = 16
+material = SubResource("ShaderMaterial_effect")
+
+[sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_sparks"]
+emission_shape = 0
+direction = Vector3(0, 0, 1)
+spread = 180.0
+initial_velocity_min = 1.5
+initial_velocity_max = 4.5
+gravity = Vector3(0, 0, 0)
+scale_min = 0.08
+scale_max = 0.2
+
+[sub_resource type="SphereMesh" id="SphereMesh_particle"]
+radius = 0.09
+height = 0.18
+radial_segments = 6
+rings = 3
+material = SubResource("ShaderMaterial_effect")
+
+[node name="NativeEffect3D" type="Node3D"]
+visible = false
+process_mode = 4
+script = ExtResource("1_effect")
+
+[node name="BurstMesh" type="MeshInstance3D" parent="."]
+visible = false
+cast_shadow = 0
+gi_mode = 0
+mesh = SubResource("SphereMesh_burst")
+
+[node name="PulseMesh" type="MeshInstance3D" parent="."]
+visible = false
+cast_shadow = 0
+gi_mode = 0
+mesh = SubResource("CylinderMesh_pulse")
+
+[node name="Particles" type="GPUParticles3D" parent="."]
+emitting = false
+amount = 8
+lifetime = 0.2
+one_shot = true
+explosiveness = 1.0
+local_coords = false
+process_material = SubResource("ParticleProcessMaterial_sparks")
+draw_pass_1 = SubResource("SphereMesh_particle")

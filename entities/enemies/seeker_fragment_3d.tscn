@@ -1,0 +1,42 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://entities/enemies/seeker_fragment_3d.gd" id="1_fragment"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial_fragment"]
+albedo_color = Color(0.92, 0.08, 0.82, 1)
+emission_enabled = true
+emission = Color(0.92, 0.08, 0.82, 1)
+emission_energy_multiplier = 2.4
+shading_mode = 0
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_fragment"]
+top_radius = 0.14
+bottom_radius = 0.34
+height = 0.8
+radial_segments = 4
+rings = 1
+material = SubResource("StandardMaterial_fragment")
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_fragment"]
+radius = 0.32
+
+[node name="SeekerFragment3D" type="Area3D"]
+visible = false
+process_mode = 4
+collision_layer = 0
+collision_mask = 0
+monitoring = false
+monitorable = false
+input_ray_pickable = false
+script = ExtResource("1_fragment")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_fragment")
+disabled = true
+
+[node name="Visuals" type="Node3D" parent="."]
+
+[node name="FragmentMesh" type="MeshInstance3D" parent="Visuals"]
+cast_shadow = 0
+gi_mode = 0
+mesh = SubResource("CylinderMesh_fragment")
