@@ -1,0 +1,121 @@
+[gd_scene load_steps=11 format=3]
+
+[ext_resource type="Script" path="res://entities/enemies/fast_enemy_3d.gd" id="1_enemy"]
+[ext_resource type="PackedScene" path="res://assets/models/mockups/fast_enemy_mockup.glb" id="2_model"]
+[ext_resource type="Resource" path="res://entities/enemies/fast_enemy_generation_1.tres" id="3_stats"]
+[ext_resource type="Shader" path="res://effects/shaders/models/corrupted_void_enemy_3d.gdshader" id="4_shader"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_hitbox"]
+size = Vector3(1.708, 0.5, 1.818)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_energy"]
+shader = ExtResource("4_shader")
+shader_parameter/base_color = Color(0.84, 0.16, 0.035, 1)
+shader_parameter/metallic = 0.28
+shader_parameter/roughness = 0.24
+shader_parameter/energy_color = Color(1, 0.541, 0.141, 1)
+shader_parameter/accent_color = Color(0.843, 0.933, 1, 1)
+shader_parameter/circuit_amount = 0.05
+shader_parameter/emission_strength = 2.0
+shader_parameter/fracture_density = 0.1
+shader_parameter/reactor_focus = 0.12
+shader_parameter/emissive_surface = 1.0
+shader_parameter/glow_color = Color(1, 0.18, 0.02, 1)
+shader_parameter/animation_speed = 0.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_hull"]
+shader = ExtResource("4_shader")
+shader_parameter/base_color = Color(0.37, 0.12, 0.08, 1)
+shader_parameter/metallic = 0.58
+shader_parameter/roughness = 0.3
+shader_parameter/energy_color = Color(1, 0.541, 0.141, 1)
+shader_parameter/accent_color = Color(0.843, 0.933, 1, 1)
+shader_parameter/circuit_amount = 0.05
+shader_parameter/emission_strength = 0.78
+shader_parameter/fracture_density = 0.1
+shader_parameter/reactor_focus = 0.12
+shader_parameter/animation_speed = 0.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_gunmetal"]
+shader = ExtResource("4_shader")
+shader_parameter/base_color = Color(0.23, 0.27, 0.34, 1)
+shader_parameter/metallic = 0.82
+shader_parameter/roughness = 0.29
+shader_parameter/energy_color = Color(1, 0.541, 0.141, 1)
+shader_parameter/accent_color = Color(0.843, 0.933, 1, 1)
+shader_parameter/circuit_amount = 0.05
+shader_parameter/emission_strength = 0.66
+shader_parameter/fracture_density = 0.1
+shader_parameter/reactor_focus = 0.12
+shader_parameter/animation_speed = 0.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_reactor"]
+shader = ExtResource("4_shader")
+shader_parameter/base_color = Color(1, 0.29, 0.06, 1)
+shader_parameter/metallic = 0.3
+shader_parameter/roughness = 0.22
+shader_parameter/energy_color = Color(1, 0.72, 0.18, 1)
+shader_parameter/accent_color = Color(0.843, 0.933, 1, 1)
+shader_parameter/circuit_amount = 0.05
+shader_parameter/emission_strength = 2.25
+shader_parameter/fracture_density = 0.1
+shader_parameter/reactor_focus = 0.2
+shader_parameter/emissive_surface = 1.0
+shader_parameter/glow_color = Color(1, 0.35, 0.04, 1)
+shader_parameter/animation_speed = 0.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_accent"]
+shader = ExtResource("4_shader")
+shader_parameter/base_color = Color(0.68, 0.78, 0.88, 1)
+shader_parameter/metallic = 0.5
+shader_parameter/roughness = 0.24
+shader_parameter/energy_color = Color(1, 0.541, 0.141, 1)
+shader_parameter/accent_color = Color(0.92, 0.98, 1, 1)
+shader_parameter/circuit_amount = 0.05
+shader_parameter/emission_strength = 0.88
+shader_parameter/fracture_density = 0.1
+shader_parameter/reactor_focus = 0.12
+shader_parameter/animation_speed = 0.0
+
+[node name="FastEnemy3D" type="Area3D"]
+editor_description = "Scene-managed Fast Enemy Gen I. Inert until activate(); Y=0 combat root. The box projects to a 20x20 baseline-pixel envelope under the shared 70-degree camera."
+collision_layer = 0
+collision_mask = 0
+monitoring = false
+monitorable = false
+input_ray_pickable = false
+script = ExtResource("1_enemy")
+gameplay_stats = ExtResource("3_stats")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_hitbox")
+disabled = true
+
+[node name="Visuals" type="Node3D" parent="."]
+position = Vector3(0, 0.08, 0)
+
+[node name="FastHullGLB" parent="Visuals" instance=ExtResource("2_model")]
+
+[node name="FAST __ RAZOR Mk II" parent="Visuals/FastHullGLB" index="0"]
+surface_material_override/0 = SubResource("ShaderMaterial_energy")
+surface_material_override/1 = SubResource("ShaderMaterial_hull")
+surface_material_override/2 = SubResource("ShaderMaterial_gunmetal")
+surface_material_override/3 = SubResource("ShaderMaterial_reactor")
+surface_material_override/4 = SubResource("ShaderMaterial_accent")
+
+[node name="Attachments" type="Node3D" parent="."]
+
+[node name="Sockets" type="Node3D" parent="Attachments"]
+
+[node name="MuzzleCenter" type="Marker3D" parent="Attachments/Sockets"]
+position = Vector3(0, 0.15, -2.36)
+
+[node name="EngineLeft" type="Marker3D" parent="Attachments/Sockets"]
+position = Vector3(-0.15, 0.07, 1.59)
+
+[node name="EngineRight" type="Marker3D" parent="Attachments/Sockets"]
+position = Vector3(0.15, 0.07, 1.59)
+
+[node name="Modules" type="Node3D" parent="Attachments"]
+
+[editable path="Visuals/FastHullGLB"]

@@ -25,6 +25,7 @@ var velocity := Vector3.ZERO
 var _flight_space: FlightSpace
 var _exit_bounds := Rect2()
 var _heading := Vector3.BACK
+var _speed_pixels := 0.0
 var _meshes: Array[MeshInstance3D] = []
 var _socket_markers: Array[Marker3D] = []
 var _animation_time := 0.0
@@ -64,15 +65,18 @@ func activate(flight_space: FlightSpace, combat_position: Vector3, direction: Ve
 	# 26x26 screen pixels at each heading; compensate camera foreshortening
 	# with the authored box, independently of visual/socket yaw.
 	collision_shape.global_rotation = Vector3.ZERO
-	var screen_direction := _flight_space.combat_motion_to_screen(_heading).normalized()
-	velocity = _flight_space.screen_motion_to_combat(
-		screen_direction * gameplay_stats.move_speed * GameManager.get_late_game_speed_multiplier()
-	)
+	_speed_pixels = gameplay_stats.move_speed * GameManager.get_late_game_speed_multiplier()
+	_configure_movement()
 	# Preserve the reference's two separate rounding steps.
 	health = roundi(float(gameplay_stats.max_health) * GameManager.get_enemy_health_multiplier())
 	health = roundi(float(health) * GameManager.get_late_game_health_multiplier())
 	_refresh_exit_bounds()
-	get_viewport().size_changed.connect(_refresh_exit_bounds)
+	if not get_viewport().size_changed.is_connected(_refresh_exit_bounds):
+		get_viewport().size_changed.connect(_refresh_exit_bounds)
+	_animation_time = 0.0
+	_flash_time_left = 0.0
+	_set_instance_parameter(&"instance_animation_time", 0.0)
+	_set_instance_parameter(&"instance_flash", 0.0)
 	is_active = true
 	add_to_group(&"enemy_craft")
 	collision_layer = PhysicsLayers.ENEMY_CRAFT
@@ -82,6 +86,7 @@ func activate(flight_space: FlightSpace, combat_position: Vector3, direction: Ve
 	collision_shape.disabled = false
 	force_update_transform()
 	set_physics_process(true)
+	show()
 	_breathing = create_tween().set_loops().set_process_mode(Tween.TWEEN_PROCESS_PHYSICS)
 	_breathing.tween_property(visuals, "scale", Vector3(1.05, 1.0, 0.95), 0.6).set_trans(Tween.TRANS_SINE)
 	_breathing.tween_property(visuals, "scale", Vector3(0.95, 1.0, 1.05), 0.6).set_trans(Tween.TRANS_SINE)
@@ -91,7 +96,7 @@ func activate(flight_space: FlightSpace, combat_position: Vector3, direction: Ve
 func _physics_process(delta: float) -> void:
 	if not is_active or not GameManager.is_game_active:
 		return
-	global_position += velocity * delta
+	_advance_movement(delta)
 	global_position.y = 0.0
 	# Player Projectiles sweep at priority 2, after actor transforms reach physics.
 	force_update_transform()
@@ -104,6 +109,19 @@ func _physics_process(delta: float) -> void:
 		_flash_time_left = maxf(_flash_time_left - delta, 0.0)
 		var flash := (0.15 - _flash_time_left) / 0.05 if _flash_time_left > 0.1 else _flash_time_left / 0.1
 		_set_instance_parameter(&"instance_flash", clampf(flash, 0.0, 1.0))
+
+
+## Hook for movement variants. The default is the Generation I straight path;
+## specialized native roles override these two methods while retaining the
+## shared hitbox, damage, contact, and finish lifecycle.
+func _configure_movement() -> void:
+	var screen_direction := _flight_space.combat_motion_to_screen(_heading).normalized()
+	velocity = _flight_space.screen_motion_to_combat(screen_direction * _speed_pixels)
+	velocity.y = 0.0
+
+
+func _advance_movement(delta: float) -> void:
+	global_position += velocity * delta
 
 
 func take_damage(amount: int) -> void:
