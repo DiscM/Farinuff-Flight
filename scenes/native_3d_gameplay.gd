@@ -31,6 +31,7 @@ const PowerUpManager := preload("res://systems/power_up_manager_3d.gd")
 @onready var effect_manager: NativeEffectManager = $GameplayManagers/NativeEffectManager3D
 @onready var hazard_manager: NativeHazardManager = $GameplayManagers/NativeHazardManager3D
 @onready var power_up_manager: PowerUpManager = $GameplayManagers/PowerUpManager3D
+@onready var special_attack_coordinator: SpecialAttackCoordinator = $GameplayManagers/SpecialAttackCoordinator
 @onready var transition_overlay: CanvasLayer = $TransitionOverlay
 
 ## Review scenes can leave this disabled to preserve their earlier no-reward
@@ -56,7 +57,7 @@ func _ready() -> void:
 	xp_orb_manager.configure(flight_space, $World3D/Pickups3D, idle_parent)
 	power_up_manager.configure(flight_space, $World3D/PowerUps3D, idle_parent)
 	effect_manager.configure($World3D/Effects3D, idle_parent)
-	hazard_manager.configure(flight_space, $World3D/Hazards3D, idle_parent)
+	hazard_manager.configure(flight_space, $World3D/Hazards3D, idle_parent, special_attack_coordinator)
 	projectile_manager.add_to_group(&"native_3d_projectile_manager")
 	if not await projectile_manager.warm_projectile_pools():
 		$TransitionOverlay/Message.text = "Projectile preparation failed. See the debugger."
@@ -81,6 +82,7 @@ func _ready() -> void:
 	projectile_manager.enemy_projectile_hit.connect(_on_enemy_projectile_hit)
 	projectile_manager.enemy_projectile_deflected.connect(_on_enemy_projectile_deflected)
 	power_up_manager.power_up_collected.connect(_on_power_up_collected)
+	hazard_manager.mine_detonated.connect(_on_mine_detonated)
 	# The review controller never consumes Hangar supplies. Its reward policy is
 	# explicit per scene, so projectile and Phase 4 reviews remain no-reward.
 	GameManager.start_game(false)
@@ -111,6 +113,10 @@ func _on_enemy_projectile_deflected(_projectile: Area3D, combat_position: Vector
 
 func _on_power_up_collected(_power_up_type: int, combat_position: Vector3) -> void:
 	effect_manager.play_effect(NativeEffect.EffectKind.PICKUP, combat_position, Vector3.UP, 1.05)
+
+
+func _on_mine_detonated(combat_position: Vector3, _is_cluster: bool, _leaves_plasma: bool) -> void:
+	effect_manager.play_effect(NativeEffect.EffectKind.IMPACT, combat_position, Vector3.UP, 1.35)
 
 
 func _on_player_fired(combat_position: Vector3, direction: Vector3) -> void:
@@ -181,6 +187,7 @@ func reset_native_progression() -> void:
 	xp_orb_manager.clear_orbs()
 	power_up_manager.clear_power_ups()
 	hazard_manager.clear_hazards()
+	special_attack_coordinator.reset_pressure()
 	effect_manager.clear_effects()
 	GameManager.start_game(false)
 	player.reset_damage_state()
@@ -216,13 +223,15 @@ func _process(delta: float) -> void:
 		pool_growth += int(orb_metrics["pool_growth_after_warmup"])
 		pool_growth += int(hazard_metrics["pool_growth_after_warmup"])
 		pool_growth += int(power_up_metrics["pool_growth_after_warmup"])
-		projectile_status.text = "P %d/%d  •  E %d/%d  •  FX %d/%d  •  ORB %d/%d  •  PU %d/%d  •  FRAG %d/%d  •  GROWTH %d" % [
+		projectile_status.text = "P %d/%d  •  E %d/%d  •  FX %d/%d  •  ORB %d/%d  •  PU %d/%d  •  FRAG %d/%d  •  MINE %d/%d  •  FIELD %d/%d  •  GROWTH %d" % [
 			metrics["player"]["active"], metrics["player"]["pool_size"],
 			metrics["enemy"]["active"], metrics["enemy"]["pool_size"],
 			effect_metrics["active"], effect_metrics["pool_size"],
 			orb_metrics["active"], orb_metrics["pool_size"],
 			power_up_metrics["active"], power_up_metrics["pool_size"],
 			hazard_metrics["active"], hazard_metrics["pool_size"],
+			hazard_metrics["mine_active"], hazard_metrics["mine_pool_size"],
+			hazard_metrics["field_active"], hazard_metrics["field_pool_size"],
 			pool_growth
 		]
 
