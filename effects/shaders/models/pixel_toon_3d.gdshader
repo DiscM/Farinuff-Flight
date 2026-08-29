@@ -40,8 +40,10 @@ uniform vec4 glow_color : source_color = vec4(0.0);
 instance uniform vec4 instance_modulate : source_color = vec4(1.0);
 instance uniform float instance_flash : hint_range(0.0, 1.0) = 0.0;
 instance uniform float instance_phase_offset = 0.0;
+instance uniform vec4 instance_base_override : source_color = vec4(0.0);
 instance uniform vec4 instance_energy_override : source_color = vec4(0.0);
 instance uniform vec4 instance_accent_override : source_color = vec4(0.0);
+instance uniform vec4 instance_glow_override : source_color = vec4(0.0);
 
 varying vec3 model_position;
 
@@ -61,6 +63,11 @@ void vertex() {
 void fragment() {
 	float time = TIME * animation_speed + phase_offset + instance_phase_offset;
 	float pulse = 0.72 + 0.28 * sin(time * (2.3 + evolution_level * 2.2));
+	vec3 active_base = mix(
+		base_color.rgb,
+		instance_base_override.rgb,
+		instance_base_override.a
+	);
 	vec3 active_energy = mix(
 		energy_color.rgb,
 		instance_energy_override.rgb,
@@ -81,7 +88,7 @@ void fragment() {
 	light_value += (dith ? 0.45 / band_count : 0.0) * dither_strength;
 	float band = clamp(floor(light_value * band_count), 0.0, band_count - 1.0);
 	float shade = 0.28 + band * 0.285;
-	vec3 body = base_color.rgb * shade;
+	vec3 body = active_base * shade;
 	if (band >= band_count - 0.5) {
 		// The lit limb lifts toward white, like a planet's day side.
 		body = body * 0.88 + vec3(0.12);
@@ -128,7 +135,8 @@ void fragment() {
 
 	// Emissive GLB surfaces (engines, reactors, canopy glass) ignore the light
 	// bands and stay hot, with a checker sparkle from the same dither grid.
-	vec3 glow_base = mix(active_energy, glow_color.rgb, glow_color.a);
+	vec4 active_glow = mix(glow_color, instance_glow_override, instance_glow_override.a);
+	vec3 glow_base = mix(active_energy, active_glow.rgb, active_glow.a);
 	vec3 glow = glow_base * (1.45 + (dith ? 0.25 : 0.0)) * max(emission_strength, 0.6);
 	vec3 pixel_color = mix(body, glow, emissive_surface);
 

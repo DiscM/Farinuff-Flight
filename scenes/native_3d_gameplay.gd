@@ -1,7 +1,7 @@
 extends Node
 class_name Native3DGameplay
 ## Isolated native Player Craft, pooled Projectiles, Basic Enemy hit routing,
-## and Player damage. Deflection, rewards, and production encounters are deferred.
+## Player damage, and boost deflection. Rewards and encounters are deferred.
 
 signal gameplay_ready
 
@@ -11,6 +11,7 @@ const PAUSE_MENU_SCENE := preload("res://ui/pause_menu.tscn")
 const ProjectileManager := preload("res://systems/projectile_manager_3d.gd")
 const BasicEnemy := preload("res://entities/enemies/basic_enemy_3d.gd")
 const WeaponTuning := preload("res://entities/player/player_weapon_tuning.gd")
+const FlightTuning := preload("res://entities/player/player_flight_tuning.gd")
 
 @onready var hud: CanvasLayer = $HUD
 @onready var player: PlayerCraft = $World3D/Actors3D/Player3D
@@ -40,6 +41,7 @@ func _ready() -> void:
 		$TransitionOverlay/Message.text = "Projectile preparation failed. See the debugger."
 		return
 	player.fire_requested.connect(projectile_manager.fire_player_projectile)
+	player.deflection_requested.connect(projectile_manager.deflect_enemy_projectiles)
 	projectile_manager.player_projectile_hit.connect(_on_player_projectile_hit)
 	projectile_manager.enemy_projectile_hit.connect(_on_enemy_projectile_hit)
 	# This review has no pickups or retry rewards; do not spend Hangar supplies.
@@ -65,8 +67,14 @@ func _process(delta: float) -> void:
 	aim_reticle.visible = player.is_using_free_aim and GameManager.is_game_active
 	if aim_reticle.visible:
 		aim_reticle.position = flight_space.combat_to_screen(player.get_aim_reticle_combat_position())
-	if player.is_boosting:
-		boost_status.text = "BOOSTING"
+	if player.boost_reflected_projectiles >= FlightTuning.BOOST_CHAIN_REFLECT_THRESHOLD:
+		boost_status.text = "CHAIN READY  •  BOOST AGAIN  •  REFLECTIONS %d / %d" % [
+			player.boost_reflected_projectiles, FlightTuning.BOOST_CHAIN_REFLECT_THRESHOLD,
+		]
+	elif player.is_boosting:
+		boost_status.text = "BOOSTING  •  REFLECTIONS %d / %d" % [
+			player.boost_reflected_projectiles, FlightTuning.BOOST_CHAIN_REFLECT_THRESHOLD,
+		]
 	elif player.boost_cooldown_timer > 0.0:
 		boost_status.text = "BOOST RECHARGING"
 	else:
@@ -75,10 +83,11 @@ func _process(delta: float) -> void:
 	if _metrics_timer <= 0.0 and projectile_manager.is_ready:
 		_metrics_timer = 0.25
 		var metrics := projectile_manager.get_metrics()
-		projectile_status.text = "PLAYER %d / %d  •  ENEMY %d / %d  •  ARMED %d  •  POOL GROWTH %d" % [
+		projectile_status.text = "P %d/%d  •  E %d/%d  •  ARMED %d  •  DEFLECT %d/%d  •  GROWTH %d" % [
 			metrics["player"]["active"], metrics["player"]["pool_size"],
 			metrics["enemy"]["active"], metrics["enemy"]["pool_size"],
-			metrics["armed"], metrics["pool_growth_after_warmup"],
+			metrics["armed"], metrics["enemy"]["deflected_active"],
+			metrics["enemy"]["deflections"], metrics["pool_growth_after_warmup"],
 		]
 
 

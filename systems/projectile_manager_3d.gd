@@ -1,10 +1,13 @@
 extends Node
 class_name ProjectileManager3D
 ## Scene-owned projectile policy around the shared ObjectPool.
-## Damage routing belongs to the native gameplay controller; deflection is deferred.
+## Damage routing belongs to the native gameplay controller; this manager owns
+## bounded-pool acquisition, Interaction Range, and Enemy Projectile deflection.
 
 signal player_projectile_hit(target: Area3D, combat_position: Vector3)
 signal enemy_projectile_hit(target: Area3D, combat_position: Vector3)
+signal enemy_projectile_deflected(projectile: Area3D, combat_position: Vector3)
+signal deflected_projectile_hit(target: Area3D, combat_position: Vector3)
 
 const Projectile := preload("res://entities/projectiles/projectile_3d.gd")
 const PLAYER_PROJECTILE_SCENE := preload("res://entities/projectiles/player_projectile_3d.tscn")
@@ -14,6 +17,7 @@ const InteractionRange := preload("res://systems/projectile_interaction_range_3d
 const WeaponTuning := preload("res://entities/player/player_weapon_tuning.gd")
 const EnemyTuning := preload("res://entities/projectiles/enemy_projectile_tuning.gd")
 const FlightTuning := preload("res://entities/player/player_flight_tuning.gd")
+const PlayerCraft := preload("res://entities/player/player_3d.gd")
 
 @export_range(1, 128, 1) var player_pool_size: int = 64
 @export_range(1, 128, 1) var enemy_pool_size: int = 64
@@ -32,6 +36,7 @@ class PoolState:
 	var rejected_shots := 0
 	var peak_active := 0
 	var pool_growth := 0
+	var deflections := 0
 
 	func _init(value: PackedScene) -> void:
 		scene = value
@@ -42,6 +47,7 @@ var _peak_active := 0
 var _flight_space: FlightSpace
 var _active_parent: Node3D
 var _idle_parent: Node3D
+var _player: PlayerCraft
 var _combat_bounds := Rect2()
 var _interaction_range := InteractionRange.new()
 var _pools: Array[PoolState] = [
@@ -50,10 +56,16 @@ var _pools: Array[PoolState] = [
 ]
 
 
-func configure(flight_space: FlightSpace, active_parent: Node3D, idle_parent: Node3D, player: Node3D) -> void:
+func configure(
+	flight_space: FlightSpace,
+	active_parent: Node3D,
+	idle_parent: Node3D,
+	player: PlayerCraft
+) -> void:
 	_flight_space = flight_space
 	_active_parent = active_parent
 	_idle_parent = idle_parent
+	_player = player
 	_pools[Projectile.Kind.PLAYER].capacity = player_pool_size
 	_pools[Projectile.Kind.ENEMY].capacity = enemy_pool_size
 	_interaction_range.configure(flight_space, player, interaction_range_pixels, interaction_hysteresis_pixels)
@@ -80,8 +92,8 @@ func warm_projectile_pools() -> bool:
 				_warming = false
 				return false
 			var interaction: InteractionRange = _interaction_range if projectile.kind == Projectile.Kind.ENEMY else null
-			projectile.configure_pool(_idle_parent, interaction)
-			projectile.hit.connect(_on_projectile_hit.bind(projectile.kind))
+			projectile.configure_pool(_idle_parent, _flight_space, interaction)
+			projectile.hit.connect(_on_projectile_hit.bind(projectile))
 			projectile.returned_to_pool.connect(_on_projectile_returned.bind(pool))
 			projectile.prepare_visual_warmup()
 			warm_nodes.append(projectile)
@@ -108,6 +120,44 @@ func fire_player_projectile(combat_position: Vector3, direction: Vector3) -> voi
 
 func fire_enemy_projectile(combat_position: Vector3, direction: Vector3, speed_pixels: float = EnemyTuning.DEFAULT_SPEED) -> void:
 	_fire(Projectile.Kind.ENEMY, combat_position, direction, speed_pixels)
+
+
+## Deflects every active incoming projectile inside the reference's exact
+## screen-pixel radius. Player3D requests this synchronously before its chain
+## input check, matching the reference boost update order.
+func deflect_enemy_projectiles(
+	deflector_position: Vector3,
+	deflector_velocity: Vector3
+) -> void:
+	if not is_ready or not GameManager.is_game_active or _player == null:
+		return
+	var radius_squared := interaction_range_pixels * interaction_range_pixels
+	var enemy_pool := _pools[Projectile.Kind.ENEMY]
+	for projectile in enemy_pool.checked_out:
+		if not projectile.is_active or projectile.is_deflected:
+			continue
+		var screen_offset := _flight_space.combat_motion_to_screen(
+			projectile.global_position - deflector_position
+		)
+		if screen_offset.length_squared() > radius_squared:
+			continue
+		_try_deflect_enemy_projectile(projectile, deflector_position, deflector_velocity)
+
+
+func _try_deflect_enemy_projectile(
+	projectile: Projectile,
+	deflector_position: Vector3,
+	deflector_velocity: Vector3
+) -> bool:
+	if not projectile.deflect(deflector_position, deflector_velocity):
+		return false
+	_pools[Projectile.Kind.ENEMY].deflections += 1
+	AudioManager.play_deflect()
+	_player.register_boost_reflection()
+	var combat_position := projectile.global_position
+	combat_position.y = 0.0
+	enemy_projectile_deflected.emit(projectile, combat_position)
+	return true
 
 
 func _fire(kind: Projectile.Kind, combat_position: Vector3, direction: Vector3, speed_pixels: float) -> void:
@@ -148,9 +198,27 @@ func _record_active_peaks() -> void:
 	_peak_active = maxi(_peak_active, total_active)
 
 
-func _on_projectile_hit(target: Area3D, combat_position: Vector3, kind: Projectile.Kind) -> void:
-	if kind == Projectile.Kind.PLAYER:
+func _on_projectile_hit(
+	target: Area3D,
+	combat_position: Vector3,
+	projectile: Projectile
+) -> void:
+	# Preserve the reference's collision-time defense for a projectile that
+	# crosses the full response radius between Player scans or spawns overlapped.
+	if (
+		projectile.kind == Projectile.Kind.ENEMY
+		and not projectile.is_deflected
+		and target == _player
+		and _player.can_deflect_projectiles()
+		and _try_deflect_enemy_projectile(projectile, _player.global_position, _player.velocity)
+	):
+		return
+	if projectile.kind == Projectile.Kind.PLAYER:
 		player_projectile_hit.emit(target, combat_position)
+	elif projectile.is_deflected:
+		player_projectile_hit.emit(target, combat_position)
+		AudioManager.play_hit_marker()
+		deflected_projectile_hit.emit(target, combat_position)
 	else:
 		enemy_projectile_hit.emit(target, combat_position)
 
@@ -190,11 +258,14 @@ func get_metrics() -> Dictionary:
 func _pool_metrics(pool: PoolState) -> Dictionary:
 	var active := 0
 	var armed := 0
+	var deflected_active := 0
 	var swept := 0
 	var step_usec := 0
 	for projectile in pool.checked_out:
 		if projectile.is_active:
 			active += 1
+			if projectile.is_deflected:
+				deflected_active += 1
 			step_usec += projectile.last_step_usec
 			if projectile.last_sweep_performed:
 				swept += 1
@@ -208,6 +279,8 @@ func _pool_metrics(pool: PoolState) -> Dictionary:
 		"returning": pool.checked_out.size() - active,
 		"idle": pool.warmed_ids.size() - pool.checked_out.size(),
 		"peak_active": pool.peak_active,
+		"deflected_active": deflected_active,
+		"deflections": pool.deflections,
 		"shots_fired": pool.shots_fired,
 		"rejected_shots": pool.rejected_shots,
 		"pool_growth_after_warmup": pool.pool_growth,
