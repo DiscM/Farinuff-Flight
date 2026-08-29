@@ -37,6 +37,7 @@ func _ready() -> void:
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	GameManager.is_game_active = false
 	projectile_manager.configure(flight_space, $World3D/Projectiles3D, $World3D/PoolRoot3D, player)
+	projectile_manager.add_to_group(&"native_3d_projectile_manager")
 	if not await projectile_manager.warm_projectile_pools():
 		$TransitionOverlay/Message.text = "Projectile preparation failed. See the debugger."
 		return

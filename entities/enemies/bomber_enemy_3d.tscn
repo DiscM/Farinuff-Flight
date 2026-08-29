@@ -1,0 +1,113 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://entities/enemies/bomber_enemy_3d.gd" id="1_enemy"]
+[ext_resource type="PackedScene" path="res://assets/models/mockups/bomber_enemy_mockup.glb" id="2_model"]
+[ext_resource type="Resource" path="res://entities/enemies/bomber_enemy_generation_1.tres" id="3_stats"]
+[ext_resource type="Shader" path="res://effects/shaders/models/corrupted_void_enemy_3d.gdshader" id="4_shader"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_hitbox"]
+size = Vector3(2.904, 0.5, 2.364)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_energy"]
+shader = ExtResource("4_shader")
+shader_parameter/base_color = Color(0.12, 0.68, 0.2, 1)
+shader_parameter/metallic = 0.24
+shader_parameter/roughness = 0.2
+shader_parameter/energy_color = Color(0.424, 1, 0.478, 1)
+shader_parameter/accent_color = Color(0.718, 1, 0.29, 1)
+shader_parameter/circuit_amount = 0.05
+shader_parameter/emission_strength = 2.1
+shader_parameter/fracture_density = 0.1
+shader_parameter/reactor_focus = 0.12
+shader_parameter/emissive_surface = 1.0
+shader_parameter/glow_color = Color(0.08, 1, 0.22, 1)
+shader_parameter/animation_speed = 0.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_hull"]
+shader = ExtResource("4_shader")
+shader_parameter/base_color = Color(0.08, 0.3, 0.16, 1)
+shader_parameter/metallic = 0.6
+shader_parameter/roughness = 0.32
+shader_parameter/energy_color = Color(0.424, 1, 0.478, 1)
+shader_parameter/accent_color = Color(0.718, 1, 0.29, 1)
+shader_parameter/circuit_amount = 0.05
+shader_parameter/emission_strength = 0.78
+shader_parameter/fracture_density = 0.1
+shader_parameter/reactor_focus = 0.12
+shader_parameter/animation_speed = 0.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_gunmetal"]
+shader = ExtResource("4_shader")
+shader_parameter/base_color = Color(0.2, 0.3, 0.28, 1)
+shader_parameter/metallic = 0.82
+shader_parameter/roughness = 0.29
+shader_parameter/energy_color = Color(0.424, 1, 0.478, 1)
+shader_parameter/accent_color = Color(0.718, 1, 0.29, 1)
+shader_parameter/circuit_amount = 0.05
+shader_parameter/emission_strength = 0.66
+shader_parameter/fracture_density = 0.1
+shader_parameter/reactor_focus = 0.12
+shader_parameter/animation_speed = 0.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_reactor"]
+shader = ExtResource("4_shader")
+shader_parameter/base_color = Color(0.1, 0.95, 0.32, 1)
+shader_parameter/metallic = 0.3
+shader_parameter/roughness = 0.22
+shader_parameter/energy_color = Color(0.55, 1, 0.26, 1)
+shader_parameter/accent_color = Color(0.84, 1, 0.65, 1)
+shader_parameter/circuit_amount = 0.05
+shader_parameter/emission_strength = 2.25
+shader_parameter/fracture_density = 0.1
+shader_parameter/reactor_focus = 0.2
+shader_parameter/emissive_surface = 1.0
+shader_parameter/glow_color = Color(0.1, 1, 0.28, 1)
+shader_parameter/animation_speed = 0.0
+
+[node name="BomberEnemy3D" type="Area3D"]
+editor_description = "Scene-managed Bomber Enemy Gen I. Inert until activate(); Y=0 combat root. The box preserves the 34x26 baseline-pixel reference envelope under the shared camera."
+collision_layer = 0
+collision_mask = 0
+monitoring = false
+monitorable = false
+input_ray_pickable = false
+script = ExtResource("1_enemy")
+gameplay_stats = ExtResource("3_stats")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_hitbox")
+disabled = true
+
+[node name="Visuals" type="Node3D" parent="."]
+position = Vector3(0, 0.08, 0)
+
+[node name="BomberHullGLB" parent="Visuals" instance=ExtResource("2_model")]
+
+[node name="BOMBER __ MANTIS Mk II" parent="Visuals/BomberHullGLB" index="0"]
+surface_material_override/0 = SubResource("ShaderMaterial_energy")
+surface_material_override/1 = SubResource("ShaderMaterial_hull")
+surface_material_override/2 = SubResource("ShaderMaterial_gunmetal")
+surface_material_override/3 = SubResource("ShaderMaterial_reactor")
+
+[node name="Attachments" type="Node3D" parent="."]
+
+[node name="Sockets" type="Node3D" parent="Attachments"]
+
+[node name="MuzzleCenter" type="Marker3D" parent="Attachments/Sockets"]
+position = Vector3(0, 0.16, -1.78)
+
+[node name="EngineLeft" type="Marker3D" parent="Attachments/Sockets"]
+position = Vector3(-0.33, 0.06, 1.48)
+
+[node name="EngineRight" type="Marker3D" parent="Attachments/Sockets"]
+position = Vector3(0.33, 0.06, 1.48)
+
+[node name="BombBayLeft" type="Marker3D" parent="Attachments/Sockets"]
+position = Vector3(-0.54, -0.26, 0.74)
+
+[node name="BombBayRight" type="Marker3D" parent="Attachments/Sockets"]
+position = Vector3(0.54, -0.26, 0.74)
+
+[node name="Modules" type="Node3D" parent="Attachments"]
+
+[editable path="Visuals/BomberHullGLB"]

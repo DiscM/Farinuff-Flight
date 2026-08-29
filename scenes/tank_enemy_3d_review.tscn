@@ -1,0 +1,103 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scenes/tank_enemy_3d_review.gd" id="1_review"]
+[ext_resource type="PackedScene" path="res://scenes/native_3d_gameplay.tscn" id="2_gameplay"]
+[ext_resource type="PackedScene" path="res://entities/enemies/tank_enemy_3d.tscn" id="3_enemy"]
+[ext_resource type="Script" path="res://scenes/basic_enemy_3d_review_guides.gd" id="4_guides"]
+
+[node name="TankEnemy3DReview" type="Node"]
+script = ExtResource("1_review")
+
+[node name="Gameplay" parent="." instance=ExtResource("2_gameplay")]
+
+[node name="FirstEnemy3D" parent="Gameplay/World3D/Actors3D" instance=ExtResource("3_enemy")]
+position = Vector3(0, 0, -12)
+
+[node name="SpawnTimer" type="Timer" parent="."]
+wait_time = 3.2
+
+[node name="ReviewHUD" type="CanvasLayer" parent="."]
+layer = 11
+
+[node name="Guides" type="Node2D" parent="ReviewHUD"]
+script = ExtResource("4_guides")
+
+[node name="Panel" type="Control" parent="ReviewHUD"]
+anchors_preset = 10
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -470.0
+offset_top = 24.0
+offset_right = 470.0
+offset_bottom = 156.0
+grow_horizontal = 2
+mouse_filter = 2
+
+[node name="Title" type="Label" parent="ReviewHUD/Panel"]
+offset_right = 940.0
+offset_bottom = 24.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.95, 0.34, 1, 1)
+theme_override_font_sizes/font_size = 16
+text = "TANK ENEMY • GEN I RADIAL BURSTS • 80 PX/S • 8 HP • NO REWARDS"
+horizontal_alignment = 1
+
+[node name="Legend" type="Label" parent="ReviewHUD/Panel"]
+offset_top = 28.0
+offset_right = 940.0
+offset_bottom = 48.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.85, 0.9, 1, 1)
+theme_override_font_sizes/font_size = 11
+text = "1–4 EDGE ENTRY  •  V AUTO  •  H HITBOXES  •  G SOCKETS  •  R RESTORE LIVES  •  HOLD FIRE TO TEST 8 HP"
+horizontal_alignment = 1
+
+[node name="Controls" type="HBoxContainer" parent="ReviewHUD/Panel"]
+offset_left = 120.0
+offset_top = 54.0
+offset_right = 820.0
+offset_bottom = 90.0
+mouse_filter = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="Top" type="Button" parent="ReviewHUD/Panel/Controls"]
+layout_mode = 2
+focus_mode = 0
+text = "1 TOP"
+
+[node name="Right" type="Button" parent="ReviewHUD/Panel/Controls"]
+layout_mode = 2
+focus_mode = 0
+text = "2 RIGHT"
+
+[node name="Bottom" type="Button" parent="ReviewHUD/Panel/Controls"]
+layout_mode = 2
+focus_mode = 0
+text = "3 BOTTOM"
+
+[node name="Left" type="Button" parent="ReviewHUD/Panel/Controls"]
+layout_mode = 2
+focus_mode = 0
+text = "4 LEFT"
+
+[node name="AutoSpawns" type="CheckButton" parent="ReviewHUD/Panel/Controls"]
+layout_mode = 2
+focus_mode = 0
+text = "AUTO"
+
+[node name="RestoreLives" type="Button" parent="ReviewHUD/Panel/Controls"]
+layout_mode = 2
+focus_mode = 0
+text = "R RESTORE LIVES"
+
+[node name="Status" type="Label" parent="ReviewHUD/Panel"]
+offset_top = 100.0
+offset_right = 940.0
+offset_bottom = 120.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.75, 0.9, 1, 1)
+theme_override_font_sizes/font_size = 12
+horizontal_alignment = 1
+
+[editable path="Gameplay"]

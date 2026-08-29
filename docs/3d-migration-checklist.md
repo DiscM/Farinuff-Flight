@@ -1,6 +1,6 @@
 # Native 3D Migration Checklist
 
-**Status**: implementation in progress; native boost deflection and chains are at their manual-playtest gate
+**Status**: implementation in progress; native Tank Enemy Generation I is at its manual-playtest gate
 
 This checklist tracks the migration from the current 2D gameplay runtime to a native 3D combat runtime. The existing 2D actor scenes remain frozen reference and rollback implementations until the user manually validates each 3D slice.
 
@@ -285,6 +285,9 @@ This checklist tracks the migration from the current 2D gameplay runtime to a na
 
 ## Phase 4 — Remaining gameplay actor migration
 
+- [x] Add the first remaining standard enemy role as a native Fast Enemy Generation I wrapper with the frozen sine-weave behavior reference.
+- [x] Add the native Bomber Enemy Generation I wrapper with the frozen slow-drift and periodic bomb-drop behavior reference.
+- [x] Add the native Tank Enemy Generation I wrapper with the frozen straight-entry and radial-burst behavior reference.
 - [ ] Port the remaining standard enemy roles one at a time using the 2D implementation as a frozen behavior reference.
 - [ ] Port powerups, XP orbs, drones, mines, armor plates, hazards, and special attack sections to native 3D scenes.
 - [ ] Port boss phases and destructible sections after the standard enemy roles pass validation.
@@ -293,6 +296,36 @@ This checklist tracks the migration from the current 2D gameplay runtime to a na
 - [ ] Validate each dependent scene as a complete 3D slice; never mix active 2D and 3D gameplay actors.
 - [ ] Obtain explicit user playtest acceptance for each slice.
 - [ ] Pause implementation after each scene or slice until explicit user approval is received.
+
+### Phase 4 Fast Enemy Generation I validation record
+
+- `res://entities/enemies/fast_enemy_3d.tscn` is a dedicated `Area3D` wrapper using the canonical `fast_enemy_mockup.glb`, a primitive 20×20-baseline-pixel `BoxShape3D`, wrapper-owned `Attachments/Sockets`, and a shared Generation I stats resource. The visual pivot is corrected below `Visuals`; the gameplay root remains at `Y=0`.
+- `FastEnemy3D` retains the reference's 280 baseline-pixels/second straight entry and 80-pixel, 3-Hz perpendicular sine weave in screen-equivalent tuning, projected through `FlightSpace3D` onto world X/Z. It reuses the validated native hit, contact, invulnerability, projectile, pause, and boundary lifecycle without adding generation II–IV abilities, rewards, or special attacks.
+- Native `Native3DGameplay` routes Player Projectile damage through the shared `BasicEnemy3D` lifecycle, so Fast Enemy receives the same one-hit Generation I damage contract without a second reward or score authority. The native scene still contains no 2D gameplay actor or coordinator.
+- `res://scenes/fast_enemy_3d_review.tscn` provides deterministic top/right/bottom/left entries, automatic entries, projected hitbox/socket guides, held-fire hit testing, contact damage, cleanup, pause, and restart/life reset review. The new wrapper inherits the existing shadow-capable craft presentation while projectiles and effects remain shadow-free.
+- The Fast Enemy slice was imported and locally verified in its review scene. The user's explicit 2026-08-29 `Continue` instruction approves moving past this manual gate; the review contract remains available for regression checks, and no Fast-specific production cutover or reward behavior was introduced.
+
+### Phase 4 Fast Enemy Generation I approval record
+
+- The user's 2026-08-29 `Continue` instruction is recorded as explicit approval to move past the Fast Enemy Generation I manual gate. The Fast review harness and wrapper remain available for later regression review.
+
+### Phase 4 Bomber Enemy Generation I validation record
+
+- `res://entities/enemies/bomber_enemy_3d.tscn` is a dedicated `Area3D` wrapper using the canonical `bomber_enemy_mockup.glb`, a primitive 34×26-baseline-pixel `BoxShape3D`, wrapper-owned `Attachments/Sockets` for the muzzle, engines, and bomb bays, and a shared Generation I stats resource (`1 HP`, `60` move speed, `200` base points). The visual pivot is corrected below `Visuals`; the gameplay root remains at `Y=0`.
+- `BomberEnemy3D` retains the reference's 60 baseline-pixels/second forward travel and 120-pixels/second perpendicular drift, with the perpendicular component bouncing at the frozen 30-pixel boundary margin. It drops alternating bomb-bay projectiles after a randomized 0.5–2.0-second first delay and every 2.0 seconds thereafter, using the scene-owned pooled `EnemyProjectile3D` manager with randomized 300–400-pixels/second speed. Mines, later generations, rewards, and special attacks remain deferred.
+- `res://scenes/bomber_enemy_3d_review.tscn` provides deterministic top/right/bottom/left entries, optional automatic entries, projected hitbox/socket guides, held-fire hit testing, contact damage, cleanup, pause, and review life reset. The HUD reports active count, cleanup outcomes, accepted damage, bomb drops, lives, drift tuning, and vulnerability state; the review scene adds no score or reward authority.
+- Clean Metal Forward+ runtime verification on Godot 4.6.3 loaded the composed review, activated the Bomber wrapper, resolved the native projectile manager, and observed active pooled enemy projectiles with the Bomber status reporting multiple bomb drops. A direct native hit-route check destroyed one Bomber and removed it from the review set. The project reported no gameplay-code errors; only the existing generated MCP bridge warnings remained. Implementation pauses at the manual gate: confirm drift readability, 60-pixels/second travel, 34×26 hitbox/socket alignment, periodic bomb drops and cleanup, one-hit destroy, contact damage/immunity, pause/restart, zero rewards, and no pool growth before continuing to Tank, Sniper, mines, or later-generation work.
+
+### Phase 4 Bomber Enemy Generation I approval record
+
+- The user's 2026-08-29 `Continue` instruction is recorded as explicit approval to move past the Bomber Enemy Generation I manual gate. The Bomber review harness and wrapper remain available for later regression review.
+
+### Phase 4 Tank Enemy Generation I validation record
+
+- `res://entities/enemies/tank_enemy_3d.tscn` is a dedicated `Area3D` wrapper using the canonical `tank_enemy_mockup.glb`, a primitive 48×48-baseline-pixel `BoxShape3D`, wrapper-owned `Attachments/Sockets` for the muzzle, engines, armor, core, and death hooks, and a shared Generation I stats resource (`8 HP`, `80` move speed, `300` base points). The visual pivot is corrected below `Visuals`; the gameplay root remains at `Y=0`.
+- `TankEnemy3D` retains the reference's 80 baseline-pixels/second straight entry and timed 8-shot radial burst: the first burst is staggered by 0.5–2.5 seconds, later bursts occur every 2.5 seconds, and alternating shots use 245/305-pixels/second speeds with the frozen ±8-pixel variance. Screen-space directions are projected through `FlightSpace3D`; orbiting plates, double rings, overload, rewards, and later generations remain deferred.
+- `res://scenes/tank_enemy_3d_review.tscn` provides deterministic top/right/bottom/left entries, optional automatic entries, projected hitbox/socket guides, held-fire damage testing across the 8-HP lifecycle, contact damage, cleanup, pause, and review life reset. The HUD reports active count, enemy hits, burst/shot requests, contacts, cleanup, accepted damage, lives, and vulnerability; the review scene adds no score or reward authority.
+- Clean Metal Forward+ runtime verification on Godot 4.6.3 loaded the composed review with no gameplay-code errors, resolved the native projectile manager, activated the Tank wrapper, and observed two radial bursts / 16 requested shots with pooled Enemy Projectiles. A guarded native hit-route check confirmed `8 HP → 7 HP` while retaining the active Tank. The review screenshot showed the purple/magenta Tank and native projectile presentation; only the existing generated MCP bridge warnings remained. Implementation pauses at the manual gate: confirm radial direction/speed readability, 80-pixels/second travel, 48×48 hitbox/socket alignment, 8-HP damage and destroy, contact damage/immunity, directional cleanup, pause/restart, zero rewards, and no pool growth before continuing to Sniper or other systems.
 
 ## Phase 5 — Native 3D VFX replacement
 

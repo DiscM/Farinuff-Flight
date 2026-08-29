@@ -1,0 +1,148 @@
+[gd_scene load_steps=12 format=3]
+
+[ext_resource type="Script" path="res://entities/enemies/tank_enemy_3d.gd" id="1_enemy"]
+[ext_resource type="PackedScene" path="res://assets/models/mockups/tank_enemy_mockup.glb" id="2_model"]
+[ext_resource type="Resource" path="res://entities/enemies/tank_enemy_generation_1.tres" id="3_stats"]
+[ext_resource type="Shader" path="res://effects/shaders/models/corrupted_void_enemy_3d.gdshader" id="4_shader"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_hitbox"]
+size = Vector3(4.10048, 0.5, 4.363636)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_void_metal"]
+shader = ExtResource("4_shader")
+shader_parameter/base_color = Color(0.025, 0.035, 0.065, 1)
+shader_parameter/metallic = 0.78
+shader_parameter/roughness = 0.24
+shader_parameter/energy_color = Color(0.478, 0.169, 1, 1)
+shader_parameter/accent_color = Color(1, 0.235, 0.812, 1)
+shader_parameter/circuit_amount = 0.05
+shader_parameter/emission_strength = 0.55
+shader_parameter/fracture_density = 0.1
+shader_parameter/reactor_focus = 0.12
+shader_parameter/animation_speed = 0.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_energy"]
+shader = ExtResource("4_shader")
+shader_parameter/base_color = Color(0.84, 0.025, 0.48, 1)
+shader_parameter/metallic = 0.24
+shader_parameter/roughness = 0.2
+shader_parameter/energy_color = Color(0.478, 0.169, 1, 1)
+shader_parameter/accent_color = Color(1, 0.235, 0.812, 1)
+shader_parameter/circuit_amount = 0.05
+shader_parameter/emission_strength = 2.0
+shader_parameter/fracture_density = 0.1
+shader_parameter/reactor_focus = 0.14
+shader_parameter/emissive_surface = 1.0
+shader_parameter/glow_color = Color(1, 0.05, 0.72, 1)
+shader_parameter/animation_speed = 0.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_bulwark_purple"]
+shader = ExtResource("4_shader")
+shader_parameter/base_color = Color(0.24, 0.035, 0.48, 1)
+shader_parameter/metallic = 0.66
+shader_parameter/roughness = 0.31
+shader_parameter/energy_color = Color(0.478, 0.169, 1, 1)
+shader_parameter/accent_color = Color(1, 0.235, 0.812, 1)
+shader_parameter/circuit_amount = 0.05
+shader_parameter/emission_strength = 0.9
+shader_parameter/fracture_density = 0.1
+shader_parameter/reactor_focus = 0.16
+shader_parameter/animation_speed = 0.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_gunmetal"]
+shader = ExtResource("4_shader")
+shader_parameter/base_color = Color(0.2, 0.27, 0.37, 1)
+shader_parameter/metallic = 0.82
+shader_parameter/roughness = 0.29
+shader_parameter/energy_color = Color(0.478, 0.169, 1, 1)
+shader_parameter/accent_color = Color(1, 0.235, 0.812, 1)
+shader_parameter/circuit_amount = 0.05
+shader_parameter/emission_strength = 0.66
+shader_parameter/fracture_density = 0.1
+shader_parameter/reactor_focus = 0.12
+shader_parameter/animation_speed = 0.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_armor"]
+shader = ExtResource("4_shader")
+shader_parameter/base_color = Color(0.42, 0.065, 0.7, 1)
+shader_parameter/metallic = 0.55
+shader_parameter/roughness = 0.29
+shader_parameter/energy_color = Color(0.478, 0.169, 1, 1)
+shader_parameter/accent_color = Color(1, 0.235, 0.812, 1)
+shader_parameter/circuit_amount = 0.05
+shader_parameter/emission_strength = 1.0
+shader_parameter/fracture_density = 0.1
+shader_parameter/reactor_focus = 0.2
+shader_parameter/glow_color = Color(0.82, 0.08, 1, 1)
+shader_parameter/animation_speed = 0.0
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_core"]
+shader = ExtResource("4_shader")
+shader_parameter/base_color = Color(0.96, 0.98, 1, 1)
+shader_parameter/metallic = 0.0
+shader_parameter/roughness = 0.14
+shader_parameter/energy_color = Color(0.62, 0.28, 1, 1)
+shader_parameter/accent_color = Color(1, 0.72, 0.94, 1)
+shader_parameter/circuit_amount = 0.05
+shader_parameter/emission_strength = 2.35
+shader_parameter/fracture_density = 0.1
+shader_parameter/reactor_focus = 0.28
+shader_parameter/emissive_surface = 1.0
+shader_parameter/glow_color = Color(1, 0.24, 0.9, 1)
+shader_parameter/animation_speed = 0.0
+
+[node name="TankEnemy3D" type="Area3D"]
+editor_description = "Scene-managed Tank Enemy Gen I. Inert until activate(); Y=0 combat root. The box preserves the 48x48 baseline-pixel reference envelope under the shared camera."
+collision_layer = 0
+collision_mask = 0
+monitoring = false
+monitorable = false
+input_ray_pickable = false
+script = ExtResource("1_enemy")
+gameplay_stats = ExtResource("3_stats")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("BoxShape3D_hitbox")
+disabled = true
+
+[node name="Visuals" type="Node3D" parent="."]
+position = Vector3(0, 0.08, 0)
+
+[node name="TankHullGLB" parent="Visuals" instance=ExtResource("2_model")]
+
+[node name="TANK __ BULWARK Mk II" parent="Visuals/TankHullGLB" index="0"]
+surface_material_override/0 = SubResource("ShaderMaterial_void_metal")
+surface_material_override/1 = SubResource("ShaderMaterial_energy")
+surface_material_override/2 = SubResource("ShaderMaterial_bulwark_purple")
+surface_material_override/3 = SubResource("ShaderMaterial_gunmetal")
+surface_material_override/4 = SubResource("ShaderMaterial_armor")
+surface_material_override/5 = SubResource("ShaderMaterial_core")
+
+[node name="Attachments" type="Node3D" parent="."]
+
+[node name="Sockets" type="Node3D" parent="Attachments"]
+
+[node name="MuzzleCenter" type="Marker3D" parent="Attachments/Sockets"]
+position = Vector3(0, 0.46, -1.66)
+
+[node name="EngineLeft" type="Marker3D" parent="Attachments/Sockets"]
+position = Vector3(-0.5, 0.04, 1.69)
+
+[node name="EngineRight" type="Marker3D" parent="Attachments/Sockets"]
+position = Vector3(0.5, 0.04, 1.69)
+
+[node name="ArmorLeft" type="Marker3D" parent="Attachments/Sockets"]
+position = Vector3(-1.75, 0.15, 0.22)
+
+[node name="ArmorRight" type="Marker3D" parent="Attachments/Sockets"]
+position = Vector3(1.75, 0.15, 0.22)
+
+[node name="Core" type="Marker3D" parent="Attachments/Sockets"]
+position = Vector3(0, 0.52, 0)
+
+[node name="Death" type="Marker3D" parent="Attachments/Sockets"]
+position = Vector3(0, 0.35, 0)
+
+[node name="Modules" type="Node3D" parent="Attachments"]
+
+[editable path="Visuals/TankHullGLB"]
