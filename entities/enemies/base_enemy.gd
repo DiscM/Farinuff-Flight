@@ -22,6 +22,7 @@ var _is_render_warmup: bool = false
 
 const HEALTH_SCALE_PER_WAVE: float = 0.045
 const SpawnTuning := preload("res://entities/enemies/enemy_spawn_tuning.gd")
+const Coordinates := preload("res://systems/combat_coordinates.gd")
 const SCORE_MULTIPLIERS := [1.0, 1.5, 2.25, 3.25]
 
 const XP_ORB_SCENE := preload("res://entities/collectibles/xp_orb.tscn")
@@ -141,7 +142,7 @@ func _die(award_rewards: bool = true) -> void:
 	special_attack_coordinator.release_major(self)
 	var scene_root := get_tree().current_scene
 	if award_rewards and rewards_enabled:
-		SignalBus.enemy_killed.emit(points, global_position)
+		SignalBus.enemy_killed.emit(points, Coordinates.from_2d(global_position))
 	# Spawn XP orb (60% chance, but guaranteed if guaranteed_orb is true).
 	if award_rewards and rewards_enabled and (guaranteed_orb or randf() < 0.6):
 		# Drops float off in the same direction the enemy was travelling.

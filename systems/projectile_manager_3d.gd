@@ -115,11 +115,22 @@ func warm_projectile_pools() -> bool:
 
 
 func fire_player_projectile(combat_position: Vector3, direction: Vector3) -> void:
-	_fire(Projectile.Kind.PLAYER, combat_position, direction, WeaponTuning.PROJECTILE_SPEED)
+	var size_multiplier := _player.get_projectile_scale() if _player != null else 1.0
+	_fire(Projectile.Kind.PLAYER, combat_position, direction, WeaponTuning.PROJECTILE_SPEED, size_multiplier)
 
 
 func fire_enemy_projectile(combat_position: Vector3, direction: Vector3, speed_pixels: float = EnemyTuning.DEFAULT_SPEED) -> void:
 	_fire(Projectile.Kind.ENEMY, combat_position, direction, speed_pixels)
+
+
+## Clears both native projectile families for review reset and scene teardown.
+## Each wrapper owns its deferred physics-safe return; the manager only
+## requests the return from its current checked-out set.
+func clear_projectiles() -> void:
+	for pool in _pools:
+		for projectile in pool.checked_out.duplicate():
+			if is_instance_valid(projectile):
+				projectile.despawn()
 
 
 ## Deflects every active incoming projectile inside the reference's exact
@@ -160,7 +171,13 @@ func _try_deflect_enemy_projectile(
 	return true
 
 
-func _fire(kind: Projectile.Kind, combat_position: Vector3, direction: Vector3, speed_pixels: float) -> void:
+func _fire(
+	kind: Projectile.Kind,
+	combat_position: Vector3,
+	direction: Vector3,
+	speed_pixels: float,
+	size_multiplier: float = 1.0
+) -> void:
 	if not is_ready or not GameManager.is_game_active:
 		return
 	var pool := _pools[kind]
@@ -179,7 +196,7 @@ func _fire(kind: Projectile.Kind, combat_position: Vector3, direction: Vector3, 
 		screen_direction = Vector2.UP if kind == Projectile.Kind.PLAYER else Vector2.DOWN
 	var projectile_velocity := _flight_space.screen_motion_to_combat(screen_direction * speed_pixels)
 	pool.checked_out.append(projectile)
-	projectile.pool_activate(combat_position, projectile_velocity, _combat_bounds)
+	projectile.pool_activate(combat_position, projectile_velocity, _combat_bounds, size_multiplier)
 	pool.shots_fired += 1
 	_record_active_peaks()
 

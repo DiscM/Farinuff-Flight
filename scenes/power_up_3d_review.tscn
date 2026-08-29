@@ -1,0 +1,116 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scenes/power_up_3d_review.gd" id="1_review"]
+[ext_resource type="PackedScene" path="res://scenes/native_3d_gameplay.tscn" id="2_gameplay"]
+
+[node name="PowerUp3DReview" type="Node"]
+script = ExtResource("1_review")
+
+[node name="Gameplay" parent="." instance=ExtResource("2_gameplay")]
+
+[node name="ReviewHUD" type="CanvasLayer" parent="."]
+layer = 11
+
+[node name="Panel" type="Control" parent="ReviewHUD"]
+anchors_preset = 10
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -560.0
+offset_top = 24.0
+offset_right = 560.0
+offset_bottom = 176.0
+grow_horizontal = 2
+mouse_filter = 2
+
+[node name="Title" type="Label" parent="ReviewHUD/Panel"]
+offset_right = 1120.0
+offset_bottom = 24.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.72, 0.16, 1)
+theme_override_font_sizes/font_size = 16
+text = "POWER-UP • NATIVE 3D PICKUPS • CONTACT / PROJECTILE • BOUNDED POOL"
+horizontal_alignment = 1
+
+[node name="Legend" type="Label" parent="ReviewHUD/Panel"]
+offset_top = 28.0
+offset_right = 1120.0
+offset_bottom = 48.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.85, 0.9, 1, 1)
+theme_override_font_sizes/font_size = 11
+text = "1–6 SPAWN TYPES • C COLLECT SELECTED • X CLEAR • R RESTORE • MOVE / SHOOT CRAFT INTO PICKUP • ESC PAUSE"
+horizontal_alignment = 1
+
+[node name="Controls" type="HBoxContainer" parent="ReviewHUD/Panel"]
+offset_left = 20.0
+offset_top = 54.0
+offset_right = 1100.0
+offset_bottom = 90.0
+mouse_filter = 2
+theme_override_constants/separation = 6
+alignment = 1
+
+[node name="Type0" type="Button" parent="ReviewHUD/Panel/Controls"]
+layout_mode = 2
+focus_mode = 0
+text = "1 S+"
+
+[node name="Type1" type="Button" parent="ReviewHUD/Panel/Controls"]
+layout_mode = 2
+focus_mode = 0
+text = "2 RAPID"
+
+[node name="Type2" type="Button" parent="ReviewHUD/Panel/Controls"]
+layout_mode = 2
+focus_mode = 0
+text = "3 SHIELD"
+
+[node name="Type3" type="Button" parent="ReviewHUD/Panel/Controls"]
+layout_mode = 2
+focus_mode = 0
+text = "4 SPREAD"
+
+[node name="Type4" type="Button" parent="ReviewHUD/Panel/Controls"]
+layout_mode = 2
+focus_mode = 0
+text = "5 MAGNET"
+
+[node name="Type5" type="Button" parent="ReviewHUD/Panel/Controls"]
+layout_mode = 2
+focus_mode = 0
+text = "6 NUKE"
+
+[node name="Contact" type="Button" parent="ReviewHUD/Panel/Controls"]
+layout_mode = 2
+focus_mode = 0
+text = "C COLLECT"
+
+[node name="Clear" type="Button" parent="ReviewHUD/Panel/Controls"]
+layout_mode = 2
+focus_mode = 0
+text = "X CLEAR"
+
+[node name="Restore" type="Button" parent="ReviewHUD/Panel/Controls"]
+layout_mode = 2
+focus_mode = 0
+text = "R RESTORE"
+
+[node name="Status" type="Label" parent="ReviewHUD/Panel"]
+offset_top = 100.0
+offset_right = 1120.0
+offset_bottom = 120.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.75, 0.9, 1, 1)
+theme_override_font_sizes/font_size = 12
+horizontal_alignment = 1
+
+[node name="EffectStatus" type="Label" parent="ReviewHUD/Panel"]
+offset_top = 124.0
+offset_right = 1120.0
+offset_bottom = 144.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.6, 1, 0.72, 1)
+theme_override_font_sizes/font_size = 12
+horizontal_alignment = 1
+
+[editable path="Gameplay"]

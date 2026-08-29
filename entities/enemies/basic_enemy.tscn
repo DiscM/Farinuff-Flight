@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3 uid="uid://cqwk2m8xh7y3a"]
+[gd_scene load_steps=20 format=3 uid="uid://cqwk2m8xh7y3a"]
 
 [ext_resource type="Script" path="res://entities/enemies/basic_enemy.gd" id="1"]
 [ext_resource type="Script" path="res://assets/sprites/generated/strip_animator.gd" id="2"]
@@ -10,6 +10,9 @@
 [ext_resource type="Texture2D" path="res://assets/sprites/generated/v2p5d_basic_enemy_gen1_idle_strip.png" id="8"]
 [ext_resource type="Texture2D" path="res://assets/sprites/generated/v2p5d_basic_enemy_gen1_idle_strip.png" id="9"]
 [ext_resource type="Resource" path="res://entities/enemies/basic_enemy_generation_1.tres" id="10_stats"]
+[ext_resource type="Resource" path="res://entities/enemies/basic_enemy_generation_2.tres" id="11_stats"]
+[ext_resource type="Resource" path="res://entities/enemies/basic_enemy_generation_3.tres" id="12_stats"]
+[ext_resource type="Resource" path="res://entities/enemies/basic_enemy_generation_4.tres" id="13_stats"]
 
 [sub_resource type="RectangleShape2D" id="shape1"]
 size = Vector2(26, 26)
@@ -55,6 +58,7 @@ collision_shape = SubResource("shape2")
 max_health = 1
 move_speed = 160.0
 base_points = 100
+gameplay_stats = ExtResource("11_stats")
 [node name="Origins" type="Node2D" parent="VisualRoot/Evolution/GenerationII"]
 [node name="FragmentLeft" type="Marker2D" parent="VisualRoot/Evolution/GenerationII/Origins"]
 position = Vector2(-10, 5)
@@ -70,6 +74,7 @@ collision_shape = SubResource("shape3")
 max_health = 2
 move_speed = 170.0
 base_points = 100
+gameplay_stats = ExtResource("12_stats")
 [node name="Origins" type="Node2D" parent="VisualRoot/Evolution/GenerationIII"]
 [node name="FragmentLeft" type="Marker2D" parent="VisualRoot/Evolution/GenerationIII/Origins"]
 position = Vector2(-11, 6)
@@ -85,6 +90,7 @@ collision_shape = SubResource("shape4")
 max_health = 2
 move_speed = 180.0
 base_points = 100
+gameplay_stats = ExtResource("13_stats")
 [node name="Origins" type="Node2D" parent="VisualRoot/Evolution/GenerationIV"]
 [node name="FragmentLeft" type="Marker2D" parent="VisualRoot/Evolution/GenerationIV/Origins"]
 position = Vector2(-12, 7)

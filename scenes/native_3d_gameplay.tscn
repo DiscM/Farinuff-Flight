@@ -1,4 +1,4 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=16 format=3]
 
 [ext_resource type="Script" path="res://scenes/native_3d_gameplay.gd" id="1_game"]
 [ext_resource type="Resource" path="res://systems/flight_space_3d_config.tres" id="2_config"]
@@ -11,6 +11,10 @@
 [ext_resource type="PackedScene" path="res://entities/player/player_3d.tscn" id="9_player"]
 [ext_resource type="Texture2D" path="res://assets/ui/cursor_crosshair.png" id="10_reticle"]
 [ext_resource type="Script" path="res://systems/projectile_manager_3d.gd" id="11_projectiles"]
+[ext_resource type="Script" path="res://systems/xp_orb_manager_3d.gd" id="12_orbs"]
+[ext_resource type="Script" path="res://systems/native_effect_manager_3d.gd" id="13_effects"]
+[ext_resource type="Script" path="res://systems/native_hazard_manager_3d.gd" id="14_hazards"]
+[ext_resource type="Script" path="res://systems/power_up_manager_3d.gd" id="15_power_ups"]
 
 [node name="Native3DGameplay" type="Node"]
 script = ExtResource("1_game")
@@ -29,6 +33,14 @@ script = ExtResource("1_game")
 
 [node name="Projectiles3D" type="Node3D" parent="World3D"]
 
+[node name="Pickups3D" type="Node3D" parent="World3D"]
+
+[node name="PowerUps3D" type="Node3D" parent="World3D"]
+
+[node name="Effects3D" type="Node3D" parent="World3D"]
+
+[node name="Hazards3D" type="Node3D" parent="World3D"]
+
 [node name="PoolRoot3D" type="Node3D" parent="World3D"]
 process_mode = 4
 visible = false
@@ -44,6 +56,18 @@ configuration = ExtResource("2_config")
 [node name="ProjectileManager3D" type="Node" parent="GameplayManagers"]
 process_physics_priority = 1
 script = ExtResource("11_projectiles")
+
+[node name="XPOrbManager3D" type="Node" parent="GameplayManagers"]
+script = ExtResource("12_orbs")
+
+[node name="NativeEffectManager3D" type="Node" parent="GameplayManagers"]
+script = ExtResource("13_effects")
+
+[node name="NativeHazardManager3D" type="Node" parent="GameplayManagers"]
+script = ExtResource("14_hazards")
+
+[node name="PowerUpManager3D" type="Node" parent="GameplayManagers"]
+script = ExtResource("15_power_ups")
 
 [node name="HUD" parent="." instance=ExtResource("7_hud")]
 layer = 10

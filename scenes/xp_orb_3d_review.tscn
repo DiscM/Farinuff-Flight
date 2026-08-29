@@ -1,0 +1,96 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scenes/xp_orb_3d_review.gd" id="1_review"]
+[ext_resource type="PackedScene" path="res://scenes/native_3d_gameplay.tscn" id="2_gameplay"]
+[ext_resource type="Script" path="res://systems/xp_orb_manager_3d.gd" id="3_manager"]
+
+[node name="XPOrb3DReview" type="Node"]
+script = ExtResource("1_review")
+
+[node name="Gameplay" parent="." instance=ExtResource("2_gameplay")]
+
+[node name="XPOrbManager3D" type="Node" parent="."]
+script = ExtResource("3_manager")
+
+[node name="ReviewHUD" type="CanvasLayer" parent="."]
+layer = 11
+
+[node name="Panel" type="Control" parent="ReviewHUD"]
+anchors_preset = 10
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -560.0
+offset_top = 24.0
+offset_right = 560.0
+offset_bottom = 156.0
+grow_horizontal = 2
+mouse_filter = 2
+
+[node name="Title" type="Label" parent="ReviewHUD/Panel"]
+offset_right = 1120.0
+offset_bottom = 24.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.16, 0.75, 1, 1)
+theme_override_font_sizes/font_size = 16
+text = "XP ORB • NATIVE CONTACT PICKUP • 40 PX/S • VALUE TIERS • BOUNDED POOL"
+horizontal_alignment = 1
+
+[node name="Legend" type="Label" parent="ReviewHUD/Panel"]
+offset_top = 28.0
+offset_right = 1120.0
+offset_bottom = 48.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.85, 0.9, 1, 1)
+theme_override_font_sizes/font_size = 11
+text = "1/2/3 SPAWN TIERS • C CONTACT RANGE • X CLEAR • R RESTORE • MOVE CRAFT INTO ORB • ESC PAUSE"
+horizontal_alignment = 1
+
+[node name="Controls" type="HBoxContainer" parent="ReviewHUD/Panel"]
+offset_left = 60.0
+offset_top = 54.0
+offset_right = 1060.0
+offset_bottom = 90.0
+mouse_filter = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="Value1" type="Button" parent="ReviewHUD/Panel/Controls"]
+layout_mode = 2
+focus_mode = 0
+text = "1 VALUE 1"
+
+[node name="Value2" type="Button" parent="ReviewHUD/Panel/Controls"]
+layout_mode = 2
+focus_mode = 0
+text = "2 VALUE 2"
+
+[node name="Value3" type="Button" parent="ReviewHUD/Panel/Controls"]
+layout_mode = 2
+focus_mode = 0
+text = "3 VALUE 3+"
+
+[node name="Contact" type="Button" parent="ReviewHUD/Panel/Controls"]
+layout_mode = 2
+focus_mode = 0
+text = "C CONTACT"
+
+[node name="Clear" type="Button" parent="ReviewHUD/Panel/Controls"]
+layout_mode = 2
+focus_mode = 0
+text = "X CLEAR"
+
+[node name="Restore" type="Button" parent="ReviewHUD/Panel/Controls"]
+layout_mode = 2
+focus_mode = 0
+text = "R RESTORE"
+
+[node name="Status" type="Label" parent="ReviewHUD/Panel"]
+offset_top = 100.0
+offset_right = 1120.0
+offset_bottom = 120.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.75, 0.9, 1, 1)
+theme_override_font_sizes/font_size = 12
+horizontal_alignment = 1
+
+[editable path="Gameplay"]

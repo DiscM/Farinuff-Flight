@@ -4,8 +4,9 @@ extends Node
 
 # Enemy signals
 @warning_ignore("unused_signal")
-## Emitted when any enemy is killed. Carries the point value and world position of the kill.
-signal enemy_killed(points: int, position: Vector2)
+## Emitted when any enemy is killed. Carries the point value and canonical
+## Combat Plane position of the kill (Y=0).
+signal enemy_killed(points: int, position: Vector3)
 
 # Player signals
 @warning_ignore("unused_signal")
@@ -14,8 +15,9 @@ signal player_hit
 
 # Power-up signals
 @warning_ignore("unused_signal")
-## Emitted when the player collects a power-up. Carries the power-up type enum value and pickup position.
-signal power_up_collected(type: int, position: Vector2)
+## Emitted when the player collects a power-up. Carries the power-up type enum
+## value and canonical Combat Plane position (Y=0).
+signal power_up_collected(type: int, position: Vector3)
 @warning_ignore("unused_signal")
 ## Emitted when the player collects an XP orb. Carries the orb's XP value.
 signal xp_orb_collected(xp_value: int)

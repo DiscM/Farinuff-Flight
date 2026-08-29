@@ -58,3 +58,9 @@ cast_shadow = 0
 gi_mode = 0
 mesh = SubResource("CapsuleMesh_bolt")
 material_override = SubResource("ShaderMaterial_bolt")
+
+[node name="Attachments" type="Node3D" parent="."]
+
+[node name="Sockets" type="Node3D" parent="Attachments"]
+
+[node name="Impact" type="Marker3D" parent="Attachments/Sockets"]

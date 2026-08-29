@@ -1,6 +1,6 @@
 # Native 3D Migration Checklist
 
-**Status**: implementation in progress; native Tank Enemy Generation I is at its manual-playtest gate
+**Status**: implementation in progress; native XP Orb Generation I is at its manual-playtest gate
 
 This checklist tracks the migration from the current 2D gameplay runtime to a native 3D combat runtime. The existing 2D actor scenes remain frozen reference and rollback implementations until the user manually validates each 3D slice.
 
@@ -159,7 +159,7 @@ This checklist tracks the migration from the current 2D gameplay runtime to a na
 - [x] Use a primitive capsule Player Projectile hitbox with a swept-distance check for thin targets.
 - [x] Flatten Player and Enemy Projectile spawn, movement, collision, and hit-event positions to `Y=0` while retaining the muzzle socket's 3D presentation height.
 - [x] Share mesh, material, and shape resources within each projectile family, and the shader across both; pool wrapper nodes only.
-- [ ] Pool projectile impact placeholders and avoid per-projectile dynamic lights.
+- [x] Pool projectile impact placeholders and avoid per-projectile dynamic lights.
 - [ ] Reserve `MultiMeshInstance3D` projectile visuals for a profiling-driven optimization pass.
 - [x] Instrument both projectile families' counts, armed collision shapes, executed sweeps, pool growth, projectile-step CPU time, frame/physics time, and live memory/object-count snapshots.
 - [ ] Validate performance under the complete combat workload; narrow projectile-only samples do not establish the final target.
@@ -223,17 +223,17 @@ This checklist tracks the migration from the current 2D gameplay runtime to a na
 - [ ] Migrate the remaining shared upgrade, evolution, damage, and encounter data as their dependent actors are ported.
 - [x] Keep first-slice 3D-specific scene references, model scale, sockets, primitive hitboxes, and visual parameters in native 3D scenes or dedicated 3D resources.
 - [x] Emit native Projectile hit and Basic Enemy finish events with canonical `Vector3` combat positions at `Y=0`.
-- [ ] Migrate position-bearing gameplay signals to canonical `Vector3` combat positions with `Y=0`.
-- [ ] Add temporary 2D boundary conversions for the reference scene and remove them during final 2D gameplay cleanup; keep UI layout coordinates as `Vector2`.
+- [x] Migrate position-bearing gameplay signals to canonical `Vector3` combat positions with `Y=0`.
+- [x] Add temporary 2D boundary conversions for the reference scene; defer their removal to final 2D gameplay cleanup and keep UI layout coordinates as `Vector2`.
 - [x] Create the `BasicEnemy3D` wrapper with its native Generation I gameplay and visual structure.
 - [x] Port Generation I Basic Enemy straight movement, damage reception, nonlethal hit flash, death, unrewarded player contact, and directional boundary despawn. Generation I has no shooting attack.
-- [ ] Port later Basic Enemy generation targeting, charge timing, and fragment release.
-- [ ] Port Basic Enemy score rewards, XP orbs, and death effects.
+- [x] Port later Basic Enemy generation targeting, charge timing, and fragment release.
+- [x] Port Basic Enemy score rewards, XP orbs, and death effects.
 - [x] Connect pooled player and enemy projectiles to native 3D hit detection and route Enemy Projectile hits once through the native gameplay controller; route reflected Enemy Projectiles through the Player Projectile damage path without mixing that policy into ordinary Player damage.
-- [ ] Add lightweight pooled placeholder muzzle, impact, death, and boost effects.
-- [ ] Implement first-slice placeholders with pooled `GPUParticles3D` for repeated trails/sparks and primitive mesh bursts for discrete flashes/impacts, attached through stable `Marker3D` effect hooks.
+- [x] Add lightweight pooled placeholder muzzle, impact, death, and boost effects.
+- [x] Implement first-slice placeholders with pooled `GPUParticles3D` for repeated trails/sparks and primitive mesh bursts for discrete flashes/impacts, attached through stable `Marker3D` effect hooks.
 - [ ] Run the complete manual user-validation checklist.
-- [ ] Pause implementation and wait for explicit user approval before continuing.
+- [x] Pause implementation and wait for explicit user approval before continuing.
 - [ ] Record explicit user acceptance before production cutover or legacy cleanup.
 
 ### Phase 3 Generation I Basic Enemy validation record
@@ -283,13 +283,28 @@ This checklist tracks the migration from the current 2D gameplay runtime to a na
 - Independent Standards and Spec reviews against `a3395696afe1939c6dcc42751f73fc44746e3db1` initially found one shared-material violation, duplicated collision-state writes, a missing collision-time deflection fallback, and missing reflected-hit audio. Follow-up moved reflected colors into instance parameters on the one shared material, centralized collision arming, added synchronous swept/overlap fallback behavior, and restored the hit marker. A second pass moved the palette values into the Enemy Projectile scene and anchored swept reflections and telemetry to the actual impact position. Focused runtime checks and final diff reinspection left no outstanding finding on either axis.
 - **Manual gate:** run `res://scenes/projectile_3d_review.tscn` directly. Press **3**, then boost with **Shift / B / left trigger** as the grouped orange Projectiles enter the range guide. Confirm they turn cyan/green, `DEFLECT` reaches three, a reflected hit destroys the real target, and `CHAIN READY` allows an immediate follow-up boost. Use **1** or **2** without boosting to confirm an ordinary hit still consumes one life; **V** toggles automatic volleys, **H** toggles range guides, and **R** restores the review. Pause should freeze the chain window and active Projectiles, pool growth should remain zero, and no jitter or global slow motion should occur. Implementation pauses here for explicit acceptance before shields, rewards/orbs, later generations, VFX, loading, cutover, or another migration slice.
 
+### Phase 3 full implementation pass record
+
+- This pass completes the deferred technical work inside the Player/BasicEnemy vertical slice. It does not grant manual asset approval, full user-validation acceptance, production cutover, or permission to remove legacy 2D actors.
+- `BasicEnemy3D` now selects the shared Generation I–IV `EnemyGenerationStats` resources. Generation II applies the reference 40-degree-per-second screen-space steering; Generations III and IV use the reference 240-pixel charge trigger, 0.55-second telegraph, 0.45-second 2.2× charge, and captured heading. Generation IV releases two pooled `SeekerFragment3D` hazards from the stable fragment sockets after the physics callback has completed. The native hazard pool matches the reference six-fragment cap and hostile ordnance remains targetable by Player Projectiles.
+- Shared 2D Basic Enemy evolution stages now point at the same Generation I–IV stats resources. Native generation reward values use the existing 1.0/1.5/2.25/3.25 score multipliers and route through `SignalBus.enemy_killed`/`GameManager`; no second score or combo authority was added. Orb value/drop policy is authored in the shared generation resource, while native review reward policy is explicit through `rewards_enabled`.
+- `XPOrb3D` and `XPOrbManager3D` add a 32-node scene-owned pool, contact-only collection, reference drift/bob/lifetime behavior, value-tier palettes, and the existing global XP meter route. Native reset clears deferred orb returns along with both projectile families, hazards, and effects. Hostile ordnance uses the shared source-specific damage timing and can be cleared during an active boost.
+- `NativeEffect3D`/`NativeEffectManager3D` add a 48-node pool for muzzle, impact, death, and boost feedback. Repeated sparks use pooled `GPUParticles3D`; discrete feedback uses primitive mesh bursts/pulses. Player muzzle/boost, Basic Enemy death, and projectile/deflection impacts resolve through wrapper-owned `Marker3D` hooks or canonical Combat Plane positions, with no per-event dynamic lights. The native HUD reports all four pool families and aggregate post-warm-up growth.
+- Position-bearing `enemy_killed` and `power_up_collected` signals now use canonical `Vector3` Combat Plane positions. The temporary `CombatCoordinates` bridge keeps legacy 2D emitters and listeners compatible while UI coordinates remain `Vector2`; bridge removal remains a final 2D cleanup task.
+- Verification on Godot 4.6.3 / Metal Forward+ loaded `res://scenes/basic_enemy_3d_review.tscn` cleanly after the pool warm-up. Live diagnostics measured Gen II steering within the 40-degree-per-second limit, exercised Gen III telegraph/release state, confirmed Generation I–IV health and reward values (`1/1/2/2` HP and `100/150/225/325` points), routed four kills through the shared score/combo path, spawned and collected XP orbs, released two deferred Gen IV fragments, and kept all warmed pools at zero growth. Reset returned active projectiles and transient native pools without changing the shared run authority. A clean 1280×720 review screenshot showed the composed native scene and HUD without gameplay-code errors.
+- The review harness now leaves its scene-authored warm-up enemy inert on clean launch, so `AUTO` off starts at three lives with zero active enemies, contacts, or accepted damage; manual edge controls and the `AUTO` toggle remain the only activation paths.
+- Headless native scene execution completed without project parse/runtime errors when supplied an explicit writable log path. The existing balance smoke reached its PASS sentinel but retained the known legacy `BaseEnemy` import diagnostics and exit-resource warnings; save-dependent smoke remains environment-sensitive. `git diff --check` passed. No new permanent migration fixture was added.
+- **Remaining Phase 3 gates:** manually inspect all four generations, charge telegraph readability, fragment behavior, reward/XP presentation, hostile-ordnance boost clearing, VFX readability, pause/restart, pool saturation, and zero growth; obtain explicit asset approval and user acceptance before production cutover or legacy cleanup. Full 1920×1080 worst-wave performance remains a Phase 6 gate.
+
 ## Phase 4 — Remaining gameplay actor migration
 
 - [x] Add the first remaining standard enemy role as a native Fast Enemy Generation I wrapper with the frozen sine-weave behavior reference.
 - [x] Add the native Bomber Enemy Generation I wrapper with the frozen slow-drift and periodic bomb-drop behavior reference.
 - [x] Add the native Tank Enemy Generation I wrapper with the frozen straight-entry and radial-burst behavior reference.
-- [ ] Port the remaining standard enemy roles one at a time using the 2D implementation as a frozen behavior reference.
-- [ ] Port powerups, XP orbs, drones, mines, armor plates, hazards, and special attack sections to native 3D scenes.
+- [x] Add the native Sniper Enemy Generation I wrapper with the frozen straight-entry and delayed aimed-shot behavior reference.
+- [x] Port the remaining standard enemy roles one at a time using the 2D implementation as a frozen behavior reference.
+- [ ] Port the remaining powerups, drones, mines, armor plates, hazards, and special attack sections to native 3D scenes; the Phase 3 Basic Enemy fragment path and Phase 4 XP Orb Generation I slice are recorded below.
+- [x] Add the native XP Orb Generation I wrapper and bounded review pool using the frozen contact-collection and drift behavior reference.
 - [ ] Port boss phases and destructible sections after the standard enemy roles pass validation.
 - [ ] Port evolution and upgrade state onto the native 3D actor implementation.
 - [ ] Add authored `AnimationPlayer` tracks only where procedural animation cannot express the required behavior.
@@ -326,6 +341,41 @@ This checklist tracks the migration from the current 2D gameplay runtime to a na
 - `TankEnemy3D` retains the reference's 80 baseline-pixels/second straight entry and timed 8-shot radial burst: the first burst is staggered by 0.5–2.5 seconds, later bursts occur every 2.5 seconds, and alternating shots use 245/305-pixels/second speeds with the frozen ±8-pixel variance. Screen-space directions are projected through `FlightSpace3D`; orbiting plates, double rings, overload, rewards, and later generations remain deferred.
 - `res://scenes/tank_enemy_3d_review.tscn` provides deterministic top/right/bottom/left entries, optional automatic entries, projected hitbox/socket guides, held-fire damage testing across the 8-HP lifecycle, contact damage, cleanup, pause, and review life reset. The HUD reports active count, enemy hits, burst/shot requests, contacts, cleanup, accepted damage, lives, and vulnerability; the review scene adds no score or reward authority.
 - Clean Metal Forward+ runtime verification on Godot 4.6.3 loaded the composed review with no gameplay-code errors, resolved the native projectile manager, activated the Tank wrapper, and observed two radial bursts / 16 requested shots with pooled Enemy Projectiles. A guarded native hit-route check confirmed `8 HP → 7 HP` while retaining the active Tank. The review screenshot showed the purple/magenta Tank and native projectile presentation; only the existing generated MCP bridge warnings remained. Implementation pauses at the manual gate: confirm radial direction/speed readability, 80-pixels/second travel, 48×48 hitbox/socket alignment, 8-HP damage and destroy, contact damage/immunity, directional cleanup, pause/restart, zero rewards, and no pool growth before continuing to Sniper or other systems.
+
+### Phase 4 Tank Enemy Generation I approval record
+
+- The user's 2026-08-29 `Continue` instruction is recorded as explicit approval to move past the Tank Enemy Generation I manual gate. The Tank review harness and wrapper remain available for later regression review.
+
+### Phase 4 Sniper Enemy Generation I validation record
+
+- `res://entities/enemies/sniper_enemy_3d.tscn` is a dedicated `Area3D` wrapper using the canonical `sniper_enemy_mockup.glb`, a primitive 32×32-baseline-pixel `BoxShape3D`, wrapper-owned `Attachments/Sockets` for `MuzzleCenter`, `LaserOrigin`, and both engines, and a shared Generation I stats resource (`2 HP`, `145` move speed, `260` base points). The visual pivot is corrected below `Visuals`; the gameplay root remains at `Y=0`.
+- `SniperEnemy3D` retains the reference's 115-pixel straight entry, 54-pixel perpendicular hold weave at 1.8 Hz, six-second hold, and 210-pixels/second withdrawal. During the hold it aims at the current Player Craft position, fires after the frozen 0.6–1.2-second first delay and every 1.55 seconds thereafter, and uses randomized 430–500-pixels/second pooled Enemy Projectiles. Generation II targeting telegraphs, predictive shots, and the Generation IV rail beam remain deferred.
+- `res://scenes/sniper_enemy_3d_review.tscn` provides deterministic top/right/bottom/left entries, optional automatic entries, projected hitbox/socket guides, held-fire hit testing across the 2-HP lifecycle, aimed-shot counters, contact damage, cleanup, pause, and review life reset. The HUD reports active count, aimed shots, last shot speed, contacts, cleanup, accepted damage, lives, and vulnerability; the review scene adds no score or reward authority.
+- Clean Metal Forward+ runtime verification on Godot 4.6.3 loaded the composed review, displayed the native Longbow model, resolved the native projectile manager, and activated the Sniper wrapper. A guarded native shot check observed the review shot counter advance `4 → 5`, one active pooled Enemy Projectile, and zero post-warm-up pool growth. A guarded damage-route check confirmed `2 HP → 1 HP`, then `1 HP → destroyed` with the review count returning to zero and `SCORE 0`. The project reported no gameplay-code errors or logs; only the existing generated MCP bridge warnings remained. Implementation pauses at the manual gate: confirm entry/hold/withdraw readability, aimed-shot timing and 430–500-pixels/second speed/readability, 32×32 hitbox/socket alignment, 2-HP damage and destroy, contact damage/immunity, directional cleanup, pause/restart, zero rewards, and no pool growth before continuing to another role or system.
+
+### Phase 4 Sniper Enemy Generation I approval record
+
+- The user's 2026-08-29 `Continue` instruction is recorded as explicit approval to move past the Sniper Enemy Generation I manual gate. The Sniper review harness and wrapper remain available for later regression review.
+
+### Phase 4 Native XP Orb Generation I validation record
+
+- `res://entities/collectibles/xp_orb_3d.tscn` is a dedicated `Area3D` wrapper using a low-poly native `SphereMesh` because the asset manifest has no canonical XP Orb GLB. It uses a wrapper-owned `SphereShape3D` with a 20×20-baseline-pixel envelope, Pickup layer/mask semantics, no shadow participation, and a gameplay root held at `Y=0`.
+- `XPOrb3D` preserves the 2D reference's contact-only collection contract, 40 baseline-pixels/second drift, 24-pixel perpendicular bob at 3 Hz, 20-second safety lifetime, and value tiers (`1`, `2`, and `3+`). Value palettes are applied through instance parameters on the shared pixel-toon material; Player Projectiles do not absorb the orb, magnet attraction and collection VFX remain deferred.
+- `res://systems/xp_orb_manager_3d.gd` uses the shared `ObjectPool` with a prewarmed 32-orb scene-owned pool. It routes one local collection event through `SignalBus.xp_orb_collected`, exposes active/returning/idle/collection/pool-growth metrics, and keeps production enemy drops and the legacy PowerUpSpawner untouched.
+- `res://scenes/xp_orb_3d_review.tscn` provides value-tier spawns, an intentional contact-range fixture, clearing, run-state restore, live XP-meter/life reporting, and pooled return telemetry. The review scene contains the actual native Player Craft and no 2D gameplay actor or production spawner.
+- Clean Godot 4.6.3 Metal/Forward+ runtime verification loaded the review scene and native orb pool with no project gameplay errors or logs; only the existing generated MCP bridge warnings remained. Area3D overlap checks collected value-1 and value-2 orbs through the manager/global signal path, kept lives unchanged, returned the consumed nodes to the 32-node idle pool, and retained zero post-warm-up pool growth. The review retained the backdrop/HUD and Player Craft while exercising the native low-poly pickup.
+- Implementation pauses at the manual gate: confirm value-tier readability, 20×20 hitbox alignment, 40-pixels/second drift and 24-pixel/3-Hz bob, direct Player Craft collection only, XP meter/life progression, clear/restore, pause behavior, full pool return, zero pool growth, and no production-spawner or power-up behavior before continuing to PowerUps, drones, mines, or another system.
+
+### Phase 4 Native PowerUp Generation I validation record
+
+- `res://entities/powerups/power_up_3d.tscn` is a dedicated `Area3D` pickup wrapper using a low-poly native `CylinderMesh`, a wrapper-owned `SphereShape3D`, a type label, Pickup layer/mask semantics, no shadow participation, and a gameplay root held at `Y=0`.
+- `PowerUp3D` preserves the 2D reference's 80 baseline-pixels/second drift, 30-pixel perpendicular bob at 2.5 Hz, 20-second safety lifetime, six type palette/label pairs, direct Player Craft contact collection, and Player Projectile collection without absorbing XP Orbs. `PowerUpManager3D` uses a scene-owned 16-node pool, bounded return bookkeeping, type metrics, and camera-derived despawn bounds.
+- Native `Player3D` applies all six existing types through the shared `SignalBus.power_up_collected` contract: three-level projectile scale, eight-second rapid fire, one-hit shield with the reference 1.5-second protection window, eight-second spread fire, ten-second native pickup/XP magnet pull, and native enemy/fragment nuke clearing. Reset clears every temporary effect and the shield visual.
+- `Native3DGameplay` warms the PowerUp pool alongside the existing projectile/orb/effect/hazard pools, routes pickup feedback through the pooled effect manager, exposes `PU` occupancy and aggregate growth in the native HUD, and clears PowerUps during review/run reset. The legacy 2D PowerUpSpawner remains untouched until production cutover.
+- `res://scenes/power_up_3d_review.tscn` provides deterministic controls for all six types, contact collection, clearing, restore, Player Projectile collection, effect-state readout, and pool telemetry without instantiating a 2D gameplay actor.
+- Live Godot 4.6.3 Metal/Forward+ checks collected all six types through the native manager, applied the expected Player3D state, absorbed a shielded hit without consuming a life, exposed three spread directions and the 1.5× projectile scale, reduced pickup distance under magnet pull, cleared a native enemy with Nuke, collected a pickup through the Player Projectile overlap path, returned the pool, and retained zero post-warm-up growth. The composed review rendered without gameplay-code errors; only the generated MCP bridge warnings remained.
+- Headless `res://scenes/power_up_3d_review.tscn` execution exited successfully with no project parse/runtime errors. The legacy full smoke loop remains environment-limited by its known `BaseEnemy` import path and was stopped when it failed to reach its existing sentinel.
+- **Manual gate:** run `res://scenes/power_up_3d_review.tscn` directly. Confirm all six pickup silhouettes/colors/labels, 80-pixels/second drift and bob, 3D hitbox alignment, direct contact and projectile collection, rapid/spread/magnet durations, scale growth, shield absorption, Nuke clearing, pause/restore, full pool return, zero growth, and no production-spawner behavior before continuing to drones, mines, armor, or special attacks.
 
 ## Phase 5 — Native 3D VFX replacement
 

@@ -1,0 +1,53 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://entities/powerups/power_up_3d.gd" id="1_power_up"]
+[ext_resource type="Shader" path="res://effects/shaders/models/pixel_toon_3d.gdshader" id="2_shader"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_power_up"]
+shader = ExtResource("2_shader")
+shader_parameter/base_color = Color(0.08, 0.12, 0.22, 1)
+shader_parameter/energy_color = Color(0.2, 0.8, 1, 1)
+shader_parameter/accent_color = Color(1, 1, 1, 1)
+shader_parameter/emissive_surface = 1.0
+shader_parameter/emission_strength = 1.8
+shader_parameter/circuit_amount = 0.0
+shader_parameter/animation_speed = 1.2
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_power_up"]
+top_radius = 0.72
+bottom_radius = 0.72
+height = 0.3
+radial_segments = 6
+rings = 1
+material = SubResource("ShaderMaterial_power_up")
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_power_up"]
+radius = 0.82
+
+[node name="PowerUp3D" type="Area3D" groups=["native_3d_powerups"]]
+visible = false
+process_mode = 4
+collision_layer = 0
+collision_mask = 0
+monitoring = false
+monitorable = false
+input_ray_pickable = false
+script = ExtResource("1_power_up")
+
+[node name="Visuals" type="Node3D" parent="."]
+position = Vector3(0, 0.24, 0)
+
+[node name="PickupMesh" type="MeshInstance3D" parent="Visuals"]
+cast_shadow = 0
+gi_mode = 0
+mesh = SubResource("CylinderMesh_power_up")
+
+[node name="TypeLabel" type="Label3D" parent="Visuals"]
+billboard = 1
+font_size = 32
+outline_size = 8
+text = "?"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_power_up")
+disabled = true

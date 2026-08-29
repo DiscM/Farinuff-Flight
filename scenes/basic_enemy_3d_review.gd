@@ -13,6 +13,7 @@ const MAX_ENEMIES := 8
 @onready var gameplay: NativeGame = $Gameplay
 @onready var spawn_timer: Timer = $SpawnTimer
 @onready var auto_spawns: CheckButton = $ReviewHUD/Panel/Controls/AutoSpawns
+@onready var generation_select: OptionButton = $ReviewHUD/Panel/Controls/Generation
 @onready var status: Label = $ReviewHUD/Panel/Status
 @onready var guides: BasicEnemy3DReviewGuides = $ReviewHUD/Guides
 @onready var _first_enemy: BasicEnemy = $Gameplay/World3D/Actors3D/FirstEnemy3D
@@ -25,6 +26,8 @@ var _destroyed := 0
 var _contacts := 0
 var _escaped := 0
 var _damage_hits := 0
+var _rewarded := 0
+var _orbs_spawned := 0
 
 
 func _ready() -> void:
@@ -33,6 +36,7 @@ func _ready() -> void:
 	$ReviewHUD/Panel/Controls/Bottom.pressed.connect(spawn_from_edge.bind(2))
 	$ReviewHUD/Panel/Controls/Left.pressed.connect(spawn_from_edge.bind(3))
 	$ReviewHUD/Panel/Controls/RestoreLives.pressed.connect(restore_lives)
+	generation_select.item_selected.connect(_set_generation)
 	auto_spawns.toggled.connect(_set_auto_spawns)
 	spawn_timer.timeout.connect(_spawn_next)
 	if gameplay.projectile_manager.is_ready:
@@ -46,10 +50,11 @@ func _begin_review() -> void:
 	guides.configure(gameplay.flight_space, _enemies)
 	gameplay.player.damage_taken.connect(_on_player_damage_taken)
 	gameplay.player.invulnerability_changed.connect(_on_invulnerability_changed)
+	gameplay.enemy_rewarded.connect(_on_enemy_rewarded)
+	gameplay.xp_orb_spawned.connect(_on_xp_orb_spawned)
 	SignalBus.lives_changed.connect(_on_lives_changed)
-	# This scene-authored enemy was already visible/inert under the same
-	# transition cover and forced warm-up draw as both projectile families.
-	_spawn_next()
+	# Keep the scene-authored enemy visible and inert so a clean review starts
+	# without an unattended encounter. Manual controls or Auto Spawns activate it.
 	_set_auto_spawns(auto_spawns.button_pressed)
 
 
@@ -65,6 +70,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			guides.show_hitboxes = not guides.show_hitboxes
 		KEY_G:
 			guides.show_sockets = not guides.show_sockets
+		KEY_Q:
+			generation_select.select((generation_select.selected + 1) % generation_select.item_count)
+			_set_generation(generation_select.selected)
 		KEY_R:
 			restore_lives()
 		_:
@@ -101,9 +109,10 @@ func spawn_from_edge(edge: int) -> void:
 		gameplay.get_node("World3D/Actors3D").add_child(enemy)
 	_spawn_count += 1
 	enemy.name = "BasicEnemy3D_%d" % _spawn_count
+	enemy.generation = generation_select.selected + 1
 	enemy.finished.connect(_on_enemy_finished.bind(enemy))
 	_enemies.append(enemy)
-	if not enemy.activate(gameplay.flight_space, spawn_position, direction):
+	if not enemy.activate_generation(gameplay.flight_space, spawn_position, direction, generation_select.selected + 1):
 		_enemies.erase(enemy)
 		enemy.queue_free()
 	_update_status()
@@ -122,8 +131,11 @@ func _set_auto_spawns(enabled: bool) -> void:
 
 
 func restore_lives() -> void:
-	GameManager.start_game(false)
-	gameplay.player.reset_damage_state()
+	for enemy in _enemies.duplicate():
+		if is_instance_valid(enemy):
+			enemy._finish(BasicEnemy.FinishReason.ESCAPED)
+	_enemies.clear()
+	gameplay.reset_native_progression()
 	_update_status()
 
 
@@ -156,9 +168,25 @@ func _on_lives_changed(_new_lives: int) -> void:
 	_update_status()
 
 
+func _on_enemy_rewarded(_points: int, _combat_position: Vector3, _orb_spawned: bool) -> void:
+	_rewarded += 1
+	_update_status()
+
+
+func _on_xp_orb_spawned(_value: int, _combat_position: Vector3) -> void:
+	_orbs_spawned += 1
+	_update_status()
+
+
+func _set_generation(index: int) -> void:
+	generation_select.select(clampi(index, 0, generation_select.item_count - 1))
+	_update_status()
+
+
 func _update_status() -> void:
 	var immunity := "INVULNERABLE" if gameplay.player.is_invincible else "VULNERABLE"
-	status.text = "ACT %d/%d • KILL %d • CONTACT %d • ESC %d • DAMAGE %d • LIVES %d/%d • %s" % [
+	status.text = "GEN %d • ACT %d/%d • KILL %d • CONTACT %d • ESC %d • DAMAGE %d • REWARD %d • ORB %d • LIVES %d/%d • %s" % [
+		generation_select.selected + 1,
 		_enemies.size(), MAX_ENEMIES, _destroyed, _contacts, _escaped,
-		_damage_hits, GameManager.lives, GameManager.starting_lives, immunity,
+		_damage_hits, _rewarded, _orbs_spawned, GameManager.lives, GameManager.starting_lives, immunity,
 	]

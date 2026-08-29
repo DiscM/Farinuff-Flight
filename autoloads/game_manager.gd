@@ -212,7 +212,7 @@ func _ready() -> void:
 ## Called when an enemy is killed. Increments the combo counter,
 ## multiplies the kill points by the current combo, adds the result
 ## to the score, and emits score/combo change signals.
-func _on_enemy_killed(points: int, _position: Vector2) -> void:
+func _on_enemy_killed(points: int, _position: Vector3) -> void:
 	combo += 1
 	run_kills += 1
 	var multiplied_points := points * combo

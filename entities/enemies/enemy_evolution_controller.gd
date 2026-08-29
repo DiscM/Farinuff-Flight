@@ -120,6 +120,10 @@ func _apply_stage(enemy_host: Node, stage: EnemyEvolutionStage) -> void:
 		enemy_host.max_health = stats.max_health if stats != null else stage.max_health
 		enemy_host.speed = stats.move_speed if stats != null else stage.move_speed
 		enemy_host.points = stats.base_points if stats != null else stage.base_points
+		if stats != null and "orb_value" in enemy_host:
+			enemy_host.orb_value = stats.orb_value
+		if stats != null and "guaranteed_orb" in enemy_host:
+			enemy_host.guaranteed_orb = stats.guaranteed_orb
 		preview_generation = stage.generation
 
 
