@@ -10,6 +10,7 @@ const RETICLE_TEXTURE := preload("res://assets/ui/cursor_crosshair.png")
 const PIXEL_EFFECT_SCENE := preload("res://effects/pixel_sprite_effect.tscn")
 const FlightTuning := preload("res://entities/player/player_flight_tuning.gd")
 const WeaponTuning := preload("res://entities/player/player_weapon_tuning.gd")
+const DamageTuning := preload("res://entities/player/player_damage_tuning.gd")
 
 @export var speed: float = FlightTuning.SPEED
 @export var base_fire_rate: float = WeaponTuning.BASE_FIRE_INTERVAL
@@ -633,7 +634,7 @@ func _on_shoot_timer_timeout() -> void:
 # --- Taking damage ---
 
 ## Default post-hit invincibility (seconds), also used for try-again respawns.
-const RESPAWN_INVINCIBILITY := 3.0
+const RESPAWN_INVINCIBILITY := DamageTuning.CONTACT_INVULNERABILITY
 ## Duration of the invincibility granted by the next hit. Set by the hit
 ## source just before _take_hit(): 3s for enemy contact, 2s for bullets and
 ## hostile ordnance.
@@ -648,22 +649,24 @@ func _on_area_entered(area: Area2D) -> void:
 	if is_invincible or dev_god_mode:
 		return
 	if area.is_in_group("enemies") or area.is_in_group("tempest_sections"):
-		respawn_invincibility = 3.0
+		respawn_invincibility = DamageTuning.CONTACT_INVULNERABILITY
 		_take_hit()
 	elif area.is_in_group("enemy_bullets"):
 		if can_deflect_projectiles():
 			_try_deflect_projectile(area)
 			return
-		respawn_invincibility = 2.0
+		respawn_invincibility = DamageTuning.PROJECTILE_INVULNERABILITY
 		_take_hit()
 	elif area.is_in_group("hostile_ordnance") or area.is_in_group("rail_beams"):
 		if is_boosting and area.is_in_group("hostile_ordnance") and area.has_method("clear_ordnance"):
 			area.clear_ordnance()
 			return
-		receive_hostile_hit(2.0)
+		receive_hostile_hit(DamageTuning.HOSTILE_ORDNANCE_INVULNERABILITY)
 
 
-func receive_hostile_hit(invincibility_duration: float = 2.0) -> void:
+func receive_hostile_hit(
+	invincibility_duration: float = DamageTuning.HOSTILE_ORDNANCE_INVULNERABILITY
+) -> void:
 	if not GameManager.is_game_active or is_invincible or dev_god_mode:
 		return
 	respawn_invincibility = invincibility_duration
@@ -680,7 +683,7 @@ func _take_hit() -> void:
 		has_shield = false
 		shield_sprite.visible = false
 		AudioManager.play_shield()
-		_start_invincibility(1.5)
+		_start_invincibility(DamageTuning.SHIELD_INVULNERABILITY)
 		return
 
 	AudioManager.play_player_hit()
@@ -695,16 +698,16 @@ func _take_hit() -> void:
 ## Activates temporary invincibility for the given duration. Starts the
 ## invincibility timer and plays a repeating alpha blink animation on the
 ## sprite to visually indicate the immune state.
-func _start_invincibility(duration: float = 1.5) -> void:
+func _start_invincibility(duration: float = DamageTuning.SHIELD_INVULNERABILITY) -> void:
 	is_invincible = true
 	invincibility_timer.wait_time = duration
 	invincibility_timer.start()
 	# Flash effect
-	var loops = int(duration / 0.24)
+	var loops = int(duration / (DamageTuning.BLINK_HALF_INTERVAL * 2.0))
 	var tween := create_tween()
 	tween.set_loops(loops)
-	tween.tween_property(sprite, "modulate:a", 0.2, 0.12)
-	tween.tween_property(sprite, "modulate:a", 1.0, 0.12)
+	tween.tween_property(sprite, "modulate:a", 0.2, DamageTuning.BLINK_HALF_INTERVAL)
+	tween.tween_property(sprite, "modulate:a", 1.0, DamageTuning.BLINK_HALF_INTERVAL)
 
 ## Ends the invincibility period and restores full sprite opacity.
 func _on_invincibility_ended() -> void:

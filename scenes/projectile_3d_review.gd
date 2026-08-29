@@ -1,9 +1,11 @@
 extends Node
 class_name Projectile3DReview
-## Manual incoming-projectile review, composed around the actual native scene.
-## Repeatable volleys count contacts only; this is not an enemy AI or damage port.
+## Manual incoming-projectile damage review around the actual native scene.
+## Boost deflection remains deferred; immunity should collapse each volley to one hit.
 
 const NativeGame := preload("res://scenes/native_3d_gameplay.gd")
+const PlayerCraft := preload("res://entities/player/player_3d.gd")
+const Projectile := preload("res://entities/projectiles/projectile_3d.gd")
 const EnemyTuning := preload("res://entities/projectiles/enemy_projectile_tuning.gd")
 const GUIDE_SEGMENTS := 64
 
@@ -16,6 +18,7 @@ const GUIDE_SEGMENTS := 64
 
 var _review_ready := false
 var _contacts := 0
+var _damage_hits := 0
 var _show_guides := true
 var _inner_offsets := PackedVector3Array()
 var _outer_offsets := PackedVector3Array()
@@ -26,6 +29,7 @@ var _outer_points := PackedVector2Array()
 func _ready() -> void:
 	$ReviewHUD/Panel/Controls/NormalVolley.pressed.connect(fire_normal_volley)
 	$ReviewHUD/Panel/Controls/FastVolley.pressed.connect(fire_fast_volley)
+	$ReviewHUD/Panel/Controls/RestoreLives.pressed.connect(restore_lives)
 	auto_volleys.toggled.connect(_set_auto_volleys)
 	volley_timer.timeout.connect(fire_normal_volley)
 	if gameplay.projectile_manager.is_ready:
@@ -37,6 +41,9 @@ func _ready() -> void:
 func _begin_review() -> void:
 	_review_ready = true
 	gameplay.projectile_manager.enemy_projectile_hit.connect(_on_enemy_projectile_hit)
+	gameplay.player.damage_taken.connect(_on_player_damage_taken)
+	gameplay.player.invulnerability_changed.connect(_on_invulnerability_changed)
+	SignalBus.lives_changed.connect(_on_lives_changed)
 	_prepare_guides()
 	_set_auto_volleys(auto_volleys.button_pressed)
 	_update_contact_status()
@@ -67,6 +74,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			_show_guides = not _show_guides
 			interaction_guide.visible = _show_guides
 			hysteresis_guide.visible = _show_guides
+		KEY_R:
+			restore_lives()
 		_:
 			return
 	get_viewport().set_input_as_handled()
@@ -99,13 +108,43 @@ func _set_auto_volleys(enabled: bool) -> void:
 		volley_timer.stop()
 
 
+func restore_lives() -> void:
+	for node in get_tree().get_nodes_in_group(&"enemy_projectiles"):
+		var projectile := node as Projectile
+		if projectile != null:
+			projectile.despawn()
+	GameManager.start_game(false)
+	gameplay.player.reset_damage_state()
+	_update_contact_status()
+
+
 func _on_enemy_projectile_hit(_target: Area3D, _combat_position: Vector3) -> void:
 	_contacts += 1
 	_update_contact_status()
 
 
+func _on_player_damage_taken(
+	_combat_position: Vector3,
+	_source: PlayerCraft.DamageSource,
+	_remaining_lives: int
+) -> void:
+	_damage_hits += 1
+	_update_contact_status()
+
+
+func _on_invulnerability_changed(_active: bool) -> void:
+	_update_contact_status()
+
+
+func _on_lives_changed(_new_lives: int) -> void:
+	_update_contact_status()
+
+
 func _update_contact_status() -> void:
-	contact_status.text = "CONTACTS %d  •  1 NORMAL  •  2 FAST (6×)  •  V AUTO  •  H RANGE GUIDES" % _contacts
+	var immunity := "INVULNERABLE" if gameplay.player.is_invincible else "VULNERABLE"
+	contact_status.text = "CONTACTS %d  •  DAMAGE %d  •  LIVES %d / %d  •  %s" % [
+		_contacts, _damage_hits, GameManager.lives, GameManager.starting_lives, immunity,
+	]
 
 
 func _prepare_guides() -> void:

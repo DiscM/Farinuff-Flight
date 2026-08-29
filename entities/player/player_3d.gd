@@ -1,14 +1,19 @@
 extends Area3D
 class_name Player3D
-## Native Player Craft flight, visual, hitbox, attachment, and socket contract.
-## Damage, upgrades, and enemy interactions arrive in later combat slices.
+## Native Player Craft flight, damage, visual, hitbox, attachment, and socket contract.
+## Shields, upgrades, projectile deflection, and chains arrive in later slices.
 
 signal fire_requested(combat_position: Vector3, direction: Vector3)
+signal damage_taken(combat_position: Vector3, source: DamageSource, remaining_lives: int)
+signal invulnerability_changed(active: bool)
+
+enum DamageSource { ENEMY_CONTACT, ENEMY_PROJECTILE }
 
 const PhysicsLayers := preload("res://systems/native_3d_physics_layers.gd")
 const FlightSpace := preload("res://systems/flight_space_3d.gd")
 const FlightTuning := preload("res://entities/player/player_flight_tuning.gd")
 const WeaponTuning := preload("res://entities/player/player_weapon_tuning.gd")
+const DamageTuning := preload("res://entities/player/player_damage_tuning.gd")
 
 @export var speed_pixels: float = FlightTuning.SPEED
 @export var acceleration: float = FlightTuning.ACCELERATION
@@ -22,6 +27,7 @@ const WeaponTuning := preload("res://entities/player/player_weapon_tuning.gd")
 @onready var attachments: Node3D = $Attachments
 @onready var sockets: Node3D = $Attachments/Sockets
 @onready var shoot_timer: Timer = $ShootTimer
+@onready var invincibility_timer: Timer = $InvincibilityTimer
 
 var _socket_names: Array[StringName] = []
 var _flight_space: FlightSpace
@@ -37,6 +43,8 @@ var boost_cooldown_timer := 0.0
 var boost_distance_remaining_pixels := 0.0
 var post_boost_slide_timer := 0.0
 var drift_speed_bonus := 1.0
+var is_invincible := false
+var _invincibility_visual_elapsed := 0.0
 
 
 func _init() -> void:
@@ -47,6 +55,8 @@ func _init() -> void:
 func _ready() -> void:
 	_cache_socket_names()
 	set_combat_position(global_position)
+	area_entered.connect(_on_area_entered)
+	invincibility_timer.timeout.connect(_on_invincibility_ended)
 	# Asset review remains inert, even if an earlier run left GameManager active.
 	set_physics_process(false)
 
@@ -63,6 +73,7 @@ func configure_flight_space(value: FlightSpace) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	_update_invincibility_visual(delta)
 	if not GameManager.is_game_active:
 		return
 	var input_direction := Vector2(
@@ -74,6 +85,69 @@ func _physics_process(delta: float) -> void:
 	_update_boost(delta)
 	_update_aiming()
 	_update_shooting()
+
+
+## Applies one life of damage through the shared GameManager/SignalBus authority.
+## Returns true only when this call consumed a life.
+func receive_damage(combat_position: Vector3, source: DamageSource) -> bool:
+	if not GameManager.is_game_active or is_invincible or GameManager.lives <= 0:
+		return false
+	combat_position.y = 0.0
+	var survives_hit := GameManager.lives > 1
+	AudioManager.play_player_hit()
+	SignalBus.player_hit.emit()
+	if survives_hit:
+		_start_invincibility(_get_invulnerability_duration(source))
+	damage_taken.emit(combat_position, source, GameManager.lives)
+	return true
+
+
+## Clears wrapper-local hit state when a review or future retry resets run state.
+func reset_damage_state() -> void:
+	invincibility_timer.stop()
+	var was_invincible := is_invincible
+	is_invincible = false
+	_invincibility_visual_elapsed = 0.0
+	visuals.show()
+	if was_invincible:
+		invulnerability_changed.emit(false)
+
+
+func _on_area_entered(area: Area3D) -> void:
+	# Projectile hits route once through ProjectileManager3D/Native3DGameplay.
+	if area.collision_layer & PhysicsLayers.ENEMY_CRAFT:
+		receive_damage(area.global_position, DamageSource.ENEMY_CONTACT)
+
+
+func _start_invincibility(duration: float) -> void:
+	is_invincible = true
+	_invincibility_visual_elapsed = 0.0
+	invincibility_timer.start(duration)
+	invulnerability_changed.emit(true)
+
+
+func _on_invincibility_ended() -> void:
+	is_invincible = false
+	_invincibility_visual_elapsed = 0.0
+	visuals.show()
+	invulnerability_changed.emit(false)
+
+
+func _update_invincibility_visual(delta: float) -> void:
+	if not is_invincible:
+		return
+	_invincibility_visual_elapsed += delta
+	var blink_index := floori(_invincibility_visual_elapsed / DamageTuning.BLINK_HALF_INTERVAL)
+	visuals.visible = blink_index % 2 == 0
+
+
+func _get_invulnerability_duration(source: DamageSource) -> float:
+	match source:
+		DamageSource.ENEMY_CONTACT:
+			return DamageTuning.CONTACT_INVULNERABILITY
+		DamageSource.ENEMY_PROJECTILE:
+			return DamageTuning.PROJECTILE_INVULNERABILITY
+	return DamageTuning.PROJECTILE_INVULNERABILITY
 
 
 func _update_shooting() -> void:

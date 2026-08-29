@@ -1,7 +1,7 @@
 extends Node
 class_name Native3DGameplay
-## Isolated native Player Craft, pooled Projectiles, and Basic Enemy hit routing.
-## Player damage, deflection, rewards, and production encounters remain deferred.
+## Isolated native Player Craft, pooled Projectiles, Basic Enemy hit routing,
+## and Player damage. Deflection, rewards, and production encounters are deferred.
 
 signal gameplay_ready
 
@@ -41,6 +41,7 @@ func _ready() -> void:
 		return
 	player.fire_requested.connect(projectile_manager.fire_player_projectile)
 	projectile_manager.player_projectile_hit.connect(_on_player_projectile_hit)
+	projectile_manager.enemy_projectile_hit.connect(_on_enemy_projectile_hit)
 	# This review has no pickups or retry rewards; do not spend Hangar supplies.
 	GameManager.start_game(false)
 	player.configure_flight_space(flight_space)
@@ -53,6 +54,11 @@ func _ready() -> void:
 func _on_player_projectile_hit(target: Area3D, _combat_position: Vector3) -> void:
 	if target is BasicEnemy:
 		(target as BasicEnemy).take_damage(WeaponTuning.BASE_DAMAGE + GameManager.bonus_damage)
+
+
+func _on_enemy_projectile_hit(target: Area3D, combat_position: Vector3) -> void:
+	if target == player:
+		player.receive_damage(combat_position, PlayerCraft.DamageSource.ENEMY_PROJECTILE)
 
 
 func _process(delta: float) -> void:
