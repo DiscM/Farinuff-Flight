@@ -1,10 +1,11 @@
 extends BasicEnemy3D
 class_name BomberEnemy3D
-## Native Generation I Bomber. The reference's slow forward travel, bounded
-## perpendicular drift, and periodic bomb drops are retained; mines and later
-## generation abilities remain outside this slice.
+## Native Bomber. Generation I retains the reference's slow forward travel,
+## bounded perpendicular drift, and periodic bomb drops; later generations can
+## request the pooled native mine path without adding a second hazard owner.
 
 signal bomb_dropped
+signal mine_dropped(is_cluster: bool, leaves_plasma: bool)
 
 const ProjectileManager := preload("res://systems/projectile_manager_3d.gd")
 
@@ -12,6 +13,7 @@ const DRIFT_BOUNDARY_MARGIN_PIXELS := 30.0
 const BOMB_FIRST_DROP_MIN_SECONDS := 0.5
 const BOMB_SPEED_MIN_PIXELS := 300.0
 const BOMB_SPEED_MAX_PIXELS := 400.0
+const MINE_FIRST_DROP_SECONDS := 5.0
 
 @export_range(0.0, 512.0, 1.0) var drift_speed_pixels: float = 120.0
 @export_range(0.1, 10.0, 0.1) var bomb_interval: float = 2.0
@@ -21,6 +23,8 @@ var _screen_perpendicular := Vector2.ZERO
 var _drift_direction := 1.0
 var _drop_timer := 0.0
 var _drop_left := true
+var _mine_timer := MINE_FIRST_DROP_SECONDS
+var _mine_count := 0
 
 
 func _is_basic_lineage() -> bool:
@@ -33,6 +37,8 @@ func _configure_movement() -> void:
 	_drift_direction = -1.0 if randf() < 0.5 else 1.0
 	_drop_timer = randf_range(BOMB_FIRST_DROP_MIN_SECONDS, bomb_interval)
 	_drop_left = true
+	_mine_timer = MINE_FIRST_DROP_SECONDS
+	_mine_count = 0
 	velocity = _flight_space.screen_motion_to_combat(_screen_travel_direction * _speed_pixels)
 	velocity.y = 0.0
 
@@ -81,6 +87,11 @@ func _advance_movement(delta: float) -> void:
 		if _drop_timer <= 0.0:
 			_drop_timer = bomb_interval
 			_drop_bomb()
+	if generation >= 2:
+		_mine_timer -= delta
+		if _mine_timer <= 0.0:
+			_mine_timer = MINE_FIRST_DROP_SECONDS
+			_try_drop_mine()
 
 
 func _is_inside_combat_view() -> bool:
@@ -103,3 +114,20 @@ func _drop_bomb() -> void:
 		randf_range(BOMB_SPEED_MIN_PIXELS, BOMB_SPEED_MAX_PIXELS),
 	)
 	bomb_dropped.emit()
+
+
+func _try_drop_mine() -> void:
+	var manager := get_tree().get_first_node_in_group(&"native_3d_hazard_manager")
+	if manager == null or not manager.has_method("spawn_mine"):
+		return
+	var marker := sockets.get_node_or_null("BombBayCenter") as Marker3D
+	if marker == null:
+		marker = sockets.get_node_or_null("BombBayLeft") as Marker3D
+	if marker == null:
+		return
+	var cluster := generation >= 3 and (_mine_count + 1) % 3 == 0
+	var leaves_plasma := generation >= 4 and cluster
+	var mine = manager.spawn_mine(marker.global_position, cluster, leaves_plasma)
+	if mine != null:
+		_mine_count += 1
+		mine_dropped.emit(cluster, leaves_plasma)

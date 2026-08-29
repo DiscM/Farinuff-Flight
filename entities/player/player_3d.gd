@@ -326,6 +326,7 @@ func _apply_magnet() -> void:
 func _apply_nuke() -> void:
 	get_tree().call_group(&"native_3d_enemies", &"take_damage", 9999)
 	get_tree().call_group(&"native_3d_fragments", &"clear_ordnance")
+	get_tree().call_group(&"native_3d_hazards", &"clear_ordnance")
 
 
 func _update_movement(input_direction: Vector2, delta: float) -> void:

@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=3]
+[gd_scene load_steps=17 format=3]
 
 [ext_resource type="Script" path="res://scenes/native_3d_gameplay.gd" id="1_game"]
 [ext_resource type="Resource" path="res://systems/flight_space_3d_config.tres" id="2_config"]
@@ -15,6 +15,7 @@
 [ext_resource type="Script" path="res://systems/native_effect_manager_3d.gd" id="13_effects"]
 [ext_resource type="Script" path="res://systems/native_hazard_manager_3d.gd" id="14_hazards"]
 [ext_resource type="Script" path="res://systems/power_up_manager_3d.gd" id="15_power_ups"]
+[ext_resource type="Script" path="res://systems/special_attack_coordinator.gd" id="16_coordinator"]
 
 [node name="Native3DGameplay" type="Node"]
 script = ExtResource("1_game")
@@ -65,6 +66,9 @@ script = ExtResource("13_effects")
 
 [node name="NativeHazardManager3D" type="Node" parent="GameplayManagers"]
 script = ExtResource("14_hazards")
+
+[node name="SpecialAttackCoordinator" type="Node" parent="GameplayManagers"]
+script = ExtResource("16_coordinator")
 
 [node name="PowerUpManager3D" type="Node" parent="GameplayManagers"]
 script = ExtResource("15_power_ups")

@@ -1,0 +1,83 @@
+[gd_scene load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://entities/enemies/enemy_mine_3d.gd" id="1_mine"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_mine_hull"]
+shading_mode = 0
+albedo_color = Color(0.11, 0.025, 0.16, 1)
+metallic = 0.35
+roughness = 0.28
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_mine_core"]
+shading_mode = 0
+albedo_color = Color(1, 0.1, 0.64, 1)
+emission_enabled = true
+emission = Color(1, 0.03, 0.45, 1)
+emission_energy_multiplier = 2.6
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_mine_telegraph"]
+transparency = 1
+shading_mode = 0
+albedo_color = Color(1, 0.08, 0.66, 0.26)
+emission_enabled = true
+emission = Color(0.9, 0.02, 0.48, 1)
+emission_energy_multiplier = 1.6
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_mine_hull"]
+top_radius = 0.78
+bottom_radius = 0.78
+height = 0.24
+radial_segments = 8
+rings = 1
+material = SubResource("StandardMaterial3D_mine_hull")
+
+[sub_resource type="SphereMesh" id="SphereMesh_mine_core"]
+radius = 0.31
+height = 0.62
+radial_segments = 8
+rings = 4
+material = SubResource("StandardMaterial3D_mine_core")
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_mine_telegraph"]
+top_radius = 1.08
+bottom_radius = 1.08
+height = 0.035
+radial_segments = 24
+rings = 1
+material = SubResource("StandardMaterial3D_mine_telegraph")
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_mine"]
+radius = 1.1
+
+[node name="EnemyMine3D" type="Area3D" groups=["native_3d_mines"]]
+visible = false
+process_mode = 4
+collision_layer = 0
+collision_mask = 0
+monitoring = false
+monitorable = false
+input_ray_pickable = false
+script = ExtResource("1_mine")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_mine")
+disabled = true
+
+[node name="Visuals" type="Node3D" parent="."]
+position = Vector3(0, 0.12, 0)
+
+[node name="Hull" type="MeshInstance3D" parent="Visuals"]
+cast_shadow = 0
+gi_mode = 0
+mesh = SubResource("CylinderMesh_mine_hull")
+
+[node name="Core" type="MeshInstance3D" parent="Visuals"]
+cast_shadow = 0
+gi_mode = 0
+mesh = SubResource("SphereMesh_mine_core")
+
+[node name="Telegraph" type="MeshInstance3D" parent="Visuals"]
+position = Vector3(0, -0.1, 0)
+cast_shadow = 0
+gi_mode = 0
+mesh = SubResource("CylinderMesh_mine_telegraph")
