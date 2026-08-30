@@ -8,6 +8,7 @@ signal bomb_dropped
 signal mine_dropped(is_cluster: bool, leaves_plasma: bool)
 
 const ProjectileManager := preload("res://systems/projectile_manager_3d.gd")
+const EnemyMine := preload("res://entities/enemies/enemy_mine_3d.gd")
 
 const DRIFT_BOUNDARY_MARGIN_PIXELS := 30.0
 const BOMB_FIRST_DROP_MIN_SECONDS := 0.5
@@ -89,7 +90,7 @@ func _advance_movement(delta: float) -> void:
 			_drop_bomb()
 	if generation >= 2:
 		_mine_timer -= delta
-		if _mine_timer <= 0.0:
+		if _mine_timer <= 0.0 and _can_begin_special():
 			_mine_timer = MINE_FIRST_DROP_SECONDS
 			_try_drop_mine()
 
@@ -97,6 +98,10 @@ func _advance_movement(delta: float) -> void:
 func _is_inside_combat_view() -> bool:
 	var bounds := _flight_space.get_combat_bounds()
 	return bounds.has_point(Vector2(global_position.x, global_position.z))
+
+
+func _can_begin_special() -> bool:
+	return _time_alive >= 0.35 and _is_inside_combat_view()
 
 
 func _drop_bomb() -> void:
@@ -127,7 +132,7 @@ func _try_drop_mine() -> void:
 		return
 	var cluster := generation >= 3 and (_mine_count + 1) % 3 == 0
 	var leaves_plasma := generation >= 4 and cluster
-	var mine = manager.spawn_mine(marker.global_position, cluster, leaves_plasma)
+	var mine: EnemyMine = manager.spawn_mine(marker.global_position, cluster, leaves_plasma) as EnemyMine
 	if mine != null:
 		_mine_count += 1
 		mine_dropped.emit(cluster, leaves_plasma)

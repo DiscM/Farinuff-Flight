@@ -218,12 +218,7 @@ func _process(delta: float) -> void:
 		var orb_metrics := xp_orb_manager.get_metrics()
 		var hazard_metrics := hazard_manager.get_metrics()
 		var power_up_metrics := power_up_manager.get_metrics()
-		var pool_growth := int(metrics["pool_growth_after_warmup"])
-		pool_growth += int(effect_metrics["pool_growth_after_warmup"])
-		pool_growth += int(orb_metrics["pool_growth_after_warmup"])
-		pool_growth += int(hazard_metrics["pool_growth_after_warmup"])
-		pool_growth += int(power_up_metrics["pool_growth_after_warmup"])
-		projectile_status.text = "P %d/%d  •  E %d/%d  •  FX %d/%d  •  ORB %d/%d  •  PU %d/%d  •  FRAG %d/%d  •  MINE %d/%d  •  FIELD %d/%d  •  GROWTH %d" % [
+		projectile_status.text = "P %d/%d  •  E %d/%d  •  FX %d/%d  •  ORB %d/%d  •  PU %d/%d  •  FRAG %d/%d  •  MINE %d/%d  •  FIELD %d/%d  •  GROWTH F%d/M%d/P%d" % [
 			metrics["player"]["active"], metrics["player"]["pool_size"],
 			metrics["enemy"]["active"], metrics["enemy"]["pool_size"],
 			effect_metrics["active"], effect_metrics["pool_size"],
@@ -232,7 +227,9 @@ func _process(delta: float) -> void:
 			hazard_metrics["active"], hazard_metrics["pool_size"],
 			hazard_metrics["mine_active"], hazard_metrics["mine_pool_size"],
 			hazard_metrics["field_active"], hazard_metrics["field_pool_size"],
-			pool_growth
+			hazard_metrics["fragment_pool_growth_after_warmup"],
+			hazard_metrics["mine_pool_growth_after_warmup"],
+			hazard_metrics["field_pool_growth_after_warmup"]
 		]
 
 
