@@ -152,12 +152,14 @@ func _update_status() -> void:
 	var metrics := hazard_manager.get_metrics()
 	var projectile_metrics := gameplay.projectile_manager.get_metrics()
 	var enemy_projectiles: Dictionary = projectile_metrics["enemy"]
-	status.text = "MINE %d/%d • FIELD %d/%d • FRAG %d/%d • SPAWN %d • DET %d • CLUSTER %d • PLASMA %d • PAYLOAD %d • DAMAGE %d • LIVES %d/%d • GROWTH %d" % [
+	status.text = "MINE %d/%d • FIELD %d/%d • FRAG %d/%d • SPAWN %d • DET %d • CLUSTER %d • PLASMA %d • PAYLOAD %d • DAMAGE %d • LIVES %d/%d • GROWTH F%d/M%d/P%d" % [
 		metrics["mine_active"], metrics["mine_pool_size"],
 		metrics["field_active"], metrics["field_pool_size"],
 		metrics["fragment_active"], metrics["pool_size"],
 		_spawned, _detonated, _cluster_detonated, _plasma_detonations,
 		enemy_projectiles["shots_fired"], _damage_hits,
 		GameManager.lives, GameManager.starting_lives,
-		metrics["pool_growth_after_warmup"],
+		metrics["fragment_pool_growth_after_warmup"],
+		metrics["mine_pool_growth_after_warmup"],
+		metrics["field_pool_growth_after_warmup"],
 	]

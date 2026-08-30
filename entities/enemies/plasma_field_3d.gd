@@ -105,7 +105,7 @@ func despawn() -> void:
 	set_deferred("monitoring", false)
 	set_deferred("monitorable", false)
 	collision_shape.set_deferred("disabled", true)
-	call_deferred("_finish_return")
+	_finish_return.call_deferred()
 
 
 func _finish_return() -> void:

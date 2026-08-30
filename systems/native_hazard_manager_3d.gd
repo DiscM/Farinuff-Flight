@@ -34,6 +34,9 @@ var _warmed_fragment_ids: Dictionary[int, bool] = {}
 var _warmed_mine_ids: Dictionary[int, bool] = {}
 var _warmed_field_ids: Dictionary[int, bool] = {}
 var _pool_growth := 0
+var _fragment_pool_growth := 0
+var _mine_pool_growth := 0
+var _field_pool_growth := 0
 var _rejected := 0
 var _spawned_fragments := 0
 var _spawned_mines := 0
@@ -138,6 +141,7 @@ func spawn_seeker_fragment(spawn_position: Vector3, direction: Vector3) -> Fragm
 		return null
 	if not _warmed_fragment_ids.has(fragment.get_instance_id()):
 		_pool_growth += 1
+		_fragment_pool_growth += 1
 		_warmed_fragment_ids[fragment.get_instance_id()] = true
 	fragment.configure_pool(_idle_parent)
 	if not fragment.returned_to_pool.is_connected(_on_fragment_returned):
@@ -174,6 +178,7 @@ func spawn_mine(
 		return null
 	if not _warmed_mine_ids.has(mine.get_instance_id()):
 		_pool_growth += 1
+		_mine_pool_growth += 1
 		_warmed_mine_ids[mine.get_instance_id()] = true
 	mine.configure_pool(_idle_parent, _coordinator)
 	if not mine.detonated.is_connected(_on_mine_detonated):
@@ -205,6 +210,7 @@ func spawn_plasma_field(spawn_position: Vector3) -> PlasmaField3DWrapper:
 		return null
 	if not _warmed_field_ids.has(field.get_instance_id()):
 		_pool_growth += 1
+		_field_pool_growth += 1
 		_warmed_field_ids[field.get_instance_id()] = true
 	field.configure_pool(_idle_parent, _coordinator)
 	if not field.returned_to_pool.is_connected(_on_field_returned):
@@ -243,14 +249,17 @@ func get_metrics() -> Dictionary:
 		"returning": _checked_out_fragments.size() - fragment_active,
 		"idle": _warmed_fragment_ids.size() - _checked_out_fragments.size(),
 		"fragment_active": fragment_active,
+		"fragment_pool_growth_after_warmup": _fragment_pool_growth,
 		"mine_pool_size": _warmed_mine_ids.size(),
 		"mine_active": mine_active,
 		"mine_returning": _checked_out_mines.size() - mine_active,
 		"mine_idle": _warmed_mine_ids.size() - _checked_out_mines.size(),
+		"mine_pool_growth_after_warmup": _mine_pool_growth,
 		"field_pool_size": _warmed_field_ids.size(),
 		"field_active": field_active,
 		"field_returning": _checked_out_fields.size() - field_active,
 		"field_idle": _warmed_field_ids.size() - _checked_out_fields.size(),
+		"field_pool_growth_after_warmup": _field_pool_growth,
 		"total_active": fragment_active + mine_active + field_active,
 		"spawned": _spawned_fragments + _spawned_mines + _spawned_fields,
 		"spawned_fragments": _spawned_fragments,
@@ -269,7 +278,7 @@ func _on_mine_detonated(
 	mine_detonated.emit(combat_position, is_cluster, leaves_plasma)
 	# Mine detonation may originate in an Area3D callback. Resolve its pooled
 	# projectile/field payload after the current physics query flush.
-	call_deferred("_resolve_mine_detonation", combat_position, is_cluster, leaves_plasma)
+	_resolve_mine_detonation.call_deferred(combat_position, is_cluster, leaves_plasma)
 
 
 func _resolve_mine_detonation(
