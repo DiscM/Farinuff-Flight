@@ -18,6 +18,7 @@ const PlayerCraft := preload("res://entities/player/player_3d.gd")
 @onready var detonate_button: Button = $ReviewHUD/Panel/Controls/Detonate
 @onready var clear_button: Button = $ReviewHUD/Panel/Controls/Clear
 @onready var restore_button: Button = $ReviewHUD/Panel/Controls/Restore
+@onready var coordinator_status: Label = $ReviewHUD/Panel/Coordinator
 
 var _review_ready := false
 var _spawned := 0
@@ -163,3 +164,4 @@ func _update_status() -> void:
 		metrics["mine_pool_growth_after_warmup"],
 		metrics["field_pool_growth_after_warmup"],
 	]
+	coordinator_status.text = "CAPS  " + gameplay.special_attack_coordinator.get_debug_state()
