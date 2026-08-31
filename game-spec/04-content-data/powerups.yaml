@@ -1,0 +1,41 @@
+schema_version: 1
+catalog: powerups
+status: reference
+
+drop_rules:
+  collection_methods: [contact, player_projectile]
+  movement: downward_drift_with_gentle_horizontal_bob
+  no_drop_modifier: MOD.SUPPLY_BLOCKADE
+  timing_status: needs_extraction
+
+entries:
+  - id: POWERUP.SCALE_UP
+    display_name: Scale Up
+    label: S+
+    color_role: cyan
+    effect: "Increase projectile scale."
+  - id: POWERUP.RAPID_FIRE
+    display_name: Rapid Fire
+    label: RF
+    color_role: yellow
+    effect: "Temporarily reduce the fire interval."
+  - id: POWERUP.SHIELD
+    display_name: Shield
+    label: SH
+    color_role: green
+    effect: "Temporarily protect the Player Craft."
+  - id: POWERUP.SPREAD_SHOT
+    display_name: Spread Shot
+    label: SP
+    color_role: pink
+    effect: "Temporarily add a spread firing pattern."
+  - id: POWERUP.MAGNET
+    display_name: Magnet
+    label: MG
+    color_role: purple
+    effect: "Temporarily attract XP Orbs and collectible Power-Ups."
+  - id: POWERUP.NUKE
+    display_name: Nuke
+    label: NK
+    color_role: red
+    effect: "Trigger a screen-clearing combat effect."
