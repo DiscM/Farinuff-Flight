@@ -13,6 +13,7 @@ const MINE_SCENE := preload("res://entities/enemies/enemy_mine_3d.tscn")
 const PlasmaField3DWrapper := preload("res://entities/enemies/plasma_field_3d.gd")
 const PLASMA_FIELD_SCENE := preload("res://entities/enemies/plasma_field_3d.tscn")
 const FlightSpace := preload("res://systems/flight_space_3d.gd")
+const ProjectileManager := preload("res://systems/projectile_manager_3d.gd")
 
 @export_range(1, 32, 1) var fragment_pool_size: int = 6
 @export_range(1, 32, 1) var mine_pool_size: int = 6
@@ -25,6 +26,7 @@ var _flight_space: FlightSpace
 var _active_parent: Node3D
 var _idle_parent: Node3D
 var _coordinator: SpecialAttackCoordinator
+var _projectile_manager: ProjectileManager
 var _combat_bounds := Rect2()
 
 var _checked_out_fragments: Array[Fragment] = []
@@ -53,12 +55,14 @@ func configure(
 	flight_space: FlightSpace,
 	active_parent: Node3D,
 	idle_parent: Node3D,
-	shared_coordinator: SpecialAttackCoordinator = null
+	shared_coordinator: SpecialAttackCoordinator = null,
+	projectile_manager: ProjectileManager = null
 ) -> void:
 	_flight_space = flight_space
 	_active_parent = active_parent
 	_idle_parent = idle_parent
 	_coordinator = shared_coordinator
+	_projectile_manager = projectile_manager
 	if _coordinator == null:
 		_coordinator = SpecialAttackCoordinator.new()
 		_coordinator.name = "NativeHazardCoordinator"
@@ -74,17 +78,15 @@ func warm_hazard_pool() -> bool:
 	if _warming or _flight_space == null or _active_parent == null or _idle_parent == null:
 		return false
 	_warming = true
-	var warm_nodes: Array[Node] = []
 	for index in range(fragment_pool_size):
 		var fragment := ObjectPool.acquire(FRAGMENT_SCENE, _active_parent) as Fragment
 		if fragment == null:
-			_warming = false
+			await _abort_warmup()
 			return false
 		fragment.configure_pool(_idle_parent)
 		if not fragment.returned_to_pool.is_connected(_on_fragment_returned):
 			fragment.returned_to_pool.connect(_on_fragment_returned)
 		fragment.prepare_visual_warmup()
-		warm_nodes.append(fragment)
 		_checked_out_fragments.append(fragment)
 		_warmed_fragment_ids[fragment.get_instance_id()] = true
 		if (index + 1) % warm_batch_size == 0:
@@ -92,7 +94,7 @@ func warm_hazard_pool() -> bool:
 	for index in range(mine_pool_size):
 		var mine := ObjectPool.acquire(MINE_SCENE, _active_parent) as Mine
 		if mine == null:
-			_warming = false
+			await _abort_warmup()
 			return false
 		mine.configure_pool(_idle_parent, _coordinator)
 		if not mine.detonated.is_connected(_on_mine_detonated):
@@ -100,7 +102,6 @@ func warm_hazard_pool() -> bool:
 		if not mine.returned_to_pool.is_connected(_on_mine_returned):
 			mine.returned_to_pool.connect(_on_mine_returned)
 		mine.prepare_visual_warmup()
-		warm_nodes.append(mine)
 		_checked_out_mines.append(mine)
 		_warmed_mine_ids[mine.get_instance_id()] = true
 		if (index + 1) % warm_batch_size == 0:
@@ -108,24 +109,33 @@ func warm_hazard_pool() -> bool:
 	for index in range(plasma_field_pool_size):
 		var field := ObjectPool.acquire(PLASMA_FIELD_SCENE, _active_parent) as PlasmaField3DWrapper
 		if field == null:
-			_warming = false
+			await _abort_warmup()
 			return false
 		field.configure_pool(_idle_parent, _coordinator)
 		if not field.returned_to_pool.is_connected(_on_field_returned):
 			field.returned_to_pool.connect(_on_field_returned)
 		field.prepare_visual_warmup()
-		warm_nodes.append(field)
 		_checked_out_fields.append(field)
 		_warmed_field_ids[field.get_instance_id()] = true
 		if (index + 1) % warm_batch_size == 0:
 			await get_tree().process_frame
 	if DisplayServer.get_name() != "headless":
 		RenderingServer.force_draw(false)
-	for index in range(warm_nodes.size()):
-		var node := warm_nodes[index]
-		if node.has_method("despawn"):
-			node.despawn()
-		if (index + 1) % warm_batch_size == 0:
+	var despawned := 0
+	for fragment in _checked_out_fragments.duplicate():
+		fragment.despawn()
+		despawned += 1
+		if despawned % warm_batch_size == 0:
+			await get_tree().process_frame
+	for mine in _checked_out_mines.duplicate():
+		mine.despawn()
+		despawned += 1
+		if despawned % warm_batch_size == 0:
+			await get_tree().process_frame
+	for field in _checked_out_fields.duplicate():
+		field.despawn()
+		despawned += 1
+		if despawned % warm_batch_size == 0:
 			await get_tree().process_frame
 	await get_tree().process_frame
 	_warming = false
@@ -267,9 +277,9 @@ func _spawn_queued_fragment(
 
 
 func get_metrics() -> Dictionary:
-	var fragment_active := _active_count(_checked_out_fragments)
-	var mine_active := _active_count(_checked_out_mines)
-	var field_active := _active_count(_checked_out_fields)
+	var fragment_active := _active_fragment_count(_checked_out_fragments)
+	var mine_active := _active_mine_count(_checked_out_mines)
+	var field_active := _active_field_count(_checked_out_fields)
 	return {
 		# Keep the original fragment keys stable for the Basic Enemy review.
 		"pool_size": _warmed_fragment_ids.size(),
@@ -319,11 +329,10 @@ func _resolve_mine_detonation(
 ) -> void:
 	if not GameManager.is_game_active or payload_generation != _payload_generation:
 		return
-	var projectile_manager := get_tree().get_first_node_in_group(&"native_3d_projectile_manager")
-	if projectile_manager != null and projectile_manager.has_method("fire_enemy_projectile") and _flight_space != null:
+	if _projectile_manager != null and _flight_space != null:
 		for index in range(8):
 			var screen_direction := Vector2.from_angle(TAU * float(index) / 8.0)
-			projectile_manager.fire_enemy_projectile(
+			_projectile_manager.fire_enemy_projectile(
 				combat_position,
 				_flight_space.input_to_combat_direction(screen_direction),
 				165.0
@@ -331,7 +340,7 @@ func _resolve_mine_detonation(
 		if is_cluster:
 			for index in range(4):
 				var cluster_direction := Vector2.from_angle(PI * 0.25 + TAU * float(index) / 4.0)
-				projectile_manager.fire_enemy_projectile(
+				_projectile_manager.fire_enemy_projectile(
 					combat_position,
 					_flight_space.input_to_combat_direction(cluster_direction),
 					105.0
@@ -364,12 +373,34 @@ func _release_mine_caps(cluster: bool) -> void:
 		_coordinator.release_hazard(&"cluster_mine")
 
 
-func _active_count(nodes: Array) -> int:
+func _active_fragment_count(nodes: Array[Fragment]) -> int:
 	var active := 0
-	for node in nodes:
-		if node != null and bool(node.is_active):
+	for fragment: Fragment in nodes:
+		if fragment != null and fragment.is_active:
 			active += 1
 	return active
+
+
+func _active_mine_count(nodes: Array[Mine]) -> int:
+	var active := 0
+	for mine: Mine in nodes:
+		if mine != null and mine.is_active:
+			active += 1
+	return active
+
+
+func _active_field_count(nodes: Array[PlasmaField3DWrapper]) -> int:
+	var active := 0
+	for field: PlasmaField3DWrapper in nodes:
+		if field != null and field.is_active:
+			active += 1
+	return active
+
+
+func _abort_warmup() -> void:
+	clear_hazards()
+	await get_tree().process_frame
+	_warming = false
 
 
 func _refresh_bounds() -> void:

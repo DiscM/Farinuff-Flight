@@ -57,7 +57,9 @@ func _ready() -> void:
 	xp_orb_manager.configure(flight_space, $World3D/Pickups3D, idle_parent)
 	power_up_manager.configure(flight_space, $World3D/PowerUps3D, idle_parent)
 	effect_manager.configure($World3D/Effects3D, idle_parent)
-	hazard_manager.configure(flight_space, $World3D/Hazards3D, idle_parent, special_attack_coordinator)
+	hazard_manager.configure(
+		flight_space, $World3D/Hazards3D, idle_parent, special_attack_coordinator, projectile_manager
+	)
 	projectile_manager.add_to_group(&"native_3d_projectile_manager")
 	if not await projectile_manager.warm_projectile_pools():
 		$TransitionOverlay/Message.text = "Projectile preparation failed. See the debugger."
@@ -78,6 +80,7 @@ func _ready() -> void:
 	player.fire_requested.connect(_on_player_fired)
 	player.deflection_requested.connect(projectile_manager.deflect_enemy_projectiles)
 	player.boost_started.connect(_on_player_boost_started)
+	player.nuke_requested.connect(_on_player_nuke_requested)
 	projectile_manager.player_projectile_hit.connect(_on_player_projectile_hit)
 	projectile_manager.enemy_projectile_hit.connect(_on_enemy_projectile_hit)
 	projectile_manager.enemy_projectile_deflected.connect(_on_enemy_projectile_deflected)
@@ -129,6 +132,15 @@ func _on_player_boost_started(combat_position: Vector3, direction: Vector3) -> v
 	var boost_socket := player.get_socket(&"Boost")
 	var effect_position := boost_socket.global_position if boost_socket != null else combat_position
 	effect_manager.play_effect(NativeEffect.EffectKind.BOOST, effect_position, direction)
+
+
+func _on_player_nuke_requested() -> void:
+	for node in get_tree().get_nodes_in_group(&"native_3d_enemies"):
+		var enemy := node as BasicEnemy
+		if enemy != null:
+			enemy.take_damage(9999)
+	projectile_manager.clear_enemy_projectiles()
+	hazard_manager.clear_hazards()
 
 
 ## Called synchronously by BasicEnemy3D after it has logically disabled its

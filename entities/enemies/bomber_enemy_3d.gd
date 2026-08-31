@@ -33,6 +33,7 @@ var _drop_timer := 0.0
 var _drop_left := true
 var _mine_timer := MINE_FIRST_DROP_SECONDS
 var _mine_count := 0
+var _hazard_manager: NativeHazardManager
 
 
 func _is_basic_lineage() -> bool:
@@ -43,6 +44,10 @@ func _get_generation_stats() -> BomberStats:
 	if generation == 1 and gameplay_stats != null:
 		return gameplay_stats
 	return BOMBER_GENERATION_STATS[generation - 1] as BomberStats
+
+
+func configure_hazard_manager(manager: NativeHazardManager) -> void:
+	_hazard_manager = manager
 
 
 func _configure_movement() -> void:
@@ -135,8 +140,7 @@ func _drop_bomb() -> void:
 
 
 func _try_drop_mine() -> void:
-	var manager := get_tree().get_first_node_in_group(&"native_3d_hazard_manager")
-	if manager == null or not manager.has_method("spawn_mine"):
+	if _hazard_manager == null:
 		return
 	var marker := sockets.get_node_or_null("BombBayCenter") as Marker3D
 	if marker == null:
@@ -145,7 +149,9 @@ func _try_drop_mine() -> void:
 		return
 	var cluster := generation >= 3 and (_mine_count + 1) % 3 == 0
 	var leaves_plasma := generation >= 4 and cluster
-	var mine: EnemyMineScript = manager.spawn_mine(marker.global_position, cluster, leaves_plasma) as EnemyMineScript
+	var mine: EnemyMineScript = _hazard_manager.spawn_mine(
+		marker.global_position, cluster, leaves_plasma
+	)
 	if mine != null:
 		_mine_count += 1
 		mine_dropped.emit(cluster, leaves_plasma)

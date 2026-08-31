@@ -111,6 +111,7 @@ func spawn_from_edge(edge: int) -> void:
 		gameplay.get_node("World3D/Actors3D").add_child(enemy)
 	_spawn_count += 1
 	enemy.name = "BomberEnemy3D_%d" % _spawn_count
+	enemy.configure_hazard_manager(gameplay.hazard_manager)
 	var generation := generation_select.selected + 1
 	enemy.finished.connect(_on_enemy_finished.bind(enemy))
 	enemy.bomb_dropped.connect(_on_bomb_dropped.bind(enemy))

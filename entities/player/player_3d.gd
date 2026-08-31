@@ -8,6 +8,7 @@ signal deflection_requested(deflector_position: Vector3, deflector_velocity: Vec
 signal boost_started(combat_position: Vector3, direction: Vector3)
 signal damage_taken(combat_position: Vector3, source: DamageSource, remaining_lives: int)
 signal invulnerability_changed(active: bool)
+signal nuke_requested
 
 enum DamageSource { ENEMY_CONTACT, ENEMY_PROJECTILE, HOSTILE_ORDNANCE }
 
@@ -331,9 +332,7 @@ func _apply_nuke() -> void:
 ## hazards through their scene-owned managers. Pending mine payload callbacks
 ## are invalidated before they can repopulate the cleared pools.
 func apply_nuke() -> void:
-	get_tree().call_group(&"native_3d_enemies", &"take_damage", 9999)
-	get_tree().call_group(&"native_3d_projectile_manager", &"clear_enemy_projectiles")
-	get_tree().call_group(&"native_3d_hazard_manager", &"clear_hazards")
+	nuke_requested.emit()
 
 
 func _update_movement(input_direction: Vector2, delta: float) -> void:
