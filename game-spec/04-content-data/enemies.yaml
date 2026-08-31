@@ -1,0 +1,109 @@
+schema_version: 1
+catalog: enemies
+status: reference
+
+generation_schedule:
+  - generation: 1
+    name: Standard
+    waves: "1-5"
+  - generation: 2
+    name: Augmented
+    waves: "6-10"
+  - generation: 3
+    name: Warform
+    waves: "11-15"
+  - generation: 4
+    name: Apex
+    waves: "16+"
+
+generation_score_multipliers:
+  gen_1: 1.0
+  gen_2: 1.5
+  gen_3: 2.25
+  gen_4: 3.25
+
+entries:
+  - id: ENEMY.BASIC
+    display_name: Basic Enemy
+    role: foundational_pressure
+    palette_role: scarlet_ember
+    orb_value: 1
+    orb_drop_chance: 0.60
+    guaranteed_orb: false
+    behavior: "Direct approach; later generations add charge, reactive movement, and a death fragment burst."
+    tuning_status: reference
+    generation_stats:
+      gen_1: {max_health: 1, move_speed: 150.0, base_points: 100}
+      gen_2: {max_health: 1, move_speed: 160.0, base_points: 100}
+      gen_3: {max_health: 2, move_speed: 170.0, base_points: 100}
+      gen_4: {max_health: 2, move_speed: 180.0, base_points: 100}
+
+  - id: ENEMY.FAST
+    display_name: Fast Enemy
+    role: mobility_pressure
+    palette_role: hot_orange
+    orb_value: 1
+    orb_drop_chance: 0.60
+    guaranteed_orb: false
+    behavior: "High-speed approach with perpendicular weaving; later generations add reactive sidesteps and a telegraphed phase move."
+    tuning_status: partial
+    generation_stats:
+      gen_1: {max_health: 1, move_speed: 280.0, base_points: 150}
+      gen_2: TBD
+      gen_3: TBD
+      gen_4: TBD
+
+  - id: ENEMY.TANK
+    display_name: Tank Enemy
+    role: durable_pressure
+    palette_role: deep_violet
+    orb_value: 3
+    orb_drop_chance: 1.0
+    guaranteed_orb: true
+    behavior: "Slow armored approach with radial fire; later generations add plates, overload behavior, and additional hazards."
+    tuning_status: partial
+    generation_stats:
+      gen_1: {max_health: 8, move_speed: 80.0, base_points: 300}
+      gen_2: TBD
+      gen_3: TBD
+      gen_4: TBD
+
+  - id: ENEMY.BOMBER
+    display_name: Bomber Enemy
+    role: hazard_pressure
+    palette_role: toxic_lime
+    orb_value: 2
+    orb_drop_chance: 1.0
+    guaranteed_orb: true
+    behavior: "Drifting approach that drops mines; later generations add clusters and persistent plasma hazards."
+    tuning_status: reference
+    generation_stats:
+      gen_1: {max_health: 1, move_speed: 60.0, base_points: 200}
+      gen_2: {max_health: 2, move_speed: 65.0, base_points: 200}
+      gen_3: {max_health: 2, move_speed: 70.0, base_points: 200}
+      gen_4: {max_health: 3, move_speed: 75.0, base_points: 200}
+
+  - id: ENEMY.SNIPER
+    display_name: Sniper Enemy
+    role: telegraph_pressure
+    palette_role: cyan_warm_reactor
+    orb_value: 2
+    orb_drop_chance: 1.0
+    guaranteed_orb: true
+    behavior: "Enters, locks aim, telegraphs a high-speed shot, and withdraws; later generations add alternate shots and a rail beam."
+    tuning_status: partial
+    generation_stats:
+      gen_1: {max_health: 2, move_speed: 145.0, base_points: 260}
+      gen_2: TBD
+      gen_3: TBD
+      gen_4: TBD
+
+supporting_hazards:
+  - id: HAZARD.ENEMY_MINE
+    role: delayed_area_denial
+  - id: HAZARD.PLASMA_FIELD
+    role: persistent_area_denial
+  - id: HAZARD.RAIL_BEAM
+    role: line_telegraph
+  - id: ENEMY.SEEKER_FRAGMENT
+    role: death_spawn_fragment

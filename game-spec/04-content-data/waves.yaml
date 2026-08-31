@@ -1,0 +1,46 @@
+schema_version: 1
+catalog: waves
+status: reference
+
+campaign:
+  first_wave: 1
+  expedition_final_wave: 20
+  endless_starts_after: 20
+  boss_frequency: every_5th_wave
+  elite_boss_waves: [10]
+  allocation_frequency: after_every_5th_wave_clear
+  allocation_points: 3
+
+orb_target:
+  base_formula: "floor(10 + wave_number * 1.30)"
+  modifier: MOD.ENERGY_DROUGHT
+  modifier_multiplier: 1.50
+  surplus_rule: "Carry surplus to the next wave, capped at half the next wave target."
+
+spawn_interval:
+  base_formula: "max(1.55 - (wave_number - 1) * 0.045, 0.48)"
+  modifier: MOD.RAPID_ASSAULT
+  modifier_multiplier: 0.80
+
+generation_transitions:
+  - after_wave: 5
+    next_generation: 2
+  - after_wave: 10
+    next_generation: 3
+  - after_wave: 15
+    next_generation: 4
+
+late_endless_drift:
+  starts_at_wave: 16
+  health_per_wave: 0.04
+  health_cap: 2.0
+  speed_per_wave: 0.015
+  speed_cap: 1.30
+
+first_clear_awards:
+  5: 50
+  10: 100
+  15: 150
+  20: 250
+  25: 400
+  30: 600

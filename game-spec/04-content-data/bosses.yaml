@@ -1,0 +1,73 @@
+schema_version: 1
+catalog: bosses
+status: reference
+
+shared_rules:
+  encounter_frequency: every_5th_wave
+  initial_attack_delay_seconds: 1.5
+  health_scale_multiplier: 0.70
+  movement_phases: [HOVER, DASH, STRAFE, DIVE]
+  attack_patterns: [AIMED, RADIAL, SHOTGUN, SPIRAL, CROSS, SWEEP]
+  guaranteed_orb: true
+
+regular_variants:
+  - id: BOSS.ASSAULT_WING
+    display_name: Assault Wing
+    title: "BOSS: ASSAULT WING"
+    role: direct_combat
+    palette_role: scarlet_ember
+    baseline_health: 23
+    base_points: 1500
+    orb_value: 5
+    tuning_status: reference
+
+  - id: BOSS.BULWARK_ARRAY
+    display_name: Bulwark Array
+    title: "BOSS: BULWARK ARRAY"
+    role: durable_pattern_combat
+    palette_role: violet_magenta
+    baseline_health: 31
+    base_points: 1500
+    orb_value: 5
+    tuning_status: reference
+
+  - id: BOSS.TEMPEST_FORK
+    display_name: Tempest Fork
+    title: "BOSS: TEMPEST FORK"
+    role: pattern_combat
+    palette_role: storm_cyan_blue
+    baseline_health: 26
+    base_points: 1500
+    orb_value: 5
+    tuning_status: reference
+
+elite_variant:
+  id: BOSS.VOID_HARBINGER
+  display_name: Void Harbinger
+  title: "ELITE BOSS: VOID HARBINGER"
+  role: elite_pattern_combat
+  palette_role: spectral_acid_green
+  baseline_health: 63
+  base_points: 5000
+  orb_value: 10
+  milestone_wave: 10
+  tuning_status: reference
+
+final_boss:
+  id: BOSS.TEMPEST_CORE
+  display_name: Tempest Core
+  title: "WAVE 20: TEMPEST CORE - SHIELD ARRAY"
+  role: expedition_climax
+  palette_role: amber_gold
+  baseline_health: 150
+  base_points: 12000
+  orb_value: 18
+  wave: 20
+  phases:
+    - {id: BARRIER, damage_multiplier: 0.0}
+    - {id: ARMAMENTS, damage_multiplier: 0.0}
+    - {id: CONDUITS, damage_multiplier: 0.35}
+    - {id: EXPOSED, damage_multiplier: 1.0}
+    - {id: OVERLOAD, damage_multiplier: 1.0}
+  overload_threshold: 0.42
+  tuning_status: reference
