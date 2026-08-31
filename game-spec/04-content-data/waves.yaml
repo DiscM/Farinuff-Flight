@@ -22,6 +22,13 @@ spawn_interval:
   modifier: MOD.RAPID_ASSAULT
   modifier_multiplier: 0.80
 
+spawn_rules:
+  spawn_margin_design_units: 80.0
+  despawn_margin_design_units: 60.0
+  edge_padding_design_units: 34.0
+  player_safe_distance_design_units: 160.0
+  max_spawn_rolls: 6
+
 encounter_composition:
   notes: "Base weights before threat-budget rules or developer overrides."
   early_waves_1_to_2:

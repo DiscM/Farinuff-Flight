@@ -23,6 +23,8 @@ An implementation may use another identifier syntax internally, but it must keep
 - Formulas and state transitions belong in `03-gameplay-rules.md` and `05-progression-and-economy.md`.
 - `tuning_status: needs_extraction` means the current project has behavior but not a complete portable table yet.
 - `acquisition_status: needs_confirmation` means the current project contains the mechanic, but its player-facing acquisition route still needs to be formalized.
+- `effect` fields are player-facing copy. Typed fields, rules, and acceptance tests are authoritative for portable behavior.
+- Allowed status values are `reference`, `legacy_reference`, and `needs_extraction` for tuning; and `reference`, `legacy_reference`, `needs_confirmation`, and `meta_blueprint_then_elite_choice` for acquisition.
 - Display names, descriptions, colors, and role labels are content data and should not be duplicated across UI code, previews, and debug tools.
 - When one mechanic has multiple acquisition routes, define its effect once and use reference entries for the alternate route.
 - Asset filenames are not public IDs. Use a manifest or mapping layer when a port changes formats.
