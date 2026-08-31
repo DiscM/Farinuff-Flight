@@ -25,6 +25,7 @@ When these sources conflict, record the decision in the relevant implementation 
 - **Canonical** — approved behavior or content for the rebuild reference.
 - **Reference** — observed in the current project and retained as a starting point.
 - **Target** — desired behavior that still needs implementation or playtest proof.
+- **Legacy reference** — behavior or content still present in the current project, but whose intended acquisition or future role is unresolved.
 - **TBD** — intentionally unresolved; do not fill it with an assumption without recording the decision.
 
 ## Porting boundary
@@ -56,6 +57,8 @@ Keep these concepts in an implementation profile:
 ## Current-project references
 
 The existing repository contains useful reference material, but those files remain implementation/history documents rather than replacements for this portable specification:
+
+This portable specification resolves two known reference ambiguities: regular boss rotation uses Tempest Fork while Tempest Core is reserved for Wave 20, and late-game drift first applies at Wave 17 after the Wave-16 generation transition.
 
 - [`GAME_DESIGN.md`](../GAME_DESIGN.md)
 - [`CONTEXT.md`](../CONTEXT.md)

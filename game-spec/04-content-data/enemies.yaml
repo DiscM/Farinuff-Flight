@@ -101,9 +101,19 @@ entries:
 supporting_hazards:
   - id: HAZARD.ENEMY_MINE
     role: delayed_area_denial
+    fuse_seconds: 2.2
+    ring_radius_design_units: 24.0
+    radial_projectile_count: 8
+    radial_projectile_speed_design_units_per_second: 165.0
+    cluster_projectile_count: 4
+    cluster_projectile_speed_design_units_per_second: 105.0
   - id: HAZARD.PLASMA_FIELD
     role: persistent_area_denial
+    lifetime_seconds: 2.0
+    damage_cooldown_seconds: 0.8
   - id: HAZARD.RAIL_BEAM
     role: line_telegraph
+    warning_seconds: 0.9
+    active_lane_seconds: 0.15
   - id: ENEMY.SEEKER_FRAGMENT
     role: death_spawn_fragment

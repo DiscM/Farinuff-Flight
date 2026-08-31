@@ -92,6 +92,8 @@ elite_upgrades:
     display_name: Afterburner
     category: mobility
     effect: "+20% speed and +15% acceleration."
+    speed_multiplier: 1.20
+    acceleration_multiplier: 1.15
     color_role: orange
     visual_module: afterburner
 
@@ -124,6 +126,8 @@ elite_upgrades:
     display_name: Overclock
     category: timed_weapon
     effect: "Triple fire rate for 2.5 seconds every 16 seconds; stacks with Rapid Fire."
+    duration_seconds: 2.5
+    cooldown_seconds: 16.0
     color_role: lime_yellow
     visual_module: overclock_reactor
 

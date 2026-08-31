@@ -95,5 +95,3 @@ Define and execute these scenario IDs; the QA plan references them rather than d
 - `PERF.ENDLESS_SOAK_120M`
 
 Each scenario records frame time, memory, active object counts, pool growth, first-use hitches, and orphan/leak indicators where the target platform exposes them.
-
-Record frame time, memory, active object counts, pool growth, and orphan/leak indicators where the target platform exposes them.
