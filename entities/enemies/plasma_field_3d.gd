@@ -5,7 +5,6 @@ class_name PlasmaField3D
 signal returned_to_pool(field: PlasmaField3D)
 
 const PhysicsLayers := preload("res://systems/native_3d_physics_layers.gd")
-const PlayerCraft := preload("res://entities/player/player_3d.gd")
 
 @export_range(0.1, 10.0, 0.1) var lifetime_seconds: float = 2.0
 
@@ -21,12 +20,10 @@ var _idle_parent: Node3D
 var _coordinator: SpecialAttackCoordinator
 var _return_pending := false
 var _pulse_time := 0.0
-var _hit_cooldown := 0.0
 
 
 func _ready() -> void:
 	set_physics_process(false)
-	area_entered.connect(_on_area_entered)
 
 
 func configure_pool(idle_parent: Node3D, shared_coordinator: SpecialAttackCoordinator) -> void:
@@ -46,7 +43,6 @@ func pool_activate(spawn_position: Vector3) -> bool:
 	global_position = Vector3(spawn_position.x, 0.0, spawn_position.z)
 	remaining_lifetime = lifetime_seconds
 	_pulse_time = 0.0
-	_hit_cooldown = 0.0
 	_return_pending = false
 	is_active = true
 	visuals.scale = Vector3.ONE
@@ -72,7 +68,6 @@ func _physics_process(delta: float) -> void:
 		return
 	remaining_lifetime -= delta
 	_pulse_time += delta
-	_hit_cooldown = maxf(0.0, _hit_cooldown - delta)
 	var pulse := (sin(_pulse_time * 9.0) + 1.0) * 0.5
 	visuals.scale = Vector3.ONE * lerpf(0.94, 1.08, pulse)
 	outer.transparency = lerpf(0.72, 0.42, pulse)
@@ -125,11 +120,3 @@ func _finish_return() -> void:
 func _release_cap() -> void:
 	if _coordinator != null and is_instance_valid(_coordinator):
 		_coordinator.release_hazard(&"plasma_field")
-
-
-func _on_area_entered(area: Area3D) -> void:
-	if not is_active or _hit_cooldown > 0.0 or not area.is_in_group(&"player_craft"):
-		return
-	_hit_cooldown = 0.8
-	if area.has_method("receive_damage"):
-		area.receive_damage(global_position, PlayerCraft.DamageSource.HOSTILE_ORDNANCE)

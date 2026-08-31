@@ -183,11 +183,10 @@ func _release_caps() -> void:
 
 
 func _on_area_entered(area: Area3D) -> void:
-	if not is_active or not area.is_in_group(&"player_craft"):
+	var player := area as PlayerCraft
+	if not is_active or player == null:
 		return
-	if bool(area.get("is_boosting")):
+	if player.is_boosting:
 		clear_ordnance()
 		return
-	if area.has_method("receive_damage"):
-		area.receive_damage(get_combat_position(), PlayerCraft.DamageSource.HOSTILE_ORDNANCE)
 	_detonate()
