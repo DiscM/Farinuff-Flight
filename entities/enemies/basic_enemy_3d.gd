@@ -15,6 +15,7 @@ const FlightSpace := preload("res://systems/flight_space_3d.gd")
 const PhysicsLayers := preload("res://systems/native_3d_physics_layers.gd")
 const GenerationStats := preload("res://entities/enemies/enemy_generation_stats.gd")
 const SpawnTuning := preload("res://entities/enemies/enemy_spawn_tuning.gd")
+const NativeHazardManager := preload("res://systems/native_hazard_manager_3d.gd")
 const GENERATION_STATS := [
 	preload("res://entities/enemies/basic_enemy_generation_1.tres"),
 	preload("res://entities/enemies/basic_enemy_generation_2.tres"),
@@ -362,8 +363,8 @@ func _is_basic_lineage() -> bool:
 
 
 func _release_generation_fragments() -> void:
-	var manager := get_tree().get_first_node_in_group(&"native_3d_hazard_manager")
-	if manager == null or not manager.has_method("spawn_seeker_fragment") or _flight_space == null:
+	var manager := get_tree().get_first_node_in_group(&"native_3d_hazard_manager") as NativeHazardManager
+	if manager == null or _flight_space == null:
 		return
 	var screen_heading := _flight_space.combat_motion_to_screen(_heading).normalized()
 	var marker_names := [&"FragmentLeft", &"FragmentRight"]
@@ -375,9 +376,9 @@ func _release_generation_fragments() -> void:
 		var fragment_direction := _flight_space.input_to_combat_direction(
 			screen_heading.rotated(offsets[index])
 		)
-		# Death can be entered from a projectile overlap callback. Defer each
-		# pooled hazard activation until the physics query flush has completed.
-		manager.call_deferred(&"spawn_seeker_fragment", marker.global_position, fragment_direction)
+		# Death can be entered from a projectile overlap callback. The manager
+		# defers activation until the physics flush and cancels it on reset/Nuke.
+		manager.queue_seeker_fragment(marker.global_position, fragment_direction)
 
 
 func _refresh_exit_bounds() -> void:
