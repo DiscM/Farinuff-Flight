@@ -18,6 +18,7 @@ const PlayerCraft := preload("res://entities/player/player_3d.gd")
 @onready var contact_button: Button = $ReviewHUD/Panel/Controls/Contact
 @onready var detonate_button: Button = $ReviewHUD/Panel/Controls/Detonate
 @onready var clear_button: Button = $ReviewHUD/Panel/Controls/Clear
+@onready var nuke_button: Button = $ReviewHUD/Panel/Controls/Nuke
 @onready var restore_button: Button = $ReviewHUD/Panel/Controls/Restore
 @onready var coordinator_status: Label = $ReviewHUD/Panel/Coordinator
 
@@ -27,6 +28,7 @@ var _detonated := 0
 var _cluster_detonated := 0
 var _plasma_detonations := 0
 var _fragment_spawns := 0
+var _nukes := 0
 var _damage_hits := 0
 var _last_mine: Mine
 
@@ -39,6 +41,7 @@ func _ready() -> void:
 	contact_button.pressed.connect(spawn_contact)
 	detonate_button.pressed.connect(detonate_latest)
 	clear_button.pressed.connect(clear_hazards)
+	nuke_button.pressed.connect(nuke_hazards)
 	restore_button.pressed.connect(restore_run)
 	if gameplay.projectile_manager.is_ready:
 		_begin_review()
@@ -76,6 +79,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			detonate_latest()
 		KEY_X:
 			clear_hazards()
+		KEY_N:
+			nuke_hazards()
 		KEY_R:
 			restore_run()
 		_:
@@ -133,6 +138,14 @@ func clear_hazards() -> void:
 	_update_status()
 
 
+func nuke_hazards() -> void:
+	if not _review_ready or get_tree().paused or not GameManager.is_game_active:
+		return
+	gameplay.player.apply_nuke()
+	_nukes += 1
+	_update_status()
+
+
 func restore_run() -> void:
 	if not _review_ready:
 		return
@@ -142,6 +155,7 @@ func restore_run() -> void:
 	_cluster_detonated = 0
 	_plasma_detonations = 0
 	_fragment_spawns = 0
+	_nukes = 0
 	_damage_hits = 0
 	_last_mine = null
 	_update_status()
@@ -169,11 +183,11 @@ func _update_status() -> void:
 	var metrics := hazard_manager.get_metrics()
 	var projectile_metrics := gameplay.projectile_manager.get_metrics()
 	var enemy_projectiles: Dictionary = projectile_metrics["enemy"]
-	status.text = "MINE %d/%d • FIELD %d/%d • FRAG %d/%d • FSPAWN %d • SPAWN %d • DET %d • CLUSTER %d • PLASMA %d • PAYLOAD %d • DAMAGE %d • LIVES %d/%d • GROWTH F%d/M%d/P%d" % [
+	status.text = "MINE %d/%d • FIELD %d/%d • FRAG %d/%d • FSPAWN %d • SPAWN %d • DET %d • CLUSTER %d • PLASMA %d • NUKE %d • PAYLOAD %d • DAMAGE %d • LIVES %d/%d • GROWTH F%d/M%d/P%d" % [
 		metrics["mine_active"], metrics["mine_pool_size"],
 		metrics["field_active"], metrics["field_pool_size"],
 		metrics["fragment_active"], metrics["pool_size"],
-		_fragment_spawns, _spawned, _detonated, _cluster_detonated, _plasma_detonations,
+		_fragment_spawns, _spawned, _detonated, _cluster_detonated, _plasma_detonations, _nukes,
 		enemy_projectiles["shots_fired"], _damage_hits,
 		GameManager.lives, GameManager.starting_lives,
 		metrics["fragment_pool_growth_after_warmup"],

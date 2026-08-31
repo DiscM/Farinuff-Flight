@@ -223,6 +223,17 @@ func _on_area_entered(area: Area3D) -> void:
 func _report_hit(target: Area3D, combat_position: Vector3) -> bool:
 	if not is_active or _impact_pending:
 		return false
+	# Plasma fields share the hostile-ordnance layer for Player Craft contact,
+	# but the 2D reference does not let regular Player Projectiles defuse them.
+	# Keep those shots moving through a field instead of consuming the projectile
+	# on a non-damageable overlap.
+	if (
+		kind == Kind.PLAYER
+		and target != null
+		and target.collision_layer & PhysicsLayers.HOSTILE_ORDNANCE
+		and not target.has_method(&"take_damage")
+	):
+		return false
 	combat_position.y = 0.0
 	# Contact listeners may redirect the projectile synchronously. Make its
 	# reflection vector and telemetry originate at the actual swept impact.

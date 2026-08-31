@@ -38,7 +38,7 @@ offset_bottom = 48.0
 mouse_filter = 2
 theme_override_colors/font_color = Color(0.85, 0.9, 1, 1)
 theme_override_font_sizes/font_size = 11
-text = "1 MINE • 2 CLUSTER • 3 CLUSTER+PLASMA • F FRAGMENT • C CONTACT • D DETONATE • X CLEAR • R RESTORE • BOOST TO DEFUSE"
+text = "1 MINE • 2 CLUSTER • 3 CLUSTER+PLASMA • F FRAGMENT • C CONTACT • D DETONATE • X CLEAR • N NUKE • R RESTORE • BOOST TO DEFUSE"
 horizontal_alignment = 1
 
 [node name="Controls" type="HBoxContainer" parent="ReviewHUD/Panel"]
@@ -84,6 +84,11 @@ text = "D DETONATE"
 layout_mode = 2
 focus_mode = 0
 text = "X CLEAR"
+
+[node name="Nuke" type="Button" parent="ReviewHUD/Panel/Controls"]
+layout_mode = 2
+focus_mode = 0
+text = "N NUKE"
 
 [node name="Restore" type="Button" parent="ReviewHUD/Panel/Controls"]
 layout_mode = 2

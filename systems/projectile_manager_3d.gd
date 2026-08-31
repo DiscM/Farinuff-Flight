@@ -127,10 +127,22 @@ func fire_enemy_projectile(combat_position: Vector3, direction: Vector3, speed_p
 ## Each wrapper owns its deferred physics-safe return; the manager only
 ## requests the return from its current checked-out set.
 func clear_projectiles() -> void:
-	for pool in _pools:
-		for projectile in pool.checked_out.duplicate():
-			if is_instance_valid(projectile):
-				projectile.despawn()
+	clear_player_projectiles()
+	clear_enemy_projectiles()
+
+
+func clear_player_projectiles() -> void:
+	_clear_pool(Projectile.Kind.PLAYER)
+
+
+func clear_enemy_projectiles() -> void:
+	_clear_pool(Projectile.Kind.ENEMY)
+
+
+func _clear_pool(kind: Projectile.Kind) -> void:
+	for projectile in _pools[kind].checked_out.duplicate():
+		if is_instance_valid(projectile):
+			projectile.despawn()
 
 
 ## Deflects every active incoming projectile inside the reference's exact

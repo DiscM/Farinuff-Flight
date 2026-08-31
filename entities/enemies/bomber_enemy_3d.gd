@@ -9,6 +9,13 @@ signal mine_dropped(is_cluster: bool, leaves_plasma: bool)
 
 const ProjectileManager := preload("res://systems/projectile_manager_3d.gd")
 const EnemyMineScript := preload("res://entities/enemies/enemy_mine_3d.gd")
+const BomberStats := preload("res://entities/enemies/enemy_generation_stats.gd")
+const BOMBER_GENERATION_STATS := [
+	preload("res://entities/enemies/bomber_enemy_generation_1.tres"),
+	preload("res://entities/enemies/bomber_enemy_generation_2.tres"),
+	preload("res://entities/enemies/bomber_enemy_generation_3.tres"),
+	preload("res://entities/enemies/bomber_enemy_generation_4.tres"),
+]
 
 const DRIFT_BOUNDARY_MARGIN_PIXELS := 30.0
 const BOMB_FIRST_DROP_MIN_SECONDS := 0.5
@@ -30,6 +37,12 @@ var _mine_count := 0
 
 func _is_basic_lineage() -> bool:
 	return false
+
+
+func _get_generation_stats() -> BomberStats:
+	if generation == 1 and gameplay_stats != null:
+		return gameplay_stats
+	return BOMBER_GENERATION_STATS[generation - 1] as BomberStats
 
 
 func _configure_movement() -> void:
