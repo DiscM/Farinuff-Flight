@@ -81,10 +81,6 @@ func _physics_process(delta: float) -> void:
 		despawn()
 
 
-func take_damage(_amount: int) -> void:
-	despawn()
-
-
 func clear_ordnance() -> void:
 	despawn()
 

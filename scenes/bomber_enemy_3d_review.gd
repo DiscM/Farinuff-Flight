@@ -1,7 +1,7 @@
 extends Node
 class_name BomberEnemy3DReview
-## Manual Generation I Bomber review around the actual native controller.
-## The deterministic entries and counters are review controls, not a spawner.
+## Manual Bomber generation review around the actual native controller. The
+## deterministic entries and counters are review controls, not a spawner.
 
 const NativeGame := preload("res://scenes/native_3d_gameplay.gd")
 const PlayerCraft := preload("res://entities/player/player_3d.gd")
@@ -15,7 +15,9 @@ const MAX_ENEMIES := 8
 @onready var gameplay: NativeGame = $Gameplay
 @onready var spawn_timer: Timer = $SpawnTimer
 @onready var auto_spawns: CheckButton = $ReviewHUD/Panel/Controls/AutoSpawns
+@onready var generation_select: OptionButton = $ReviewHUD/Panel/Controls/Generation
 @onready var status: Label = $ReviewHUD/Panel/Status
+@onready var mine_status: Label = $ReviewHUD/Panel/MineStatus
 @onready var guides: BasicEnemy3DReviewGuides = $ReviewHUD/Guides
 @onready var _first_enemy: BomberEnemy = $Gameplay/World3D/Actors3D/FirstEnemy3D
 
@@ -28,6 +30,9 @@ var _contacts := 0
 var _escaped := 0
 var _damage_hits := 0
 var _bombs_dropped := 0
+var _mines_dropped := 0
+var _cluster_mines_dropped := 0
+var _plasma_mines_dropped := 0
 
 
 func _ready() -> void:
@@ -36,6 +41,7 @@ func _ready() -> void:
 	$ReviewHUD/Panel/Controls/Bottom.pressed.connect(spawn_from_edge.bind(2))
 	$ReviewHUD/Panel/Controls/Left.pressed.connect(spawn_from_edge.bind(3))
 	$ReviewHUD/Panel/Controls/RestoreLives.pressed.connect(restore_lives)
+	generation_select.item_selected.connect(_set_generation)
 	auto_spawns.toggled.connect(_set_auto_spawns)
 	spawn_timer.timeout.connect(_spawn_next)
 	if gameplay.projectile_manager.is_ready:
@@ -66,6 +72,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			guides.show_hitboxes = not guides.show_hitboxes
 		KEY_G:
 			guides.show_sockets = not guides.show_sockets
+		KEY_Q:
+			generation_select.select((generation_select.selected + 1) % generation_select.item_count)
+			_set_generation(generation_select.selected)
 		KEY_R:
 			restore_lives()
 		_:
@@ -102,10 +111,12 @@ func spawn_from_edge(edge: int) -> void:
 		gameplay.get_node("World3D/Actors3D").add_child(enemy)
 	_spawn_count += 1
 	enemy.name = "BomberEnemy3D_%d" % _spawn_count
+	var generation := generation_select.selected + 1
 	enemy.finished.connect(_on_enemy_finished.bind(enemy))
 	enemy.bomb_dropped.connect(_on_bomb_dropped.bind(enemy))
+	enemy.mine_dropped.connect(_on_mine_dropped.bind(enemy))
 	_enemies.append(enemy)
-	if not enemy.activate(gameplay.flight_space, spawn_position, direction):
+	if not enemy.activate_generation(gameplay.flight_space, spawn_position, direction, generation):
 		_enemies.erase(enemy)
 		enemy.queue_free()
 	_update_status()
@@ -150,6 +161,15 @@ func _on_bomb_dropped(_enemy: BomberEnemy) -> void:
 	_update_status()
 
 
+func _on_mine_dropped(is_cluster: bool, leaves_plasma: bool, _enemy: BomberEnemy) -> void:
+	_mines_dropped += 1
+	if is_cluster:
+		_cluster_mines_dropped += 1
+	if leaves_plasma:
+		_plasma_mines_dropped += 1
+	_update_status()
+
+
 func _on_player_damage_taken(
 	_combat_position: Vector3,
 	_source: PlayerCraft.DamageSource,
@@ -167,9 +187,17 @@ func _on_lives_changed(_new_lives: int) -> void:
 	_update_status()
 
 
+func _set_generation(index: int) -> void:
+	generation_select.select(clampi(index, 0, generation_select.item_count - 1))
+	_update_status()
+
+
 func _update_status() -> void:
 	var immunity := "INVULNERABLE" if gameplay.player.is_invincible else "VULNERABLE"
-	status.text = "ACT %d/%d • KILL %d • CONTACT %d • ESC %d • DAMAGE %d • BOMBS %d • LIVES %d/%d • DRIFT 120 PX/S • %s" % [
-		_enemies.size(), MAX_ENEMIES, _destroyed, _contacts, _escaped,
+	status.text = "GEN %d • ACT %d/%d • KILL %d • CONTACT %d • ESC %d • DAMAGE %d • BOMBS %d • LIVES %d/%d • DRIFT 120 PX/S • %s" % [
+		generation_select.selected + 1, _enemies.size(), MAX_ENEMIES, _destroyed, _contacts, _escaped,
 		_damage_hits, _bombs_dropped, GameManager.lives, GameManager.starting_lives, immunity,
+	]
+	mine_status.text = "MINE ROUTE GEN %d • DROPS %d • CLUSTER %d • PLASMA %d" % [
+		generation_select.selected + 1, _mines_dropped, _cluster_mines_dropped, _plasma_mines_dropped,
 	]
