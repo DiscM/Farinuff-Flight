@@ -46,12 +46,12 @@ entries:
     orb_drop_chance: 0.60
     guaranteed_orb: false
     behavior: "High-speed approach with perpendicular weaving; later generations add reactive sidesteps and a telegraphed phase move."
-    tuning_status: partial
+    tuning_status: reference
     generation_stats:
       gen_1: {max_health: 1, move_speed: 280.0, base_points: 150}
-      gen_2: TBD
-      gen_3: TBD
-      gen_4: TBD
+      gen_2: {max_health: 1, move_speed: 290.0, base_points: 150}
+      gen_3: {max_health: 1, move_speed: 300.0, base_points: 150}
+      gen_4: {max_health: 1, move_speed: 315.0, base_points: 150}
 
   - id: ENEMY.TANK
     display_name: Tank Enemy
@@ -61,12 +61,12 @@ entries:
     orb_drop_chance: 1.0
     guaranteed_orb: true
     behavior: "Slow armored approach with radial fire; later generations add plates, overload behavior, and additional hazards."
-    tuning_status: partial
+    tuning_status: reference
     generation_stats:
       gen_1: {max_health: 8, move_speed: 80.0, base_points: 300}
-      gen_2: TBD
-      gen_3: TBD
-      gen_4: TBD
+      gen_2: {max_health: 9, move_speed: 82.0, base_points: 300}
+      gen_3: {max_health: 11, move_speed: 85.0, base_points: 300}
+      gen_4: {max_health: 13, move_speed: 88.0, base_points: 300}
 
   - id: ENEMY.BOMBER
     display_name: Bomber Enemy
@@ -91,12 +91,12 @@ entries:
     orb_drop_chance: 1.0
     guaranteed_orb: true
     behavior: "Enters, locks aim, telegraphs a high-speed shot, and withdraws; later generations add alternate shots and a rail beam."
-    tuning_status: partial
+    tuning_status: reference
     generation_stats:
       gen_1: {max_health: 2, move_speed: 145.0, base_points: 260}
-      gen_2: TBD
-      gen_3: TBD
-      gen_4: TBD
+      gen_2: {max_health: 2, move_speed: 150.0, base_points: 260}
+      gen_3: {max_health: 3, move_speed: 155.0, base_points: 260}
+      gen_4: {max_health: 3, move_speed: 160.0, base_points: 260}
 
 supporting_hazards:
   - id: HAZARD.ENEMY_MINE

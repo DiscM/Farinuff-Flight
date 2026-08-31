@@ -6,7 +6,7 @@ drop_rules:
   collection_methods: [contact, player_projectile]
   movement: downward_drift_with_gentle_horizontal_bob
   no_drop_modifier: MOD.SUPPLY_BLOCKADE
-  timing_status: needs_extraction
+  timing_status: reference
 
 entries:
   - id: POWERUP.SCALE_UP
@@ -14,28 +14,52 @@ entries:
     label: S+
     color_role: cyan
     effect: "Increase projectile scale."
+    max_stacks: 3
+    stack_formula: "projectile_scale = 1 + (stack * 0.5)"
+    duration_seconds: null
+    stacking: additive_until_cap
+    tuning_status: reference
   - id: POWERUP.RAPID_FIRE
     display_name: Rapid Fire
     label: RF
     color_role: yellow
-    effect: "Temporarily reduce the fire interval."
+    effect: "Reduce the fire interval to 40% of base for 8 seconds."
+    duration_seconds: 8.0
+    stacking: refresh_duration
+    combined_overclock_interval_factor: 0.15
+    tuning_status: reference
   - id: POWERUP.SHIELD
     display_name: Shield
     label: SH
     color_role: green
-    effect: "Temporarily protect the Player Craft."
+    effect: "Absorb one hit, then grant 1.5 seconds of invulnerability."
+    duration_seconds: null
+    stacking: replace_existing_shield
+    tuning_status: reference
   - id: POWERUP.SPREAD_SHOT
     display_name: Spread Shot
     label: SP
     color_role: pink
-    effect: "Temporarily add a spread firing pattern."
+    effect: "Fire a three-way fan for 8 seconds."
+    duration_seconds: 8.0
+    spread_angles_degrees: [-25, 0, 25]
+    stacking: refresh_duration
+    tuning_status: reference
   - id: POWERUP.MAGNET
     display_name: Magnet
     label: MG
     color_role: purple
-    effect: "Temporarily attract XP Orbs and collectible Power-Ups."
+    effect: "Attract XP Orbs and collectible Power-Ups at 350 design units/s for 10 seconds."
+    duration_seconds: 10.0
+    pull_speed_design_units_per_second: 350.0
+    extended_variant_duration_seconds: 15.0
+    stacking: refresh_duration
+    tuning_status: reference
   - id: POWERUP.NUKE
     display_name: Nuke
     label: NK
     color_role: red
-    effect: "Trigger a screen-clearing combat effect."
+    effect: "Instantly destroy active Enemy Craft and Tempest sections and clear hostile ordnance."
+    duration_seconds: 0.0
+    stacking: one_shot
+    tuning_status: reference

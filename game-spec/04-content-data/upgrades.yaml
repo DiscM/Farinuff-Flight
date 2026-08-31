@@ -5,11 +5,61 @@ status: reference
 run_scope: run_long
 selection_rule: "An upgrade selected during a run is excluded from later choices in that run."
 
+run_upgrades:
+  - id: UPGRADE.REAR_GUN
+    display_name: Rear Gun
+    category: rear_weapon
+    effect: "Fire one backward Projectile with each shot."
+    scope: run_long
+    acquisition_status: needs_confirmation
+    tuning_status: legacy_reference
+
+  - id: UPGRADE.ZIGZAG_BULLETS
+    display_name: Zigzag Bullets
+    category: projectile_motion
+    effect: "Projectiles oscillate perpendicular to their travel direction; each stack increases the motion."
+    max_stacks: 10
+    speed_loss_per_stack: 0.10
+    speed_loss_cap_stacks: 5
+    frequency_formula: "18 + (stack * 3)"
+    amplitude_formula: "120 * stack"
+    scope: run_long
+    acquisition_status: needs_confirmation
+    tuning_status: legacy_reference
+
+  - id: UPGRADE.ORBITAL_ARRAY
+    display_name: Orbital Array
+    category: contact_weapon
+    effect: "Three Projectiles orbit the Player Craft and damage enemies on contact."
+    orbital_count: 3
+    orbital_radius_design_units: 60.0
+    orbital_rotation_speed_radians_per_second: 3.0
+    scope: run_long
+    acquisition_status: meta_blueprint_then_elite_choice
+    tuning_status: reference
+
+  - id: UPGRADE.PIERCING_ROUNDS
+    display_name: Piercing Rounds
+    category: projectile_modifier
+    effect: "Projectiles pass through Enemy Craft instead of stopping on impact."
+    scope: run_long
+    acquisition_status: meta_blueprint_then_elite_choice
+    tuning_status: reference
+
+  - id: UPGRADE.EXPLOSIVE_ROUNDS
+    display_name: Explosive Rounds
+    category: area_damage
+    effect: "Projectiles deal area damage on impact."
+    scope: run_long
+    acquisition_status: meta_blueprint_then_elite_choice
+    tuning_status: reference
+
 elite_upgrades:
   - id: UPGRADE.TWIN_CANNONS
     display_name: Twin Cannons
     category: weapon_count
     effect: "Fire two additional bullets with every shot."
+    additional_projectiles: 2
     color_role: yellow
     visual_module: twin_cannons
     stack_notes: "Can combine with Spread Shot."
@@ -18,6 +68,8 @@ elite_upgrades:
     display_name: Auto-Aim Core
     category: targeting
     effect: "Bullets home toward the nearest valid Enemy Craft."
+    target_range_design_units: 500.0
+    direction_nudge: 0.35
     color_role: green
     visual_module: auto_aim_core
 
@@ -47,6 +99,7 @@ elite_upgrades:
     display_name: Spread Shot
     category: weapon_pattern
     effect: "Fire a permanent three-way fan; with Twin Cannons the reference pattern becomes five bullets."
+    spread_angles_degrees: [-25, 0, 25]
     color_role: magenta
     visual_module: spread_shot_emitters
 
@@ -54,6 +107,8 @@ elite_upgrades:
     display_name: Shield Burst
     category: defense_area
     effect: "Every 10 seconds, emit a shockwave that clears enemy Projectiles and damages enemies."
+    period_seconds: 10.0
+    radius_design_units: 160.0
     color_role: cyan
     visual_module: shield_burst_projectors
 
@@ -61,6 +116,7 @@ elite_upgrades:
     display_name: Orb Magnet
     category: collection
     effect: "Permanently attract XP Orbs and Power-Ups with a faster pull."
+    pull_speed_design_units_per_second: 500.0
     color_role: amber
     visual_module: magnet_coils
 
@@ -80,22 +136,13 @@ elite_upgrades:
 
 meta_blueprints:
   - id: UPGRADE.ORBITAL_ARRAY
-    display_name: Orbital Array
-    category: contact_weapon
-    effect: "Three Projectiles orbit the Player Craft and damage enemies on contact."
     unlock_id: META.ORBITALS
     elite_pool_gate: wave_10
 
   - id: UPGRADE.PIERCING_ROUNDS
-    display_name: Piercing Rounds
-    category: projectile_modifier
-    effect: "Projectiles pass through Enemy Craft instead of stopping on impact."
     unlock_id: META.PIERCING
     elite_pool_gate: wave_10
 
   - id: UPGRADE.EXPLOSIVE_ROUNDS
-    display_name: Explosive Rounds
-    category: area_damage
-    effect: "Projectiles deal area damage on impact."
     unlock_id: META.EXPLOSIVE
     elite_pool_gate: wave_10

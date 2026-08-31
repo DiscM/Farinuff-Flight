@@ -84,10 +84,16 @@ When reduced flashing and visual-effects settings are enabled, the player still 
 
 ## Performance scenarios
 
-- Baseline active run at normal enemy load
-- Fully upgraded Player Craft while boosting and firing maximum weapon patterns
-- Boss encounter with hazards, Projectiles, UI, and VFX active
-- 30-, 60-, and 120-minute Endless soak
-- Cold start and first encounter after loading assets
+Define and execute these scenario IDs; the QA plan references them rather than duplicating their setup:
+
+- `PERF.COLD_START`
+- `PERF.BASELINE_ACTIVE_RUN`
+- `PERF.FULL_BUILD_COMBAT_LOAD`
+- `PERF.BOSS_COMBAT_LOAD`
+- `PERF.ENDLESS_SOAK_30M`
+- `PERF.ENDLESS_SOAK_60M`
+- `PERF.ENDLESS_SOAK_120M`
+
+Each scenario records frame time, memory, active object counts, pool growth, first-use hitches, and orphan/leak indicators where the target platform exposes them.
 
 Record frame time, memory, active object counts, pool growth, and orphan/leak indicators where the target platform exposes them.

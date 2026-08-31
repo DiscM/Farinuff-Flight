@@ -22,6 +22,31 @@ spawn_interval:
   modifier: MOD.RAPID_ASSAULT
   modifier_multiplier: 0.80
 
+encounter_composition:
+  notes: "Base weights before threat-budget rules or developer overrides."
+  early_waves_1_to_2:
+    ENEMY.BASIC: 0.75
+    ENEMY.FAST: 0.25
+  early_waves_3_to_5:
+    ENEMY.BASIC: 0.34
+    ENEMY.FAST: 0.24
+    ENEMY.BOMBER: 0.18
+    ENEMY.TANK: 0.14
+    ENEMY.SNIPER: 0.10
+  evolved_waves_6_plus:
+    ENEMY.BASIC: 0.28
+    ENEMY.FAST: 0.22
+    ENEMY.BOMBER: 0.18
+    ENEMY.TANK: 0.14
+    ENEMY.SNIPER: 0.18
+
+boss_rotation:
+  regular_variants: [BOSS.ASSAULT_WING, BOSS.BULWARK_ARRAY, BOSS.TEMPEST_FORK]
+  regular_rotation_starts_at_wave_5: true
+  overrides:
+    10: BOSS.VOID_HARBINGER
+    20: BOSS.TEMPEST_CORE
+
 generation_transitions:
   - after_wave: 5
     next_generation: 2
@@ -31,7 +56,8 @@ generation_transitions:
     next_generation: 4
 
 late_endless_drift:
-  starts_at_wave: 16
+  starts_after_wave: 16
+  first_applies_at_wave: 17
   health_per_wave: 0.04
   health_cap: 2.0
   speed_per_wave: 0.015
