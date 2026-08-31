@@ -5,7 +5,6 @@ class_name BomberEnemy3DReview
 
 const NativeGame := preload("res://scenes/native_3d_gameplay.gd")
 const PlayerCraft := preload("res://entities/player/player_3d.gd")
-const Projectile := preload("res://entities/projectiles/projectile_3d.gd")
 const BasicEnemy := preload("res://entities/enemies/basic_enemy_3d.gd")
 const BomberEnemy := preload("res://entities/enemies/bomber_enemy_3d.gd")
 const ENEMY_SCENE := preload("res://entities/enemies/bomber_enemy_3d.tscn")
@@ -136,12 +135,7 @@ func _set_auto_spawns(enabled: bool) -> void:
 
 
 func restore_lives() -> void:
-	for node in get_tree().get_nodes_in_group(&"enemy_projectiles"):
-		var projectile := node as Projectile
-		if projectile != null:
-			projectile.despawn()
-	GameManager.start_game(false)
-	gameplay.player.reset_damage_state()
+	gameplay.reset_native_progression()
 	_update_status()
 
 
