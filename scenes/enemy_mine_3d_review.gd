@@ -14,6 +14,7 @@ const PlayerCraft := preload("res://entities/player/player_3d.gd")
 @onready var spawn_mine_button: Button = $ReviewHUD/Panel/Controls/Mine
 @onready var spawn_cluster_button: Button = $ReviewHUD/Panel/Controls/Cluster
 @onready var spawn_plasma_button: Button = $ReviewHUD/Panel/Controls/ClusterPlasma
+@onready var fragment_button: Button = $ReviewHUD/Panel/Controls/Fragment
 @onready var contact_button: Button = $ReviewHUD/Panel/Controls/Contact
 @onready var detonate_button: Button = $ReviewHUD/Panel/Controls/Detonate
 @onready var clear_button: Button = $ReviewHUD/Panel/Controls/Clear
@@ -25,6 +26,7 @@ var _spawned := 0
 var _detonated := 0
 var _cluster_detonated := 0
 var _plasma_detonations := 0
+var _fragment_spawns := 0
 var _damage_hits := 0
 var _last_mine: Mine
 
@@ -33,6 +35,7 @@ func _ready() -> void:
 	spawn_mine_button.pressed.connect(spawn_mine)
 	spawn_cluster_button.pressed.connect(spawn_cluster)
 	spawn_plasma_button.pressed.connect(spawn_cluster_plasma)
+	fragment_button.pressed.connect(spawn_fragment)
 	contact_button.pressed.connect(spawn_contact)
 	detonate_button.pressed.connect(detonate_latest)
 	clear_button.pressed.connect(clear_hazards)
@@ -65,6 +68,8 @@ func _unhandled_input(event: InputEvent) -> void:
 			spawn_cluster()
 		KEY_3:
 			spawn_cluster_plasma()
+		KEY_F:
+			spawn_fragment()
 		KEY_C:
 			spawn_contact()
 		KEY_D:
@@ -92,6 +97,16 @@ func spawn_cluster_plasma() -> void:
 
 func spawn_contact() -> void:
 	_spawn_near_player(false, false, Vector2.ZERO)
+
+
+func spawn_fragment() -> void:
+	if not _review_ready or get_tree().paused or not GameManager.is_game_active:
+		return
+	var spawn_position := gameplay.player.global_position + gameplay.flight_space.screen_motion_to_combat(Vector2(-148.0, 48.0))
+	var fragment := hazard_manager.spawn_seeker_fragment(spawn_position, Vector3.BACK)
+	if fragment != null:
+		_fragment_spawns += 1
+	_update_status()
 
 
 func _spawn_near_player(cluster: bool, leaves_plasma: bool, screen_offset: Vector2) -> void:
@@ -126,6 +141,7 @@ func restore_run() -> void:
 	_detonated = 0
 	_cluster_detonated = 0
 	_plasma_detonations = 0
+	_fragment_spawns = 0
 	_damage_hits = 0
 	_last_mine = null
 	_update_status()
@@ -153,11 +169,11 @@ func _update_status() -> void:
 	var metrics := hazard_manager.get_metrics()
 	var projectile_metrics := gameplay.projectile_manager.get_metrics()
 	var enemy_projectiles: Dictionary = projectile_metrics["enemy"]
-	status.text = "MINE %d/%d • FIELD %d/%d • FRAG %d/%d • SPAWN %d • DET %d • CLUSTER %d • PLASMA %d • PAYLOAD %d • DAMAGE %d • LIVES %d/%d • GROWTH F%d/M%d/P%d" % [
+	status.text = "MINE %d/%d • FIELD %d/%d • FRAG %d/%d • FSPAWN %d • SPAWN %d • DET %d • CLUSTER %d • PLASMA %d • PAYLOAD %d • DAMAGE %d • LIVES %d/%d • GROWTH F%d/M%d/P%d" % [
 		metrics["mine_active"], metrics["mine_pool_size"],
 		metrics["field_active"], metrics["field_pool_size"],
 		metrics["fragment_active"], metrics["pool_size"],
-		_spawned, _detonated, _cluster_detonated, _plasma_detonations,
+		_fragment_spawns, _spawned, _detonated, _cluster_detonated, _plasma_detonations,
 		enemy_projectiles["shots_fired"], _damage_hits,
 		GameManager.lives, GameManager.starting_lives,
 		metrics["fragment_pool_growth_after_warmup"],

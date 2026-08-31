@@ -8,7 +8,7 @@ signal bomb_dropped
 signal mine_dropped(is_cluster: bool, leaves_plasma: bool)
 
 const ProjectileManager := preload("res://systems/projectile_manager_3d.gd")
-const EnemyMine := preload("res://entities/enemies/enemy_mine_3d.gd")
+const EnemyMineScript := preload("res://entities/enemies/enemy_mine_3d.gd")
 
 const DRIFT_BOUNDARY_MARGIN_PIXELS := 30.0
 const BOMB_FIRST_DROP_MIN_SECONDS := 0.5
@@ -132,7 +132,7 @@ func _try_drop_mine() -> void:
 		return
 	var cluster := generation >= 3 and (_mine_count + 1) % 3 == 0
 	var leaves_plasma := generation >= 4 and cluster
-	var mine: EnemyMine = manager.spawn_mine(marker.global_position, cluster, leaves_plasma) as EnemyMine
+	var mine: EnemyMineScript = manager.spawn_mine(marker.global_position, cluster, leaves_plasma) as EnemyMineScript
 	if mine != null:
 		_mine_count += 1
 		mine_dropped.emit(cluster, leaves_plasma)
