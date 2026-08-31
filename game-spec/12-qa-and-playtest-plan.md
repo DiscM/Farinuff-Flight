@@ -41,13 +41,12 @@ Run with the target UI and input adapters:
 
 ### Performance tests
 
-- Cold start and first gameplay transition
-- First encounter of every enemy role
-- Fully upgraded Player Craft under maximum firing and boost load
-- Boss with hazards, Projectiles, UI, and VFX active
-- 30-, 60-, and 120-minute Endless soak
+- Execute `PERF.COLD_START` and the first-gameplay-transition portion of `PERF.BASELINE_ACTIVE_RUN`.
+- Execute `PERF.FULL_BUILD_COMBAT_LOAD` and `PERF.BOSS_COMBAT_LOAD`.
+- Execute `PERF.ENDLESS_SOAK_30M`, `PERF.ENDLESS_SOAK_60M`, and `PERF.ENDLESS_SOAK_120M`.
+- Include the first encounter of every Enemy role in the cold-start and active-run records.
 
-Record frame time, memory, active object count, pool size/growth, load hitches, and orphan/leak indicators where available.
+Record frame time, memory, active object count, pool size/growth, load hitches, and orphan/leak indicators where available. The scenario definitions live in `09-acceptance-tests.md`.
 
 ## Manual playtest script
 

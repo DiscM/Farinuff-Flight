@@ -4,6 +4,14 @@ Status: canonical rules with values carried from the reference build
 
 This document describes simulation behavior without assuming a particular engine, physics API, or renderer.
 
+## Run baseline
+
+| Parameter | Value |
+|---|---:|
+| Starting lives | 3 |
+| Starting Try Again stocks | 2 |
+| XP Orb value needed for one life | 12 |
+
 ## Units and coordinate mapping
 
 - Use **design units** for portable tuning.

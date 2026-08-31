@@ -12,12 +12,7 @@ Status: reference economy contract
 
 ## Starting run values
 
-- Base lives: 3
-- Base try-again stocks: 2
-- Base fire interval: 0.22 seconds
-- Base movement speed: 280 design units/second
-- Base orb-to-life threshold: 12 orb-value units
-- Base salvage multiplier: ×1.00
+The base lives, Try Again stocks, movement, fire interval, and orb-to-life threshold are defined in [`03-gameplay-rules.md`](03-gameplay-rules.md). The economy starts every run at a ×1.00 Salvage multiplier before challenge modifiers.
 
 Starting values are modified by the selected ship, purchased systems, armed consumables, and challenge modifiers. The resolved starting lives are stored so Try Again can restore the same loadout-derived value.
 

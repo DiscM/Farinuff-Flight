@@ -79,6 +79,10 @@ An alternate control scheme may use left mouse for `shoot` and Space for `boost`
 
 Difficulty should come from readable patterns, movement demands, timing, and encounter composition before raw health inflation. Endless mode may add gentle late-game pressure, but it must preserve safe gaps and meaningful player counterplay.
 
+## Boss identity
+
+Regular boss encounters rotate through Assault Wing, Bulwark Array, and Tempest Fork. Wave 10 uses the elite Void Harbinger variant, and Wave 20 is reserved for the Tempest Core Expedition climax. Tempest Core is not part of the ordinary regular-boss rotation.
+
 ## Feedback philosophy
 
 Every high-value state change should have at least two independent channels of confirmation:
