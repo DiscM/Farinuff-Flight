@@ -324,10 +324,16 @@ func _apply_magnet() -> void:
 
 
 func _apply_nuke() -> void:
+	apply_nuke()
+
+
+## Clears native enemy actors, active hostile payload projectiles, and pooled
+## hazards through their scene-owned managers. Pending mine payload callbacks
+## are invalidated before they can repopulate the cleared pools.
+func apply_nuke() -> void:
 	get_tree().call_group(&"native_3d_enemies", &"take_damage", 9999)
-	get_tree().call_group(&"native_3d_fragments", &"clear_ordnance")
-	get_tree().call_group(&"native_3d_hazard_manager", &"cancel_pending_payloads")
-	get_tree().call_group(&"native_3d_hazards", &"clear_ordnance")
+	get_tree().call_group(&"native_3d_projectile_manager", &"clear_enemy_projectiles")
+	get_tree().call_group(&"native_3d_hazard_manager", &"clear_hazards")
 
 
 func _update_movement(input_direction: Vector2, delta: float) -> void:

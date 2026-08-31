@@ -31,6 +31,7 @@ var _checked_out_fragments: Array[Fragment] = []
 var _checked_out_mines: Array[Mine] = []
 var _checked_out_fields: Array[PlasmaField3DWrapper] = []
 var _warmed_fragment_ids: Dictionary[int, bool] = {}
+var _fragment_cap_ids: Dictionary[int, bool] = {}
 var _warmed_mine_ids: Dictionary[int, bool] = {}
 var _warmed_field_ids: Dictionary[int, bool] = {}
 var _pool_growth := 0
@@ -136,8 +137,12 @@ func spawn_seeker_fragment(spawn_position: Vector3, direction: Vector3) -> Fragm
 	if not is_ready or not GameManager.is_game_active or _checked_out_fragments.size() >= _warmed_fragment_ids.size():
 		_rejected += 1
 		return null
+	if _coordinator == null or not _coordinator.request_hazard(&"seeker_fragment"):
+		_rejected += 1
+		return null
 	var fragment := ObjectPool.acquire(FRAGMENT_SCENE, _active_parent) as Fragment
 	if fragment == null:
+		_coordinator.release_hazard(&"seeker_fragment")
 		_rejected += 1
 		return null
 	if not _warmed_fragment_ids.has(fragment.get_instance_id()):
@@ -148,8 +153,11 @@ func spawn_seeker_fragment(spawn_position: Vector3, direction: Vector3) -> Fragm
 	if not fragment.returned_to_pool.is_connected(_on_fragment_returned):
 		fragment.returned_to_pool.connect(_on_fragment_returned)
 	_checked_out_fragments.append(fragment)
+	_fragment_cap_ids[fragment.get_instance_id()] = true
 	if not fragment.pool_activate(_flight_space, spawn_position, direction, _combat_bounds):
 		_checked_out_fragments.erase(fragment)
+		_fragment_cap_ids.erase(fragment.get_instance_id())
+		_coordinator.release_hazard(&"seeker_fragment")
 		ObjectPool.release(fragment, _idle_parent)
 		_rejected += 1
 		return null
@@ -320,6 +328,10 @@ func _resolve_mine_detonation(
 
 func _on_fragment_returned(fragment: Fragment) -> void:
 	_checked_out_fragments.erase(fragment)
+	if _fragment_cap_ids.has(fragment.get_instance_id()):
+		_fragment_cap_ids.erase(fragment.get_instance_id())
+		if _coordinator != null and is_instance_valid(_coordinator):
+			_coordinator.release_hazard(&"seeker_fragment")
 
 
 func _on_mine_returned(mine: Mine) -> void:
