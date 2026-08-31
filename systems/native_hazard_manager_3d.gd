@@ -165,6 +165,10 @@ func spawn_seeker_fragment(spawn_position: Vector3, direction: Vector3) -> Fragm
 	return fragment
 
 
+func queue_seeker_fragment(spawn_position: Vector3, direction: Vector3) -> void:
+	_spawn_queued_fragment.call_deferred(spawn_position, direction, _payload_generation)
+
+
 func spawn_mine(
 	spawn_position: Vector3,
 	cluster: bool = false,
@@ -250,6 +254,16 @@ func clear_hazards() -> void:
 
 func cancel_pending_payloads() -> void:
 	_payload_generation += 1
+
+
+func _spawn_queued_fragment(
+	spawn_position: Vector3,
+	direction: Vector3,
+	payload_generation: int
+) -> void:
+	if not GameManager.is_game_active or payload_generation != _payload_generation:
+		return
+	spawn_seeker_fragment(spawn_position, direction)
 
 
 func get_metrics() -> Dictionary:
