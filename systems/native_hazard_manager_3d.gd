@@ -37,6 +37,7 @@ var _pool_growth := 0
 var _fragment_pool_growth := 0
 var _mine_pool_growth := 0
 var _field_pool_growth := 0
+var _payload_generation := 0
 var _rejected := 0
 var _spawned_fragments := 0
 var _spawned_mines := 0
@@ -227,6 +228,7 @@ func spawn_plasma_field(spawn_position: Vector3) -> PlasmaField3DWrapper:
 
 
 func clear_hazards() -> void:
+	cancel_pending_payloads()
 	for fragment in _checked_out_fragments.duplicate():
 		if is_instance_valid(fragment):
 			fragment.despawn()
@@ -236,6 +238,10 @@ func clear_hazards() -> void:
 	for field in _checked_out_fields.duplicate():
 		if is_instance_valid(field):
 			field.despawn()
+
+
+func cancel_pending_payloads() -> void:
+	_payload_generation += 1
 
 
 func get_metrics() -> Dictionary:
@@ -278,15 +284,18 @@ func _on_mine_detonated(
 	mine_detonated.emit(combat_position, is_cluster, leaves_plasma)
 	# Mine detonation may originate in an Area3D callback. Resolve its pooled
 	# projectile/field payload after the current physics query flush.
-	_resolve_mine_detonation.call_deferred(combat_position, is_cluster, leaves_plasma)
+	_resolve_mine_detonation.call_deferred(
+		combat_position, is_cluster, leaves_plasma, _payload_generation
+	)
 
 
 func _resolve_mine_detonation(
 	combat_position: Vector3,
 	is_cluster: bool,
-	leaves_plasma: bool
+	leaves_plasma: bool,
+	payload_generation: int
 ) -> void:
-	if not GameManager.is_game_active:
+	if not GameManager.is_game_active or payload_generation != _payload_generation:
 		return
 	var projectile_manager := get_tree().get_first_node_in_group(&"native_3d_projectile_manager")
 	if projectile_manager != null and projectile_manager.has_method("fire_enemy_projectile") and _flight_space != null:
