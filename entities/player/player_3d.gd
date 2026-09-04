@@ -536,3 +536,15 @@ func _cache_socket_names() -> void:
 		_socket_names.append(child.name)
 	if _socket_names.is_empty():
 		push_error("Player3D requires at least one Marker3D socket")
+
+
+## HUD-facing effect state without exposing Timer nodes or scene internals.
+func get_power_up_timing(type: int) -> Vector2:
+	match type:
+		PowerUpTypes.Type.RAPID_FIRE:
+			return Vector2(rapid_fire_remaining, 8.0)
+		PowerUpTypes.Type.SPREAD_SHOT:
+			return Vector2(spread_shot_remaining, 8.0)
+		PowerUpTypes.Type.MAGNET:
+			return Vector2(magnet_remaining, 10.0)
+	return Vector2.ZERO

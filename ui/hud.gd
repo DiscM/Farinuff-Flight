@@ -207,12 +207,21 @@ func _process(_delta: float) -> void:
 
 func _sync_power_up_timers() -> void:
 	if not is_instance_valid(_player):
-		_player = get_tree().get_first_node_in_group("player")
+		_player = get_tree().get_first_node_in_group("player_craft")
+		if _player == null:
+			_player = get_tree().get_first_node_in_group("player")
 	if _player == null:
 		_clear_effect_chips()
 		return
 	for type: int in TIMED_POWER_UPS:
 		var cfg: Dictionary = TIMED_POWER_UPS[type]
+		if _player.has_method("get_power_up_timing"):
+			var timing: Vector2 = _player.get_power_up_timing(type)
+			if timing.x > 0.0:
+				_update_effect_chip(cfg, timing.x, timing.y)
+			else:
+				_remove_effect_chip(cfg["key"])
+			continue
 		var timer: Timer = _player.get(cfg["timer"]) as Timer
 		if timer != null and timer.time_left > 0.0:
 			_update_effect_chip(cfg, timer.time_left, timer.wait_time)

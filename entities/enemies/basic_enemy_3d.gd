@@ -38,6 +38,7 @@ const CHARGE_WARNING_LENGTH_PIXELS := 260.0
 @onready var visuals: Node3D = $Visuals
 @onready var sockets: Node3D = $Attachments/Sockets
 
+var archetype_id: StringName = &"basic"
 var is_active := false
 var health: int = 0
 var velocity := Vector3.ZERO
@@ -331,6 +332,7 @@ func _finish(reason: FinishReason) -> void:
 	set_physics_process(false)
 	remove_from_group(&"enemy_craft")
 	remove_from_group(&"native_3d_enemies")
+	remove_from_group(&"native_3d_regular_enemies")
 	hide()
 	if _breathing != null:
 		_breathing.kill()

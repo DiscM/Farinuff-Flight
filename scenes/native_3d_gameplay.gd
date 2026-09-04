@@ -42,6 +42,7 @@ const DRONE_SCENE := preload("res://entities/player/player_drone_3d.tscn")
 ## Review scenes can leave this disabled to preserve their earlier no-reward
 ## contract. Native production gameplay will enable it when its spawner lands.
 @export var rewards_enabled := false
+@export var consume_field_supplies := false
 
 var _previous_hdr_2d: bool = false
 var _pause_overlay: CanvasLayer
@@ -85,6 +86,7 @@ func _ready() -> void:
 	if not await _warm_drone_visual():
 		$TransitionOverlay/Message.text = "Drone preparation failed. See the debugger."
 		return
+	await _prepare_run_actors()
 	player.fire_requested.connect(projectile_manager.fire_player_projectile)
 	player.fire_requested.connect(_on_player_fired)
 	player.deflection_requested.connect(projectile_manager.deflect_enemy_projectiles)
@@ -98,7 +100,7 @@ func _ready() -> void:
 	hazard_manager.mine_detonated.connect(_on_mine_detonated)
 	# The review controller never consumes Hangar supplies. Its reward policy is
 	# explicit per scene, so projectile and Phase 4 reviews remain no-reward.
-	GameManager.start_game(false)
+	GameManager.start_game(consume_field_supplies)
 	player.configure_flight_space(flight_space)
 	transition_overlay.hide()
 	if hud.has_method("update_all"):
@@ -223,7 +225,7 @@ func _warm_drone_visual() -> bool:
 func _on_player_nuke_requested() -> void:
 	for node in get_tree().get_nodes_in_group(&"native_3d_enemies"):
 		var enemy := node as BasicEnemy
-		if enemy != null:
+		if enemy != null and not enemy.is_in_group(&"native_3d_bosses"):
 			enemy.take_damage(9999)
 	projectile_manager.clear_enemy_projectiles()
 	hazard_manager.clear_hazards()
@@ -368,3 +370,7 @@ func _exit_tree() -> void:
 	if get_tree() != null:
 		get_tree().paused = false
 	GameManager.is_game_active = false
+
+
+func _prepare_run_actors() -> void:
+	await get_tree().process_frame

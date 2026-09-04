@@ -49,7 +49,7 @@ func show_score(final_score: int) -> void:
 ## Unpauses the game and reloads the game scene for a fresh run.
 func _on_retry_pressed() -> void:
 	get_tree().paused = false
-	get_tree().change_scene_to_file("res://scenes/game.tscn")
+	get_tree().change_scene_to_file("res://scenes/native_3d_run.tscn")
 
 ## Unpauses the game and returns to the main menu.
 func _on_menu_pressed() -> void:
