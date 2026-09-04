@@ -94,7 +94,7 @@ func _advance_movement(delta: float) -> void:
 	global_position = _hold_position + _flight_space.screen_motion_to_combat(screen_offset)
 	global_position.y = 0.0
 	_update_aim_and_fire(delta)
-	if _hold_timer >= HOLD_DURATION_SECONDS:
+	if _hold_timer >= (9.0 if generation >= 4 else HOLD_DURATION_SECONDS):
 		_holding = false
 		_has_withdrawn = true
 		_aim_timer = 0.0

@@ -1,6 +1,8 @@
 # Farinuff Flight
 
-A premium single-purchase 2D arcade shooter built in Godot 4. Farinuff Flight centers on fast survival play, drift-heavy ship handling, boost-reflection combat, transformative run builds, and an authored Wave-20 Expedition that opens into optional Endless mastery.
+A premium single-purchase native 3D arcade shooter built in Godot 4. Farinuff Flight centers on fast survival play, drift-heavy ship handling, boost-reflection combat, transformative run builds, and an authored Wave-20 Expedition that opens into optional Endless mastery.
+
+The native run currently uses a simplified Siege Commander boss based on the Tank hull. Distinct boss variants, remaining upgrades, and VFX polish are still in development. Changes and validation are recorded in [the transition log](docs/3d-migration-checklist.md).
 
 ![Gameplay capture](assets/readme/gameplay-capture.png)
 
@@ -16,7 +18,7 @@ Combat uses held auto-fire with free aim support. The ship can aim with mouse mo
 
 Power-ups appear during active waves and can be collected by contact or shot pickup. Current temporary effects include bullet scale increases, rapid fire, shield, spread shot, magnet, and nuke. These stack with run upgrades to create different weapon profiles across a session.
 
-Progression adds permanent run choices at milestone moments. Every fifth cleared wave grants stat allocation points for fire rate, health, and movement speed. Boss waves occur every 5 waves, while every 10th wave triggers an elite upgrade choice with options such as twin cannons, auto-aim, drone escort, afterburner, shield burst, magnet field, overclock, and rear gunner.
+Progression adds permanent run choices at milestone moments. Every fifth cleared wave grants stat allocation points for fire rate, health, and movement speed. Native boss encounters occur every 5 waves. During the transition, the first elite reward grants Drone Escort; later elite rewards grant extra stat points. The broader transformation catalog remains to be integrated.
 
 The first launch opens Flight School, a replayable five-page briefing covering movement, boost reflection, the orb/life economy, build decisions, and the Wave-20 target. Failure uses a try-again flow before final game over. Remaining try-again stocks can continue a run, clear immediate pressure, and return the ship with temporary invincibility. Final game over records score, high score, and highest wave reached.
 
@@ -35,7 +37,7 @@ Before each run, the launch bay offers a loadout choice: pick an unlocked ship v
 
 ## Tech Stack
 
-- Engine: Godot 4.6 project format with Forward+ rendering; the verified 2D gameplay baseline remains active while native 3D migration is in progress
+- Engine: Godot 4.6 project format with Forward+ rendering; the menu and retry flow launch the native 3D runtime; 2D HUD and backdrop remain
 - Language: GDScript 2.0 with typed scripts across gameplay systems
 - Architecture: scene-based composition with reusable player, enemy, bullet, power-up, HUD, menu, and popup scenes
 - Global state: autoload singletons for `GameManager`, `MetaProgression`, `SignalBus`, and `SaveManager`

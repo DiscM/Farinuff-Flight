@@ -45,6 +45,8 @@ var _hangar_menu: Node
 var _launch_bay: Node
 var _flight_school: Node
 var _pending_launch_after_school := false
+const NATIVE_RUN_PATH := "res://scenes/native_3d_run.tscn"
+var _native_run_scene: PackedScene
 var _launching := false
 var _pulse_time := 0.0
 var _intro_played := false
@@ -341,6 +343,7 @@ func _on_launch_bay_closed() -> void:
 
 
 func _begin_launch() -> void:
+	ResourceLoader.load_threaded_request(NATIVE_RUN_PATH, "PackedScene")
 	_launching = true
 	play_button.disabled = true
 	hangar_button.disabled = true
@@ -357,7 +360,21 @@ func _begin_launch() -> void:
 
 
 func _on_ship_launch_finished() -> void:
-	get_tree().change_scene_to_file("res://scenes/game.tscn")
+	var progress: Array = []
+	while ResourceLoader.load_threaded_get_status(NATIVE_RUN_PATH, progress) == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+		play_button.text = "PREPARING FLIGHT… %d%%" % int(float(progress[0]) * 100.0) if not progress.is_empty() else "PREPARING FLIGHT…"
+		await get_tree().process_frame
+	if ResourceLoader.load_threaded_get_status(NATIVE_RUN_PATH) == ResourceLoader.THREAD_LOAD_LOADED:
+		_native_run_scene = ResourceLoader.load_threaded_get(NATIVE_RUN_PATH) as PackedScene
+		if _native_run_scene != null and get_tree().change_scene_to_packed(_native_run_scene) == OK:
+			return
+	_launching = false
+	play_button.text = "RETRY LAUNCH"
+	play_button.disabled = false
+	hangar_button.disabled = false
+	settings_button.disabled = false
+	help_button.disabled = false
+	push_error("Could not prepare the native 3D run")
 
 
 func _any_overlay_open() -> bool:

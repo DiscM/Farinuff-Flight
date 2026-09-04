@@ -9,7 +9,7 @@ class_name FastEnemy3D
 var _start_position := Vector3.ZERO
 var _screen_travel_direction := Vector2.ZERO
 var _screen_perpendicular := Vector2.ZERO
-var _time_alive := 0.0
+var _weave_time := 0.0
 
 
 func _is_basic_lineage() -> bool:
@@ -22,12 +22,12 @@ func _configure_movement() -> void:
 	_screen_perpendicular = Vector2(-_screen_travel_direction.y, _screen_travel_direction.x)
 	velocity = _flight_space.screen_motion_to_combat(_screen_travel_direction * _speed_pixels)
 	velocity.y = 0.0
-	_time_alive = 0.0
+	_weave_time = 0.0
 
 
 func _advance_movement(delta: float) -> void:
-	_time_alive += delta
-	var screen_offset := _screen_travel_direction * (_speed_pixels * _time_alive)
-	screen_offset += _screen_perpendicular * sin(_time_alive * weave_frequency) * weave_amplitude_pixels
+	_weave_time += delta
+	var screen_offset := _screen_travel_direction * (_speed_pixels * _weave_time)
+	screen_offset += _screen_perpendicular * sin(_weave_time * weave_frequency) * weave_amplitude_pixels
 	global_position = _start_position + _flight_space.screen_motion_to_combat(screen_offset)
 	global_position.y = 0.0

@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/native_3d_gameplay.tscn" id="1"]
+[ext_resource type="Script" path="res://scenes/native_3d_run.gd" id="2"]
+
+[node name="Native3DRun" instance=ExtResource("1")]
+script = ExtResource("2")
+rewards_enabled = true
+consume_field_supplies = true

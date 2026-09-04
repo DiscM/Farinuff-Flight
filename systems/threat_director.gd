@@ -19,6 +19,8 @@ const LATE_PRESSURE_START_WAVE := 15
 const LATE_PRESSURE_WAVES_PER_STEP := 5
 const LATE_PRESSURE_MAX_BONUS := 3
 
+@export var enemy_group: StringName = &"regular_enemies"
+
 var generation: int = 1
 var spawn_history: Array[StringName] = []
 
@@ -39,7 +41,7 @@ func get_late_pressure_bonus(wave_number: int = GameManager.current_wave) -> int
 
 
 func can_spawn(archetype: StringName) -> bool:
-	var active := get_tree().get_nodes_in_group("regular_enemies")
+	var active := get_tree().get_nodes_in_group(enemy_group)
 	var bonus := get_late_pressure_bonus()
 	if active.size() >= ACTIVE_CAPS[generation - 1] + bonus:
 		return false
@@ -72,7 +74,7 @@ func needs_light_enemy() -> bool:
 
 
 func get_debug_state() -> String:
-	var active := get_tree().get_nodes_in_group("regular_enemies")
+	var active := get_tree().get_nodes_in_group(enemy_group)
 	var used := 0.0
 	for enemy in active:
 		if is_instance_valid(enemy):

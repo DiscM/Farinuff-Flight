@@ -4,7 +4,7 @@ extends Control
 
 signal resumed
 
-const DEV_MENU_SCENE := preload("res://ui/dev_menu.tscn")
+const DEV_MENU_PATH := "res://ui/dev_menu.tscn"
 const SETTINGS_MENU_SCENE := preload("res://ui/settings_menu.tscn")
 const DOCK_TEXTURE := preload("res://assets/Game UI collection FREE version/PNG/Borders/Yellow/New folder/Group 4 copy.png")
 const BUTTON_BLUE_TEXTURE := preload("res://assets/Game UI collection FREE version/PNG/Button with border/Blue/1x/Asset 8.png")
@@ -67,7 +67,8 @@ func _build_ui() -> void:
 	button_column.add_child(_make_btn("RetryWrap", "RESTART RUN", NeonUI.CYAN, _on_retry))
 	button_column.add_child(_make_btn("SettingsWrap", "OPTIONS", NeonUI.CYAN, _on_settings))
 	button_column.add_child(_make_btn("MenuWrap", "MAIN MENU", NeonUI.CYAN, _on_menu))
-	button_column.add_child(_make_btn("DevWrap", "DEV TOOLS", NeonUI.GREEN, _on_dev_tools))
+	if get_tree().get_first_node_in_group(&"native_3d_gameplay") == null:
+		button_column.add_child(_make_btn("DevWrap", "DEV TOOLS", NeonUI.GREEN, _on_dev_tools))
 
 	_dev_slot = VBoxContainer.new()
 	_dev_slot.name = "DevSlot"
@@ -121,7 +122,7 @@ func _on_dev_tools() -> void:
 	else:
 		_dev_slot.visible = true
 		if _dev_panel == null or not is_instance_valid(_dev_panel):
-			_dev_panel = DEV_MENU_SCENE.instantiate() as PanelContainer
+			_dev_panel = (load(DEV_MENU_PATH) as PackedScene).instantiate() as PanelContainer
 			_dev_panel.force_close.connect(_on_resume)
 			_dev_slot.add_child(_dev_panel)
 
