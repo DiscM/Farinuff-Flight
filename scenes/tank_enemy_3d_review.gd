@@ -1,6 +1,6 @@
 extends Node
 class_name TankEnemy3DReview
-## Manual Generation I Tank review around the actual native controller.
+## Manual Generation I-IV Tank review around the actual native controller.
 ## The deterministic entries and counters are review controls, not a spawner.
 
 const NativeGame := preload("res://scenes/native_3d_gameplay.gd")
@@ -19,6 +19,7 @@ const MAX_ENEMIES := 8
 @onready var guides: BasicEnemy3DReviewGuides = $ReviewHUD/Guides
 @onready var _first_enemy: TankEnemy = $Gameplay/World3D/Actors3D/FirstEnemy3D
 
+var selected_generation := 4
 var _review_ready := false
 var _enemies: Array[BasicEnemy] = []
 var _next_edge := 0
@@ -53,7 +54,7 @@ func _begin_review() -> void:
 	gameplay.player.invulnerability_changed.connect(_on_invulnerability_changed)
 	gameplay.projectile_manager.player_projectile_hit.connect(_on_player_projectile_hit)
 	SignalBus.lives_changed.connect(_on_lives_changed)
-	_spawn_next()
+	_update_status()
 	_set_auto_spawns(auto_spawns.button_pressed)
 
 
@@ -63,6 +64,15 @@ func _unhandled_input(event: InputEvent) -> void:
 	match event.keycode:
 		KEY_1, KEY_2, KEY_3, KEY_4:
 			spawn_from_edge(event.keycode - KEY_1)
+		KEY_BRACKETLEFT:
+			selected_generation = maxi(1, selected_generation - 1)
+			_update_status()
+		KEY_BRACKETRIGHT:
+			selected_generation = mini(4, selected_generation + 1)
+			_update_status()
+		KEY_O:
+			for enemy in _enemies:
+				(enemy as TankEnemy).dev_trigger_ability()
 		KEY_V:
 			auto_spawns.button_pressed = not auto_spawns.button_pressed
 		KEY_H:
@@ -108,7 +118,7 @@ func spawn_from_edge(edge: int) -> void:
 	enemy.finished.connect(_on_enemy_finished.bind(enemy))
 	enemy.burst_fired.connect(_on_burst_fired.bind(enemy))
 	_enemies.append(enemy)
-	if not enemy.activate(gameplay.flight_space, spawn_position, direction):
+	if not enemy.activate_generation(gameplay.flight_space, spawn_position, direction, selected_generation):
 		_enemies.erase(enemy)
 		enemy.queue_free()
 	_update_status()
@@ -127,12 +137,19 @@ func _set_auto_spawns(enabled: bool) -> void:
 
 
 func restore_lives() -> void:
-	for node in get_tree().get_nodes_in_group(&"enemy_projectiles"):
-		var projectile := node as Projectile
-		if projectile != null:
-			projectile.despawn()
-	GameManager.start_game(false)
-	gameplay.player.reset_damage_state()
+	for enemy in _enemies:
+		if is_instance_valid(enemy):
+			enemy.queue_free()
+	_enemies.clear()
+	gameplay.reset_native_progression()
+	_spawn_count = 0
+	_destroyed = 0
+	_contacts = 0
+	_escaped = 0
+	_damage_hits = 0
+	_enemy_hit_events = 0
+	_bursts_fired = 0
+	_shots_requested = 0
 	_update_status()
 
 
@@ -178,6 +195,7 @@ func _on_lives_changed(_new_lives: int) -> void:
 
 
 func _update_status() -> void:
+	$ReviewHUD/Panel/Title.text = "TANK GEN %d • III–IV DOUBLE RINGS • IV OVERLOAD • NO REWARDS" % selected_generation
 	var immunity := "INVULNERABLE" if gameplay.player.is_invincible else "VULNERABLE"
 	status.text = "ACT %d/%d • KILL %d • HITS %d • BURST %d • SHOTS %d • CONTACT %d • ESC %d • DMG %d • LIVES %d/%d • RADIAL 8 • %s" % [
 		_enemies.size(), MAX_ENEMIES, _destroyed, _enemy_hit_events,

@@ -8,6 +8,7 @@ signal deflection_requested(deflector_position: Vector3, deflector_velocity: Vec
 signal boost_started(combat_position: Vector3, direction: Vector3)
 signal damage_taken(combat_position: Vector3, source: DamageSource, remaining_lives: int)
 signal invulnerability_changed(active: bool)
+signal drone_escort_changed(enabled: bool)
 signal nuke_requested
 
 enum DamageSource { ENEMY_CONTACT, ENEMY_PROJECTILE, HOSTILE_ORDNANCE }
@@ -63,6 +64,7 @@ var has_magnet := false
 var rapid_fire_remaining := 0.0
 var spread_shot_remaining := 0.0
 var magnet_remaining := 0.0
+var drone_escort_enabled := false
 
 
 func _init() -> void:
@@ -165,6 +167,20 @@ func get_power_up_status() -> Dictionary:
 		"spread_remaining": spread_shot_remaining,
 		"magnet_remaining": magnet_remaining,
 	}
+
+
+## Native counterpart to the reference Player's elite upgrade hook. The
+## gameplay controller owns the top-level Drone Escort instance; Player3D
+## owns only the run-facing upgrade state and change notification.
+func set_drone_escort_enabled(enabled: bool) -> void:
+	if drone_escort_enabled == enabled:
+		return
+	drone_escort_enabled = enabled
+	drone_escort_changed.emit(enabled)
+
+
+func is_drone_escort_enabled() -> bool:
+	return drone_escort_enabled
 
 
 ## Counts successful reflections only during an active boost. Reflections in

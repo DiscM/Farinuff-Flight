@@ -1,0 +1,104 @@
+[gd_scene load_steps=9 format=3]
+
+[ext_resource type="Script" path="res://entities/player/player_drone_3d.gd" id="1_drone"]
+[ext_resource type="PackedScene" path="res://assets/models/redesign/butterfly_elites/bf_elite_drone_escort.glb" id="2_model"]
+[ext_resource type="Shader" path="res://effects/shaders/models/pixel_toon_3d.gdshader" id="3_shader"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_hitbox"]
+radius = 0.65
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_drone"]
+shader = ExtResource("3_shader")
+shader_parameter/base_color = Color(0.16, 0.28, 0.4, 1)
+shader_parameter/metallic = 0.48
+shader_parameter/roughness = 0.28
+shader_parameter/energy_color = Color(0.18, 0.92, 1, 1)
+shader_parameter/accent_color = Color(0.78, 0.98, 1, 1)
+shader_parameter/evolution_level = 0.46
+shader_parameter/circuit_amount = 0.28
+shader_parameter/emission_strength = 1.22
+shader_parameter/pattern_scale = 4.8
+shader_parameter/animation_speed = 0.35
+shader_parameter/emissive_surface = 0.22
+shader_parameter/glow_color = Color(0.12, 0.88, 1, 1)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_drone_energy"]
+shader = ExtResource("3_shader")
+shader_parameter/base_color = Color(0.12, 0.62, 0.78, 1)
+shader_parameter/energy_color = Color(0.28, 1, 1, 1)
+shader_parameter/accent_color = Color(0.86, 1, 1, 1)
+shader_parameter/evolution_level = 0.46
+shader_parameter/circuit_amount = 0.34
+shader_parameter/emission_strength = 1.55
+shader_parameter/pattern_scale = 5.2
+shader_parameter/animation_speed = 0.45
+shader_parameter/emissive_surface = 0.8
+shader_parameter/glow_color = Color(0.15, 0.95, 1, 1)
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_drone_core"]
+shader = ExtResource("3_shader")
+shader_parameter/base_color = Color(0.42, 0.92, 1, 1)
+shader_parameter/energy_color = Color(0.3, 1, 1, 1)
+shader_parameter/accent_color = Color(1, 1, 1, 1)
+shader_parameter/evolution_level = 0.46
+shader_parameter/circuit_amount = 0.12
+shader_parameter/emission_strength = 2.1
+shader_parameter/pattern_scale = 5.2
+shader_parameter/animation_speed = 0.5
+shader_parameter/emissive_surface = 1.0
+shader_parameter/glow_color = Color(0.28, 1, 1, 1)
+
+[node name="PlayerDrone3D" type="Area3D"]
+editor_description = "Scene-managed native Drone Escort. Inert until configure(); root remains on Y=0 and the wrapper owns the gameplay sphere and sockets."
+visible = false
+collision_layer = 0
+collision_mask = 0
+monitoring = false
+monitorable = false
+input_ray_pickable = false
+script = ExtResource("1_drone")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+shape = SubResource("SphereShape3D_hitbox")
+disabled = true
+
+[node name="Visuals" type="Node3D" parent="."]
+position = Vector3(0, 0.08, 0)
+
+[node name="DroneHullGLB" parent="Visuals" instance=ExtResource("2_model")]
+
+[node name="ELITE __ BUTTERFLY DRONES" parent="Visuals/DroneHullGLB" index="0"]
+surface_material_override/0 = SubResource("ShaderMaterial_drone")
+surface_material_override/1 = SubResource("ShaderMaterial_drone")
+surface_material_override/2 = SubResource("ShaderMaterial_drone")
+surface_material_override/3 = SubResource("ShaderMaterial_drone_energy")
+surface_material_override/4 = SubResource("ShaderMaterial_drone")
+surface_material_override/5 = SubResource("ShaderMaterial_drone")
+surface_material_override/6 = SubResource("ShaderMaterial_drone_core")
+
+[node name="Attachments" type="Node3D" parent="."]
+
+[node name="Sockets" type="Node3D" parent="Attachments"]
+
+[node name="MuzzleCenter" type="Marker3D" parent="Attachments/Sockets"]
+position = Vector3(0, 0.0357, -0.6426)
+
+[node name="MuzzleLeft" type="Marker3D" parent="Attachments/Sockets"]
+position = Vector3(-0.1428, 0.019635, -0.97104)
+
+[node name="MuzzleRight" type="Marker3D" parent="Attachments/Sockets"]
+position = Vector3(0.1428, 0.019635, -0.97104)
+
+[node name="EngineLeft" type="Marker3D" parent="Attachments/Sockets"]
+position = Vector3(-0.44268, 0, 0.78897)
+
+[node name="EngineRight" type="Marker3D" parent="Attachments/Sockets"]
+position = Vector3(0.44268, 0, 0.78897)
+
+[node name="UpgradeLeft" type="Marker3D" parent="Attachments/Sockets"]
+position = Vector3(-0.22134, 0.0357, 0.0714)
+
+[node name="UpgradeRight" type="Marker3D" parent="Attachments/Sockets"]
+position = Vector3(0.22134, 0.0357, 0.0714)
+
+[node name="Modules" type="Node3D" parent="Attachments"]
