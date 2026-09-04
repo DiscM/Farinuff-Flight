@@ -1,0 +1,126 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scenes/tank_armor_3d_review.gd" id="1_review"]
+[ext_resource type="PackedScene" path="res://scenes/native_3d_gameplay.tscn" id="2_gameplay"]
+[ext_resource type="PackedScene" path="res://entities/enemies/tank_enemy_3d.tscn" id="3_enemy"]
+[ext_resource type="Script" path="res://scenes/tank_armor_3d_review_guides.gd" id="4_guides"]
+
+[node name="TankArmor3DReview" type="Node"]
+script = ExtResource("1_review")
+
+[node name="Gameplay" parent="." instance=ExtResource("2_gameplay")]
+
+[node name="FirstTank3D" parent="Gameplay/World3D/Actors3D" instance=ExtResource("3_enemy")]
+visible = false
+
+[node name="ReviewHUD" type="CanvasLayer" parent="."]
+layer = 11
+
+[node name="Guides" type="Node2D" parent="ReviewHUD"]
+script = ExtResource("4_guides")
+
+[node name="Panel" type="Control" parent="ReviewHUD"]
+anchors_preset = 10
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -590.0
+offset_top = 24.0
+offset_right = 590.0
+offset_bottom = 180.0
+grow_horizontal = 2
+mouse_filter = 2
+
+[node name="Title" type="Label" parent="ReviewHUD/Panel"]
+offset_right = 1180.0
+offset_bottom = 24.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.75, 0.42, 1, 1)
+theme_override_font_sizes/font_size = 16
+text = "TANK ARMOR PLATES • NATIVE 3D GENERATIONS II–IV • ONE-HIT ORBITING MODULES"
+horizontal_alignment = 1
+
+[node name="Legend" type="Label" parent="ReviewHUD/Panel"]
+offset_top = 28.0
+offset_right = 1180.0
+offset_bottom = 48.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.85, 0.9, 1, 1)
+theme_override_font_sizes/font_size = 11
+text = "1–4 EDGE ENTRY • O GENERATION • P PLATE TEST • HOLD FIRE TO HIT PLATES/HULL • H HITBOXES • S SOCKETS"
+horizontal_alignment = 1
+
+[node name="Controls" type="HBoxContainer" parent="ReviewHUD/Panel"]
+offset_left = 10.0
+offset_top = 54.0
+offset_right = 1170.0
+offset_bottom = 90.0
+mouse_filter = 2
+theme_override_constants/separation = 6
+alignment = 1
+
+[node name="Generation" type="OptionButton" parent="ReviewHUD/Panel/Controls"]
+layout_mode = 2
+focus_mode = 0
+item_count = 3
+selected = 0
+popup/item_0/text = "GEN II • 9 HP"
+popup/item_0/id = 0
+popup/item_1/text = "GEN III • 11 HP"
+popup/item_1/id = 1
+popup/item_2/text = "GEN IV • 13 HP"
+popup/item_2/id = 2
+
+[node name="Top" type="Button" parent="ReviewHUD/Panel/Controls"]
+layout_mode = 2
+focus_mode = 0
+text = "1 TOP"
+
+[node name="Right" type="Button" parent="ReviewHUD/Panel/Controls"]
+layout_mode = 2
+focus_mode = 0
+text = "2 RIGHT"
+
+[node name="Bottom" type="Button" parent="ReviewHUD/Panel/Controls"]
+layout_mode = 2
+focus_mode = 0
+text = "3 BOTTOM"
+
+[node name="Left" type="Button" parent="ReviewHUD/Panel/Controls"]
+layout_mode = 2
+focus_mode = 0
+text = "4 LEFT"
+
+[node name="PlateTest" type="Button" parent="ReviewHUD/Panel/Controls"]
+layout_mode = 2
+focus_mode = 0
+text = "P PLATE TEST"
+
+[node name="Clear" type="Button" parent="ReviewHUD/Panel/Controls"]
+layout_mode = 2
+focus_mode = 0
+text = "X CLEAR"
+
+[node name="Restore" type="Button" parent="ReviewHUD/Panel/Controls"]
+layout_mode = 2
+focus_mode = 0
+text = "R RESTORE"
+
+[node name="Status" type="Label" parent="ReviewHUD/Panel"]
+offset_top = 100.0
+offset_right = 1180.0
+offset_bottom = 120.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.75, 0.9, 1, 1)
+theme_override_font_sizes/font_size = 12
+horizontal_alignment = 1
+
+[node name="Detail" type="Label" parent="ReviewHUD/Panel"]
+offset_top = 124.0
+offset_right = 1180.0
+offset_bottom = 144.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.6, 1, 0.72, 1)
+theme_override_font_sizes/font_size = 11
+horizontal_alignment = 1
+
+[editable path="Gameplay"]

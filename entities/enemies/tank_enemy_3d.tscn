@@ -1,9 +1,10 @@
-[gd_scene load_steps=12 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://entities/enemies/tank_enemy_3d.gd" id="1_enemy"]
 [ext_resource type="PackedScene" path="res://assets/models/mockups/tank_enemy_mockup.glb" id="2_model"]
 [ext_resource type="Resource" path="res://entities/enemies/tank_enemy_generation_1.tres" id="3_stats"]
 [ext_resource type="Shader" path="res://effects/shaders/models/corrupted_void_enemy_3d.gdshader" id="4_shader"]
+[ext_resource type="PackedScene" path="res://entities/enemies/tank_plate_3d.tscn" id="5_plate"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_hitbox"]
 size = Vector3(4.10048, 0.5, 4.363636)
@@ -92,7 +93,7 @@ shader_parameter/glow_color = Color(1, 0.24, 0.9, 1)
 shader_parameter/animation_speed = 0.0
 
 [node name="TankEnemy3D" type="Area3D"]
-editor_description = "Scene-managed Tank Enemy Gen I. Inert until activate(); Y=0 combat root. The box preserves the 48x48 baseline-pixel reference envelope under the shared camera."
+editor_description = "Scene-managed Tank Enemy Generations I-IV. Inert until activate(); Y=0 combat root. The box preserves the 48x48 baseline-pixel reference envelope under the shared camera; Generations II-IV add three native orbiting armor plates."
 collision_layer = 0
 collision_mask = 0
 monitoring = false
@@ -144,5 +145,13 @@ position = Vector3(0, 0.52, 0)
 position = Vector3(0, 0.35, 0)
 
 [node name="Modules" type="Node3D" parent="Attachments"]
+
+[node name="ArmorPlates" type="Node3D" parent="Attachments"]
+
+[node name="ArmorPlateLeft" parent="Attachments/ArmorPlates" instance=ExtResource("5_plate")]
+
+[node name="ArmorPlateCenter" parent="Attachments/ArmorPlates" instance=ExtResource("5_plate")]
+
+[node name="ArmorPlateRight" parent="Attachments/ArmorPlates" instance=ExtResource("5_plate")]
 
 [editable path="Visuals/TankHullGLB"]
