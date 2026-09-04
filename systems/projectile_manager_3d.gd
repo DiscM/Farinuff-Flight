@@ -119,6 +119,12 @@ func fire_player_projectile(combat_position: Vector3, direction: Vector3) -> voi
 	_fire(Projectile.Kind.PLAYER, combat_position, direction, WeaponTuning.PROJECTILE_SPEED, size_multiplier)
 
 
+## Drone Escort shots use the reference drone's normal projectile size even
+## when the Player Craft has a temporary projectile-scale power-up active.
+func fire_drone_projectile(combat_position: Vector3, direction: Vector3) -> void:
+	_fire(Projectile.Kind.PLAYER, combat_position, direction, WeaponTuning.PROJECTILE_SPEED, 1.0)
+
+
 func fire_enemy_projectile(combat_position: Vector3, direction: Vector3, speed_pixels: float = EnemyTuning.DEFAULT_SPEED) -> void:
 	_fire(Projectile.Kind.ENEMY, combat_position, direction, speed_pixels)
 

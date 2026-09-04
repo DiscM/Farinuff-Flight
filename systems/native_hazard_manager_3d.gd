@@ -6,6 +6,9 @@ class_name NativeHazardManager3D
 
 signal mine_detonated(combat_position: Vector3, is_cluster: bool, leaves_plasma: bool)
 
+const Rail := preload("res://entities/enemies/enemy_rail_beam_3d.gd")
+const RAIL_SCENE := preload("res://entities/enemies/enemy_rail_beam_3d.tscn")
+
 const Fragment := preload("res://entities/enemies/seeker_fragment_3d.gd")
 const FRAGMENT_SCENE := preload("res://entities/enemies/seeker_fragment_3d.tscn")
 const Mine := preload("res://entities/enemies/enemy_mine_3d.gd")
@@ -19,6 +22,12 @@ const ProjectileManager := preload("res://systems/projectile_manager_3d.gd")
 @export_range(1, 32, 1) var mine_pool_size: int = 6
 @export_range(1, 8, 1) var plasma_field_pool_size: int = 2
 @export_range(1, 8, 1) var warm_batch_size: int = 4
+
+var _checked_out_rails: Array[Rail] = []
+var _rail_pool_size := 0
+var _warmed_rail_id := 0
+var _rail_pool_growth := 0
+var _spawned_rails := 0
 
 var is_ready := false
 var _warming := false
@@ -119,8 +128,21 @@ func warm_hazard_pool() -> bool:
 		_warmed_field_ids[field.get_instance_id()] = true
 		if (index + 1) % warm_batch_size == 0:
 			await get_tree().process_frame
+	# One major attack at a time; retain one rail, including deferred returns.
+	var rail := ObjectPool.acquire(RAIL_SCENE, _active_parent) as Rail
+	if rail == null:
+		await _abort_warmup()
+		return false
+	rail.configure_pool(_idle_parent, _coordinator)
+	if not rail.returned_to_pool.is_connected(_on_rail_returned):
+		rail.returned_to_pool.connect(_on_rail_returned)
+	_checked_out_rails.append(rail)
+	_rail_pool_size = 1
+	_warmed_rail_id = rail.get_instance_id()
+	rail.prepare_visual_warmup()
 	if DisplayServer.get_name() != "headless":
 		RenderingServer.force_draw(false)
+	rail.despawn()
 	var despawned := 0
 	for fragment in _checked_out_fragments.duplicate():
 		fragment.despawn()
@@ -249,7 +271,41 @@ func spawn_plasma_field(spawn_position: Vector3) -> PlasmaField3DWrapper:
 	return field
 
 
+func spawn_rail_beam(origin: Vector3, direction: Vector3, source: Node) -> Rail:
+	if not is_ready or not GameManager.is_game_active or not _checked_out_rails.is_empty() or direction.is_zero_approx() or not is_instance_valid(source):
+		_rejected += 1
+		return null
+	if not _coordinator.request_major(source):
+		_rejected += 1
+		return null
+	var rail := ObjectPool.acquire(RAIL_SCENE, _active_parent) as Rail
+	if rail == null:
+		_coordinator.release_major(source)
+		return null
+	if rail.get_instance_id() != _warmed_rail_id:
+		_pool_growth += 1
+		_rail_pool_growth += 1
+		_warmed_rail_id = rail.get_instance_id()
+	rail.configure_pool(_idle_parent, _coordinator)
+	if not rail.returned_to_pool.is_connected(_on_rail_returned):
+		rail.returned_to_pool.connect(_on_rail_returned)
+	_checked_out_rails.append(rail)
+	if not rail.pool_activate(_flight_space, origin, direction, source):
+		rail.despawn()
+		_coordinator.release_major(source)
+		return null
+	_spawned_rails += 1
+	return rail
+
+
+func _on_rail_returned(rail: Rail) -> void:
+	_checked_out_rails.erase(rail)
+
+
 func clear_hazards() -> void:
+	for rail in _checked_out_rails.duplicate():
+		if is_instance_valid(rail):
+			rail.despawn()
 	cancel_pending_payloads()
 	for fragment in _checked_out_fragments.duplicate():
 		if is_instance_valid(fragment):
@@ -277,6 +333,10 @@ func _spawn_queued_fragment(
 
 
 func get_metrics() -> Dictionary:
+	var rail_active := 0
+	for rail in _checked_out_rails:
+		if rail.is_active:
+			rail_active += 1
 	var fragment_active := _active_fragment_count(_checked_out_fragments)
 	var mine_active := _active_mine_count(_checked_out_mines)
 	var field_active := _active_field_count(_checked_out_fields)
@@ -298,8 +358,14 @@ func get_metrics() -> Dictionary:
 		"field_returning": _checked_out_fields.size() - field_active,
 		"field_idle": _warmed_field_ids.size() - _checked_out_fields.size(),
 		"field_pool_growth_after_warmup": _field_pool_growth,
-		"total_active": fragment_active + mine_active + field_active,
-		"spawned": _spawned_fragments + _spawned_mines + _spawned_fields,
+		"rail_pool_size": _rail_pool_size,
+		"rail_pool_growth_after_warmup": _rail_pool_growth,
+		"rail_active": rail_active,
+		"rail_returning": _checked_out_rails.size() - rail_active,
+		"rail_idle": _rail_pool_size - _checked_out_rails.size(),
+		"spawned_rails": _spawned_rails,
+		"total_active": fragment_active + mine_active + field_active + rail_active,
+		"spawned": _spawned_fragments + _spawned_mines + _spawned_fields + _spawned_rails,
 		"spawned_fragments": _spawned_fragments,
 		"spawned_mines": _spawned_mines,
 		"spawned_fields": _spawned_fields,

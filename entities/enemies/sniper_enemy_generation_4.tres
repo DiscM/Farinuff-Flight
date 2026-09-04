@@ -4,8 +4,8 @@
 
 [resource]
 script = ExtResource("1_stats")
-max_health = 2
-move_speed = 145.0
+max_health = 3
+move_speed = 160.0
 base_points = 260
 orb_value = 2
 guaranteed_orb = true

@@ -2,7 +2,7 @@
 
 **Status**: accepted
 
-During the native Top-down 3D migration, new player and enemy actor scenes will be built beside the existing 2D actors so behavior can be migrated and compared incrementally without destabilizing the current runtime. This parallelism is temporal only: the existing 2D actors are a frozen reference and rollback path, not a second gameplay implementation that must remain synchronized with the 3D actors. After the user validates native 3D behavior and parity, the obsolete 2D actor scenes, migration-only adapters, and compatibility paths must be removed; the 2D backdrop and HUD are not part of this removal rule.
+During the native Top-down 3D migration, new player and enemy actor scenes will be built beside the existing 2D actors so behavior can be migrated and compared incrementally without destabilizing the current runtime. This parallelism is temporal only: the existing 2D actors are a frozen reference and rollback path, not a second gameplay implementation that must remain synchronized with the 3D actors. After native 3D behavior and parity are verified and the user authorizes legacy cleanup, the obsolete 2D actor scenes, migration-only adapters, and compatibility paths must be removed; the 2D backdrop and HUD are not part of this removal rule.
 
 ## Considered Options
 
@@ -11,11 +11,11 @@ During the native Top-down 3D migration, new player and enemy actor scenes will 
 
 ## Consequences
 
-The migration temporarily carries two actor representations and requires explicit parity checks and a user-validation gate before cleanup. Shared code should be extracted only where it is genuinely reusable; the final runtime contains one native 3D gameplay implementation, without allowing the temporary parallel architecture to become the product architecture.
+The migration temporarily carries two actor representations and requires explicit parity checks and user authorization before legacy cleanup. Shared code should be extracted only where it is genuinely reusable; the final runtime contains one native 3D gameplay implementation, without allowing the temporary parallel architecture to become the product architecture.
 
 ## Validation Gate
 
-The 3D actors are not considered ready for cleanup when they merely render or launch successfully. They must preserve the current run behavior—including controls, movement tuning, enemy patterns, weapon timing, damage, upgrades, deflection, spawning, and combat-plane limits—and the user must validate that parity before the legacy actor implementations are removed.
+The 3D actors are not considered ready for cleanup when they merely render or launch successfully. They must preserve the current run behavior—including controls, movement tuning, enemy patterns, weapon timing, damage, upgrades, deflection, spawning, and combat-plane limits—and that parity must be verified before the user authorizes removal of the legacy actor implementations.
 
 ## Implementation Approach
 
@@ -27,25 +27,25 @@ Parallel implementations may coexist in the repository for reference and rollbac
 
 The native 3D runtime will live in a separate top-level gameplay scene. That scene owns the active `Camera3D`, 3D world, pooled gameplay managers, native 3D actors, and the retained `CanvasLayer` HUD needed for the run. A validation entry point loads either the existing 2D gameplay scene or this native 3D gameplay scene; it does not nest one gameplay scene inside the other or keep both resource graphs active.
 
-Once the first native 3D slice is ready for personal playtesting, the active gameplay entry will switch directly to the native 3D scene. No in-app 2D/3D scene selector will be added; the 2D implementation remains repository-resident as a reference and rollback path and can be recovered through version control when needed. The active scene tree still contains only one gameplay implementation at a time.
+Once the first native 3D slice is functionally validated, the active gameplay entry will switch directly to the native 3D scene. No in-app 2D/3D scene selector will be added; the 2D implementation remains repository-resident as a reference and rollback path and can be recovered through version control when needed. The active scene tree still contains only one gameplay implementation at a time.
 
 Before the active gameplay entry is changed, the verified 2D baseline will receive a named Git checkpoint. This checkpoint records the known-good reference for rollback and comparison without requiring the runtime to carry a second active scene path.
 
-## User Validation
+## Functional Validation
 
-Dedicated automated smoke tests are not part of this migration gate. The user must manually play each 3D migration slice and explicitly accept its behavior before the 3D scene replaces the production 2D path or the corresponding legacy 2D implementation is removed; automated checks, if used for development diagnostics, never authorize cleanup.
+As of the user's 2026-09-04 plan update, visual playtesting and manual asset approval are not migration requirements. Validate each slice through code inspection, targeted runtime diagnostics, and relevant existing tests. A dedicated automated migration smoke suite is not required. Existing review scenes remain optional diagnostic tools; do not create or extend them solely for visual playtesting.
 
 ## Acceptance Checklist
 
-Each slice must be reviewed for movement and controls, rotation and combat-plane boundaries, camera framing, model scale and orientation, weapon sockets, projectile and collision behavior, damage and deflection, hit effects, death and rewards, despawning and pooling, pause and restart flows, game-over behavior, visible rendering issues, runtime errors, and acceptable performance.
+Verify movement and controls, rotation and combat-plane boundaries, actor scale and weapon socket contracts, projectile and collision behavior, damage and deflection, death and rewards, despawning and pooling, pause and restart flows, game-over behavior, runtime errors, and performance. Integrated gameplay parity and worst-case performance remain requirements.
 
-## Approval Pause
+## Implementation Continuation
 
-After each migrated scene or slice is presented for playtesting, implementation must pause until the user explicitly approves it. The workflow must not automatically continue to the next migration slice or remove the corresponding 2D reference after a playtest.
+Continue to the next migration slice after relevant functional checks pass, without pausing for visual playtesting or per-slice user approval. This policy supersedes earlier manual-review gates; it does not declare unperformed checks passed or authorize removal of legacy actors. Destructive legacy cleanup still requires explicit user authorization.
 
 ## Initial Vertical Slice
 
-The first playable native 3D validation scene will contain only the Player Craft, one Basic Enemy role, and their pooled Projectiles. Remaining enemy roles, bosses, and other gameplay actors will remain outside that scene and will be migrated in later isolated slices, so the first playtest measures the core flight, aiming, firing, collision, damage, and pooling loop without activating unported actor systems.
+The first playable native 3D validation scene will contain only the Player Craft, one Basic Enemy role, and their pooled Projectiles. Remaining enemy roles, bosses, and other gameplay actors will remain outside that scene and will be migrated in later isolated slices, so initial functional validation measures the core flight, aiming, firing, collision, damage, and pooling loop without activating unported actor systems.
 
 ## Coordinator System Porting
 

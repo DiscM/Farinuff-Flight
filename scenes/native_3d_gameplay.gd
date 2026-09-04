@@ -6,6 +6,8 @@ class_name Native3DGameplay
 signal gameplay_ready
 signal enemy_rewarded(points: int, combat_position: Vector3, orb_spawned: bool)
 signal xp_orb_spawned(value: int, combat_position: Vector3)
+signal drone_fired(combat_position: Vector3, direction: Vector3)
+signal drone_contact_hit(target: Area3D, combat_position: Vector3)
 
 const PlayerCraft := preload("res://entities/player/player_3d.gd")
 const FlightSpace := preload("res://systems/flight_space_3d.gd")
@@ -19,6 +21,8 @@ const NativeEffectManager := preload("res://systems/native_effect_manager_3d.gd"
 const NativeEffect := preload("res://effects/native_effect_3d.gd")
 const NativeHazardManager := preload("res://systems/native_hazard_manager_3d.gd")
 const PowerUpManager := preload("res://systems/power_up_manager_3d.gd")
+const PlayerDrone := preload("res://entities/player/player_drone_3d.gd")
+const DRONE_SCENE := preload("res://entities/player/player_drone_3d.tscn")
 
 @onready var hud: CanvasLayer = $HUD
 @onready var player: PlayerCraft = $World3D/Actors3D/Player3D
@@ -33,6 +37,7 @@ const PowerUpManager := preload("res://systems/power_up_manager_3d.gd")
 @onready var power_up_manager: PowerUpManager = $GameplayManagers/PowerUpManager3D
 @onready var special_attack_coordinator: SpecialAttackCoordinator = $GameplayManagers/SpecialAttackCoordinator
 @onready var transition_overlay: CanvasLayer = $TransitionOverlay
+@onready var actors_root: Node3D = $World3D/Actors3D
 
 ## Review scenes can leave this disabled to preserve their earlier no-reward
 ## contract. Native production gameplay will enable it when its spawner lands.
@@ -41,6 +46,7 @@ const PowerUpManager := preload("res://systems/power_up_manager_3d.gd")
 var _previous_hdr_2d: bool = false
 var _pause_overlay: CanvasLayer
 var _metrics_timer := 0.0
+var _drone: PlayerDrone
 
 
 func _enter_tree() -> void:
@@ -76,11 +82,15 @@ func _ready() -> void:
 	if not await power_up_manager.warm_power_up_pool():
 		$TransitionOverlay/Message.text = "Power-up preparation failed. See the debugger."
 		return
+	if not await _warm_drone_visual():
+		$TransitionOverlay/Message.text = "Drone preparation failed. See the debugger."
+		return
 	player.fire_requested.connect(projectile_manager.fire_player_projectile)
 	player.fire_requested.connect(_on_player_fired)
 	player.deflection_requested.connect(projectile_manager.deflect_enemy_projectiles)
 	player.boost_started.connect(_on_player_boost_started)
 	player.nuke_requested.connect(_on_player_nuke_requested)
+	player.drone_escort_changed.connect(_on_drone_escort_changed)
 	projectile_manager.player_projectile_hit.connect(_on_player_projectile_hit)
 	projectile_manager.enemy_projectile_hit.connect(_on_enemy_projectile_hit)
 	projectile_manager.enemy_projectile_deflected.connect(_on_enemy_projectile_deflected)
@@ -132,6 +142,82 @@ func _on_player_boost_started(combat_position: Vector3, direction: Vector3) -> v
 	var boost_socket := player.get_socket(&"Boost")
 	var effect_position := boost_socket.global_position if boost_socket != null else combat_position
 	effect_manager.play_effect(NativeEffect.EffectKind.BOOST, effect_position, direction)
+
+
+func set_drone_escort_enabled(enabled: bool) -> void:
+	player.set_drone_escort_enabled(enabled)
+
+
+func get_drone() -> PlayerDrone:
+	return _drone
+
+
+func get_drone_status() -> Dictionary:
+	if is_instance_valid(_drone):
+		return _drone.get_status()
+	return {
+		"active": false,
+		"shots_fired": 0,
+		"contact_hits": 0,
+		"fire_interval": PlayerDrone.FIRE_INTERVAL,
+		"hover_offset_pixels": PlayerDrone.HOVER_OFFSET_PIXELS,
+	}
+
+
+func _on_drone_escort_changed(enabled: bool) -> void:
+	if not enabled:
+		if is_instance_valid(_drone):
+			_drone.deactivate()
+			_drone.queue_free()
+		_drone = null
+		return
+	if is_instance_valid(_drone):
+		return
+	var drone := DRONE_SCENE.instantiate() as PlayerDrone
+	if drone == null:
+		push_error("Native3DGameplay could not instantiate PlayerDrone3D")
+		return
+	actors_root.add_child(drone)
+	drone.fire_requested.connect(projectile_manager.fire_drone_projectile)
+	drone.fire_requested.connect(_on_drone_fired)
+	drone.contact_damage_requested.connect(_on_drone_contact_requested)
+	if not drone.configure(player, flight_space):
+		drone.queue_free()
+		return
+	_drone = drone
+
+
+func _on_drone_fired(combat_position: Vector3, direction: Vector3) -> void:
+	var effect_position := combat_position
+	if is_instance_valid(_drone):
+		var muzzle := _drone.get_socket(&"MuzzleCenter")
+		if muzzle != null:
+			effect_position = muzzle.global_position
+	effect_manager.play_effect(NativeEffect.EffectKind.MUZZLE, effect_position, direction, 0.45)
+	drone_fired.emit(combat_position, direction)
+
+
+func _on_drone_contact_requested(target: Area3D, combat_position: Vector3) -> void:
+	if target == null or not target.has_method(&"take_damage"):
+		return
+	effect_manager.play_effect(NativeEffect.EffectKind.IMPACT, combat_position, Vector3.UP, 0.55)
+	target.take_damage(WeaponTuning.BASE_DAMAGE + GameManager.bonus_damage)
+	drone_contact_hit.emit(target, combat_position)
+
+
+func _warm_drone_visual() -> bool:
+	var idle_parent := $World3D/PoolRoot3D as Node3D
+	var preview := DRONE_SCENE.instantiate() as PlayerDrone
+	if preview == null:
+		return false
+	idle_parent.add_child(preview)
+	preview.prepare_visual_warmup()
+	await get_tree().process_frame
+	if DisplayServer.get_name() != "headless":
+		RenderingServer.force_draw(false)
+	preview.queue_free()
+	await get_tree().process_frame
+	return true
 
 
 func _on_player_nuke_requested() -> void:
@@ -203,6 +289,7 @@ func reset_native_progression() -> void:
 	effect_manager.clear_effects()
 	GameManager.start_game(false)
 	player.reset_damage_state()
+	player.set_drone_escort_enabled(false)
 	player.reset_power_up_state()
 
 
