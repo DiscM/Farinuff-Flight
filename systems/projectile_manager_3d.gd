@@ -4,6 +4,7 @@ class_name ProjectileManager3D
 ## Damage routing belongs to the native gameplay controller; this manager owns
 ## bounded-pool acquisition, Interaction Range, and Enemy Projectile deflection.
 
+signal explosion_requested(combat_position: Vector3, primary_target: Area3D)
 signal player_projectile_hit(target: Area3D, combat_position: Vector3)
 signal enemy_projectile_hit(target: Area3D, combat_position: Vector3)
 signal enemy_projectile_deflected(projectile: Area3D, combat_position: Vector3)
@@ -19,8 +20,8 @@ const EnemyTuning := preload("res://entities/projectiles/enemy_projectile_tuning
 const FlightTuning := preload("res://entities/player/player_flight_tuning.gd")
 const PlayerCraft := preload("res://entities/player/player_3d.gd")
 
-@export_range(1, 128, 1) var player_pool_size: int = 64
-@export_range(1, 128, 1) var enemy_pool_size: int = 64
+@export_range(1, 512, 1) var player_pool_size: int = 512
+@export_range(1, 512, 1) var enemy_pool_size: int = 256
 @export_range(1, 16, 1) var warm_batch_size: int = 8
 @export_range(32.0, 256.0, 1.0) var interaction_range_pixels: float = FlightTuning.BOOST_DEFLECT_RADIUS
 @export_range(0.0, 64.0, 1.0) var interaction_hysteresis_pixels: float = 16.0
@@ -73,9 +74,10 @@ func configure(
 	get_viewport().size_changed.connect(_refresh_bounds)
 
 
-func _physics_process(_delta: float) -> void:
+func _physics_process(delta: float) -> void:
 	if is_ready and GameManager.is_game_active:
 		_interaction_range.update_target()
+		_update_homing(delta)
 
 
 func warm_projectile_pools() -> bool:
@@ -215,6 +217,10 @@ func _fire(
 	var projectile_velocity := _flight_space.screen_motion_to_combat(screen_direction * speed_pixels)
 	pool.checked_out.append(projectile)
 	projectile.pool_activate(combat_position, projectile_velocity, _combat_bounds, size_multiplier)
+	if kind == Projectile.Kind.PLAYER and _player != null:
+		projectile.piercing = _player.has_elite_upgrade("piercing")
+		projectile.explosive = _player.has_elite_upgrade("explosive_rounds")
+		projectile.homing = _player.has_elite_upgrade("auto_aim")
 	pool.shots_fired += 1
 	_record_active_peaks()
 
@@ -250,6 +256,8 @@ func _on_projectile_hit(
 		return
 	if projectile.kind == Projectile.Kind.PLAYER:
 		player_projectile_hit.emit(target, combat_position)
+		if projectile.explosive:
+			explosion_requested.emit(combat_position, target)
 	elif projectile.is_deflected:
 		player_projectile_hit.emit(target, combat_position)
 		AudioManager.play_hit_marker()
@@ -321,3 +329,27 @@ func _pool_metrics(pool: PoolState) -> Dictionary:
 		"pool_growth_after_warmup": pool.pool_growth,
 		"projectile_step_usec": step_usec,
 	}
+
+
+func _update_homing(delta: float) -> void:
+	if _player == null or not _player.has_elite_upgrade("auto_aim"):
+		return
+	var enemies := get_tree().get_nodes_in_group(&"native_3d_enemies")
+	for projectile in _pools[Projectile.Kind.PLAYER].checked_out:
+		if not projectile.is_active or not projectile.homing:
+			continue
+		var nearest: Node3D
+		var distance := 420.0
+		var screen_velocity := _flight_space.combat_motion_to_screen(projectile.velocity)
+		for enemy in enemies:
+			if not enemy.is_active:
+				continue
+			var offset := _flight_space.combat_motion_to_screen(enemy.global_position - projectile.global_position)
+			if offset.length() < distance and screen_velocity.normalized().dot(offset.normalized()) > 0.2:
+				nearest = enemy
+				distance = offset.length()
+		if nearest != null:
+			var desired := _flight_space.combat_motion_to_screen(nearest.global_position - projectile.global_position).normalized()
+			var angle := clampf(screen_velocity.angle_to(desired), -delta * 2.5, delta * 2.5)
+			projectile.velocity = _flight_space.screen_motion_to_combat(screen_velocity.rotated(angle))
+			projectile.rotation.y = atan2(-projectile.velocity.x, -projectile.velocity.z)

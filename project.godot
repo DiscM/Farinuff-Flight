@@ -23,11 +23,6 @@ config/icon="res://icon.svg"
 
 [autoload]
 
-
-
-
-
-
 SignalBus="*res://autoloads/signal_bus.gd"
 SaveManager="*res://autoloads/save_manager.gd"
 MetaProgression="*res://autoloads/meta_progression.gd"

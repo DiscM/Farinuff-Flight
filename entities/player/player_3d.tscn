@@ -1,20 +1,19 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="Script" path="res://entities/player/player_3d.gd" id="1_player"]
 [ext_resource type="PackedScene" path="res://assets/models/redesign/player_butterfly.glb" id="2_model"]
+
+[ext_resource type="PackedScene" path="res://assets/models/redesign/player_butterfly_morpho.glb" id="3_morpho"]
+[ext_resource type="PackedScene" path="res://assets/models/redesign/player_butterfly_monarch.glb" id="4_monarch"]
+
+[ext_resource type="Shader" path="res://effects/shaders/native_shield_3d.gdshader" id="5_shield"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
 radius = 1.366826
 height = 4.0
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_shield"]
-transparency = 1
-shading_mode = 0
-albedo_color = Color(0.12, 0.8, 1, 0.16)
-emission_enabled = true
-emission = Color(0.03, 0.4, 1, 1)
-emission_energy_multiplier = 1.8
-roughness = 0.15
+[sub_resource type="ShaderMaterial" id="StandardMaterial3D_shield"]
+shader = ExtResource("5_shield")
 
 [sub_resource type="SphereMesh" id="SphereMesh_shield"]
 radius = 2.0
@@ -22,6 +21,34 @@ height = 4.0
 radial_segments = 20
 rings = 10
 material = SubResource("StandardMaterial3D_shield")
+
+[sub_resource type="StandardMaterial3D" id="ExhaustMaterial"]
+shading_mode = 0
+transparency = 1
+albedo_color = Color(0.1, 0.7, 1, 0.6)
+emission_enabled = true
+emission = Color(0.02, 0.5, 1, 1)
+emission_energy_multiplier = 2.5
+[sub_resource type="SphereMesh" id="ExhaustMesh"]
+radius = 0.08
+height = 0.16
+radial_segments = 6
+rings = 3
+material = SubResource("ExhaustMaterial")
+[sub_resource type="Curve" id="ExhaustCurve"]
+_data = [Vector2(0, 1), 0.0, 0.0, 0, 0, Vector2(1, 0), 0.0, 0.0, 0, 0]
+point_count = 2
+[sub_resource type="CurveTexture" id="ExhaustScale"]
+curve = SubResource("ExhaustCurve")
+[sub_resource type="ParticleProcessMaterial" id="ExhaustProcess"]
+direction = Vector3(0, 0, 1)
+spread = 8.0
+initial_velocity_min = 2.5
+initial_velocity_max = 4.0
+gravity = Vector3(0, 0, 0)
+scale_min = 0.6
+scale_max = 1.4
+scale_curve = SubResource("ExhaustScale")
 
 [node name="Player3D" type="Area3D" groups=["player_craft"]]
 editor_description = "Native Player Craft gameplay root. Root position is always on Y=0; imported-pivot correction belongs under Visuals."
@@ -38,6 +65,12 @@ position = Vector3(0, 0.08, 0)
 
 [node name="PlayerHullGLB" parent="Visuals" instance=ExtResource("2_model")]
 
+[node name="InterceptorHull" parent="Visuals" instance=ExtResource("3_morpho")]
+visible = false
+
+[node name="BulwarkHull" parent="Visuals" instance=ExtResource("4_monarch")]
+visible = false
+
 [node name="ShieldVisual" type="MeshInstance3D" parent="Visuals"]
 visible = false
 cast_shadow = 0
@@ -50,6 +83,9 @@ mesh = SubResource("SphereMesh_shield")
 
 [node name="MuzzleCenter" type="Marker3D" parent="Attachments/Sockets"]
 position = Vector3(0, 0.165, -1.53)
+
+[node name="MuzzleRear" type="Marker3D" parent="Attachments/Sockets"]
+position = Vector3(0, 0.15, 2.4)
 
 [node name="MuzzleLeft" type="Marker3D" parent="Attachments/Sockets"]
 position = Vector3(-0.34, 0.12675, -2.312)
@@ -91,3 +127,21 @@ one_shot = true
 
 [node name="InvincibilityTimer" type="Timer" parent="."]
 one_shot = true
+
+[node name="Exhaust" type="GPUParticles3D" parent="Attachments/Sockets/EngineLeft"]
+emitting = false
+amount = 16
+lifetime = 0.3
+local_coords = false
+visibility_aabb = AABB(-5, -2, -5, 10, 4, 10)
+process_material = SubResource("ExhaustProcess")
+draw_pass_1 = SubResource("ExhaustMesh")
+
+[node name="Exhaust" type="GPUParticles3D" parent="Attachments/Sockets/EngineRight"]
+emitting = false
+amount = 16
+lifetime = 0.3
+local_coords = false
+visibility_aabb = AABB(-5, -2, -5, 10, 4, 10)
+process_material = SubResource("ExhaustProcess")
+draw_pass_1 = SubResource("ExhaustMesh")

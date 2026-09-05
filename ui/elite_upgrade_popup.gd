@@ -5,7 +5,12 @@ extends Control
 
 signal upgrade_chosen
 
-const SHIP_PREVIEW_SCRIPT := preload("res://entities/player/ship_upgrade_preview.gd")
+const SHIP_PREVIEW_PATH := "res://entities/player/ship_upgrade_preview.gd"
+
+var use_custom_upgrade_pool := false
+var custom_upgrade_pool: Array[Dictionary] = []
+var upgrade_target: Node
+var show_ship_previews := true
 
 # ── Upgrade Definitions ────────────────────────────────────────────────────────
 
@@ -34,7 +39,7 @@ func _ready() -> void:
 ## meta-unlocked blueprints), excluding any already chosen this run.
 func _pick_upgrades() -> void:
 	var pool: Array[Dictionary] = []
-	for upg in GameManager.get_upgrade_pool():
+	for upg in (custom_upgrade_pool if use_custom_upgrade_pool else GameManager.get_upgrade_pool()):
 		if not GameManager.chosen_upgrade_ids.has(upg["id"]):
 			pool.append(upg)
 	pool.shuffle()
@@ -115,14 +120,20 @@ func _make_card(upg: Dictionary) -> PanelContainer:
 	inner.add_theme_constant_override("separation", 6 if panel_only else 10)
 	card.add_child(inner)
 
-	# Current-build preview with the candidate module highlighted.
-	var preview := SHIP_PREVIEW_SCRIPT.new() as ShipUpgradePreview
-	var player := get_tree().get_first_node_in_group("player")
-	var current_upgrades: Array[String] = []
-	if player != null and player.has_method("get_active_elite_upgrade_ids"):
-		current_upgrades = player.get_active_elite_upgrade_ids()
-	preview.configure(current_upgrades, str(upg["id"]))
-	inner.add_child(preview)
+	if show_ship_previews:
+		var preview := load(SHIP_PREVIEW_PATH).new() as Control
+		var player := get_tree().get_first_node_in_group("player_craft")
+		var current_upgrades: Array[String] = []
+		if player != null and player.has_method("get_active_elite_upgrade_ids"):
+			current_upgrades = player.get_active_elite_upgrade_ids()
+		preview.configure(current_upgrades, str(upg["id"]))
+		inner.add_child(preview)
+	else:
+		var icon := Label.new()
+		icon.text = str(upg.get("icon", "✦"))
+		icon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		icon.add_theme_font_size_override("font_size", 40)
+		inner.add_child(icon)
 
 	# Name
 	var name_lbl := Label.new()
@@ -201,22 +212,24 @@ func _on_upgrade_selected(upgrade_id: String) -> void:
 			break
 	if selected_upgrade.is_empty():
 		return
+	if not is_instance_valid(upgrade_target):
+		upgrade_target = get_tree().get_first_node_in_group("player_craft")
+	if not is_instance_valid(upgrade_target) or not upgrade_target.has_method("apply_elite_upgrade"):
+		return
+	if not upgrade_target.apply_elite_upgrade(upgrade_id):
+		return
 	selection_locked = true
 
 	# Record as chosen so it won't appear in future Wave-10 upgrade pools.
 	if not GameManager.chosen_upgrade_ids.has(upgrade_id):
 		GameManager.chosen_upgrade_ids.append(upgrade_id)
 
-	var player = get_tree().get_first_node_in_group("player")
-	if player != null and player.has_method("set_elite_upgrade_enabled"):
-		player.set_elite_upgrade_enabled(upgrade_id, true, true)
-
 	_show_selection_feedback(upgrade_id, selected_upgrade)
 	await get_tree().create_timer(0.15, true, false, true).timeout
 
 	upgrade_chosen.emit()
-	# game.gd owns the pause state — it unpauses when it receives upgrade_chosen.
-	# In panel_only mode the parent is a shared HBoxContainer; game.gd cleans up the overlay.
+	# native_3d_run.gd owns the pause state — it unpauses when it receives upgrade_chosen.
+	# In panel_only mode the parent is a shared HBoxContainer; native_3d_run.gd cleans up the overlay.
 	if not panel_only:
 		get_parent().queue_free()
 

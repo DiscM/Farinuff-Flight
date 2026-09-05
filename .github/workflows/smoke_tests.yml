@@ -19,6 +19,9 @@ jobs:
           unzip -q godot.zip
           chmod +x Godot_v4.6.3-stable_linux.x86_64
 
+      - name: Check native resource contracts
+        run: python3 tools/check_native_transition.py
+
       - name: Import project (refresh class cache)
         run: ./Godot_v4.6.3-stable_linux.x86_64 --headless --path . --import
 
@@ -26,13 +29,8 @@ jobs:
         run: |
           set -e
           for test_scene in \
-            enemy_evolution_shader_smoke \
             in_house_vfx_smoke \
-            ship_render_layer_3d_smoke \
-            player_upgrade_3d_smoke \
-            boss_render_layer_3d_smoke \
-            visual_upgrade_smoke \
-            upgrade_modal_flow_smoke \
+            native_completion_smoke \
             autoload_smoke; do
             echo "=== $test_scene ==="
             ./Godot_v4.6.3-stable_linux.x86_64 --headless --path . "res://tests/${test_scene}.tscn"

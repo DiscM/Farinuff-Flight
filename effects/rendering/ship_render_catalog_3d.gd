@@ -174,8 +174,7 @@ const VOXEL_STYLE_ARG := VisualStyle.VOXEL_STYLE_ARG
 
 
 static func voxel_style_enabled() -> bool:
-	# Compatibility API for existing 2D actors and renderer smoke tests. Keep
-	# visual-style policy in VisualStyleSettings while those callers migrate.
+	# Shared style policy for menu and reward previews.
 	return VisualStyle.voxel_style_enabled()
 
 
@@ -186,48 +185,3 @@ static func instantiate_model(archetype: StringName) -> Node3D:
 		return null
 	var packed_scene := MODEL_SCENES[archetype] as PackedScene
 	return packed_scene.instantiate() as Node3D
-
-
-static func get_archetype(source: Node2D) -> StringName:
-	if source.is_in_group("player"):
-		return &"player"
-	if source.is_in_group("drone_escort"):
-		return &"drone_escort"
-	if source is BossEnemy:
-		var boss := source as BossEnemy
-		if boss.is_tempest_core:
-			return &"boss_tempest_core"
-		if boss.is_elite:
-			return &"boss_void_harbinger"
-		match boss.boss_variant:
-			BossEnemy.BossVariant.ASSAULT:
-				return &"boss_assault"
-			BossEnemy.BossVariant.BULWARK:
-				return &"boss_bulwark"
-			BossEnemy.BossVariant.TEMPEST:
-				return &"boss_tempest"
-	if source is TempestSection:
-		return &"tempest_section"
-	if source is BaseEnemy:
-		var enemy := source as BaseEnemy
-		if enemy.is_regular_enemy:
-			return enemy.archetype_id
-	return &""
-
-
-static func get_source_visual(source: Node2D, archetype: StringName) -> CanvasItem:
-	if archetype == &"player":
-		return source.get_node_or_null("Sprite2D") as Sprite2D
-	if archetype == &"drone_escort":
-		return source.get_node_or_null("DroneVisual") as CanvasItem
-	if archetype == &"tempest_section":
-		return source
-	return source.get_node_or_null("VisualRoot/Sprite2D") as Sprite2D
-
-
-static func get_generation(source: Node2D, archetype: StringName) -> int:
-	if archetype == &"player" or STATIC_STYLES.has(archetype):
-		return 0
-	if source is BaseEnemy:
-		return clampi((source as BaseEnemy).generation, 1, 4)
-	return 1

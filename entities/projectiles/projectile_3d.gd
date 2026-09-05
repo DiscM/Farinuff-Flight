@@ -29,6 +29,10 @@ enum Kind { PLAYER, ENEMY }
 @onready var visuals: Node3D = $Visuals
 @onready var projectile_mesh: MeshInstance3D = $Visuals/ProjectileMesh
 
+var piercing := false
+var explosive := false
+var homing := false
+var _hit_ids: Dictionary[int, bool] = {}
 var is_active := false
 var is_armed := false
 var is_deflected := false
@@ -81,6 +85,10 @@ func pool_activate(
 	transform = Transform3D.IDENTITY
 	scale = Vector3.ONE * maxf(size_multiplier, 1.0)
 	is_deflected = false
+	piercing = false
+	explosive = false
+	homing = false
+	_hit_ids.clear()
 	_reset_faction_contract()
 	global_position = Vector3(spawn_position.x, 0.0, spawn_position.z)
 	velocity = Vector3(new_velocity.x, 0.0, new_velocity.z)
@@ -179,11 +187,12 @@ func deflect(deflector_position: Vector3, deflector_velocity: Vector3) -> bool:
 	return true
 
 
-func _sweep_motion(motion: Vector3) -> bool:
+func _sweep_motion(motion: Vector3, piercing_contacts: int = 0) -> bool:
 	last_sweep_performed = true
 	var target_motion := Vector3.ZERO
 	if (
-		not is_deflected
+		kind == Kind.ENEMY
+		and not is_deflected
 		and _interaction_range != null
 		and _activation_physics_frame != Engine.get_physics_frames()
 	):
@@ -205,7 +214,14 @@ func _sweep_motion(motion: Vector3) -> bool:
 	sweep.transform = original_transform
 	sweep.target_position = Vector3.ZERO
 	if target != null and _inside_bounds(impact_position):
-		return _report_hit(target, impact_position)
+		var redirected := _report_hit(target, impact_position)
+		if redirected:
+			return true
+		# Recast the same motion after adding a piercing exception. This catches
+		# closely spaced targets crossed in one frame, with a bounded query budget.
+		if is_active and piercing and piercing_contacts < 7 and _hit_ids.has(target.get_instance_id()):
+			return _sweep_motion(motion, piercing_contacts + 1)
+		return false
 	return false
 
 
@@ -221,7 +237,7 @@ func _on_area_entered(area: Area3D) -> void:
 ## Returns true when a synchronous contact listener reflected this incoming
 ## projectile, allowing the physics step to discard its stale inbound motion.
 func _report_hit(target: Area3D, combat_position: Vector3) -> bool:
-	if not is_active or _impact_pending:
+	if target == null or not is_active or _impact_pending or _hit_ids.has(target.get_instance_id()):
 		return false
 	# Plasma fields share the hostile-ordnance layer for Player Craft contact,
 	# but the 2D reference does not let regular Player Projectiles defuse them.
@@ -237,14 +253,20 @@ func _report_hit(target: Area3D, combat_position: Vector3) -> bool:
 	combat_position.y = 0.0
 	# Contact listeners may redirect the projectile synchronously. Make its
 	# reflection vector and telemetry originate at the actual swept impact.
+	var previous_position := global_position
 	global_position = combat_position
+	_hit_ids[target.get_instance_id()] = true
 	var was_deflected := is_deflected
 	_impact_pending = true
 	hit.emit(target, combat_position)
 	if not was_deflected and is_deflected and is_active:
 		_impact_pending = false
 		return true
-	if is_active:
+	if is_active and piercing and target.collision_layer & PhysicsLayers.ENEMY_CRAFT:
+		sweep.add_exception(target)
+		global_position = previous_position
+		_impact_pending = false
+	elif is_active:
 		despawn()
 	return false
 
@@ -263,6 +285,10 @@ func despawn() -> void:
 
 
 func _finish_return() -> void:
+	piercing = false
+	explosive = false
+	homing = false
+	_hit_ids.clear()
 	is_deflected = false
 	_set_collision_armed(false)
 	sweep.target_position = Vector3.ZERO

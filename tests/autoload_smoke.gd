@@ -7,7 +7,7 @@ extends Node
 ## (Run the .tscn wrapper, not --script: --script mode skips the autoloads
 ## these tests depend on and never exits.)
 
-const BULLET_SCENE := preload("res://entities/bullets/bullet.tscn")
+const BULLET_SCENE := preload("res://entities/projectiles/player_projectile_3d.tscn")
 
 var _failures: Array[String] = []
 
@@ -63,7 +63,7 @@ func _check_object_pool() -> void:
 	ObjectPool.release(recovered)
 
 	# Releasing a node with no pool key must fall back to queue_free
-	var stray := Node2D.new()
+	var stray := Node3D.new()
 	holder.add_child(stray)
 	ObjectPool.release(stray)
 	_expect(stray.is_queued_for_deletion(), "Non-pooled release must queue_free the node")
@@ -76,7 +76,7 @@ func _check_object_pool() -> void:
 		ObjectPool.release(node)
 	var pooled_count := 0
 	for child in ObjectPool.get_children():
-		if child is Area2D:
+		if child is Area3D:
 			pooled_count += 1
 	_expect(pooled_count <= ObjectPool.MAX_IDLE_PER_SCENE, "Idle pool must respect MAX_IDLE_PER_SCENE")
 

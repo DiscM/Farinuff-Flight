@@ -9,16 +9,20 @@ signal boost_started(combat_position: Vector3, direction: Vector3)
 signal damage_taken(combat_position: Vector3, source: DamageSource, remaining_lives: int)
 signal invulnerability_changed(active: bool)
 signal drone_escort_changed(enabled: bool)
+signal shield_burst_requested(combat_position: Vector3)
 signal nuke_requested
 
 enum DamageSource { ENEMY_CONTACT, ENEMY_PROJECTILE, HOSTILE_ORDNANCE }
+
+const UpgradeVisuals := preload("res://entities/player/native_upgrade_visuals.gd")
+const NativeUpgrades := preload("res://entities/player/native_player_upgrades.gd")
 
 const PhysicsLayers := preload("res://systems/native_3d_physics_layers.gd")
 const FlightSpace := preload("res://systems/flight_space_3d.gd")
 const FlightTuning := preload("res://entities/player/player_flight_tuning.gd")
 const WeaponTuning := preload("res://entities/player/player_weapon_tuning.gd")
 const DamageTuning := preload("res://entities/player/player_damage_tuning.gd")
-const PowerUpTypes := preload("res://entities/powerups/power_up.gd")
+const PowerUpTypes := preload("res://entities/powerups/power_up_types.gd")
 
 @export var speed_pixels: float = FlightTuning.SPEED
 @export var acceleration: float = FlightTuning.ACCELERATION
@@ -65,6 +69,11 @@ var rapid_fire_remaining := 0.0
 var spread_shot_remaining := 0.0
 var magnet_remaining := 0.0
 var drone_escort_enabled := false
+var _elite_clock := 0.0
+var _shield_burst_clock := 0.0
+var _orbital_hit_clock := 0.0
+var _upgrade_visuals: UpgradeVisuals
+var _elite_upgrades: Dictionary[String, bool] = {}
 
 
 func _init() -> void:
@@ -73,6 +82,8 @@ func _init() -> void:
 
 
 func _ready() -> void:
+	_upgrade_visuals = UpgradeVisuals.new()
+	$Attachments/Modules.add_child(_upgrade_visuals)
 	_cache_socket_names()
 	set_combat_position(global_position)
 	area_entered.connect(_on_area_entered)
@@ -87,6 +98,12 @@ func configure_flight_space(value: FlightSpace) -> void:
 	if value == null or value.configuration == null:
 		push_error("Player3D requires a configured FlightSpace3D before enabling controls")
 		return
+	_upgrade_visuals.reset()
+	for id in _elite_upgrades:
+		_upgrade_visuals.set_upgrade(id, true)
+	$Visuals/PlayerHullGLB.visible = MetaProgression.selected_ship == "ship_swallowtail"
+	$Visuals/InterceptorHull.visible = MetaProgression.selected_ship == "ship_interceptor"
+	$Visuals/BulwarkHull.visible = MetaProgression.selected_ship == "ship_bulwark"
 	_flight_space = value
 	if not get_viewport().size_changed.is_connected(_refresh_movement_bounds):
 		get_viewport().size_changed.connect(_refresh_movement_bounds)
@@ -95,6 +112,8 @@ func configure_flight_space(value: FlightSpace) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	$Attachments/Sockets/EngineLeft/Exhaust.emitting = GameManager.is_game_active
+	$Attachments/Sockets/EngineRight/Exhaust.emitting = GameManager.is_game_active
 	_update_invincibility_visual(delta)
 	if not GameManager.is_game_active:
 		return
@@ -107,6 +126,7 @@ func _physics_process(delta: float) -> void:
 	_update_boost(delta)
 	_update_aiming()
 	_update_power_ups(delta)
+	_update_elite_abilities(delta)
 	_update_shooting()
 
 
@@ -250,22 +270,41 @@ func _update_shooting() -> void:
 	)
 	if has_rapid_fire:
 		rate_multiplier *= 0.4
-	shoot_timer.start(maxf(base_fire_interval * rate_multiplier, WeaponTuning.MIN_FIRE_INTERVAL))
+	var interval := maxf(base_fire_interval * rate_multiplier, WeaponTuning.MIN_FIRE_INTERVAL)
+	if has_elite_upgrade("overclock") and fmod(_elite_clock, 16.0) < 2.5:
+		interval /= 3.0
+	shoot_timer.start(interval)
 	for fire_direction in _get_fire_directions():
-		var screen_direction := _flight_space.combat_motion_to_screen(fire_direction).normalized()
-		var spawn_position := muzzle.global_position + _flight_space.screen_motion_to_combat(
-			screen_direction * WeaponTuning.MUZZLE_CLEARANCE
-		)
-		spawn_position.y = 0.0
-		fire_requested.emit(spawn_position, fire_direction)
+		_emit_muzzle_shot(muzzle, fire_direction)
+	if has_elite_upgrade("twin_cannons"):
+		for socket_name in [&"MuzzleLeft", &"MuzzleRight"]:
+			var side_muzzle := get_socket(socket_name)
+			if side_muzzle != null:
+				_emit_muzzle_shot(side_muzzle, last_aim_direction)
+	if has_elite_upgrade("rear_gunner"):
+		var rear_muzzle := get_socket(&"MuzzleRear")
+		if rear_muzzle != null:
+			_emit_muzzle_shot(rear_muzzle, -last_aim_direction)
+
+
+func _emit_muzzle_shot(muzzle: Marker3D, direction: Vector3) -> void:
+	var screen_direction := _flight_space.combat_motion_to_screen(direction).normalized()
+	var spawn_position := muzzle.global_position + _flight_space.screen_motion_to_combat(
+		screen_direction * WeaponTuning.MUZZLE_CLEARANCE
+	)
+	spawn_position.y = 0.0
+	fire_requested.emit(spawn_position, direction)
 
 
 func _get_fire_directions() -> Array[Vector3]:
 	var directions: Array[Vector3] = [last_aim_direction]
-	if not has_spread_shot or _flight_space == null:
+	if (not has_spread_shot and not has_elite_upgrade("spread_shot_elite")) or _flight_space == null:
 		return directions
 	var screen_direction := _flight_space.combat_motion_to_screen(last_aim_direction).normalized()
-	for spread_angle in [-deg_to_rad(15.0), deg_to_rad(15.0)]:
+	var angles: Array[float] = [-deg_to_rad(15.0), deg_to_rad(15.0)]
+	if has_spread_shot and has_elite_upgrade("spread_shot_elite"):
+		angles.append_array([-deg_to_rad(30.0), deg_to_rad(30.0)])
+	for spread_angle in angles:
 		var spread_screen_direction := screen_direction.rotated(spread_angle)
 		directions.append(_flight_space.input_to_combat_direction(spread_screen_direction))
 	return directions
@@ -288,7 +327,7 @@ func _update_power_ups(delta: float) -> void:
 		magnet_remaining = maxf(magnet_remaining - delta, 0.0)
 		if is_zero_approx(magnet_remaining):
 			has_magnet = false
-	if has_magnet:
+	if has_magnet or has_elite_upgrade("magnet_field"):
 		_attract_native_pickups(delta)
 
 
@@ -296,7 +335,7 @@ func _attract_native_pickups(delta: float) -> void:
 	for group_name in [&"native_3d_powerups", &"xp_orbs"]:
 		for pickup in get_tree().get_nodes_in_group(group_name):
 			if is_instance_valid(pickup) and pickup.has_method("magnet_pull_to"):
-				pickup.magnet_pull_to(global_position, delta, 350.0)
+				pickup.magnet_pull_to(global_position, delta, 525.0 if has_elite_upgrade("magnet_field") else 350.0)
 
 
 func _on_power_up_collected(type: int, _combat_position: Vector3) -> void:
@@ -357,7 +396,7 @@ func _update_movement(input_direction: Vector2, delta: float) -> void:
 		return
 	var effective_speed := speed_pixels * (
 		1.0 + GameManager.bonus_speed_pct + GameManager.meta_speed_pct + GameManager.ship_speed_pct
-	) * drift_speed_bonus
+	) * drift_speed_bonus * (1.2 if has_elite_upgrade("afterburner") else 1.0)
 	var current_acceleration := acceleration
 	var current_drag := drag
 	if post_boost_slide_timer > 0.0:
@@ -380,6 +419,8 @@ func _update_movement(input_direction: Vector2, delta: float) -> void:
 			current_drag = FlightTuning.BRAKE_DRAG
 			current_acceleration = FlightTuning.BRAKE_ACCELERATION
 			drift_speed_bonus = move_toward(drift_speed_bonus, 1.0, FlightTuning.BRAKE_BONUS_DECAY * delta)
+	if has_elite_upgrade("afterburner"):
+		current_acceleration *= 1.15
 	if not input_direction.is_zero_approx():
 		var target_velocity := _flight_space.screen_motion_to_combat(input_direction * effective_speed)
 		velocity = velocity.lerp(target_velocity, current_acceleration * delta)
@@ -548,3 +589,70 @@ func get_power_up_timing(type: int) -> Vector2:
 		PowerUpTypes.Type.MAGNET:
 			return Vector2(magnet_remaining, 10.0)
 	return Vector2.ZERO
+
+
+func has_elite_upgrade(upgrade_id: String) -> bool:
+	return _elite_upgrades.get(upgrade_id, false)
+
+
+## Returns false for unsupported or duplicate selections. The reward controller
+## records the global chosen ID only after this native application succeeds.
+func apply_elite_upgrade(upgrade_id: String) -> bool:
+	if not NativeUpgrades.SUPPORTED_IDS.has(upgrade_id) or has_elite_upgrade(upgrade_id):
+		return false
+	_elite_upgrades[upgrade_id] = true
+	_upgrade_visuals.set_upgrade(upgrade_id, true)
+	match upgrade_id:
+		"drone_escort":
+			set_drone_escort_enabled(true)
+		"hull_plating":
+			GameManager.lives += 1
+			SignalBus.lives_changed.emit(GameManager.lives)
+	return true
+
+
+## Run reset calls this after GameManager has reset lives and chosen IDs.
+## Continue/revive deliberately does not clear permanent upgrades.
+func reset_elite_upgrades() -> void:
+	_elite_upgrades.clear()
+	_elite_clock = 0.0
+	_shield_burst_clock = 0.0
+	_orbital_hit_clock = 0.0
+	_upgrade_visuals.reset()
+	set_drone_escort_enabled(false)
+
+
+func _update_elite_abilities(delta: float) -> void:
+	_elite_clock += delta
+	if has_elite_upgrade("shield_burst"):
+		_shield_burst_clock += delta
+		if _shield_burst_clock >= 10.0:
+			_shield_burst_clock = 0.0
+			shield_burst_requested.emit(get_combat_position())
+	if not has_elite_upgrade("orbitals"):
+		return
+	var positions: Array[Vector3] = _upgrade_visuals.advance_orbitals(delta, _flight_space, get_combat_position())
+	_orbital_hit_clock -= delta
+	for point in positions:
+		for projectile in get_tree().get_nodes_in_group(&"enemy_projectiles"):
+			if projectile.is_active and not projectile.is_deflected and _flight_space.combat_motion_to_screen(projectile.global_position - point).length() < 18.0:
+				projectile.despawn()
+		if _orbital_hit_clock <= 0.0:
+			for enemy in get_tree().get_nodes_in_group(&"native_3d_enemies"):
+				if enemy.is_active and _flight_space.combat_motion_to_screen(enemy.global_position - point).length() < 30.0:
+					enemy.take_damage(2 + GameManager.bonus_damage)
+	if _orbital_hit_clock <= 0.0:
+		_orbital_hit_clock = 0.25
+
+
+func get_active_elite_upgrade_ids() -> Array[String]:
+	var ids: Array[String] = []
+	for id in _elite_upgrades:
+		ids.append(id)
+	return ids
+
+
+func prepare_visual_warmup() -> void:
+	_upgrade_visuals.prepare_visual_warmup()
+	$Visuals/InterceptorHull.show()
+	$Visuals/BulwarkHull.show()

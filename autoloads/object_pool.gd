@@ -4,7 +4,7 @@ const POOL_KEY_META := "_pool_key"
 const POOL_IDLE_META := "_pool_idle"
 ## Maximum idle nodes retained per scene. Boss-wave spikes would otherwise
 ## keep hundreds of idle nodes alive for the rest of the run.
-const MAX_IDLE_PER_SCENE := 128
+const MAX_IDLE_PER_SCENE := 512
 
 var _available: Dictionary = {}
 

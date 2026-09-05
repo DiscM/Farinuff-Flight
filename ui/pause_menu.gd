@@ -4,14 +4,11 @@ extends Control
 
 signal resumed
 
-const DEV_MENU_PATH := "res://ui/dev_menu.tscn"
 const SETTINGS_MENU_SCENE := preload("res://ui/settings_menu.tscn")
 const DOCK_TEXTURE := preload("res://assets/Game UI collection FREE version/PNG/Borders/Yellow/New folder/Group 4 copy.png")
 const BUTTON_BLUE_TEXTURE := preload("res://assets/Game UI collection FREE version/PNG/Button with border/Blue/1x/Asset 8.png")
 const BUTTON_YELLOW_TEXTURE := preload("res://assets/Game UI collection FREE version/PNG/Button with border/Yellow/1x/Asset 8.png")
 
-var _dev_panel: PanelContainer = null
-var _dev_slot: VBoxContainer = null
 var _settings_menu: Node = null
 
 ## Builds the UI layout and plays the fade-in animation. The scene's full-rect
@@ -67,17 +64,6 @@ func _build_ui() -> void:
 	button_column.add_child(_make_btn("RetryWrap", "RESTART RUN", NeonUI.CYAN, _on_retry))
 	button_column.add_child(_make_btn("SettingsWrap", "OPTIONS", NeonUI.CYAN, _on_settings))
 	button_column.add_child(_make_btn("MenuWrap", "MAIN MENU", NeonUI.CYAN, _on_menu))
-	if get_tree().get_first_node_in_group(&"native_3d_gameplay") == null:
-		button_column.add_child(_make_btn("DevWrap", "DEV TOOLS", NeonUI.GREEN, _on_dev_tools))
-
-	_dev_slot = VBoxContainer.new()
-	_dev_slot.name = "DevSlot"
-	_dev_slot.position = Vector2(270.0, 110.0)
-	_dev_slot.size = Vector2(minf(vp_size.x - 300.0, 380.0), vp_size.y - 220.0)
-	_dev_slot.visible = false
-	_dev_slot.alignment = BoxContainer.ALIGNMENT_CENTER
-	add_child(_dev_slot)
-
 ## Helper: creates a centered, styled button with the given label text,
 ## color, callback, and width.
 func _make_btn(control_name: String, label: String, accent: Color, callback: Callable, hot: bool = false) -> Control:
@@ -110,21 +96,6 @@ func _make_btn(control_name: String, label: String, accent: Color, callback: Cal
 func _on_resume() -> void:
 	resumed.emit()
 	get_parent().queue_free()
-
-## Toggles the dev tools panel visibility. Lazily instantiates the dev
-## menu the first time it's opened, and connects its force_close signal
-## to resume the game.
-func _on_dev_tools() -> void:
-	if _dev_slot == null:
-		return
-	if _dev_slot.visible:
-		_dev_slot.visible = false
-	else:
-		_dev_slot.visible = true
-		if _dev_panel == null or not is_instance_valid(_dev_panel):
-			_dev_panel = (load(DEV_MENU_PATH) as PackedScene).instantiate() as PanelContainer
-			_dev_panel.force_close.connect(_on_resume)
-			_dev_slot.add_child(_dev_panel)
 
 ## Unpauses the game and reloads the game scene for a fresh retry.
 func _on_retry() -> void:

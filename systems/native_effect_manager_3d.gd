@@ -5,7 +5,7 @@ class_name NativeEffectManager3D
 const Effect := preload("res://effects/native_effect_3d.gd")
 const EFFECT_SCENE := preload("res://effects/native_effect_3d.tscn")
 
-@export_range(1, 128, 1) var pool_size: int = 48
+@export_range(1, 128, 1) var pool_size: int = 96
 @export_range(1, 16, 1) var warm_batch_size: int = 8
 
 var is_ready := false

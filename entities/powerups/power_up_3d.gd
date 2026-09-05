@@ -7,7 +7,7 @@ class_name PowerUp3D
 signal collected(power_up_type: int, combat_position: Vector3)
 signal returned_to_pool(power_up: PowerUp3D)
 
-const PowerUpTypes := preload("res://entities/powerups/power_up.gd")
+const PowerUpTypes := preload("res://entities/powerups/power_up_types.gd")
 const PhysicsLayers := preload("res://systems/native_3d_physics_layers.gd")
 const FlightSpace := preload("res://systems/flight_space_3d.gd")
 

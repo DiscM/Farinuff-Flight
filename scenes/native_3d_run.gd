@@ -5,12 +5,15 @@ const EncounterDirector := preload("res://systems/native_encounter_director.gd")
 const TRY_AGAIN := preload("res://ui/try_again_popup.tscn")
 const GAME_OVER := preload("res://ui/game_over.tscn")
 const ALLOCATION := preload("res://ui/point_allocation_popup.tscn")
+const ELITE_REWARD := preload("res://ui/elite_upgrade_popup.tscn")
+const NativeUpgrades := preload("res://entities/player/native_player_upgrades.gd")
 const VICTORY := preload("res://ui/expedition_victory.tscn")
 
 var encounters: EncounterDirector
 var _run_overlay: CanvasLayer
 var _allocation_queue: Array[int] = []
 var _ended := false
+var _elite_pending := false
 
 
 func _ready() -> void:
@@ -20,7 +23,7 @@ func _ready() -> void:
 	encounters.configure(self)
 	SignalBus.game_over.connect(_end_run)
 	SignalBus.allocation_triggered.connect(_queue_allocation)
-	SignalBus.elite_upgrade_triggered.connect(_grant_native_elite_reward)
+	SignalBus.elite_upgrade_triggered.connect(_queue_elite_reward)
 	SignalBus.expedition_completed.connect(_show_victory)
 	await super._ready()
 	if not GameManager.is_game_active:
@@ -97,37 +100,50 @@ func _show_game_over(score: int) -> void:
 func _queue_allocation(points: int) -> void:
 	_allocation_queue.append(points)
 	get_tree().paused = true
-	_show_next_allocation.call_deferred()
+	_show_next_reward.call_deferred()
 
 
-func _show_next_allocation() -> void:
-	if _ended or is_instance_valid(_run_overlay) or _allocation_queue.is_empty():
+func _show_next_reward() -> void:
+	if _ended or is_instance_valid(_run_overlay):
+		return
+	if _elite_pending:
+		_elite_pending = false
+		var choices := NativeUpgrades.available()
+		if choices.is_empty():
+			_allocation_queue.push_front(3)
+		else:
+			_run_overlay = _new_overlay()
+			var elite := ELITE_REWARD.instantiate()
+			elite.use_custom_upgrade_pool = true
+			elite.custom_upgrade_pool = choices
+			elite.upgrade_target = player
+			elite.show_ship_previews = true
+			_run_overlay.add_child(elite)
+			elite.upgrade_chosen.connect(_finish_reward)
+			return
+	if _allocation_queue.is_empty():
+		hud.show()
+		get_tree().paused = false
 		return
 	_run_overlay = _new_overlay()
 	var popup := ALLOCATION.instantiate()
 	_run_overlay.add_child(popup)
 	popup.set_points(_allocation_queue.pop_front())
-	popup.allocation_done.connect(_finish_allocation)
+	popup.allocation_done.connect(_finish_reward)
 
 
-func _finish_allocation() -> void:
+func _finish_reward() -> void:
 	_run_overlay.queue_free()
 	_run_overlay = null
-	if not _allocation_queue.is_empty():
-		_show_next_allocation.call_deferred()
-	else:
-		hud.show()
-		get_tree().paused = false
+	# Keep the tree paused until every milestone reward is resolved. Deferred
+	# presentation also lets the closing popup finish its own signal handler.
+	_show_next_reward.call_deferred()
 
 
-func _grant_native_elite_reward() -> void:
-	# Offer only implemented rewards during the transition. A silent selection
-	# from the old transformation catalog would promise unsupported abilities.
-	if not GameManager.chosen_upgrade_ids.has("drone_escort"):
-		GameManager.chosen_upgrade_ids.append("drone_escort")
-		set_drone_escort_enabled(true)
-	else:
-		_queue_allocation(3)
+func _queue_elite_reward() -> void:
+	_elite_pending = true
+	get_tree().paused = true
+	_show_next_reward.call_deferred()
 
 
 func _show_victory(wave: int) -> void:
@@ -158,6 +174,6 @@ func _return_to_menu() -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _ended or is_instance_valid(_run_overlay) or not _allocation_queue.is_empty():
+	if _ended or is_instance_valid(_run_overlay) or _elite_pending or not _allocation_queue.is_empty():
 		return
 	super._unhandled_input(event)

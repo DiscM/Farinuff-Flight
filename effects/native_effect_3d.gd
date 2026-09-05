@@ -1,7 +1,6 @@
 extends Node3D
 class_name NativeEffect3D
-## Pooled first-slice 3D feedback. Repeated trails/sparks use GPUParticles3D;
-## discrete hits, deaths, and boost bursts use primitive mesh pulses.
+## Pooled native mesh flashes, shock rings, and GPU sparks.
 
 signal returned_to_pool(effect: NativeEffect3D)
 
@@ -11,6 +10,10 @@ enum EffectKind { MUZZLE, IMPACT, DEATH, BOOST, PICKUP }
 @onready var burst_mesh: MeshInstance3D = $BurstMesh
 @onready var pulse_mesh: MeshInstance3D = $PulseMesh
 
+const SHOCK_RING := preload("res://assets/models/native/shock_ring.glb")
+const MUZZLE_FLARE := preload("res://assets/models/native/muzzle_flare.glb")
+var _flare: Mesh
+var _impact_mesh: Mesh
 var is_active := false
 var _idle_parent: Node3D
 var _kind := EffectKind.IMPACT
@@ -20,6 +23,11 @@ var _intensity := 1.0
 
 
 func _ready() -> void:
+	_impact_mesh = burst_mesh.mesh
+	_flare = _extract_mesh(MUZZLE_FLARE)
+	pulse_mesh.material_override = pulse_mesh.mesh.surface_get_material(0)
+	pulse_mesh.mesh = _extract_mesh(SHOCK_RING)
+	burst_mesh.material_override = _impact_mesh.surface_get_material(0)
 	visible = false
 	process_mode = Node.PROCESS_MODE_DISABLED
 	set_process(false)
@@ -67,7 +75,10 @@ func play(
 	set_process(true)
 	var color := _get_color(kind)
 	_set_shader_state(color, 1.0, _get_emission(kind))
-	burst_mesh.visible = kind != EffectKind.MUZZLE
+	burst_mesh.mesh = _flare if kind == EffectKind.MUZZLE else _impact_mesh
+	burst_mesh.scale = Vector3.ONE * 0.25 * _intensity
+	pulse_mesh.scale = Vector3.ONE * 0.35 * _intensity
+	burst_mesh.visible = true
 	pulse_mesh.visible = kind != EffectKind.MUZZLE
 	particles.amount = _get_particle_amount(kind)
 	particles.lifetime = _get_particle_lifetime(kind)
@@ -175,3 +186,14 @@ func _set_shader_state(color: Color, alpha: float, emission: float) -> void:
 	pulse_mesh.set_instance_shader_parameter(&"instance_color", color)
 	pulse_mesh.set_instance_shader_parameter(&"instance_alpha", alpha)
 	pulse_mesh.set_instance_shader_parameter(&"instance_emission", emission)
+
+
+func _extract_mesh(scene: PackedScene) -> Mesh:
+	var model := scene.instantiate()
+	var mesh_node := model.find_child("*", true, false) as MeshInstance3D
+	if mesh_node == null:
+		var meshes := model.find_children("*", "MeshInstance3D", true, false)
+		mesh_node = meshes[0] as MeshInstance3D if not meshes.is_empty() else null
+	var mesh: Mesh = mesh_node.mesh if mesh_node != null else _impact_mesh
+	model.free()
+	return mesh
