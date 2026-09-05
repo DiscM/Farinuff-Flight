@@ -1,0 +1,50 @@
+[
+  {
+    "file": "orbital_sentinel.glb",
+    "triangles": 472,
+    "vertices": 298,
+    "materials": 3,
+    "socket_count": 0,
+    "bytes": 12540
+  },
+  {
+    "file": "upgrade_orbitals.glb",
+    "triangles": 384,
+    "vertices": 192,
+    "materials": 1,
+    "socket_count": 0,
+    "bytes": 8096
+  },
+  {
+    "file": "upgrade_piercing.glb",
+    "triangles": 80,
+    "vertices": 96,
+    "materials": 2,
+    "socket_count": 0,
+    "bytes": 4652
+  },
+  {
+    "file": "upgrade_explosive.glb",
+    "triangles": 288,
+    "vertices": 192,
+    "materials": 1,
+    "socket_count": 0,
+    "bytes": 7520
+  },
+  {
+    "file": "shock_ring.glb",
+    "triangles": 384,
+    "vertices": 192,
+    "materials": 1,
+    "socket_count": 0,
+    "bytes": 8072
+  },
+  {
+    "file": "muzzle_flare.glb",
+    "triangles": 32,
+    "vertices": 40,
+    "materials": 1,
+    "socket_count": 0,
+    "bytes": 2296
+  }
+]

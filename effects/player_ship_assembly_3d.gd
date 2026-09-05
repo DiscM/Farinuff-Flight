@@ -12,6 +12,8 @@ const VOXEL_SHIP_SHADER: Shader = preload("res://effects/shaders/models/voxel_to
 const OUTLINE_SHADER: Shader = preload("res://effects/shaders/models/pixel_outline_3d.gdshader")
 const VOID_SHIP_SHADER: Shader = preload("res://effects/shaders/models/void_silhouette_3d.gdshader")
 const VOID_OUTLINE_SHADER: Shader = preload("res://effects/shaders/models/void_silhouette_outline_3d.gdshader")
+const INTERCEPTOR_SCENE := preload("res://assets/models/redesign/player_butterfly_morpho.glb")
+const BULWARK_SCENE := preload("res://assets/models/redesign/player_butterfly_monarch.glb")
 const HULL_SCENE: PackedScene = preload("res://assets/models/redesign/player_butterfly.glb")
 const DRONE_SCENE: PackedScene = preload("res://assets/models/redesign/butterfly_elites/bf_elite_drone_escort.glb")
 
@@ -25,9 +27,14 @@ const ATTACHED_IDS: Array[String] = [
 	"magnet_field",
 	"overclock",
 	"rear_gunner",
+	"orbitals", "piercing", "explosive_rounds",
 ]
 
 const MODULE_SCENES := {
+	"orbitals": preload("res://assets/models/native/upgrade_orbitals.glb"),
+	"piercing": preload("res://assets/models/native/upgrade_piercing.glb"),
+	"explosive_rounds": preload("res://assets/models/native/upgrade_explosive.glb"),
+
 	"twin_cannons": preload("res://assets/models/redesign/butterfly_elites/bf_elite_twin_cannons.glb"),
 	"auto_aim": preload("res://assets/models/redesign/butterfly_elites/bf_elite_auto_aim.glb"),
 	"hull_plating": preload("res://assets/models/redesign/butterfly_elites/bf_elite_hull_plating.glb"),
@@ -40,6 +47,10 @@ const MODULE_SCENES := {
 }
 
 const MODULE_PATHS := {
+	"orbitals": "res://assets/models/native/upgrade_orbitals.glb",
+	"piercing": "res://assets/models/native/upgrade_piercing.glb",
+	"explosive_rounds": "res://assets/models/native/upgrade_explosive.glb",
+
 	"twin_cannons": "res://assets/models/redesign/butterfly_elites/bf_elite_twin_cannons.glb",
 	"auto_aim": "res://assets/models/redesign/butterfly_elites/bf_elite_auto_aim.glb",
 	"hull_plating": "res://assets/models/redesign/butterfly_elites/bf_elite_hull_plating.glb",
@@ -52,6 +63,10 @@ const MODULE_PATHS := {
 }
 
 const UPGRADE_COLORS := {
+	"orbitals": Color(0.3, 0.9, 1.0),
+	"piercing": Color(0.3, 0.9, 1.0),
+	"explosive_rounds": Color(0.3, 0.9, 1.0),
+
 	"twin_cannons": Color(1.0, 0.8, 0.2),
 	"auto_aim": Color(0.3, 1.0, 0.5),
 	"drone_escort": Color(0.4, 0.85, 1.0),
@@ -98,7 +113,8 @@ func build() -> void:
 		return
 	_built = true
 
-	hull_model = HULL_SCENE.instantiate() as Node3D
+	var hull_scene: PackedScene = INTERCEPTOR_SCENE if MetaProgression.selected_ship == "ship_interceptor" else BULWARK_SCENE if MetaProgression.selected_ship == "ship_bulwark" else HULL_SCENE
+	hull_model = hull_scene.instantiate() as Node3D
 	hull_model.name = "PlayerHullGLB"
 	add_child(hull_model)
 	_style_model(

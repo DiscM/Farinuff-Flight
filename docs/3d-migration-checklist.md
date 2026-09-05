@@ -2,7 +2,46 @@
 
 **Direction updated 2026-09-04:** the game is moving fully to native 3D gameplay. This document primarily records implementation changes and verified results. Earlier guidance is optional context, not a required work order. Choose work that advances the integrated 3D game.
 
-The previous checklist and its detailed slice/approval history are available in Git history. This guide supersedes their parity, frozen-reference, parallel-runtime, and per-slice approval requirements. Implementation progress below is not a claim that the full game has been integrated or performance-tested.
+The previous checklist and its detailed slice/approval history are available in Git history. This guide supersedes their parity, frozen-reference, parallel-runtime, and per-slice approval requirements. The current entry states implementation status; dated entries retain their original validation limits.
+
+## 2026-09-04 — Native transition implementation completed (file checks only)
+
+This entry supersedes the interim content limits in earlier entries. The shipping paths now use one native 3D combat runtime. Completion here refers to source/content integration; engine parsing, visual acceptance, balance, and performance of these changes remain unverified.
+
+**Gameplay and assets**
+
+- Integrated all 13 elite abilities. Added homing steering, piercing with per-activation target deduplication, splash damage, a permanent faster magnet, a 10-second defensive burst, 2.5 seconds of triple-rate Overclock every 16 seconds, and two orbiting defensive/damage sentinels. Temporary and permanent spread now stack into a five-shot central fan. Existing twin/rear fire, hull, afterburner, and drone upgrades remain supported.
+- Projectiles snapshot applicable upgrades at activation and clear them on return/reuse. Piercing recasts the current step for up to eight contacts to catch closely spaced enemies; explosions exclude the direct-hit target. Corrected player shots inheriting the enemy-only relative-player-motion sweep adjustment. Expanded bounded pools to 512 player shots, 256 enemy shots, and 96 effects; the shared idle ceiling is 512. These are capacity decisions, not measured performance results.
+- Added original generated GLBs for the orbital sentinel, orbital mount, piercing module, explosive module, shock ring, and muzzle flare. The reproducible stdlib generator and asset manifest are checked in. Reused the existing butterfly module assets for the other ten upgrades, and mapped Interceptor/Bulwark loadouts to the Morpho/Monarch hulls. Modules and hull variants warm under the transition cover.
+- Replaced the Tank-based boss with Assault Commander, Iron Bulwark, Tempest, Void Harbinger, and Tempest Core hulls. Bosses cycle every five encounters; the first four occupy waves 5/10/15/20. Each has distinct fan/ring/pinwheel patterns, visible charge warnings, two health thresholds, and bounded firing cadence. Later hulls carry two destructible weapon pods; destroying pods reduces volley density and removes Bulwark/Core hull resistance when both are gone. Rings leave a two-slot escape gap.
+- Boss completion is deferred through the scene-owned director, clears remaining hostile shots/hazards, and preserves a pending completion across simultaneous player death/continue. Scene teardown discards that pending state.
+- Enabled 3D reward-card previews for the full module catalog and selected hull. Added native engine particles and a rim/band shield shader; muzzle flashes and shock rings now use generated geometry through the existing pooled feedback API.
+
+**Retirement**
+
+- Removed the old `game` entry, 2D player/enemy/bullet/pickup/hazard actors, old spawners, coordinate adapter, evolution scaffolding, proxy rendering bridge, legacy dev tools, and their dependent comparison tests. Removed the obsolete screenshot tool targeting that entry. Git retains the historical implementation.
+- Removed old enemy-class dependencies from the menu's model catalog, the legacy upgrade application branch, and HUD Timer-node fallback. Extracted the shared pickup enum into a dimension-independent data script. Retained 2D menus/HUD/backdrop, native review scenes, shared tuning resources, model previews, and existing art assets.
+- Updated CI to retain autoload/VFX checks and use a native completion smoke scene instead of retired renderer/parity tests. The new smoke scene covers duplicate-safe upgrades, stacked spread, projectile modifiers/deduplication/reuse, and the five boss/section variants. It has been authored but not executed in this task.
+
+**Validation performed**
+
+- `python3 tools/check_native_transition.py` passed: project-owned resource references/IDs, six generated GLB headers and buffer ranges, 13 unique upgrade modules, native menu/retry targets, and no remaining `Area2D` combat actors. The vendored PixelPlanets standalone project is excluded from root-relative reference checks.
+- Asset generation validates finite vertices and rejects degenerate or duplicate coplanar triangles; generated completion assets contain 1,640 triangles total. Python source compilation and `git diff --check` passed.
+- Inspected inheritance/member names, signal wiring, pool reset paths, reward ownership, boss finish/death handling, and scene resource counts. No Godot process, debugger, gameplay test, export, or screenshot run was launched, as requested. Native CI tests, worst-case firing pressure, homing/piercing collision behavior, all reward UI combinations, and complete playthrough balance await engine validation.
+
+## 2026-09-04 — Native elite upgrade choices (file changes only)
+
+**Changed**
+
+- Replaced the temporary automatic Drone Escort reward with the existing elite-choice UI, supplied with a native-only capability catalog. Each offer contains up to three unowned choices from Twin Cannons, permanent Spread Shot, Rear Gunner, Afterburner, Hull Plating, and Drone Escort. Unsupported transformations and blueprint abilities are excluded. When the supported catalog is exhausted, the reward becomes three stat points.
+- Native Player now applies upgrades through an explicit, duplicate-safe method. Twin Cannons adds two shots from the left/right sockets; permanent Spread Shot enables the three-way central fan (five forward shots with Twin Cannons); Rear Gunner adds one backward shot from a new rear socket. These shots use the existing projectile request/scale/damage path. Temporary spread does not duplicate the permanent fan.
+- Afterburner adds 20% normal flight speed and 15% acceleration, including drift/braking acceleration; boost distance and timing remain unchanged. Hull Plating grants one life once. Drone Escort uses the existing native escort lifecycle. Continue retains permanent upgrades; run reset clears their local state after resetting GameManager.
+- Added an elite-first reward queue so simultaneous elite/stat milestones resolve serially without briefly resuming combat. Global chosen IDs are recorded only after native application succeeds. Native cards use icons and descriptions; they do not load the old ship-preview rendering path. Modular GLB upgrade visuals remain a later presentation task.
+- Muzzle feedback now uses each emitted shot's position, including side and rear shots, instead of always playing at the central socket. Updated the README's reward description. This entry supersedes the automatic-reward policy in the first production-run log below.
+
+**Inspection**
+
+Static file checks passed for resource paths, duplicate methods, all six IDs against the shared catalog and native implementation, four muzzle nodes, reward ordering, and reset/continue call sites. Inspected popup callback ownership and duplicate-selection handling. `git diff --check` passed. No Godot launch, debugger, runtime test, or playtest was performed. Upgrade combinations, modal interaction, firing density/pool pressure, and gameplay balance remain unverified at runtime.
 
 ## 2026-09-04 — Native Fast Enemy evolution (file changes only)
 
@@ -76,12 +115,12 @@ These are the current defaults, not a requirement to reproduce the 2D implementa
 | Area | Implemented foundation | Work still needed |
 | --- | --- | --- |
 | Rendering and flight space | Forward+, native camera/world, camera-derived bounds, input projection, retained backdrop/HUD | Output/filtering audit and loading measurements |
-| Player combat | Flight, aiming, boost, firing, damage/immunity, deflection/chains, six power-up effects, Drone Escort | Remaining player transformation/upgrade assembly |
+| Player combat | Flight, boost, damage/deflection, six power-ups, all 13 elite abilities and modules, three loadout hulls | Runtime checks of elite combinations and firing pressure |
 | Projectiles and pickups | Native pooled player/enemy projectiles, XP orbs, power-ups, interaction-range collision | Drop tuning and load testing |
 | Enemy actors | Basic lineage; Fast Generation I-IV weave/sidestep/phase behavior; Bomber, Tank, and Sniper native wrappers | Runtime validation of Fast evolution and broader encounter tuning |
 | Special attacks and hazards | Basic fragments, mines/plasma, Tank armor/double rings/overload, Sniper warnings/prediction/pooled rail; Gen IV hold extended | Heavy-encounter tuning and broader ability integration |
-| Feedback | Pooled native placeholder effects and stable hooks | Native VFX polish where it improves combat readability |
-| Production flow | Native menu/retry entry, encounter spawning, simplified boss waves, allocation, continue/game-over, victory/Endless | Broader upgrade/boss content, encounter tuning, loading/performance profiling, legacy cleanup |
+| Feedback | Pooled mesh flashes/shock rings, GPU sparks/exhaust, shield shader | Visual and performance validation |
+| Production flow | Native menu/retry entry, five boss variants and pods, all upgrades, allocation, continue/game-over, victory/Endless; legacy combat retired | Engine validation, encounter tuning, loading/performance profiling |
 
 Targeted runtime checks have exercised these foundations, including damage routing, attack timing, coordinator ownership, pause behavior, reset, and pool reuse. They do not establish complete run coverage or worst-case performance.
 

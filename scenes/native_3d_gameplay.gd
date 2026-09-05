@@ -59,6 +59,7 @@ func _ready() -> void:
 	add_to_group(&"native_3d_gameplay")
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	GameManager.is_game_active = false
+	player.prepare_visual_warmup()
 	var idle_parent := $World3D/PoolRoot3D as Node3D
 	projectile_manager.configure(flight_space, $World3D/Projectiles3D, idle_parent, player)
 	xp_orb_manager.configure(flight_space, $World3D/Pickups3D, idle_parent)
@@ -93,6 +94,8 @@ func _ready() -> void:
 	player.boost_started.connect(_on_player_boost_started)
 	player.nuke_requested.connect(_on_player_nuke_requested)
 	player.drone_escort_changed.connect(_on_drone_escort_changed)
+	player.shield_burst_requested.connect(_on_shield_burst)
+	projectile_manager.explosion_requested.connect(_on_explosive_impact)
 	projectile_manager.player_projectile_hit.connect(_on_player_projectile_hit)
 	projectile_manager.enemy_projectile_hit.connect(_on_enemy_projectile_hit)
 	projectile_manager.enemy_projectile_deflected.connect(_on_enemy_projectile_deflected)
@@ -135,9 +138,7 @@ func _on_mine_detonated(combat_position: Vector3, _is_cluster: bool, _leaves_pla
 
 
 func _on_player_fired(combat_position: Vector3, direction: Vector3) -> void:
-	var muzzle := player.get_socket(&"MuzzleCenter")
-	var effect_position := muzzle.global_position if muzzle != null else combat_position
-	effect_manager.play_effect(NativeEffect.EffectKind.MUZZLE, effect_position, direction, 0.7)
+	effect_manager.play_effect(NativeEffect.EffectKind.MUZZLE, combat_position, direction, 0.7)
 
 
 func _on_player_boost_started(combat_position: Vector3, direction: Vector3) -> void:
@@ -291,7 +292,7 @@ func reset_native_progression() -> void:
 	effect_manager.clear_effects()
 	GameManager.start_game(false)
 	player.reset_damage_state()
-	player.set_drone_escort_enabled(false)
+	player.reset_elite_upgrades()
 	player.reset_power_up_state()
 
 
@@ -374,3 +375,22 @@ func _exit_tree() -> void:
 
 func _prepare_run_actors() -> void:
 	await get_tree().process_frame
+
+
+func _on_explosive_impact(combat_position: Vector3, primary_target: Area3D) -> void:
+	effect_manager.play_effect(NativeEffect.EffectKind.DEATH, combat_position, Vector3.UP, 0.5)
+	_damage_in_radius(combat_position, 65.0, 2 + GameManager.bonus_damage, primary_target)
+
+
+func _on_shield_burst(combat_position: Vector3) -> void:
+	effect_manager.play_effect(NativeEffect.EffectKind.PICKUP, combat_position, Vector3.UP, 4.0)
+	for projectile in get_tree().get_nodes_in_group(&"enemy_projectiles"):
+		if projectile.is_active and not projectile.is_deflected and flight_space.combat_motion_to_screen(projectile.global_position - combat_position).length() <= 240.0:
+			projectile.despawn()
+	_damage_in_radius(combat_position, 240.0, 8 + GameManager.bonus_damage)
+
+
+func _damage_in_radius(center: Vector3, radius: float, damage: int, excluded: Node = null) -> void:
+	for enemy in get_tree().get_nodes_in_group(&"native_3d_enemies"):
+		if enemy != excluded and enemy.is_active and flight_space.combat_motion_to_screen(enemy.global_position - center).length() <= radius:
+			enemy.take_damage(damage)

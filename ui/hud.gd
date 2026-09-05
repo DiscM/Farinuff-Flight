@@ -32,11 +32,11 @@ const MAX_VISIBLE_HEARTS: int = 10
 # --- Active power-up timers ---
 ## Timed power-ups shown as live countdown chips in the PowerUpPanel, keyed
 ## by the PowerUp.Type enum carried by SignalBus.power_up_collected.
-## "timer" names the player's Timer node driving that effect.
+## Countdown values are provided by the native player.
 const TIMED_POWER_UPS: Dictionary = {
-	PowerUp.Type.RAPID_FIRE: {"key": &"rapid", "label": "RAPID", "color": Color(1.0, 0.8, 0.0), "timer": "rapid_fire_timer"},
-	PowerUp.Type.SPREAD_SHOT: {"key": &"spread", "label": "SPREAD", "color": Color(1.0, 0.4, 0.8), "timer": "spread_shot_timer"},
-	PowerUp.Type.MAGNET: {"key": &"magnet", "label": "MAGNET", "color": Color(0.6, 0.4, 1.0), "timer": "magnet_timer"},
+	PowerUp.Type.RAPID_FIRE: {"key": &"rapid", "label": "RAPID", "color": Color(1.0, 0.8, 0.0)},
+	PowerUp.Type.SPREAD_SHOT: {"key": &"spread", "label": "SPREAD", "color": Color(1.0, 0.4, 0.8)},
+	PowerUp.Type.MAGNET: {"key": &"magnet", "label": "MAGNET", "color": Color(0.6, 0.4, 1.0)},
 }
 const SHIELD_TYPE: int = PowerUp.Type.SHIELD
 const SHIELD_CHIP: Dictionary = {"key": &"shield", "label": "SHIELD", "color": Color(0.3, 0.9, 0.5)}
@@ -208,23 +208,14 @@ func _process(_delta: float) -> void:
 func _sync_power_up_timers() -> void:
 	if not is_instance_valid(_player):
 		_player = get_tree().get_first_node_in_group("player_craft")
-		if _player == null:
-			_player = get_tree().get_first_node_in_group("player")
 	if _player == null:
 		_clear_effect_chips()
 		return
 	for type: int in TIMED_POWER_UPS:
 		var cfg: Dictionary = TIMED_POWER_UPS[type]
-		if _player.has_method("get_power_up_timing"):
-			var timing: Vector2 = _player.get_power_up_timing(type)
-			if timing.x > 0.0:
-				_update_effect_chip(cfg, timing.x, timing.y)
-			else:
-				_remove_effect_chip(cfg["key"])
-			continue
-		var timer: Timer = _player.get(cfg["timer"]) as Timer
-		if timer != null and timer.time_left > 0.0:
-			_update_effect_chip(cfg, timer.time_left, timer.wait_time)
+		var timing: Vector2 = _player.get_power_up_timing(type)
+		if timing.x > 0.0:
+			_update_effect_chip(cfg, timing.x, timing.y)
 		else:
 			_remove_effect_chip(cfg["key"])
 	# Shield persists until consumed — no countdown.

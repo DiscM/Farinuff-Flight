@@ -4,7 +4,7 @@ class_name PowerUp3DReview
 ## global collection signal, and Player3D effect application.
 
 const NativeGame := preload("res://scenes/native_3d_gameplay.gd")
-const PowerUpTypes := preload("res://entities/powerups/power_up.gd")
+const PowerUpTypes := preload("res://entities/powerups/power_up_types.gd")
 const PowerUpManager := preload("res://systems/power_up_manager_3d.gd")
 
 @onready var gameplay: NativeGame = $Gameplay

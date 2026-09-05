@@ -18,9 +18,12 @@ var _spawn_in := 0.5
 var _pickup_in := 8.0
 var _wave_epoch := 0
 var started := false
+var _pending_boss_wave := 0
+var _pending_boss_points := 0
 
 
 func configure(game: Node) -> void:
+	add_to_group(&"native_encounter_director")
 	gameplay = game
 	threat = Threat.new()
 	threat.enemy_group = &"native_3d_regular_enemies"
@@ -46,6 +49,9 @@ func start() -> void:
 
 func _physics_process(delta: float) -> void:
 	if not started or not GameManager.is_game_active:
+		return
+	if _pending_boss_wave > 0:
+		finish_boss(_pending_boss_wave, _pending_boss_points)
 		return
 	_pickup_in -= delta
 	if _pickup_in <= 0.0:
@@ -128,3 +134,19 @@ func _begin_boss(epoch: int) -> void:
 	var boss := SCENES[&"boss"].instantiate() as Enemy
 	gameplay.actors_root.add_child(boss)
 	boss.activate_generation(gameplay.flight_space, Vector3(bounds.get_center().x, 0, bounds.position.y + bounds.size.y * 0.22), Vector3.BACK, threat.generation)
+
+
+func finish_boss(wave: int, points: int) -> void:
+	if not GameManager.boss_active or GameManager.current_wave != wave:
+		_pending_boss_wave = 0
+		return
+	# A simultaneous player death can pause before this deferred completion.
+	# Keep it scene-owned and finish after a continue instead of stranding a boss wave.
+	if not started or not GameManager.is_game_active:
+		_pending_boss_wave = wave
+		_pending_boss_points = points
+		return
+	_pending_boss_wave = 0
+	gameplay.projectile_manager.clear_enemy_projectiles()
+	gameplay.hazard_manager.clear_hazards()
+	SignalBus.boss_died.emit(points)
