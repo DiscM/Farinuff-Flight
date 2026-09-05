@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3]
+[gd_scene load_steps=13 format=3]
 
 [ext_resource type="Script" path="res://entities/enemies/fast_enemy_3d.gd" id="1_enemy"]
 [ext_resource type="PackedScene" path="res://assets/models/mockups/fast_enemy_mockup.glb" id="2_model"]
@@ -77,8 +77,16 @@ shader_parameter/fracture_density = 0.1
 shader_parameter/reactor_focus = 0.12
 shader_parameter/animation_speed = 0.0
 
+[sub_resource type="BoxMesh" id="PhaseWarningMesh"]
+size = Vector3(1, 0.025, 1)
+
+[sub_resource type="StandardMaterial3D" id="PhaseWarningMaterial"]
+shading_mode = 0
+transparency = 1
+albedo_color = Color(1, 0.08, 0.78, 0.9)
+
 [node name="FastEnemy3D" type="Area3D"]
-editor_description = "Scene-managed Fast Enemy Gen I. Inert until activate(); Y=0 combat root. The box projects to a 20x20 baseline-pixel envelope under the shared 70-degree camera."
+editor_description = "Scene-managed Fast Enemy Generations I-IV. Inert until activate(); Y=0 combat root. The box projects to a 20x20 baseline-pixel envelope under the shared 70-degree camera."
 collision_layer = 0
 collision_mask = 0
 monitoring = false
@@ -117,5 +125,11 @@ position = Vector3(-0.15, 0.07, 1.59)
 position = Vector3(0.15, 0.07, 1.59)
 
 [node name="Modules" type="Node3D" parent="Attachments"]
+
+[node name="PhaseWarning" type="MeshInstance3D" parent="Attachments"]
+visible = false
+cast_shadow = 0
+mesh = SubResource("PhaseWarningMesh")
+material_override = SubResource("PhaseWarningMaterial")
 
 [editable path="Visuals/FastHullGLB"]

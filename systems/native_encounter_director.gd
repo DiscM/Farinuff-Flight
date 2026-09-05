@@ -84,10 +84,7 @@ func spawn_enemy(kind: StringName) -> Enemy:
 	var actor := SCENES[kind].instantiate() as Enemy
 	gameplay.actors_root.add_child(actor)
 	actor.archetype_id = kind
-	# Fast's later-generation abilities are not ported yet. Do not silently
-	# substitute Basic Enemy stats for this role.
-	var generation := 1 if kind == &"fast" else threat.generation
-	if not actor.activate_generation(gameplay.flight_space, origin, direction, generation):
+	if not actor.activate_generation(gameplay.flight_space, origin, direction, threat.generation):
 		actor.queue_free()
 		return null
 	actor.add_to_group(&"native_3d_regular_enemies")
