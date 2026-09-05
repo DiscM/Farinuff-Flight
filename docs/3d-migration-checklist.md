@@ -4,6 +4,25 @@
 
 The previous checklist and its detailed slice/approval history are available in Git history. This guide supersedes their parity, frozen-reference, parallel-runtime, and per-slice approval requirements. Implementation progress below is not a claim that the full game has been integrated or performance-tested.
 
+## 2026-09-04 — Native Fast Enemy evolution (file changes only)
+
+**Changed**
+
+- Added Fast-specific Generation II-IV resources: speeds 290/300/315, one base HP, 150 base points, and generation-specific 21/23/25-pixel hitbox envelopes. Existing shared difficulty/reward multipliers and per-instance generation materials still apply.
+- Generation II changes weave amplitude/frequency periodically. Changes recenter the path so switching patterns does not teleport the craft; no new model or duplicated material is needed.
+- Generation III checks approaching active native Player Projectiles at a throttled 0.12-second interval, sidesteps up to 44 baseline pixels, and observes a 2.5-second cooldown. Displacement chooses the side with room and trims to camera-derived bounds.
+- Generation IV adds a single phase dash after a 0.4-second native mesh warning. The dash traverses up to 100 baseline pixels over 0.16 seconds with normal gameplay collision retained. Pattern changes and reactive sidesteps wait while the phase attack is in progress; leaving view during the warning or finishing the actor cancels it. Timers remain actor-owned and inherit pause/scene lifetime.
+- Reused pooled boost feedback for pattern changes, sidesteps, and phase release instead of allocating sprite ghosts. The scene owns one reusable shadow-free warning mesh and shared material.
+- Removed the production director's Generation I restriction for Fast enemies; all five regular roles now receive the encounter generation. This supersedes the temporary Fast restriction recorded in the first production-run entry below.
+
+**Inspection**
+
+Checked referenced resources, scene resource counts, the warning-node path, inherited member names, projectile velocity/group interfaces, effect-manager calls, and production generation routing. `git diff --check` passed. No Godot launch, debugger, runtime checks, or playtest was performed, per the user's instruction. Timing, collision feel, dash readability, and performance remain unverified in the running game.
+
+**Working preference**
+
+Continue migration through file changes and code inspection. Do not launch Godot/debugger or playtest unless the user asks. Record inspection separately from runtime validation; earlier runtime results remain historical evidence only.
+
 ## 2026-09-04 — First integrated native production run
 
 **Changed**
@@ -26,7 +45,7 @@ The previous checklist and its detailed slice/approval history are available in 
 
 **Remaining work**
 
-Distinct native boss variants/sections, remaining Fast/evolution and player transformation abilities, richer reward presentation, difficulty tuning, VFX polish, stress/performance measurements, and dependency-aware legacy cleanup. The first native boss and elite rewards are intentional interim content, not completed equivalents of the old catalog.
+Distinct native boss variants/sections, remaining evolution refinements and player transformation abilities, richer reward presentation, difficulty tuning, VFX polish, stress/performance measurements, and dependency-aware legacy cleanup. The first native boss and elite rewards are intentional interim content, not completed equivalents of the old catalog.
 
 ## Working approach
 
@@ -59,7 +78,7 @@ These are the current defaults, not a requirement to reproduce the 2D implementa
 | Rendering and flight space | Forward+, native camera/world, camera-derived bounds, input projection, retained backdrop/HUD | Output/filtering audit and loading measurements |
 | Player combat | Flight, aiming, boost, firing, damage/immunity, deflection/chains, six power-up effects, Drone Escort | Remaining player transformation/upgrade assembly |
 | Projectiles and pickups | Native pooled player/enemy projectiles, XP orbs, power-ups, interaction-range collision | Drop tuning and load testing |
-| Enemy actors | Basic lineage; Fast, Bomber, Tank, and Sniper native wrappers | Remaining evolution abilities and integrated encounter behavior |
+| Enemy actors | Basic lineage; Fast Generation I-IV weave/sidestep/phase behavior; Bomber, Tank, and Sniper native wrappers | Runtime validation of Fast evolution and broader encounter tuning |
 | Special attacks and hazards | Basic fragments, mines/plasma, Tank armor/double rings/overload, Sniper warnings/prediction/pooled rail; Gen IV hold extended | Heavy-encounter tuning and broader ability integration |
 | Feedback | Pooled native placeholder effects and stable hooks | Native VFX polish where it improves combat readability |
 | Production flow | Native menu/retry entry, encounter spawning, simplified boss waves, allocation, continue/game-over, victory/Endless | Broader upgrade/boss content, encounter tuning, loading/performance profiling, legacy cleanup |
