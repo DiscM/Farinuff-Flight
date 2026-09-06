@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3]
+[gd_scene load_steps=17 format=3]
 
 [ext_resource type="Script" path="res://entities/player/player_3d.gd" id="1_player"]
 [ext_resource type="PackedScene" path="res://assets/models/redesign/player_butterfly.glb" id="2_model"]
@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" path="res://assets/models/redesign/player_butterfly_monarch.glb" id="4_monarch"]
 
 [ext_resource type="Shader" path="res://effects/shaders/native_shield_3d.gdshader" id="5_shield"]
+[ext_resource type="Shader" path="res://effects/shaders/native_core_3d.gdshader" id="6_core"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
 radius = 1.366826
@@ -21,6 +22,16 @@ height = 4.0
 radial_segments = 20
 rings = 10
 material = SubResource("StandardMaterial3D_shield")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_core_glow"]
+shader = ExtResource("6_core")
+
+[sub_resource type="SphereMesh" id="SphereMesh_core_glow"]
+radius = 0.34
+height = 0.68
+radial_segments = 8
+rings = 4
+material = SubResource("ShaderMaterial_core_glow")
 
 [sub_resource type="StandardMaterial3D" id="ExhaustMaterial"]
 shading_mode = 0
@@ -77,6 +88,13 @@ cast_shadow = 0
 gi_mode = 0
 mesh = SubResource("SphereMesh_shield")
 
+[node name="CoreGlow" type="MeshInstance3D" parent="Visuals"]
+position = Vector3(0, 0.24, 0)
+scale = Vector3(0.6, 0.42, 0.6)
+cast_shadow = 0
+gi_mode = 0
+mesh = SubResource("SphereMesh_core_glow")
+
 [node name="Attachments" type="Node3D" parent="."]
 
 [node name="Sockets" type="Node3D" parent="Attachments"]
@@ -117,6 +135,20 @@ position = Vector3(0, 0.2, 0)
 [node name="Boost" type="Marker3D" parent="Attachments/Sockets"]
 position = Vector3(0, 0.08, 0.8)
 
+[node name="EngineGlow" type="MeshInstance3D" parent="Attachments/Sockets/EngineLeft"]
+position = Vector3(0, 0.02, 0)
+scale = Vector3(0.68, 0.42, 0.68)
+cast_shadow = 0
+gi_mode = 0
+mesh = SubResource("SphereMesh_core_glow")
+
+[node name="EngineGlow" type="MeshInstance3D" parent="Attachments/Sockets/EngineRight"]
+position = Vector3(0, 0.02, 0)
+scale = Vector3(0.68, 0.42, 0.68)
+cast_shadow = 0
+gi_mode = 0
+mesh = SubResource("SphereMesh_core_glow")
+
 [node name="Impact" type="Marker3D" parent="Attachments/Sockets"]
 position = Vector3(0, 0.2, 0)
 
@@ -132,7 +164,7 @@ one_shot = true
 emitting = false
 amount = 16
 lifetime = 0.3
-local_coords = false
+local_coords = true
 visibility_aabb = AABB(-5, -2, -5, 10, 4, 10)
 process_material = SubResource("ExhaustProcess")
 draw_pass_1 = SubResource("ExhaustMesh")
@@ -141,7 +173,7 @@ draw_pass_1 = SubResource("ExhaustMesh")
 emitting = false
 amount = 16
 lifetime = 0.3
-local_coords = false
+local_coords = true
 visibility_aabb = AABB(-5, -2, -5, 10, 4, 10)
 process_material = SubResource("ExhaustProcess")
 draw_pass_1 = SubResource("ExhaustMesh")

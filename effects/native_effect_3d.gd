@@ -1,37 +1,66 @@
 extends Node3D
 class_name NativeEffect3D
-## Pooled native mesh flashes, shock rings, and GPU sparks.
+## Bounded native 3D feedback unit for combat, telegraphs, and pickups.
+##
+## Every visual is local to this pooled wrapper: meshes and particles are
+## reused, gameplay remains on the Combat Plane, and the manager decides which
+## effects may claim one of the small number of local light slots.
 
 signal returned_to_pool(effect: NativeEffect3D)
 
-enum EffectKind { MUZZLE, IMPACT, DEATH, BOOST, PICKUP }
-
-@onready var particles: GPUParticles3D = $Particles
-@onready var burst_mesh: MeshInstance3D = $BurstMesh
-@onready var pulse_mesh: MeshInstance3D = $PulseMesh
+enum EffectKind {
+	MUZZLE,
+	IMPACT,
+	DEATH,
+	BOOST,
+	PICKUP,
+	PROJECTILE,
+	EXPLOSION,
+	SHIELD,
+	TELEGRAPH,
+}
 
 const SHOCK_RING := preload("res://assets/models/native/shock_ring.glb")
 const MUZZLE_FLARE := preload("res://assets/models/native/muzzle_flare.glb")
+
+@onready var core_mesh: MeshInstance3D = $CoreMesh
+@onready var burst_mesh: MeshInstance3D = $BurstMesh
+@onready var pulse_mesh: MeshInstance3D = $PulseMesh
+@onready var secondary_ring: MeshInstance3D = $SecondaryRing
+@onready var streak_mesh: MeshInstance3D = $StreakMesh
+@onready var particles: GPUParticles3D = $Particles
+@onready var burst_light: OmniLight3D = $BurstLight
+
 var _flare: Mesh
 var _impact_mesh: Mesh
+var _shock_ring: Mesh
 var is_active := false
 var _idle_parent: Node3D
 var _kind := EffectKind.IMPACT
 var _elapsed := 0.0
 var _duration := 0.24
 var _intensity := 1.0
+var _phase_offset := 0.0
+var _local_light_enabled := false
 
 
 func _ready() -> void:
 	_impact_mesh = burst_mesh.mesh
 	_flare = _extract_mesh(MUZZLE_FLARE)
-	pulse_mesh.material_override = pulse_mesh.mesh.surface_get_material(0)
-	pulse_mesh.mesh = _extract_mesh(SHOCK_RING)
-	burst_mesh.material_override = _impact_mesh.surface_get_material(0)
+	_shock_ring = _extract_mesh(SHOCK_RING)
+	var effect_material := _impact_mesh.surface_get_material(0)
+	var ring_material := pulse_mesh.mesh.surface_get_material(0)
+	burst_mesh.material_override = effect_material
+	streak_mesh.material_override = effect_material
+	pulse_mesh.material_override = ring_material
+	secondary_ring.material_override = ring_material
+	pulse_mesh.mesh = _shock_ring
 	visible = false
 	process_mode = Node.PROCESS_MODE_DISABLED
 	set_process(false)
 	particles.emitting = false
+	burst_light.visible = false
+	burst_light.light_energy = 0.0
 	_set_shader_state(Color.TRANSPARENT, 0.0, 0.0)
 
 
@@ -39,16 +68,28 @@ func configure_pool(idle_parent: Node3D) -> void:
 	_idle_parent = idle_parent
 
 
-## Render the effect mesh and particle pipeline under the transition cover
-## without arming gameplay, starting emission, or joining a live effect set.
+## Render every mesh/material and the particle pipeline under the transition
+## cover without arming gameplay, starting a live effect, or claiming a light.
 func prepare_visual_warmup() -> void:
 	is_active = false
 	transform = Transform3D.IDENTITY
+	_kind = EffectKind.IMPACT
+	_elapsed = 0.0
+	_duration = 0.24
+	_intensity = 1.0
+	_phase_offset = 0.0
+	_local_light_enabled = false
 	visible = true
+	burst_mesh.mesh = _impact_mesh
+	core_mesh.visible = true
 	burst_mesh.visible = true
 	pulse_mesh.visible = true
-	particles.amount = 8
-	particles.lifetime = 0.18
+	secondary_ring.visible = true
+	streak_mesh.visible = true
+	particles.amount = 24
+	particles.lifetime = 0.3
+	burst_light.visible = false
+	burst_light.light_energy = 0.0
 	particles.restart()
 	particles.emitting = true
 	_set_shader_state(Color(0.2, 0.8, 1.0, 1.0), 0.18, 1.0)
@@ -58,7 +99,9 @@ func play(
 	kind: EffectKind,
 	effect_position: Vector3,
 	direction: Vector3 = Vector3.FORWARD,
-	intensity: float = 1.0
+	intensity: float = 1.0,
+	preserve_height: bool = false,
+	emit_local_light: bool = false
 ) -> bool:
 	if is_active or _idle_parent == null:
 		return false
@@ -66,8 +109,11 @@ func play(
 	_intensity = maxf(intensity, 0.1)
 	_elapsed = 0.0
 	_duration = _get_duration(kind)
+	_phase_offset = float(Time.get_ticks_usec() % 1000) * 0.006
 	is_active = true
-	global_position = Vector3(effect_position.x, 0.0, effect_position.z)
+	var visual_position := effect_position
+	visual_position.y = effect_position.y if preserve_height else 0.0
+	global_position = visual_position
 	rotation.y = _get_yaw(direction)
 	scale = Vector3.ONE
 	visible = true
@@ -76,14 +122,19 @@ func play(
 	var color := _get_color(kind)
 	_set_shader_state(color, 1.0, _get_emission(kind))
 	burst_mesh.mesh = _flare if kind == EffectKind.MUZZLE else _impact_mesh
-	burst_mesh.scale = Vector3.ONE * 0.25 * _intensity
-	pulse_mesh.scale = Vector3.ONE * 0.35 * _intensity
-	burst_mesh.visible = true
-	pulse_mesh.visible = kind != EffectKind.MUZZLE
+	core_mesh.visible = kind != EffectKind.TELEGRAPH
+	burst_mesh.visible = kind != EffectKind.TELEGRAPH
+	pulse_mesh.visible = kind not in [EffectKind.MUZZLE, EffectKind.PROJECTILE]
+	secondary_ring.visible = kind in [EffectKind.IMPACT, EffectKind.DEATH, EffectKind.BOOST, EffectKind.PICKUP, EffectKind.EXPLOSION, EffectKind.SHIELD, EffectKind.TELEGRAPH]
+	streak_mesh.visible = kind in [EffectKind.MUZZLE, EffectKind.PROJECTILE, EffectKind.BOOST, EffectKind.TELEGRAPH]
 	particles.amount = _get_particle_amount(kind)
 	particles.lifetime = _get_particle_lifetime(kind)
 	particles.restart()
 	particles.emitting = true
+	_local_light_enabled = emit_local_light and _get_light_energy(kind) > 0.0
+	burst_light.visible = _local_light_enabled
+	burst_light.light_color = color
+	burst_light.light_energy = _get_light_energy(kind) * _intensity if _local_light_enabled else 0.0
 	return true
 
 
@@ -94,13 +145,55 @@ func _process(delta: float) -> void:
 	var progress := clampf(_elapsed / _duration, 0.0, 1.0)
 	var fade := 1.0 - progress
 	var expansion := 1.0 - pow(1.0 - progress, 3.0)
-	if _kind == EffectKind.MUZZLE:
-		burst_mesh.scale = Vector3.ONE * lerpf(0.5, 1.8, expansion) * _intensity
-		pulse_mesh.scale = Vector3.ONE * lerpf(0.4, 1.2, expansion) * _intensity
-	else:
-		burst_mesh.scale = Vector3.ONE * lerpf(0.25, 1.3, expansion) * _intensity
-		pulse_mesh.scale = Vector3(lerpf(0.35, 2.6, expansion), 1.0, lerpf(0.35, 2.6, expansion)) * _intensity
-	_set_shader_state(_get_color(_kind), fade, _get_emission(_kind) * (0.45 + fade * 0.55))
+	var pulse := 0.78 + 0.22 * sin(_elapsed * 18.0 + _phase_offset)
+	var mesh_scale := 0.25
+	var ring_scale := 0.35
+	var streak_width := 0.5
+	var streak_length := 1.0
+	match _kind:
+		EffectKind.MUZZLE:
+			mesh_scale = lerpf(0.45, 1.45, expansion)
+			ring_scale = lerpf(0.45, 1.1, expansion)
+			streak_width = lerpf(0.7, 0.35, progress)
+			streak_length = lerpf(0.7, 1.8, expansion)
+		EffectKind.PROJECTILE:
+			mesh_scale = lerpf(0.16, 0.48, expansion)
+			streak_width = lerpf(0.32, 0.12, progress)
+			streak_length = lerpf(0.45, 1.25, expansion)
+		EffectKind.TELEGRAPH:
+			streak_width = lerpf(1.35, 0.6, progress)
+			streak_length = lerpf(7.0, 9.0, expansion)
+			ring_scale = lerpf(0.55, 1.4, expansion)
+		EffectKind.SHIELD:
+			mesh_scale = lerpf(0.6, 2.1, expansion)
+			ring_scale = lerpf(0.75, 3.2, expansion)
+		EffectKind.EXPLOSION:
+			mesh_scale = lerpf(0.3, 2.65, expansion)
+			ring_scale = lerpf(0.4, 3.8, expansion)
+			streak_length = lerpf(1.0, 2.2, expansion)
+		EffectKind.DEATH:
+			mesh_scale = lerpf(0.25, 1.75, expansion)
+			ring_scale = lerpf(0.35, 2.8, expansion)
+		EffectKind.BOOST:
+			mesh_scale = lerpf(0.22, 0.82, expansion)
+			ring_scale = lerpf(0.4, 1.8, expansion)
+			streak_width = lerpf(1.0, 0.35, progress)
+			streak_length = lerpf(2.0, 4.2, expansion)
+		EffectKind.PICKUP:
+			mesh_scale = lerpf(0.18, 0.72, expansion)
+			ring_scale = lerpf(0.3, 1.55, expansion)
+	core_mesh.scale = Vector3.ONE * mesh_scale * _intensity
+	burst_mesh.scale = Vector3.ONE * mesh_scale * _intensity
+	pulse_mesh.scale = Vector3(ring_scale, 1.0, ring_scale) * _intensity * (0.92 + pulse * 0.08)
+	secondary_ring.scale = Vector3.ONE * ring_scale * _intensity * (0.9 + pulse * 0.1)
+	streak_mesh.scale = Vector3(streak_width, streak_width, streak_length) * _intensity
+	_set_shader_state(
+		_get_color(_kind),
+		fade,
+		_get_emission(_kind) * (0.45 + fade * 0.55)
+	)
+	if _local_light_enabled:
+		burst_light.light_energy = _get_light_energy(_kind) * _intensity * fade * fade
 	if _elapsed >= _duration:
 		despawn()
 
@@ -113,8 +206,25 @@ func despawn() -> void:
 	set_process(false)
 	particles.emitting = false
 	process_mode = Node.PROCESS_MODE_DISABLED
+	core_mesh.visible = false
 	burst_mesh.visible = false
 	pulse_mesh.visible = false
+	secondary_ring.visible = false
+	streak_mesh.visible = false
+	burst_light.visible = false
+	burst_light.light_energy = 0.0
+	_local_light_enabled = false
+	burst_mesh.mesh = _impact_mesh
+	_kind = EffectKind.IMPACT
+	_elapsed = 0.0
+	_duration = 0.24
+	_intensity = 1.0
+	_phase_offset = 0.0
+	core_mesh.scale = Vector3.ONE
+	burst_mesh.scale = Vector3.ONE
+	pulse_mesh.scale = Vector3.ONE
+	secondary_ring.scale = Vector3.ONE
+	streak_mesh.scale = Vector3.ONE
 	scale = Vector3.ONE
 	_set_shader_state(Color.TRANSPARENT, 0.0, 0.0)
 	ObjectPool.release(self, _idle_parent)
@@ -124,54 +234,126 @@ func despawn() -> void:
 func _get_duration(kind: EffectKind) -> float:
 	match kind:
 		EffectKind.MUZZLE:
-			return 0.12
+			return 0.1
+		EffectKind.PROJECTILE:
+			return 0.08
 		EffectKind.IMPACT:
 			return 0.2
 		EffectKind.DEATH:
 			return 0.52
 		EffectKind.BOOST:
-			return 0.3
-		EffectKind.PICKUP:
 			return 0.34
+		EffectKind.PICKUP:
+			return 0.38
+		EffectKind.EXPLOSION:
+			return 0.62
+		EffectKind.SHIELD:
+			return 0.48
+		EffectKind.TELEGRAPH:
+			return 0.55
 	return 0.24
 
 
 func _get_particle_amount(kind: EffectKind) -> int:
 	match kind:
 		EffectKind.MUZZLE:
-			return 5
-		EffectKind.IMPACT:
 			return 8
+		EffectKind.PROJECTILE:
+			return 3
+		EffectKind.IMPACT:
+			return 12
 		EffectKind.DEATH:
-			return 20
+			return 28
 		EffectKind.BOOST:
-			return 14
+			return 20
 		EffectKind.PICKUP:
-			return 16
+			return 18
+		EffectKind.EXPLOSION:
+			return 40
+		EffectKind.SHIELD:
+			return 32
+		EffectKind.TELEGRAPH:
+			return 6
 	return 8
 
 
 func _get_particle_lifetime(kind: EffectKind) -> float:
-	return 0.12 if kind == EffectKind.MUZZLE else 0.18 if kind == EffectKind.IMPACT else 0.42 if kind == EffectKind.DEATH else 0.32 if kind == EffectKind.PICKUP else 0.28
+	match kind:
+		EffectKind.MUZZLE:
+			return 0.14
+		EffectKind.PROJECTILE:
+			return 0.08
+		EffectKind.IMPACT:
+			return 0.2
+		EffectKind.DEATH:
+			return 0.46
+		EffectKind.BOOST:
+			return 0.32
+		EffectKind.PICKUP:
+			return 0.36
+		EffectKind.EXPLOSION:
+			return 0.56
+		EffectKind.SHIELD:
+			return 0.42
+		EffectKind.TELEGRAPH:
+			return 0.3
+	return 0.24
 
 
 func _get_color(kind: EffectKind) -> Color:
 	match kind:
-		EffectKind.MUZZLE:
+		EffectKind.MUZZLE, EffectKind.PROJECTILE:
 			return Color(0.18, 0.8, 1.0, 1.0)
 		EffectKind.IMPACT:
 			return Color(1.0, 0.45, 0.08, 1.0)
-		EffectKind.DEATH:
+		EffectKind.DEATH, EffectKind.EXPLOSION:
 			return Color(1.0, 0.1, 0.42, 1.0)
 		EffectKind.BOOST:
 			return Color(0.2, 1.0, 0.56, 1.0)
 		EffectKind.PICKUP:
 			return Color(1.0, 0.78, 0.18, 1.0)
+		EffectKind.SHIELD:
+			return Color(0.16, 0.74, 1.0, 1.0)
+		EffectKind.TELEGRAPH:
+			return Color(1.0, 0.16, 0.04, 1.0)
 	return Color.WHITE
 
 
+func _get_accent(kind: EffectKind) -> Color:
+	match kind:
+		EffectKind.MUZZLE, EffectKind.PROJECTILE, EffectKind.SHIELD:
+			return Color(0.88, 1.0, 1.0, 1.0)
+		EffectKind.BOOST:
+			return Color(0.8, 1.0, 0.9, 1.0)
+		EffectKind.TELEGRAPH, EffectKind.EXPLOSION:
+			return Color(1.0, 0.82, 0.24, 1.0)
+		EffectKind.DEATH:
+			return Color(1.0, 0.72, 0.86, 1.0)
+	return Color(1.0, 0.96, 0.72, 1.0)
+
+
 func _get_emission(kind: EffectKind) -> float:
-	return 2.6 if kind == EffectKind.DEATH else 2.0
+	match kind:
+		EffectKind.EXPLOSION, EffectKind.SHIELD:
+			return 3.2
+		EffectKind.DEATH, EffectKind.TELEGRAPH:
+			return 2.8
+		EffectKind.BOOST:
+			return 2.5
+	return 2.0
+
+
+func _get_light_energy(kind: EffectKind) -> float:
+	match kind:
+		EffectKind.EXPLOSION:
+			return 3.8
+		EffectKind.SHIELD:
+			return 2.8
+		EffectKind.DEATH:
+			return 2.2
+		EffectKind.IMPACT, EffectKind.BOOST:
+			return 1.4
+	return 0.0
 
 
 func _get_yaw(direction: Vector3) -> float:
@@ -180,12 +362,29 @@ func _get_yaw(direction: Vector3) -> float:
 
 
 func _set_shader_state(color: Color, alpha: float, emission: float) -> void:
-	burst_mesh.set_instance_shader_parameter(&"instance_color", color)
-	burst_mesh.set_instance_shader_parameter(&"instance_alpha", alpha)
-	burst_mesh.set_instance_shader_parameter(&"instance_emission", emission)
-	pulse_mesh.set_instance_shader_parameter(&"instance_color", color)
-	pulse_mesh.set_instance_shader_parameter(&"instance_alpha", alpha)
-	pulse_mesh.set_instance_shader_parameter(&"instance_emission", emission)
+	var accent := _get_accent(_kind)
+	_set_effect_shader_state(burst_mesh, color, accent, alpha, emission)
+	_set_effect_shader_state(streak_mesh, color, accent, alpha, emission)
+	_set_effect_shader_state(pulse_mesh, color, accent, alpha, emission)
+	_set_effect_shader_state(secondary_ring, color, accent, alpha, emission)
+	core_mesh.set_instance_shader_parameter(&"instance_color", color)
+	core_mesh.set_instance_shader_parameter(&"instance_alpha", alpha)
+	core_mesh.set_instance_shader_parameter(&"instance_intensity", emission)
+	core_mesh.set_instance_shader_parameter(&"instance_phase", _phase_offset)
+
+
+func _set_effect_shader_state(
+	mesh: MeshInstance3D,
+	color: Color,
+	accent: Color,
+	alpha: float,
+	emission: float
+) -> void:
+	mesh.set_instance_shader_parameter(&"instance_color", color)
+	mesh.set_instance_shader_parameter(&"instance_accent", accent)
+	mesh.set_instance_shader_parameter(&"instance_alpha", alpha)
+	mesh.set_instance_shader_parameter(&"instance_emission", emission)
+	mesh.set_instance_shader_parameter(&"instance_phase", _phase_offset)
 
 
 func _extract_mesh(scene: PackedScene) -> Mesh:

@@ -4,12 +4,14 @@ class_name Player3D
 ## socket, and first-slice power-up contract.
 
 signal fire_requested(combat_position: Vector3, direction: Vector3)
+signal muzzle_feedback_requested(visual_position: Vector3, direction: Vector3)
 signal deflection_requested(deflector_position: Vector3, deflector_velocity: Vector3)
 signal boost_started(combat_position: Vector3, direction: Vector3)
 signal damage_taken(combat_position: Vector3, source: DamageSource, remaining_lives: int)
 signal invulnerability_changed(active: bool)
 signal drone_escort_changed(enabled: bool)
 signal shield_burst_requested(combat_position: Vector3)
+signal shield_absorbed(combat_position: Vector3)
 signal nuke_requested
 
 enum DamageSource { ENEMY_CONTACT, ENEMY_PROJECTILE, HOSTILE_ORDNANCE }
@@ -34,6 +36,9 @@ const PowerUpTypes := preload("res://entities/powerups/power_up_types.gd")
 @onready var collision_shape: CollisionShape3D = $CollisionShape3D
 @onready var visuals: Node3D = $Visuals
 @onready var shield_visual: MeshInstance3D = $Visuals/ShieldVisual
+@onready var core_glow: MeshInstance3D = $Visuals/CoreGlow
+@onready var engine_glow_left: MeshInstance3D = $Attachments/Sockets/EngineLeft/EngineGlow
+@onready var engine_glow_right: MeshInstance3D = $Attachments/Sockets/EngineRight/EngineGlow
 @onready var attachments: Node3D = $Attachments
 @onready var sockets: Node3D = $Attachments/Sockets
 @onready var shoot_timer: Timer = $ShootTimer
@@ -57,6 +62,8 @@ var post_boost_slide_timer := 0.0
 var drift_speed_bonus := 1.0
 var is_invincible := false
 var _invincibility_visual_elapsed := 0.0
+var _ship_visual_elapsed := 0.0
+var _shield_visual_elapsed := 0.0
 
 # First-slice temporary power-up state. The type enum and collection signal
 # remain shared with the reference Player through PowerUp/SignalBus.
@@ -90,6 +97,8 @@ func _ready() -> void:
 	invincibility_timer.timeout.connect(_on_invincibility_ended)
 	SignalBus.power_up_collected.connect(_on_power_up_collected)
 	shield_visual.visible = false
+	core_glow.visible = true
+	_update_visual_feedback(0.0)
 	# Asset review remains inert, even if an earlier run left GameManager active.
 	set_physics_process(false)
 
@@ -105,6 +114,7 @@ func configure_flight_space(value: FlightSpace) -> void:
 	$Visuals/InterceptorHull.visible = MetaProgression.selected_ship == "ship_interceptor"
 	$Visuals/BulwarkHull.visible = MetaProgression.selected_ship == "ship_bulwark"
 	_flight_space = value
+	_reset_feedback_state()
 	if not get_viewport().size_changed.is_connected(_refresh_movement_bounds):
 		get_viewport().size_changed.connect(_refresh_movement_bounds)
 	_refresh_movement_bounds()
@@ -114,6 +124,7 @@ func configure_flight_space(value: FlightSpace) -> void:
 func _physics_process(delta: float) -> void:
 	$Attachments/Sockets/EngineLeft/Exhaust.emitting = GameManager.is_game_active
 	$Attachments/Sockets/EngineRight/Exhaust.emitting = GameManager.is_game_active
+	_update_visual_feedback(delta)
 	_update_invincibility_visual(delta)
 	if not GameManager.is_game_active:
 		return
@@ -130,6 +141,36 @@ func _physics_process(delta: float) -> void:
 	_update_shooting()
 
 
+func _update_visual_feedback(delta: float) -> void:
+	_ship_visual_elapsed += delta
+	var flight_power := 1.0 if GameManager.is_game_active else 0.22
+	var engine_power := flight_power * (1.35 if is_boosting else 1.0)
+	var pulse := 0.86 + 0.14 * sin(_ship_visual_elapsed * 11.0)
+	core_glow.set_instance_shader_parameter(&"instance_color", Color(0.18, 0.8, 1.0, 1.0))
+	core_glow.set_instance_shader_parameter(&"instance_alpha", flight_power)
+	core_glow.set_instance_shader_parameter(&"instance_intensity", pulse * (1.0 + engine_power * 0.55))
+	core_glow.set_instance_shader_parameter(&"instance_phase", 0.0)
+	for glow in [engine_glow_left, engine_glow_right]:
+		glow.set_instance_shader_parameter(&"instance_color", Color(0.08, 0.66, 1.0, 1.0))
+		glow.set_instance_shader_parameter(&"instance_alpha", flight_power)
+		glow.set_instance_shader_parameter(&"instance_intensity", engine_power * pulse)
+		glow.set_instance_shader_parameter(&"instance_phase", 1.4 if glow == engine_glow_right else 0.0)
+	if shield_visual.visible:
+		_shield_visual_elapsed += delta
+		shield_visual.set_instance_shader_parameter(
+			&"instance_pulse", 0.78 + 0.22 * sin(_shield_visual_elapsed * 9.0)
+		)
+
+
+func _reset_feedback_state() -> void:
+	_ship_visual_elapsed = 0.0
+	_shield_visual_elapsed = 0.0
+	core_glow.visible = true
+	shield_visual.visible = has_shield
+	shield_visual.set_instance_shader_parameter(&"instance_pulse", 0.0)
+	_update_visual_feedback(0.0)
+
+
 ## Applies damage through the shared GameManager/SignalBus authority. A native
 ## Shield absorbs the hit and opens the reference's short immunity window;
 ## returns true only when this call consumed a life.
@@ -139,6 +180,9 @@ func receive_damage(combat_position: Vector3, source: DamageSource) -> bool:
 	if has_shield:
 		has_shield = false
 		shield_visual.visible = false
+		var shield_position := combat_position
+		shield_position.y = 0.0
+		shield_absorbed.emit(shield_position)
 		AudioManager.play_shield()
 		_start_invincibility(DamageTuning.SHIELD_INVULNERABILITY)
 		return false
@@ -159,6 +203,7 @@ func reset_damage_state() -> void:
 	is_invincible = false
 	_invincibility_visual_elapsed = 0.0
 	visuals.show()
+	_reset_feedback_state()
 	if was_invincible:
 		invulnerability_changed.emit(false)
 
@@ -174,6 +219,8 @@ func reset_power_up_state() -> void:
 	spread_shot_remaining = 0.0
 	magnet_remaining = 0.0
 	shield_visual.visible = false
+	_shield_visual_elapsed = 0.0
+	shield_visual.set_instance_shader_parameter(&"instance_pulse", 0.0)
 
 
 func get_power_up_status() -> Dictionary:
@@ -288,12 +335,16 @@ func _update_shooting() -> void:
 
 
 func _emit_muzzle_shot(muzzle: Marker3D, direction: Vector3) -> void:
-	var screen_direction := _flight_space.combat_motion_to_screen(direction).normalized()
+	var normalized_direction := Vector3(direction.x, 0.0, direction.z).normalized()
+	if normalized_direction.is_zero_approx():
+		normalized_direction = last_aim_direction
+	var screen_direction := _flight_space.combat_motion_to_screen(normalized_direction).normalized()
 	var spawn_position := muzzle.global_position + _flight_space.screen_motion_to_combat(
 		screen_direction * WeaponTuning.MUZZLE_CLEARANCE
 	)
 	spawn_position.y = 0.0
-	fire_requested.emit(spawn_position, direction)
+	fire_requested.emit(spawn_position, normalized_direction)
+	muzzle_feedback_requested.emit(muzzle.global_position, normalized_direction)
 
 
 func _get_fire_directions() -> Array[Vector3]:
@@ -366,6 +417,7 @@ func _apply_rapid_fire() -> void:
 
 func _apply_shield() -> void:
 	has_shield = true
+	_shield_visual_elapsed = 0.0
 	shield_visual.visible = true
 
 
