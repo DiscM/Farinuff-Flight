@@ -3,6 +3,7 @@
 [ext_resource type="Environment" path="res://effects/native_3d_combat_environment.tres" id="1_environment"]
 
 [node name="Native3DCombatLighting" type="Node3D"]
+editor_description = "Shared Forward+ lighting: one shadowed key and one shadow-free cool fill keep low-poly hulls readable without adding per-effect lights."
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = ExtResource("1_environment")
@@ -12,5 +13,14 @@ rotation_degrees = Vector3(-52, -24, 0)
 light_color = Color(0.72, 0.86, 1, 1)
 light_energy = 2.2
 shadow_enabled = true
-directional_shadow_mode = 2
-directional_shadow_max_distance = 120.0
+directional_shadow_mode = 1
+directional_shadow_max_distance = 96.0
+shadow_bias = 0.05
+shadow_normal_bias = 1.0
+light_angular_distance = 0.35
+
+[node name="FillLight" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-24, 148, 0)
+light_color = Color(0.28, 0.46, 0.92, 1)
+light_energy = 0.32
+shadow_enabled = false

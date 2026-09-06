@@ -5,15 +5,21 @@ extends Control
 signal continue_endless
 signal return_to_menu
 
+const NativeUpgradeCatalog := preload("res://entities/player/native_player_upgrades.gd")
+const SHIP_PREVIEW_SCRIPT := preload("res://entities/player/ship_upgrade_preview.gd")
 const CYAN := Color(0.14, 0.93, 1.0)
 const GREEN := Color(0.32, 1.0, 0.55)
 const YELLOW := Color(1.0, 0.84, 0.12)
 const MAGENTA := Color(1.0, 0.16, 0.55)
 const INK := Color(0.005, 0.012, 0.04, 0.98)
+const FALLBACK_ICON := "✦"
+const FALLBACK_NAME := "YOUR SHIP"
 
 var _wave_label: Label
 var _body_label: Label
 var _salvage_label: Label
+var _loadout_label: Label
+var _ship_preview: ShipUpgradePreview
 var _continue_button: Button
 var _menu_button: Button
 var _resolved := false
@@ -38,7 +44,7 @@ func _build_ui() -> void:
 	add_child(center)
 
 	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(318.0, 390.0)
+	panel.custom_minimum_size = Vector2(430.0, 560.0)
 	panel.add_theme_stylebox_override("panel", _panel_style())
 	center.add_child(panel)
 
@@ -84,6 +90,24 @@ func _build_ui() -> void:
 	_body_label.add_theme_color_override("font_color", Color(0.88, 0.93, 1.0))
 	_body_label.add_theme_font_size_override("font_size", 15)
 	content.add_child(_body_label)
+
+	_ship_preview = SHIP_PREVIEW_SCRIPT.new() as ShipUpgradePreview
+	if _ship_preview != null:
+		_ship_preview.configure(_active_upgrade_ids(), "", _selected_hull_id())
+		_ship_preview.custom_minimum_size = Vector2(0.0, 84.0)
+		content.add_child(_ship_preview)
+	else:
+		var preview_fallback := Label.new()
+		preview_fallback.text = "NATIVE SHIP PREVIEW UNAVAILABLE"
+		preview_fallback.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		content.add_child(preview_fallback)
+
+	_loadout_label = Label.new()
+	_loadout_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_loadout_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_loadout_label.add_theme_color_override("font_color", Color(0.68, 0.84, 1.0))
+	_loadout_label.add_theme_font_size_override("font_size", 12)
+	content.add_child(_loadout_label)
 
 	_salvage_label = Label.new()
 	_salvage_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -148,14 +172,82 @@ func _button_style(fill: Color, border: Color, radius: int, width: int) -> Style
 ## Public setup seam so the game scene can provide the exact cleared wave.
 func show_result(final_wave: int) -> void:
 	_wave_label.text = "WAVE %02d  //  EXPEDITION CLEAR" % final_wave
-	var ship_profile := MetaProgression.get_selected_ship_profile()
-	var ship_name := str(ship_profile.get("name", "YOUR SHIP")).to_upper()
+	var hull_id := _selected_hull_id()
+	var ship_name := _selected_ship_name()
 	_body_label.text = "%s BREAKS THE FORMATION.\nTHE EXPEDITION IS YOURS." % ship_name
-	_salvage_label.text = "BOSS SALVAGE BANKED: %s" % _format_salvage(GameManager.run_salvage_boss)
+	_salvage_label.text = "RUN SALVAGE: %s  ·  BOSS BANKED: %s" % [
+		_format_salvage(GameManager.run_salvage),
+		_format_salvage(GameManager.run_salvage_boss),
+	]
+	var active_ids := _active_upgrade_ids()
+	if _ship_preview != null:
+		_ship_preview.configure(active_ids, "", hull_id)
+	if _loadout_label != null:
+		_loadout_label.text = _format_loadout(hull_id, active_ids)
 
 
 func _format_salvage(value: int) -> String:
 	return "SALVAGE %d" % value
+
+
+func _selected_hull_id() -> String:
+	var selected_id := str(MetaProgression.selected_ship)
+	for ship in MetaProgression.SHIP_VARIANTS:
+		if str(ship.get("id", "")) == selected_id:
+			return selected_id
+	return MetaProgression.DEFAULT_SHIP
+
+
+func _selected_ship_name() -> String:
+	var selected_id := _selected_hull_id()
+	for ship in MetaProgression.SHIP_VARIANTS:
+		if str(ship.get("id", "")) == selected_id:
+			return _safe_text(ship, "name", FALLBACK_NAME).to_upper()
+	return FALLBACK_NAME
+
+
+func _active_upgrade_ids() -> Array[String]:
+	var ids: Array[String] = []
+	var player := get_tree().get_first_node_in_group("player_craft")
+	if player == null or not player.has_method("get_active_elite_upgrade_ids"):
+		return ids
+	for raw_id: Variant in player.get_active_elite_upgrade_ids():
+		var upgrade_id := str(raw_id)
+		if NativeUpgradeCatalog.SUPPORTED_IDS.has(upgrade_id) and not ids.has(upgrade_id):
+			ids.append(upgrade_id)
+	return ids
+
+
+func _format_loadout(hull_id: String, active_ids: Array[String]) -> String:
+	var module_names: Array[String] = []
+	for upgrade_id in active_ids:
+		var definition := _upgrade_definition(upgrade_id)
+		var icon := _safe_text(definition, "icon", FALLBACK_ICON)
+		var name := _safe_text(definition, "name", upgrade_id.replace("_", " ").to_upper())
+		module_names.append("%s %s" % [icon, name])
+	var modules_text := "NONE INSTALLED" if module_names.is_empty() else " · ".join(module_names)
+	return "LOADOUT  ·  %s\nNATIVE MODULES  %d/%d  ·  %s" % [
+		_selected_ship_name() if hull_id == _selected_hull_id() else FALLBACK_NAME,
+		active_ids.size(),
+		NativeUpgradeCatalog.SUPPORTED_IDS.size(),
+		modules_text,
+	]
+
+
+func _upgrade_definition(upgrade_id: String) -> Dictionary:
+	for definition in GameManager.ALL_UPGRADES:
+		if str(definition.get("id", "")) == upgrade_id:
+			return definition
+	for definition in GameManager.META_ELITE_UPGRADES:
+		if str(definition.get("id", "")) == upgrade_id:
+			return definition
+	return {}
+
+
+func _safe_text(data: Dictionary, key: String, fallback: String) -> String:
+	var value: Variant = data.get(key, "")
+	var text := str(value).strip_edges()
+	return text if text != "" else fallback
 
 
 func _on_continue_pressed() -> void:

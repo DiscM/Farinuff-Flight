@@ -102,10 +102,11 @@ mesh = SubResource("BoxMesh_streak")
 [node name="Particles" type="GPUParticles3D" parent="."]
 emitting = false
 amount = 24
-lifetime = 0.3
+lifetime = 0.48
 one_shot = true
 explosiveness = 1.0
 local_coords = true
+visibility_aabb = AABB(-4, -4, -4, 8, 8, 8)
 process_material = SubResource("ParticleProcessMaterial_sparks")
 draw_pass_1 = SubResource("SphereMesh_particle")
 

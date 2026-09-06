@@ -28,12 +28,12 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -180
-offset_top = -160
+offset_top = -300
 offset_right = 180
-offset_bottom = 160
+offset_bottom = 300
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/separation = 22
+theme_override_constants/separation = 12
 alignment = 1
 
 [node name="GameOverLabel" type="Label" parent="VBoxContainer"]
@@ -91,6 +91,14 @@ text = "RUNS: 0 · KILLS: 0"
 horizontal_alignment = 1
 theme_override_colors/font_color = Color(0.5, 0.55, 0.7, 1)
 theme_override_font_sizes/font_size = 12
+
+[node name="LoadoutLabel" type="Label" parent="VBoxContainer"]
+layout_mode = 2
+text = "LOADOUT · YOUR SHIP\nNATIVE MODULES 0/13 · NONE INSTALLED"
+horizontal_alignment = 1
+autowrap_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.7, 0.9, 1)
+theme_override_font_sizes/font_size = 11
 
 [node name="Spacer" type="Control" parent="VBoxContainer"]
 layout_mode = 2

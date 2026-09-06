@@ -24,6 +24,18 @@ const NativeHazardManager := preload("res://systems/native_hazard_manager_3d.gd"
 const PowerUpManager := preload("res://systems/power_up_manager_3d.gd")
 const PlayerDrone := preload("res://entities/player/player_drone_3d.gd")
 const DRONE_SCENE := preload("res://entities/player/player_drone_3d.tscn")
+const PresentationSettings := preload("res://effects/rendering/native_3d_presentation_settings.gd")
+
+const MONITOR_FRAME_PROCESS_MS := &"native_3d/frame_process_ms"
+const MONITOR_FRAME_PHYSICS_MS := &"native_3d/frame_physics_ms"
+const MONITOR_FRAME_PROCESS_PEAK_MS := &"native_3d/frame_process_peak_ms"
+const MONITOR_FRAME_PHYSICS_PEAK_MS := &"native_3d/frame_physics_peak_ms"
+const MONITOR_EFFECT_ACTIVE := &"native_3d/effect_active"
+const MONITOR_EFFECT_CAPACITY := &"native_3d/effect_capacity"
+const MONITOR_EFFECT_PRESSURE := &"native_3d/effect_pressure"
+const MONITOR_EFFECT_REJECTED := &"native_3d/effect_rejected"
+const MONITOR_EFFECT_POOL_GROWTH := &"native_3d/effect_pool_growth"
+const MONITOR_POOL_PRESSURE := &"native_3d/pool_pressure"
 
 @onready var hud: CanvasLayer = $HUD
 @onready var player: PlayerCraft = $World3D/Actors3D/Player3D
@@ -44,12 +56,26 @@ const DRONE_SCENE := preload("res://entities/player/player_drone_3d.tscn")
 ## contract. Native production gameplay will enable it when its spawner lands.
 @export var rewards_enabled := false
 @export var consume_field_supplies := false
+@export var presentation_settings: PresentationSettings
 
 var _previous_hdr_2d: bool = false
 var _pause_overlay: CanvasLayer
 var _metrics_timer := 0.0
+var _metrics_interval := 0.25
 var _drone: PlayerDrone
 var _feedback_actors: Dictionary[int, Node] = {}
+var _presentation_metrics_enabled := true
+var _presentation_metrics_registered := false
+var _presentation_frame_process_ms := 0.0
+var _presentation_frame_physics_ms := 0.0
+var _presentation_frame_process_peak_ms := 0.0
+var _presentation_frame_physics_peak_ms := 0.0
+var _presentation_effect_active := 0
+var _presentation_effect_capacity := 0
+var _presentation_effect_pressure := 0.0
+var _presentation_effect_rejected := 0
+var _presentation_effect_pool_growth := 0
+var _presentation_pool_pressure := 0.0
 
 
 func _enter_tree() -> void:
@@ -61,6 +87,8 @@ func _ready() -> void:
 	add_to_group(&"native_3d_gameplay")
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	GameManager.is_game_active = false
+	_apply_presentation_settings()
+	_register_presentation_monitors()
 	player.prepare_visual_warmup()
 	var idle_parent := $World3D/PoolRoot3D as Node3D
 	projectile_manager.configure(flight_space, $World3D/Projectiles3D, idle_parent, player)
@@ -366,6 +394,8 @@ func reset_native_progression() -> void:
 
 
 func _process(delta: float) -> void:
+	if _presentation_metrics_enabled:
+		_sample_presentation_frame_timing()
 	aim_reticle.visible = player.is_using_free_aim and GameManager.is_game_active
 	if aim_reticle.visible:
 		aim_reticle.position = flight_space.combat_to_screen(player.get_aim_reticle_combat_position())
@@ -383,12 +413,13 @@ func _process(delta: float) -> void:
 		boost_status.text = "BOOST READY"
 	_metrics_timer -= delta
 	if _metrics_timer <= 0.0 and projectile_manager.is_ready:
-		_metrics_timer = 0.25
+		_metrics_timer = _metrics_interval
 		var metrics := projectile_manager.get_metrics()
 		var effect_metrics := effect_manager.get_metrics()
 		var orb_metrics := xp_orb_manager.get_metrics()
 		var hazard_metrics := hazard_manager.get_metrics()
 		var power_up_metrics := power_up_manager.get_metrics()
+		_cache_presentation_pool_metrics(metrics, effect_metrics, orb_metrics, hazard_metrics, power_up_metrics)
 		var pool_growth := int(metrics["pool_growth_after_warmup"])
 		pool_growth += int(effect_metrics["pool_growth_after_warmup"])
 		pool_growth += int(orb_metrics["pool_growth_after_warmup"])
@@ -408,6 +439,165 @@ func _process(delta: float) -> void:
 			hazard_metrics["mine_pool_growth_after_warmup"],
 			hazard_metrics["field_pool_growth_after_warmup"]
 		]
+
+
+func _apply_presentation_settings() -> void:
+	if presentation_settings == null:
+		return
+	effect_manager.pool_size = presentation_settings.effect_pool_size
+	effect_manager.warm_batch_size = presentation_settings.effect_warm_batch_size
+	effect_manager.max_local_lights = presentation_settings.max_local_effect_lights
+	_presentation_metrics_enabled = presentation_settings.metrics_enabled
+	_metrics_interval = maxf(presentation_settings.metrics_interval, 0.05)
+
+
+func _register_presentation_monitors() -> void:
+	if not _presentation_metrics_enabled or _presentation_metrics_registered:
+		return
+	_register_presentation_monitor(MONITOR_FRAME_PROCESS_MS, "_get_presentation_frame_process_ms")
+	_register_presentation_monitor(MONITOR_FRAME_PHYSICS_MS, "_get_presentation_frame_physics_ms")
+	_register_presentation_monitor(MONITOR_FRAME_PROCESS_PEAK_MS, "_get_presentation_frame_process_peak_ms")
+	_register_presentation_monitor(MONITOR_FRAME_PHYSICS_PEAK_MS, "_get_presentation_frame_physics_peak_ms")
+	_register_presentation_monitor(MONITOR_EFFECT_ACTIVE, "_get_presentation_effect_active")
+	_register_presentation_monitor(MONITOR_EFFECT_CAPACITY, "_get_presentation_effect_capacity")
+	_register_presentation_monitor(MONITOR_EFFECT_PRESSURE, "_get_presentation_effect_pressure")
+	_register_presentation_monitor(MONITOR_EFFECT_REJECTED, "_get_presentation_effect_rejected")
+	_register_presentation_monitor(MONITOR_EFFECT_POOL_GROWTH, "_get_presentation_effect_pool_growth")
+	_register_presentation_monitor(MONITOR_POOL_PRESSURE, "_get_presentation_pool_pressure")
+	_presentation_metrics_registered = true
+
+
+func _register_presentation_monitor(monitor_name: StringName, method_name: String) -> void:
+	if Performance.has_custom_monitor(monitor_name):
+		Performance.remove_custom_monitor(monitor_name)
+	Performance.add_custom_monitor(monitor_name, Callable(self, method_name))
+
+
+func _unregister_presentation_monitors() -> void:
+	if not _presentation_metrics_registered:
+		return
+	Performance.remove_custom_monitor(MONITOR_FRAME_PROCESS_MS)
+	Performance.remove_custom_monitor(MONITOR_FRAME_PHYSICS_MS)
+	Performance.remove_custom_monitor(MONITOR_FRAME_PROCESS_PEAK_MS)
+	Performance.remove_custom_monitor(MONITOR_FRAME_PHYSICS_PEAK_MS)
+	Performance.remove_custom_monitor(MONITOR_EFFECT_ACTIVE)
+	Performance.remove_custom_monitor(MONITOR_EFFECT_CAPACITY)
+	Performance.remove_custom_monitor(MONITOR_EFFECT_PRESSURE)
+	Performance.remove_custom_monitor(MONITOR_EFFECT_REJECTED)
+	Performance.remove_custom_monitor(MONITOR_EFFECT_POOL_GROWTH)
+	Performance.remove_custom_monitor(MONITOR_POOL_PRESSURE)
+	_presentation_metrics_registered = false
+
+
+func _sample_presentation_frame_timing() -> void:
+	# TIME_PROCESS/TIME_PHYSICS_PROCESS are engine-owned durations, so this
+	# samples whole-frame work without adding timers or allocations to events.
+	_presentation_frame_process_ms = Performance.get_monitor(Performance.TIME_PROCESS) * 1000.0
+	_presentation_frame_physics_ms = Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0
+	_presentation_frame_process_peak_ms = maxf(
+		_presentation_frame_process_peak_ms,
+		_presentation_frame_process_ms
+	)
+	_presentation_frame_physics_peak_ms = maxf(
+		_presentation_frame_physics_peak_ms,
+		_presentation_frame_physics_ms
+	)
+
+
+func _cache_presentation_pool_metrics(
+	projectile_metrics: Dictionary,
+	effect_metrics: Dictionary,
+	orb_metrics: Dictionary,
+	hazard_metrics: Dictionary,
+	power_up_metrics: Dictionary
+) -> void:
+	_presentation_effect_active = int(effect_metrics["active"])
+	_presentation_effect_capacity = int(effect_metrics["pool_size"])
+	_presentation_effect_pressure = _pool_pressure(
+		_presentation_effect_active,
+		_presentation_effect_capacity
+	)
+	_presentation_effect_rejected = int(effect_metrics["rejected"])
+	_presentation_effect_pool_growth = int(effect_metrics["pool_growth_after_warmup"])
+	var pressure := _presentation_effect_pressure
+	pressure = maxf(
+		pressure,
+		_pool_pressure(int(projectile_metrics["player"]["active"]), int(projectile_metrics["player"]["pool_size"]))
+	)
+	pressure = maxf(
+		pressure,
+		_pool_pressure(int(projectile_metrics["enemy"]["active"]), int(projectile_metrics["enemy"]["pool_size"]))
+	)
+	pressure = maxf(pressure, _pool_pressure(int(orb_metrics["active"]), int(orb_metrics["pool_size"])))
+	pressure = maxf(pressure, _pool_pressure(int(power_up_metrics["active"]), int(power_up_metrics["pool_size"])))
+	var hazard_capacity := int(hazard_metrics["pool_size"])
+	hazard_capacity += int(hazard_metrics["mine_pool_size"])
+	hazard_capacity += int(hazard_metrics["field_pool_size"])
+	hazard_capacity += int(hazard_metrics["rail_pool_size"])
+	pressure = maxf(pressure, _pool_pressure(int(hazard_metrics["total_active"]), hazard_capacity))
+	_presentation_pool_pressure = pressure
+
+
+func _pool_pressure(active: int, capacity: int) -> float:
+	if capacity <= 0:
+		return 0.0
+	return clampf(float(active) / float(capacity), 0.0, 1.0)
+
+
+## Snapshot for an external profiler; this is intentionally off the event path.
+func get_presentation_metrics() -> Dictionary:
+	return {
+		"frame_process_ms": _presentation_frame_process_ms,
+		"frame_physics_ms": _presentation_frame_physics_ms,
+		"frame_process_peak_ms": _presentation_frame_process_peak_ms,
+		"frame_physics_peak_ms": _presentation_frame_physics_peak_ms,
+		"effect_active": _presentation_effect_active,
+		"effect_capacity": _presentation_effect_capacity,
+		"effect_pressure": _presentation_effect_pressure,
+		"effect_rejected": _presentation_effect_rejected,
+		"effect_pool_growth": _presentation_effect_pool_growth,
+		"pool_pressure": _presentation_pool_pressure,
+	}
+
+
+func _get_presentation_frame_process_ms() -> float:
+	return _presentation_frame_process_ms
+
+
+func _get_presentation_frame_physics_ms() -> float:
+	return _presentation_frame_physics_ms
+
+
+func _get_presentation_frame_process_peak_ms() -> float:
+	return _presentation_frame_process_peak_ms
+
+
+func _get_presentation_frame_physics_peak_ms() -> float:
+	return _presentation_frame_physics_peak_ms
+
+
+func _get_presentation_effect_active() -> int:
+	return _presentation_effect_active
+
+
+func _get_presentation_effect_capacity() -> int:
+	return _presentation_effect_capacity
+
+
+func _get_presentation_effect_pressure() -> float:
+	return _presentation_effect_pressure
+
+
+func _get_presentation_effect_rejected() -> int:
+	return _presentation_effect_rejected
+
+
+func _get_presentation_effect_pool_growth() -> int:
+	return _presentation_effect_pool_growth
+
+
+func _get_presentation_pool_pressure() -> float:
+	return _presentation_pool_pressure
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -435,6 +625,7 @@ func _close_pause_menu() -> void:
 
 
 func _exit_tree() -> void:
+	_unregister_presentation_monitors()
 	for enemy in _feedback_actors.values().duplicate():
 		if is_instance_valid(enemy):
 			unregister_enemy_feedback(enemy)
