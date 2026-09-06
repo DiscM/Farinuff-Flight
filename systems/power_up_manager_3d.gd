@@ -8,8 +8,11 @@ signal power_up_collected(power_up_type: int, combat_position: Vector3)
 
 const POWER_UP_SCENE := preload("res://entities/powerups/power_up_3d.tscn")
 const FlightSpace := preload("res://systems/flight_space_3d.gd")
+const FrameWorkBudget := preload("res://systems/frame_work_budget.gd")
 
 @export_range(1, 64, 1) var pool_size: int = 16
+## Legacy inspector setting retained for scene compatibility. Warmup now yields
+## from the shared elapsed-work budget instead of a fixed item count.
 @export_range(1, 16, 1) var warm_batch_size: int = 8
 
 var is_ready := false
@@ -19,6 +22,7 @@ var _active_parent: Node3D
 var _idle_parent: Node3D
 var _combat_bounds := Rect2()
 var _checked_out: Array[PowerUp3D] = []
+var _checked_out_indices: Dictionary[int, int] = {}
 var _warmed_ids: Dictionary[int, bool] = {}
 var _pool_growth := 0
 var _spawned := 0
@@ -42,6 +46,7 @@ func warm_power_up_pool() -> bool:
 		return false
 	_warming = true
 	var warm_nodes: Array[PowerUp3D] = []
+	var budget := FrameWorkBudget.new()
 	for index in range(pool_size):
 		var power_up := ObjectPool.acquire(POWER_UP_SCENE, _active_parent) as PowerUp3D
 		if power_up == null:
@@ -52,16 +57,19 @@ func warm_power_up_pool() -> bool:
 		power_up.returned_to_pool.connect(_on_power_up_returned)
 		power_up.prepare_visual_warmup()
 		warm_nodes.append(power_up)
-		_checked_out.append(power_up)
+		_track_checkout(power_up)
 		_warmed_ids[power_up.get_instance_id()] = true
-		if (index + 1) % warm_batch_size == 0:
+		if budget.should_yield():
 			await get_tree().process_frame
+			budget.reset()
 	if DisplayServer.get_name() != "headless":
 		RenderingServer.force_draw(false)
+	budget.reset()
 	for index in range(warm_nodes.size()):
 		warm_nodes[index].despawn()
-		if (index + 1) % warm_batch_size == 0:
+		if budget.should_yield():
 			await get_tree().process_frame
+			budget.reset()
 	await get_tree().process_frame
 	_warming = false
 	is_ready = true
@@ -84,9 +92,9 @@ func spawn_power_up(
 		_pool_growth += 1
 		_warmed_ids[power_up.get_instance_id()] = true
 	power_up.configure_pool(_idle_parent)
-	_checked_out.append(power_up)
+	_track_checkout(power_up)
 	if not power_up.pool_activate(_flight_space, combat_position, power_up_type, drift_direction, _combat_bounds):
-		_checked_out.erase(power_up)
+		_untrack_checkout(power_up)
 		ObjectPool.release(power_up, _idle_parent)
 		return null
 	_spawned += 1
@@ -95,7 +103,7 @@ func spawn_power_up(
 
 
 func clear_power_ups() -> void:
-	for power_up in _checked_out.duplicate():
+	for power_up in _checked_out:
 		if is_instance_valid(power_up):
 			power_up.despawn()
 
@@ -123,7 +131,29 @@ func _on_power_up_collected(power_up_type: int, combat_position: Vector3, _power
 
 
 func _on_power_up_returned(power_up: PowerUp3D) -> void:
-	_checked_out.erase(power_up)
+	_untrack_checkout(power_up)
+
+
+func _track_checkout(power_up: PowerUp3D) -> void:
+	var instance_id := power_up.get_instance_id()
+	_checked_out_indices[instance_id] = _checked_out.size()
+	_checked_out.append(power_up)
+
+
+func _untrack_checkout(power_up: PowerUp3D) -> void:
+	if power_up == null:
+		return
+	var instance_id := power_up.get_instance_id()
+	if not _checked_out_indices.has(instance_id):
+		return
+	var index := int(_checked_out_indices[instance_id])
+	var last_index := _checked_out.size() - 1
+	if index != last_index:
+		var last_power_up := _checked_out[last_index]
+		_checked_out[index] = last_power_up
+		_checked_out_indices[last_power_up.get_instance_id()] = index
+	_checked_out.pop_back()
+	_checked_out_indices.erase(instance_id)
 
 
 func _refresh_bounds() -> void:

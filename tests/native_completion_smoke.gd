@@ -3,6 +3,7 @@ extends Native3DGameplay
 ## local verification pass for this change remains file-only.
 const BossScene := preload("res://entities/enemies/boss_enemy_3d.tscn")
 const BossScript := preload("res://entities/enemies/boss_enemy_3d.gd")
+const EnemyScene := preload("res://entities/enemies/basic_enemy_3d.tscn")
 const UpgradeCatalog := preload("res://entities/player/native_player_upgrades.gd")
 const PhysicsLayers := preload("res://systems/native_3d_physics_layers.gd")
 var _failures: Array[String] = []
@@ -21,6 +22,7 @@ func _run_checks() -> void:
 	_check_native_actor_graph()
 	_check_generation_resources()
 	_check_pool_contract()
+	await _check_native_registries_and_checkout_reuse()
 	_check_upgrade_contract()
 	await _check_projectile_contract()
 	await _check_boss_variants()
@@ -111,6 +113,49 @@ func _check_pool_metrics(metrics: Dictionary, active_key: String, size_key: Stri
 			int(metrics[active_key]) <= int(metrics[size_key]),
 			label + " active count stays within capacity"
 		)
+
+
+func _check_native_registries_and_checkout_reuse() -> void:
+	# Scene-owned registries must discover review-spawned actors and remove them
+	# on tree exit so Auto-Aim and radius damage can reuse the same array safely.
+	var enemy := EnemyScene.instantiate() as BasicEnemy
+	actors_root.add_child(enemy)
+	var enemy_id := enemy.get_instance_id()
+	_expect(_get_homing_targets().has(enemy), "Native enemy registry tracks child actors")
+	_expect(
+		enemy.activate_generation(
+			flight_space,
+			player.global_position + Vector3(0.0, 0.0, -180.0),
+			Vector3.BACK,
+			1
+		),
+		"Registry test enemy activates"
+	)
+	enemy.queue_free()
+	await get_tree().process_frame
+	await get_tree().process_frame
+	var cached_after_exit := false
+	for candidate in _get_homing_targets():
+		if is_instance_valid(candidate) and candidate.get_instance_id() == enemy_id:
+			cached_after_exit = true
+	_expect(not cached_after_exit, "Native enemy registry removes exiting actors")
+
+	projectile_manager.fire_player_projectile(player.global_position, Vector3.FORWARD)
+	projectile_manager.fire_player_projectile(player.global_position, Vector3.FORWARD)
+	var checkout: Array = projectile_manager._pools[Projectile.Kind.PLAYER].checked_out
+	_expect(checkout.size() >= 2, "Projectile checkout tracks two simultaneous shots")
+	if checkout.size() >= 2:
+		var first := checkout[0] as Projectile3D
+		var second := checkout[1] as Projectile3D
+		first.despawn()
+		await _wait_for_pool_returns()
+		_expect(second.is_active, "Swap removal keeps the remaining projectile active")
+		_expect(
+			int(projectile_manager.get_metrics()["player"]["active"]) >= 1,
+			"Projectile metrics retain the remaining checkout after return"
+		)
+		second.despawn()
+		await _wait_for_pool_returns()
 
 
 func _check_upgrade_contract() -> void:

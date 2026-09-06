@@ -64,6 +64,8 @@ var _metrics_timer := 0.0
 var _metrics_interval := 0.25
 var _drone: PlayerDrone
 var _feedback_actors: Dictionary[int, Node] = {}
+var _native_enemies: Array[BasicEnemy] = []
+var _native_enemy_indices: Dictionary[int, int] = {}
 var _presentation_metrics_enabled := true
 var _presentation_metrics_registered := false
 var _presentation_frame_process_ms := 0.0
@@ -87,11 +89,18 @@ func _ready() -> void:
 	add_to_group(&"native_3d_gameplay")
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	GameManager.is_game_active = false
+	if not actors_root.child_entered_tree.is_connected(_on_actor_entered_tree):
+		actors_root.child_entered_tree.connect(_on_actor_entered_tree)
+	if not actors_root.child_exiting_tree.is_connected(_on_actor_exiting_tree):
+		actors_root.child_exiting_tree.connect(_on_actor_exiting_tree)
+	for actor in actors_root.get_children():
+		_track_native_enemy(actor)
 	_apply_presentation_settings()
 	_register_presentation_monitors()
 	player.prepare_visual_warmup()
 	var idle_parent := $World3D/PoolRoot3D as Node3D
 	projectile_manager.configure(flight_space, $World3D/Projectiles3D, idle_parent, player)
+	projectile_manager.set_homing_targets_provider(Callable(self, "_get_homing_targets"))
 	xp_orb_manager.configure(flight_space, $World3D/Pickups3D, idle_parent)
 	power_up_manager.configure(flight_space, $World3D/PowerUps3D, idle_parent)
 	effect_manager.configure($World3D/Effects3D, idle_parent)
@@ -207,6 +216,7 @@ func _on_projectile_fired(kind: int, combat_position: Vector3, direction: Vector
 func register_enemy_feedback(enemy: Node) -> void:
 	if enemy == null or not is_inside_tree() or enemy.is_queued_for_deletion():
 		return
+	_track_native_enemy(enemy)
 	var enemy_id := enemy.get_instance_id()
 	if _feedback_actors.has(enemy_id) and is_instance_valid(_feedback_actors[enemy_id]):
 		return
@@ -234,6 +244,46 @@ func unregister_enemy_feedback(enemy: Node) -> void:
 
 func _on_feedback_actor_exiting(enemy: Node) -> void:
 	unregister_enemy_feedback(enemy)
+	_untrack_native_enemy(enemy)
+
+
+func _on_actor_entered_tree(actor: Node) -> void:
+	_track_native_enemy(actor)
+
+
+func _on_actor_exiting_tree(actor: Node) -> void:
+	_untrack_native_enemy(actor)
+
+
+func _track_native_enemy(actor: Node) -> void:
+	if not actor is BasicEnemy:
+		return
+	var enemy := actor as BasicEnemy
+	var instance_id := enemy.get_instance_id()
+	if _native_enemy_indices.has(instance_id):
+		return
+	_native_enemy_indices[instance_id] = _native_enemies.size()
+	_native_enemies.append(enemy)
+
+
+func _untrack_native_enemy(actor: Node) -> void:
+	if actor == null:
+		return
+	var instance_id := actor.get_instance_id()
+	if not _native_enemy_indices.has(instance_id):
+		return
+	var index := int(_native_enemy_indices[instance_id])
+	var last_index := _native_enemies.size() - 1
+	if index != last_index:
+		var last_enemy := _native_enemies[last_index]
+		_native_enemies[index] = last_enemy
+		_native_enemy_indices[last_enemy.get_instance_id()] = index
+	_native_enemies.pop_back()
+	_native_enemy_indices.erase(instance_id)
+
+
+func _get_homing_targets() -> Array[BasicEnemy]:
+	return _native_enemies
 
 
 func _on_enemy_charge_started(combat_position: Vector3, direction: Vector3) -> void:
@@ -321,9 +371,8 @@ func _warm_drone_visual() -> bool:
 
 
 func _on_player_nuke_requested() -> void:
-	for node in get_tree().get_nodes_in_group(&"native_3d_enemies"):
-		var enemy := node as BasicEnemy
-		if enemy != null and not enemy.is_in_group(&"native_3d_bosses"):
+	for enemy in _native_enemies:
+		if is_instance_valid(enemy) and enemy.is_active and not enemy.is_in_group(&"native_3d_bosses"):
 			enemy.take_damage(9999)
 	projectile_manager.clear_enemy_projectiles()
 	hazard_manager.clear_hazards()
@@ -630,6 +679,8 @@ func _exit_tree() -> void:
 		if is_instance_valid(enemy):
 			unregister_enemy_feedback(enemy)
 	_feedback_actors.clear()
+	_native_enemies.clear()
+	_native_enemy_indices.clear()
 	if get_viewport() != null:
 		get_viewport().use_hdr_2d = _previous_hdr_2d
 	if get_tree() != null:
@@ -648,13 +699,17 @@ func _on_explosive_impact(combat_position: Vector3, primary_target: Area3D) -> v
 
 func _on_shield_burst(combat_position: Vector3) -> void:
 	effect_manager.play_effect(NativeEffect.EffectKind.SHIELD, combat_position, Vector3.UP, 4.0)
-	for projectile in get_tree().get_nodes_in_group(&"enemy_projectiles"):
-		if projectile.is_active and not projectile.is_deflected and flight_space.combat_motion_to_screen(projectile.global_position - combat_position).length() <= 240.0:
-			projectile.despawn()
+	projectile_manager.clear_enemy_projectiles_in_radius(combat_position, 240.0)
 	_damage_in_radius(combat_position, 240.0, 8 + GameManager.bonus_damage)
 
 
 func _damage_in_radius(center: Vector3, radius: float, damage: int, excluded: Node = null) -> void:
-	for enemy in get_tree().get_nodes_in_group(&"native_3d_enemies"):
-		if enemy != excluded and enemy.is_active and flight_space.combat_motion_to_screen(enemy.global_position - center).length() <= radius:
+	var radius_squared := radius * radius
+	for enemy in _native_enemies:
+		if (
+			enemy != excluded
+			and is_instance_valid(enemy)
+			and enemy.is_active
+			and flight_space.combat_motion_to_screen(enemy.global_position - center).length_squared() <= radius_squared
+		):
 			enemy.take_damage(damage)
