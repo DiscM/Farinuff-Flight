@@ -1,7 +1,7 @@
 extends Node
 class_name Native3DGameplay
 ## Isolated native Player Craft, pooled Projectiles, Basic Enemy lineage,
-## rewards, pooled pickups/hazards, and first-slice feedback.
+## rewards, pooled pickups/hazards, and native feedback.
 
 signal gameplay_ready
 signal enemy_rewarded(points: int, combat_position: Vector3, orb_spawned: bool)
@@ -12,6 +12,7 @@ signal drone_contact_hit(target: Area3D, combat_position: Vector3)
 const PlayerCraft := preload("res://entities/player/player_3d.gd")
 const FlightSpace := preload("res://systems/flight_space_3d.gd")
 const PAUSE_MENU_SCENE := preload("res://ui/pause_menu.tscn")
+const Projectile := preload("res://entities/projectiles/projectile_3d.gd")
 const ProjectileManager := preload("res://systems/projectile_manager_3d.gd")
 const BasicEnemy := preload("res://entities/enemies/basic_enemy_3d.gd")
 const WeaponTuning := preload("res://entities/player/player_weapon_tuning.gd")
@@ -48,6 +49,7 @@ var _previous_hdr_2d: bool = false
 var _pause_overlay: CanvasLayer
 var _metrics_timer := 0.0
 var _drone: PlayerDrone
+var _feedback_actors: Dictionary[int, Node] = {}
 
 
 func _enter_tree() -> void:
@@ -89,13 +91,16 @@ func _ready() -> void:
 		return
 	await _prepare_run_actors()
 	player.fire_requested.connect(projectile_manager.fire_player_projectile)
-	player.fire_requested.connect(_on_player_fired)
+	player.muzzle_feedback_requested.connect(_on_player_fired)
 	player.deflection_requested.connect(projectile_manager.deflect_enemy_projectiles)
 	player.boost_started.connect(_on_player_boost_started)
+	player.damage_taken.connect(_on_player_damage_taken)
+	player.shield_absorbed.connect(_on_shield_absorbed)
 	player.nuke_requested.connect(_on_player_nuke_requested)
 	player.drone_escort_changed.connect(_on_drone_escort_changed)
 	player.shield_burst_requested.connect(_on_shield_burst)
 	projectile_manager.explosion_requested.connect(_on_explosive_impact)
+	projectile_manager.projectile_fired.connect(_on_projectile_fired)
 	projectile_manager.player_projectile_hit.connect(_on_player_projectile_hit)
 	projectile_manager.enemy_projectile_hit.connect(_on_enemy_projectile_hit)
 	projectile_manager.enemy_projectile_deflected.connect(_on_enemy_projectile_deflected)
@@ -120,9 +125,10 @@ func _on_player_projectile_hit(target: Area3D, _combat_position: Vector3) -> voi
 
 
 func _on_enemy_projectile_hit(target: Area3D, combat_position: Vector3) -> void:
-	effect_manager.play_effect(NativeEffect.EffectKind.IMPACT, combat_position)
 	if target == player:
 		player.receive_damage(combat_position, PlayerCraft.DamageSource.ENEMY_PROJECTILE)
+	else:
+		effect_manager.play_effect(NativeEffect.EffectKind.IMPACT, combat_position)
 
 
 func _on_enemy_projectile_deflected(_projectile: Area3D, combat_position: Vector3) -> void:
@@ -134,17 +140,80 @@ func _on_power_up_collected(_power_up_type: int, combat_position: Vector3) -> vo
 
 
 func _on_mine_detonated(combat_position: Vector3, _is_cluster: bool, _leaves_plasma: bool) -> void:
-	effect_manager.play_effect(NativeEffect.EffectKind.IMPACT, combat_position, Vector3.UP, 1.35)
+	var intensity := 1.7 if _is_cluster else 1.25
+	effect_manager.play_effect(NativeEffect.EffectKind.EXPLOSION, combat_position, Vector3.UP, intensity)
 
 
 func _on_player_fired(combat_position: Vector3, direction: Vector3) -> void:
-	effect_manager.play_effect(NativeEffect.EffectKind.MUZZLE, combat_position, direction, 0.7)
+	effect_manager.play_effect(NativeEffect.EffectKind.MUZZLE, combat_position, direction, 0.7, true)
 
 
 func _on_player_boost_started(combat_position: Vector3, direction: Vector3) -> void:
 	var boost_socket := player.get_socket(&"Boost")
 	var effect_position := boost_socket.global_position if boost_socket != null else combat_position
-	effect_manager.play_effect(NativeEffect.EffectKind.BOOST, effect_position, direction)
+	effect_manager.play_effect(NativeEffect.EffectKind.BOOST, effect_position, direction, 1.0, true)
+
+
+func _on_player_damage_taken(combat_position: Vector3, _source: PlayerCraft.DamageSource, _remaining_lives: int) -> void:
+	effect_manager.play_effect(NativeEffect.EffectKind.IMPACT, combat_position, Vector3.UP, 1.35)
+
+
+func _on_shield_absorbed(combat_position: Vector3) -> void:
+	effect_manager.play_effect(NativeEffect.EffectKind.SHIELD, combat_position, Vector3.UP, 1.15)
+
+
+func _on_projectile_fired(kind: int, combat_position: Vector3, direction: Vector3, _speed_pixels: float) -> void:
+	var intensity := 0.5 if kind == Projectile.Kind.PLAYER else 0.38
+	effect_manager.play_effect(
+		NativeEffect.EffectKind.PROJECTILE,
+		combat_position,
+		direction,
+		intensity,
+		true
+	)
+
+
+## Attaches the shared telegraph/release feedback to any native actor that
+## exposes the stable charge signal contract. The actor keeps ownership of its
+## timers and attack cancellation; this controller only renders the event.
+func register_enemy_feedback(enemy: Node) -> void:
+	if enemy == null or not is_inside_tree() or enemy.is_queued_for_deletion():
+		return
+	var enemy_id := enemy.get_instance_id()
+	if _feedback_actors.has(enemy_id) and is_instance_valid(_feedback_actors[enemy_id]):
+		return
+	var charge_started := Callable(self, "_on_enemy_charge_started")
+	if enemy.has_signal(&"charge_started") and not enemy.is_connected(&"charge_started", charge_started):
+		enemy.connect(&"charge_started", charge_started)
+	var charge_released := Callable(self, "_on_enemy_charge_released")
+	if enemy.has_signal(&"charge_released") and not enemy.is_connected(&"charge_released", charge_released):
+		enemy.connect(&"charge_released", charge_released)
+	enemy.tree_exiting.connect(_on_feedback_actor_exiting.bind(enemy), CONNECT_ONE_SHOT)
+	_feedback_actors[enemy_id] = enemy
+
+
+func unregister_enemy_feedback(enemy: Node) -> void:
+	if enemy == null:
+		return
+	var charge_started := Callable(self, "_on_enemy_charge_started")
+	if enemy.has_signal(&"charge_started") and enemy.is_connected(&"charge_started", charge_started):
+		enemy.disconnect(&"charge_started", charge_started)
+	var charge_released := Callable(self, "_on_enemy_charge_released")
+	if enemy.has_signal(&"charge_released") and enemy.is_connected(&"charge_released", charge_released):
+		enemy.disconnect(&"charge_released", charge_released)
+	_feedback_actors.erase(enemy.get_instance_id())
+
+
+func _on_feedback_actor_exiting(enemy: Node) -> void:
+	unregister_enemy_feedback(enemy)
+
+
+func _on_enemy_charge_started(combat_position: Vector3, direction: Vector3) -> void:
+	effect_manager.play_effect(NativeEffect.EffectKind.TELEGRAPH, combat_position, direction, 1.0)
+
+
+func _on_enemy_charge_released(combat_position: Vector3, direction: Vector3) -> void:
+	effect_manager.play_effect(NativeEffect.EffectKind.MUZZLE, combat_position, direction, 0.9, true)
 
 
 func set_drone_escort_enabled(enabled: bool) -> void:
@@ -196,7 +265,7 @@ func _on_drone_fired(combat_position: Vector3, direction: Vector3) -> void:
 		var muzzle := _drone.get_socket(&"MuzzleCenter")
 		if muzzle != null:
 			effect_position = muzzle.global_position
-	effect_manager.play_effect(NativeEffect.EffectKind.MUZZLE, effect_position, direction, 0.45)
+	effect_manager.play_effect(NativeEffect.EffectKind.MUZZLE, effect_position, direction, 0.45, true)
 	drone_fired.emit(combat_position, direction)
 
 
@@ -257,7 +326,8 @@ func route_enemy_finish(
 		NativeEffect.EffectKind.DEATH,
 		death_position,
 		drift_direction,
-		0.86 + float(clampi(generation, 1, 4)) * 0.14
+		0.86 + float(clampi(generation, 1, 4)) * 0.14,
+		true
 	)
 	if not rewards_enabled or not enemy.has_method("get_reward_points"):
 		return
@@ -366,6 +436,10 @@ func _close_pause_menu() -> void:
 
 
 func _exit_tree() -> void:
+	for enemy in _feedback_actors.values().duplicate():
+		if is_instance_valid(enemy):
+			unregister_enemy_feedback(enemy)
+	_feedback_actors.clear()
 	if get_viewport() != null:
 		get_viewport().use_hdr_2d = _previous_hdr_2d
 	if get_tree() != null:
@@ -378,12 +452,12 @@ func _prepare_run_actors() -> void:
 
 
 func _on_explosive_impact(combat_position: Vector3, primary_target: Area3D) -> void:
-	effect_manager.play_effect(NativeEffect.EffectKind.DEATH, combat_position, Vector3.UP, 0.5)
+	effect_manager.play_effect(NativeEffect.EffectKind.EXPLOSION, combat_position, Vector3.UP, 0.9)
 	_damage_in_radius(combat_position, 65.0, 2 + GameManager.bonus_damage, primary_target)
 
 
 func _on_shield_burst(combat_position: Vector3) -> void:
-	effect_manager.play_effect(NativeEffect.EffectKind.PICKUP, combat_position, Vector3.UP, 4.0)
+	effect_manager.play_effect(NativeEffect.EffectKind.SHIELD, combat_position, Vector3.UP, 4.0)
 	for projectile in get_tree().get_nodes_in_group(&"enemy_projectiles"):
 		if projectile.is_active and not projectile.is_deflected and flight_space.combat_motion_to_screen(projectile.global_position - combat_position).length() <= 240.0:
 			projectile.despawn()

@@ -7,6 +7,7 @@ const EFFECT_SCENE := preload("res://effects/native_effect_3d.tscn")
 
 @export_range(1, 128, 1) var pool_size: int = 96
 @export_range(1, 16, 1) var warm_batch_size: int = 8
+@export_range(0, 16, 1) var max_local_lights: int = 8
 
 var is_ready := false
 var _warming := false
@@ -17,9 +18,14 @@ var _warmed_ids: Dictionary[int, bool] = {}
 var _pool_growth := 0
 var _rejected := 0
 var _played := 0
+var _lit_effects: Dictionary[int, bool] = {}
 
 
 func configure(active_parent: Node3D, idle_parent: Node3D) -> void:
+	if _active_parent == active_parent and _idle_parent == idle_parent:
+		return
+	if not _checked_out.is_empty():
+		clear_effects()
 	_active_parent = active_parent
 	_idle_parent = idle_parent
 
@@ -61,7 +67,8 @@ func play_effect(
 	kind: Effect.EffectKind,
 	effect_position: Vector3,
 	direction: Vector3 = Vector3.FORWARD,
-	intensity: float = 1.0
+	intensity: float = 1.0,
+	preserve_height: bool = false
 ) -> bool:
 	if not is_ready or _checked_out.size() >= _warmed_ids.size():
 		_rejected += 1
@@ -77,8 +84,12 @@ func play_effect(
 	if not effect.returned_to_pool.is_connected(_on_effect_returned):
 		effect.returned_to_pool.connect(_on_effect_returned)
 	_checked_out.append(effect)
-	if not effect.play(kind, effect_position, direction, intensity):
+	var emit_local_light := _can_claim_local_light(kind)
+	if emit_local_light:
+		_lit_effects[effect.get_instance_id()] = true
+	if not effect.play(kind, effect_position, direction, intensity, preserve_height, emit_local_light):
 		_checked_out.erase(effect)
+		_lit_effects.erase(effect.get_instance_id())
 		ObjectPool.release(effect, _idle_parent)
 		_rejected += 1
 		return false
@@ -90,6 +101,7 @@ func clear_effects() -> void:
 	for effect in _checked_out.duplicate():
 		if is_instance_valid(effect):
 			effect.despawn()
+	_lit_effects.clear()
 
 
 func get_metrics() -> Dictionary:
@@ -105,8 +117,23 @@ func get_metrics() -> Dictionary:
 		"played": _played,
 		"rejected": _rejected,
 		"pool_growth_after_warmup": _pool_growth,
+		"local_lights_active": _lit_effects.size(),
+		"local_lights_capacity": max_local_lights,
 	}
 
 
 func _on_effect_returned(effect: Effect) -> void:
 	_checked_out.erase(effect)
+	_lit_effects.erase(effect.get_instance_id())
+
+
+func _can_claim_local_light(kind: Effect.EffectKind) -> bool:
+	if max_local_lights <= 0 or _lit_effects.size() >= max_local_lights:
+		return false
+	return kind in [
+		Effect.EffectKind.IMPACT,
+		Effect.EffectKind.DEATH,
+		Effect.EffectKind.BOOST,
+		Effect.EffectKind.EXPLOSION,
+		Effect.EffectKind.SHIELD,
+	]
