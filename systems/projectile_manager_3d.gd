@@ -5,6 +5,7 @@ class_name ProjectileManager3D
 ## bounded-pool acquisition, Interaction Range, and Enemy Projectile deflection.
 
 signal explosion_requested(combat_position: Vector3, primary_target: Area3D)
+signal projectile_fired(kind: int, combat_position: Vector3, direction: Vector3, speed_pixels: float)
 signal player_projectile_hit(target: Area3D, combat_position: Vector3)
 signal enemy_projectile_hit(target: Area3D, combat_position: Vector3)
 signal enemy_projectile_deflected(projectile: Area3D, combat_position: Vector3)
@@ -71,7 +72,8 @@ func configure(
 	_pools[Projectile.Kind.ENEMY].capacity = enemy_pool_size
 	_interaction_range.configure(flight_space, player, interaction_range_pixels, interaction_hysteresis_pixels)
 	_refresh_bounds()
-	get_viewport().size_changed.connect(_refresh_bounds)
+	if not get_viewport().size_changed.is_connected(_refresh_bounds):
+		get_viewport().size_changed.connect(_refresh_bounds)
 
 
 func _physics_process(delta: float) -> void:
@@ -217,10 +219,15 @@ func _fire(
 	var projectile_velocity := _flight_space.screen_motion_to_combat(screen_direction * speed_pixels)
 	pool.checked_out.append(projectile)
 	projectile.pool_activate(combat_position, projectile_velocity, _combat_bounds, size_multiplier)
+	if not projectile.is_active:
+		pool.checked_out.erase(projectile)
+		pool.rejected_shots += 1
+		return
 	if kind == Projectile.Kind.PLAYER and _player != null:
 		projectile.piercing = _player.has_elite_upgrade("piercing")
 		projectile.explosive = _player.has_elite_upgrade("explosive_rounds")
 		projectile.homing = _player.has_elite_upgrade("auto_aim")
+	projectile_fired.emit(kind, combat_position, direction, speed_pixels)
 	pool.shots_fired += 1
 	_record_active_peaks()
 
@@ -275,6 +282,12 @@ func _refresh_bounds() -> void:
 	for pool in _pools:
 		for projectile in pool.checked_out:
 			projectile.update_combat_bounds(_combat_bounds)
+
+
+func _exit_tree() -> void:
+	var viewport := get_viewport()
+	if viewport != null and viewport.size_changed.is_connected(_refresh_bounds):
+		viewport.size_changed.disconnect(_refresh_bounds)
 
 
 ## Snapshots only on request, not a dictionary allocation per projectile/tick.

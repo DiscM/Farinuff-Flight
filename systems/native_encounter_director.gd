@@ -20,15 +20,20 @@ var _wave_epoch := 0
 var started := false
 var _pending_boss_wave := 0
 var _pending_boss_points := 0
+var _configured := false
 
 
 func configure(game: Node) -> void:
+	if _configured:
+		return
 	add_to_group(&"native_encounter_director")
 	gameplay = game
 	threat = Threat.new()
 	threat.enemy_group = &"native_3d_regular_enemies"
 	add_child(threat)
-	SignalBus.wave_started.connect(_on_wave_started)
+	if not SignalBus.wave_started.is_connected(_on_wave_started):
+		SignalBus.wave_started.connect(_on_wave_started)
+	_configured = true
 
 
 func warm_actors() -> void:
@@ -90,7 +95,9 @@ func spawn_enemy(kind: StringName) -> Enemy:
 	var actor := SCENES[kind].instantiate() as Enemy
 	gameplay.actors_root.add_child(actor)
 	actor.archetype_id = kind
+	gameplay.register_enemy_feedback(actor)
 	if not actor.activate_generation(gameplay.flight_space, origin, direction, threat.generation):
+		gameplay.unregister_enemy_feedback(actor)
 		actor.queue_free()
 		return null
 	actor.add_to_group(&"native_3d_regular_enemies")
@@ -133,7 +140,16 @@ func _begin_boss(epoch: int) -> void:
 	var bounds: Rect2 = gameplay.flight_space.get_combat_bounds()
 	var boss := SCENES[&"boss"].instantiate() as Enemy
 	gameplay.actors_root.add_child(boss)
-	boss.activate_generation(gameplay.flight_space, Vector3(bounds.get_center().x, 0, bounds.position.y + bounds.size.y * 0.22), Vector3.BACK, threat.generation)
+	gameplay.register_enemy_feedback(boss)
+	if boss.activate_generation(gameplay.flight_space, Vector3(bounds.get_center().x, 0, bounds.position.y + bounds.size.y * 0.22), Vector3.BACK, threat.generation):
+		return
+	gameplay.unregister_enemy_feedback(boss)
+	boss.queue_free()
+
+
+func _exit_tree() -> void:
+	if SignalBus.wave_started.is_connected(_on_wave_started):
+		SignalBus.wave_started.disconnect(_on_wave_started)
 
 
 func finish_boss(wave: int, points: int) -> void:
