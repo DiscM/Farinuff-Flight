@@ -4,6 +4,20 @@
 
 The previous checklist and its detailed slice/approval history are available in Git history. This guide supersedes their parity, frozen-reference, parallel-runtime, and per-slice approval requirements. The current entry states implementation status; dated entries retain their original validation limits.
 
+## 2026-09-06 — Native 3D VFX replacement (file checks only)
+
+**Changed**
+
+- Replaced the single first-slice feedback shape with a pooled layered native VFX unit covering core, engine, muzzle, projectile, impact, explosion, shield, boost, pickup, and charge-telegraph presentation. Each effect composes reusable meshes, animated shader bands, GPU particles, and optional height-preserving socket placement without adding gameplay nodes or per-event allocations.
+- Added native core/engine glow materials to Player3D, animated the shield rim/band shader, and kept engine particles local to their sockets so yaw and boost intensity read correctly in the Combat Plane presentation.
+- Added projectile-fire feedback at the manager seam for both factions, per-shot muzzle feedback at the actual player/drone sockets, impact/explosion/shield feedback for damage and ability events, and charge start/release feedback for regular enemies and all boss variants. Boss warning rings now use the native telegraph shader.
+- Added a scene-owned cap of eight simultaneous OmniLight3D accents. The effect pool reports active light usage alongside pool growth, while projectiles, particles, meshes, and lights remain bounded by the existing transition warm-up.
+
+**Inspection**
+
+- `python3 tools/check_native_transition.py` passed for 206 source/resources and six generated GLBs. Python tool compilation and `git diff --check` passed.
+- No Godot process, debugger, screenshot, or playtest was launched, following the migration guide's file-only working preference. Native-resolution readability, shader compilation, light cost, heavy-wave performance, and pool pressure remain runtime validation items.
+
 ## 2026-09-04 — Native transition implementation completed (file checks only)
 
 This entry supersedes the interim content limits in earlier entries. The shipping paths now use one native 3D combat runtime. Completion here refers to source/content integration; engine parsing, visual acceptance, balance, and performance of these changes remain unverified.
@@ -84,7 +98,7 @@ Continue migration through file changes and code inspection. Do not launch Godot
 
 **Remaining work**
 
-Distinct native boss variants/sections, remaining evolution refinements and player transformation abilities, richer reward presentation, difficulty tuning, VFX polish, stress/performance measurements, and dependency-aware legacy cleanup. The first native boss and elite rewards are intentional interim content, not completed equivalents of the old catalog.
+Remaining evolution refinements and player transformation abilities, richer reward presentation, difficulty tuning, native VFX readability/performance validation, stress measurements, and dependency-aware legacy cleanup. The first native boss and elite rewards are intentional interim content, not completed equivalents of the old catalog.
 
 ## Working approach
 
@@ -119,7 +133,7 @@ These are the current defaults, not a requirement to reproduce the 2D implementa
 | Projectiles and pickups | Native pooled player/enemy projectiles, XP orbs, power-ups, interaction-range collision | Drop tuning and load testing |
 | Enemy actors | Basic lineage; Fast Generation I-IV weave/sidestep/phase behavior; Bomber, Tank, and Sniper native wrappers | Runtime validation of Fast evolution and broader encounter tuning |
 | Special attacks and hazards | Basic fragments, mines/plasma, Tank armor/double rings/overload, Sniper warnings/prediction/pooled rail; Gen IV hold extended | Heavy-encounter tuning and broader ability integration |
-| Feedback | Pooled mesh flashes/shock rings, GPU sparks/exhaust, shield shader | Visual and performance validation |
+| Feedback | Pooled native core/engine/muzzle/projectile/impact/explosion/shield/boost/telegraph VFX, GPU particles, and capped local lights | Native-resolution readability and performance validation |
 | Production flow | Native menu/retry entry, five boss variants and pods, all upgrades, allocation, continue/game-over, victory/Endless; legacy combat retired | Engine validation, encounter tuning, loading/performance profiling |
 
 Targeted runtime checks have exercised these foundations, including damage routing, attack timing, coordinator ownership, pause behavior, reset, and pool reuse. They do not establish complete run coverage or worst-case performance.

@@ -1,10 +1,25 @@
-[gd_scene load_steps=7 format=3]
+[gd_scene load_steps=14 format=3]
 
 [ext_resource type="Script" path="res://effects/native_effect_3d.gd" id="1_effect"]
-[ext_resource type="Shader" path="res://effects/shaders/native_effect_3d.gdshader" id="2_shader"]
+[ext_resource type="Shader" path="res://effects/shaders/native_effect_3d.gdshader" id="2_effect_shader"]
+[ext_resource type="Shader" path="res://effects/shaders/native_ring_3d.gdshader" id="3_ring_shader"]
+[ext_resource type="Shader" path="res://effects/shaders/native_core_3d.gdshader" id="4_core_shader"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_effect"]
-shader = ExtResource("2_shader")
+shader = ExtResource("2_effect_shader")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_ring"]
+shader = ExtResource("3_ring_shader")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_core"]
+shader = ExtResource("4_core_shader")
+
+[sub_resource type="SphereMesh" id="SphereMesh_core"]
+radius = 0.24
+height = 0.48
+radial_segments = 8
+rings = 4
+material = SubResource("ShaderMaterial_core")
 
 [sub_resource type="SphereMesh" id="SphereMesh_burst"]
 radius = 0.32
@@ -18,10 +33,22 @@ top_radius = 0.5
 bottom_radius = 0.5
 height = 0.045
 radial_segments = 16
+material = SubResource("ShaderMaterial_ring")
+
+[sub_resource type="TorusMesh" id="TorusMesh_ring"]
+inner_radius = 0.42
+outer_radius = 0.5
+rings = 24
+ring_segments = 8
+material = SubResource("ShaderMaterial_ring")
+
+[sub_resource type="BoxMesh" id="BoxMesh_streak"]
+size = Vector3(0.18, 0.06, 1.0)
 material = SubResource("ShaderMaterial_effect")
 
 [sub_resource type="ParticleProcessMaterial" id="ParticleProcessMaterial_sparks"]
-emission_shape = 0
+emission_shape = 1
+emission_sphere_radius = 0.12
 direction = Vector3(0, 0, 1)
 spread = 180.0
 initial_velocity_min = 1.5
@@ -35,12 +62,18 @@ radius = 0.09
 height = 0.18
 radial_segments = 6
 rings = 3
-material = SubResource("ShaderMaterial_effect")
+material = SubResource("ShaderMaterial_core")
 
 [node name="NativeEffect3D" type="Node3D"]
 visible = false
 process_mode = 4
 script = ExtResource("1_effect")
+
+[node name="CoreMesh" type="MeshInstance3D" parent="."]
+visible = false
+cast_shadow = 0
+gi_mode = 0
+mesh = SubResource("SphereMesh_core")
 
 [node name="BurstMesh" type="MeshInstance3D" parent="."]
 visible = false
@@ -54,12 +87,31 @@ cast_shadow = 0
 gi_mode = 0
 mesh = SubResource("CylinderMesh_pulse")
 
+[node name="SecondaryRing" type="MeshInstance3D" parent="."]
+visible = false
+cast_shadow = 0
+gi_mode = 0
+mesh = SubResource("TorusMesh_ring")
+
+[node name="StreakMesh" type="MeshInstance3D" parent="."]
+visible = false
+cast_shadow = 0
+gi_mode = 0
+mesh = SubResource("BoxMesh_streak")
+
 [node name="Particles" type="GPUParticles3D" parent="."]
 emitting = false
-amount = 8
-lifetime = 0.2
+amount = 24
+lifetime = 0.3
 one_shot = true
 explosiveness = 1.0
-local_coords = false
+local_coords = true
 process_material = SubResource("ParticleProcessMaterial_sparks")
 draw_pass_1 = SubResource("SphereMesh_particle")
+
+[node name="BurstLight" type="OmniLight3D" parent="."]
+visible = false
+light_color = Color(0.18, 0.8, 1, 1)
+light_energy = 0.0
+omni_range = 7.0
+shadow_enabled = false

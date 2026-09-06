@@ -19,7 +19,6 @@ func _ready() -> void:
 	super._ready()
 	for section in $Attachments/Sections.get_children():
 		_sections.append(section as Section)
-		section.destroyed.connect(_on_section_destroyed)
 
 func _is_basic_lineage() -> bool:
 	return false
@@ -39,6 +38,7 @@ func activate_generation(space: FlightSpace, origin: Vector3, direction: Vector3
 	_volley_index = 0
 	_volley_timer = 1.8
 	_warning_timer = 0.0
+	$Attachments/Warning.scale = Vector3.ONE
 	for index in visuals.get_child_count():
 		visuals.get_child(index).visible = index == variant
 	$Attachments/Warning.hide()
@@ -69,6 +69,7 @@ func _advance_movement(delta: float) -> void:
 		_locked_aim = _flight_space.combat_motion_to_screen(player.global_position - global_position).normalized() if player != null else Vector2.DOWN
 		_warning_timer = 0.65
 		$Attachments/Warning.show()
+		charge_started.emit(get_combat_position(), _flight_space.input_to_combat_direction(_locked_aim))
 
 func _fire_volley() -> void:
 	var manager := get_tree().get_first_node_in_group(&"native_3d_projectile_manager") as ProjectileManager
@@ -95,7 +96,7 @@ func _fire_volley() -> void:
 	for section in _sections:
 		if section.is_active:
 			_fire_fan(manager, section.global_position, _locked_aim, 1 + phase, 0.18, 285.0)
-	charge_released.emit(global_position, _flight_space.input_to_combat_direction(_locked_aim))
+	charge_released.emit(get_combat_position(), _flight_space.input_to_combat_direction(_locked_aim))
 
 func _fire_fan(manager: ProjectileManager, origin: Vector3, aim: Vector2, count: int, spacing: float, speed: float) -> void:
 	for index in count:
@@ -113,9 +114,6 @@ func _active_section_count() -> int:
 		if section.is_active:
 			count += 1
 	return count
-
-func _on_section_destroyed(combat_position: Vector3) -> void:
-	charge_released.emit(combat_position, Vector3.UP)
 
 func _has_crossed_exit_edge() -> bool:
 	return false
@@ -139,6 +137,9 @@ func should_drop_xp_orb() -> bool:
 	return false
 
 func _before_finish(reason: FinishReason, _position: Vector3) -> void:
+	_warning_timer = 0.0
+	$Attachments/Warning.hide()
+	$Attachments/Warning.scale = Vector3.ONE
 	for section in _sections:
 		section.deactivate()
 	if reason == FinishReason.DESTROYED:

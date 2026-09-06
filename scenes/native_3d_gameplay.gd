@@ -311,7 +311,6 @@ func route_enemy_finish(
 ) -> void:
 	combat_position.y = 0.0
 	if reason == BasicEnemy.FinishReason.CONTACT:
-		effect_manager.play_effect(NativeEffect.EffectKind.IMPACT, combat_position)
 		return
 	if reason != BasicEnemy.FinishReason.DESTROYED:
 		return
