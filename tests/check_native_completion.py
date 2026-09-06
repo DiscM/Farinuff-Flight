@@ -94,6 +94,7 @@ def check_native_entry_and_transitions() -> None:
     victory = read("ui/expedition_victory.gd")
     manager = read("autoloads/game_manager.gd")
     signals = read("autoloads/signal_bus.gd")
+    resource_cache = read("autoloads/resource_cache.gd")
 
     require(
         'run/main_scene="res://ui/main_menu.tscn"' in project,
@@ -106,8 +107,23 @@ def check_native_entry_and_transitions() -> None:
             ("native run path", f'const NATIVE_RUN_PATH := "{NATIVE_RUN}"'),
             ("Play handler", "func _on_play_pressed()"),
             ("launch-bay handoff", "_open_launch_bay()"),
-            ("threaded native load", "ResourceLoader.load_threaded_request(NATIVE_RUN_PATH, \"PackedScene\")"),
+            ("bounded native cache prime", "ResourceCache.prime_scene(NATIVE_RUN_PATH)"),
+            ("cache-backed native polling", "ResourceCache.is_scene_ready(NATIVE_RUN_PATH)"),
             ("native packed-scene transition", "get_tree().change_scene_to_packed(_native_run_scene)"),
+        ],
+    )
+    require(
+        'ResourceCache="*res://autoloads/resource_cache.gd"' in project,
+        "project must register the bounded root-scene cache",
+    )
+    require_all(
+        "autoloads/resource_cache.gd",
+        resource_cache,
+        [
+            ("root-scene allowlist", "const CACHEABLE_SCENES: PackedStringArray"),
+            ("bounded scene budget", "const MAX_CACHED_SCENES := 2"),
+            ("threaded scene request", 'ResourceLoader.load_threaded_request(path, \"PackedScene\", true)'),
+            ("asynchronous wait", "func wait_for_scene(path: String) -> PackedScene"),
         ],
     )
     require_all(

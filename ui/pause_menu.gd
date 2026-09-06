@@ -8,8 +8,11 @@ const SETTINGS_MENU_SCENE := preload("res://ui/settings_menu.tscn")
 const DOCK_TEXTURE := preload("res://assets/Game UI collection FREE version/PNG/Borders/Yellow/New folder/Group 4 copy.png")
 const BUTTON_BLUE_TEXTURE := preload("res://assets/Game UI collection FREE version/PNG/Button with border/Blue/1x/Asset 8.png")
 const BUTTON_YELLOW_TEXTURE := preload("res://assets/Game UI collection FREE version/PNG/Button with border/Yellow/1x/Asset 8.png")
+const NATIVE_RUN_PATH := "res://scenes/native_3d_run.tscn"
+const MAIN_MENU_PATH := "res://ui/main_menu.tscn"
 
 var _settings_menu: Node = null
+var _transitioning := false
 
 ## Builds the UI layout and plays the fade-in animation. The scene's full-rect
 ## anchors fill the viewport. Runs in PROCESS_MODE_ALWAYS so it functions while
@@ -22,6 +25,8 @@ func _ready() -> void:
 ## Handles the ESC key to resume gameplay and close the pause menu.
 func _unhandled_input(event: InputEvent) -> void:
 	if event is InputEventKey and event.keycode == KEY_ESCAPE and event.pressed and not event.echo:
+		if _transitioning:
+			return
 		get_viewport().set_input_as_handled()
 		resumed.emit()
 
@@ -94,17 +99,40 @@ func _make_btn(control_name: String, label: String, accent: Color, callback: Cal
 
 ## Emits the resumed signal and frees the pause overlay.
 func _on_resume() -> void:
+	if _transitioning:
+		return
 	resumed.emit()
 	get_parent().queue_free()
 
-## Unpauses the game and reloads the game scene for a fresh retry.
+## Unpauses the game and reuses the resident game scene for a fresh retry.
 func _on_retry() -> void:
+	if _transitioning:
+		return
+	_transitioning = true
+	var current_scene := get_tree().current_scene
+	if current_scene == null or current_scene.scene_file_path != NATIVE_RUN_PATH:
+		# Review scenes use this same pause menu. Preserve their reload contract
+		# instead of redirecting every retry into the production run.
+		get_tree().paused = false
+		get_tree().reload_current_scene()
+		return
+	var run_scene := await ResourceCache.wait_for_scene(NATIVE_RUN_PATH)
 	get_tree().paused = false
+	if run_scene != null and get_tree().change_scene_to_packed(run_scene) == OK:
+		return
+	_transitioning = false
 	get_tree().reload_current_scene()
 
-## Unpauses the game and returns to the main menu.
+## Unpauses the game and reuses the resident title scene.
 func _on_menu() -> void:
+	if _transitioning:
+		return
+	_transitioning = true
+	var menu_scene := await ResourceCache.wait_for_scene(MAIN_MENU_PATH)
 	get_tree().paused = false
+	if menu_scene != null and get_tree().change_scene_to_packed(menu_scene) == OK:
+		return
+	_transitioning = false
 	get_tree().change_scene_to_file("res://ui/main_menu.tscn")
 
 ## Opens the settings menu as a modal child. Prevents duplicate instances.

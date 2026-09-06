@@ -9,8 +9,11 @@ signal xp_orb_collected(orb_value: int, combat_position: Vector3)
 const XP_ORB_SCENE := preload("res://entities/collectibles/xp_orb_3d.tscn")
 const XPOrb := preload("res://entities/collectibles/xp_orb_3d.gd")
 const FlightSpace := preload("res://systems/flight_space_3d.gd")
+const FrameWorkBudget := preload("res://systems/frame_work_budget.gd")
 
 @export_range(1, 128, 1) var pool_size: int = 32
+## Legacy inspector setting retained for scene compatibility. Warmup now yields
+## from the shared elapsed-work budget instead of a fixed item count.
 @export_range(1, 16, 1) var warm_batch_size: int = 8
 
 var is_ready := false
@@ -20,6 +23,7 @@ var _active_parent: Node3D
 var _idle_parent: Node3D
 var _combat_bounds := Rect2()
 var _checked_out: Array[XPOrb] = []
+var _checked_out_indices: Dictionary[int, int] = {}
 var _warmed_ids: Dictionary[int, bool] = {}
 var _pool_growth := 0
 var _collected := 0
@@ -41,6 +45,7 @@ func warm_orb_pool() -> bool:
 		return false
 	_warming = true
 	var warm_nodes: Array[XPOrb] = []
+	var budget := FrameWorkBudget.new()
 	for index in range(pool_size):
 		var orb := ObjectPool.acquire(XP_ORB_SCENE, _active_parent) as XPOrb
 		if orb == null:
@@ -51,16 +56,19 @@ func warm_orb_pool() -> bool:
 		orb.returned_to_pool.connect(_on_orb_returned)
 		orb.prepare_visual_warmup()
 		warm_nodes.append(orb)
-		_checked_out.append(orb)
+		_track_checkout(orb)
 		_warmed_ids[orb.get_instance_id()] = true
-		if (index + 1) % warm_batch_size == 0:
+		if budget.should_yield():
 			await get_tree().process_frame
+			budget.reset()
 	if DisplayServer.get_name() != "headless":
 		RenderingServer.force_draw(false)
+	budget.reset()
 	for index in range(warm_nodes.size()):
 		warm_nodes[index].despawn()
-		if (index + 1) % warm_batch_size == 0:
+		if budget.should_yield():
 			await get_tree().process_frame
+			budget.reset()
 	await get_tree().process_frame
 	_warming = false
 	is_ready = true
@@ -83,16 +91,16 @@ func spawn_xp_orb(
 		_pool_growth += 1
 		_warmed_ids[orb.get_instance_id()] = true
 	orb.configure_pool(_idle_parent)
-	_checked_out.append(orb)
+	_track_checkout(orb)
 	if not orb.pool_activate(_flight_space, combat_position, value, drift_direction, _combat_bounds):
-		_checked_out.erase(orb)
+		_untrack_checkout(orb)
 		ObjectPool.release(orb, _idle_parent)
 		return null
 	return orb
 
 
 func clear_orbs() -> void:
-	for orb in _checked_out.duplicate():
+	for orb in _checked_out:
 		if is_instance_valid(orb):
 			orb.despawn()
 
@@ -120,7 +128,29 @@ func _on_orb_collected(value: int, combat_position: Vector3, _orb: XPOrb) -> voi
 
 
 func _on_orb_returned(orb: Area3D) -> void:
-	_checked_out.erase(orb)
+	_untrack_checkout(orb as XPOrb)
+
+
+func _track_checkout(orb: XPOrb) -> void:
+	var instance_id := orb.get_instance_id()
+	_checked_out_indices[instance_id] = _checked_out.size()
+	_checked_out.append(orb)
+
+
+func _untrack_checkout(orb: XPOrb) -> void:
+	if orb == null:
+		return
+	var instance_id := orb.get_instance_id()
+	if not _checked_out_indices.has(instance_id):
+		return
+	var index := int(_checked_out_indices[instance_id])
+	var last_index := _checked_out.size() - 1
+	if index != last_index:
+		var last_orb := _checked_out[last_index]
+		_checked_out[index] = last_orb
+		_checked_out_indices[last_orb.get_instance_id()] = index
+	_checked_out.pop_back()
+	_checked_out_indices.erase(instance_id)
 
 
 func _refresh_bounds() -> void:

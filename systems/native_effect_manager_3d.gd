@@ -4,8 +4,11 @@ class_name NativeEffectManager3D
 
 const Effect := preload("res://effects/native_effect_3d.gd")
 const EFFECT_SCENE := preload("res://effects/native_effect_3d.tscn")
+const FrameWorkBudget := preload("res://systems/frame_work_budget.gd")
 
 @export_range(1, 128, 1) var pool_size: int = 96
+## Retained for saved-scene compatibility. Warm-up now yields from an elapsed
+## work budget so a slow effect instance cannot force a long fixed-frame stall.
 @export_range(1, 16, 1) var warm_batch_size: int = 8
 @export_range(0, 16, 1) var max_local_lights: int = 8
 
@@ -28,6 +31,14 @@ func configure(active_parent: Node3D, idle_parent: Node3D) -> void:
 		clear_effects()
 	_active_parent = active_parent
 	_idle_parent = idle_parent
+	is_ready = false
+	_warming = false
+	_checked_out.clear()
+	_warmed_ids.clear()
+	_lit_effects.clear()
+	_pool_growth = 0
+	_rejected = 0
+	_played = 0
 
 
 func warm_effect_pool() -> bool:
@@ -36,11 +47,15 @@ func warm_effect_pool() -> bool:
 	if _warming or _active_parent == null or _idle_parent == null:
 		return false
 	_warming = true
+	var budget := FrameWorkBudget.new()
+	# Keep a stable warm-up snapshot for the deferred return pass. This array
+	# exists only during startup; event-time effect playback remains allocation
+	# free apart from the pool's own bookkeeping.
 	var warm_nodes: Array[Effect] = []
 	for index in range(pool_size):
 		var effect := ObjectPool.acquire(EFFECT_SCENE, _active_parent) as Effect
 		if effect == null:
-			_warming = false
+			await _abort_warmup()
 			return false
 		effect.configure_pool(_idle_parent)
 		if not effect.returned_to_pool.is_connected(_on_effect_returned):
@@ -49,14 +64,19 @@ func warm_effect_pool() -> bool:
 		warm_nodes.append(effect)
 		_checked_out.append(effect)
 		_warmed_ids[effect.get_instance_id()] = true
-		if (index + 1) % warm_batch_size == 0:
+		if budget.should_yield():
 			await get_tree().process_frame
+			budget.reset()
 	if DisplayServer.get_name() != "headless":
 		RenderingServer.force_draw(false)
-	for index in range(warm_nodes.size()):
-		warm_nodes[index].despawn()
-		if (index + 1) % warm_batch_size == 0:
+	# Despawn is deferred by the wrapper, so the stable warm-up snapshot remains
+	# valid when a budget yield lets returned_to_pool callbacks run.
+	for effect in warm_nodes:
+		if is_instance_valid(effect):
+			effect.despawn()
+		if budget.should_yield():
 			await get_tree().process_frame
+			budget.reset()
 	await get_tree().process_frame
 	_warming = false
 	is_ready = true
@@ -70,7 +90,14 @@ func play_effect(
 	intensity: float = 1.0,
 	preserve_height: bool = false
 ) -> bool:
-	if not is_ready or _checked_out.size() >= _warmed_ids.size():
+	if not is_ready:
+		_rejected += 1
+		return false
+	if _checked_out.size() >= _warmed_ids.size():
+		# Stale strong references are only possible after an external scene
+		# teardown. Pay the compact cost on saturation, never on every effect.
+		_compact_checked_out()
+	if _checked_out.size() >= _warmed_ids.size():
 		_rejected += 1
 		return false
 	var effect := ObjectPool.acquire(EFFECT_SCENE, _active_parent) as Effect
@@ -98,13 +125,14 @@ func play_effect(
 
 
 func clear_effects() -> void:
-	for effect in _checked_out.duplicate():
+	for effect in _checked_out:
 		if is_instance_valid(effect):
 			effect.despawn()
 	_lit_effects.clear()
 
 
 func get_metrics() -> Dictionary:
+	_compact_checked_out()
 	var active := 0
 	for effect in _checked_out:
 		if effect.is_active:
@@ -124,7 +152,29 @@ func get_metrics() -> Dictionary:
 
 func _on_effect_returned(effect: Effect) -> void:
 	_checked_out.erase(effect)
-	_lit_effects.erase(effect.get_instance_id())
+	if is_instance_valid(effect):
+		_lit_effects.erase(effect.get_instance_id())
+
+
+func _compact_checked_out() -> void:
+	var write_index := 0
+	for effect in _checked_out:
+		if not is_instance_valid(effect):
+			continue
+		_checked_out[write_index] = effect
+		write_index += 1
+	if write_index != _checked_out.size():
+		_checked_out.resize(write_index)
+
+
+func _abort_warmup() -> void:
+	clear_effects()
+	_warmed_ids.clear()
+	_lit_effects.clear()
+	await get_tree().process_frame
+	_checked_out.clear()
+	_warming = false
+	is_ready = false
 
 
 func _can_claim_local_light(kind: Effect.EffectKind) -> bool:

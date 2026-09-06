@@ -8,6 +8,8 @@ const ALLOCATION := preload("res://ui/point_allocation_popup.tscn")
 const ELITE_REWARD := preload("res://ui/elite_upgrade_popup.tscn")
 const NativeUpgrades := preload("res://entities/player/native_player_upgrades.gd")
 const VICTORY := preload("res://ui/expedition_victory.tscn")
+const MAIN_MENU_PATH := "res://ui/main_menu.tscn"
+const NATIVE_RUN_PATH := "res://scenes/native_3d_run.tscn"
 
 var encounters: EncounterDirector
 var _run_overlay: CanvasLayer
@@ -89,6 +91,8 @@ func _revive() -> void:
 
 func _show_game_over(score: int) -> void:
 	GameManager.finalize_run()
+	ResourceCache.prime_scene(MAIN_MENU_PATH)
+	ResourceCache.prime_scene(NATIVE_RUN_PATH)
 	if is_instance_valid(_run_overlay):
 		_run_overlay.queue_free()
 	_run_overlay = _new_overlay()
@@ -150,6 +154,7 @@ func _show_victory(wave: int) -> void:
 	encounters.started = false
 	projectile_manager.clear_projectiles()
 	hazard_manager.clear_hazards()
+	ResourceCache.prime_scene(MAIN_MENU_PATH)
 	_run_overlay = _new_overlay()
 	var screen := VICTORY.instantiate()
 	_run_overlay.add_child(screen)
@@ -170,6 +175,9 @@ func _continue_endless() -> void:
 func _return_to_menu() -> void:
 	GameManager.finalize_run()
 	get_tree().paused = false
+	var menu_scene := ResourceCache.get_scene(MAIN_MENU_PATH)
+	if menu_scene != null and get_tree().change_scene_to_packed(menu_scene) == OK:
+		return
 	get_tree().change_scene_to_file("res://ui/main_menu.tscn")
 
 

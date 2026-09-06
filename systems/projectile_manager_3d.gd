@@ -20,9 +20,13 @@ const WeaponTuning := preload("res://entities/player/player_weapon_tuning.gd")
 const EnemyTuning := preload("res://entities/projectiles/enemy_projectile_tuning.gd")
 const FlightTuning := preload("res://entities/player/player_flight_tuning.gd")
 const PlayerCraft := preload("res://entities/player/player_3d.gd")
+const FrameWorkBudget := preload("res://systems/frame_work_budget.gd")
+const HOMING_RANGE_SQUARED := 420.0 * 420.0
 
 @export_range(1, 512, 1) var player_pool_size: int = 512
 @export_range(1, 512, 1) var enemy_pool_size: int = 256
+## Legacy inspector setting retained for scene compatibility. Warmup now yields
+## from the shared elapsed-work budget instead of a fixed item count.
 @export_range(1, 16, 1) var warm_batch_size: int = 8
 @export_range(32.0, 256.0, 1.0) var interaction_range_pixels: float = FlightTuning.BOOST_DEFLECT_RADIUS
 @export_range(0.0, 64.0, 1.0) var interaction_hysteresis_pixels: float = 16.0
@@ -33,6 +37,7 @@ class PoolState:
 	var capacity := 0
 	# Includes deferred returns until ObjectPool has made them available.
 	var checked_out: Array[Projectile] = []
+	var checked_out_indices: Dictionary[int, int] = {}
 	var warmed_ids: Dictionary[int, bool] = {}
 	var shots_fired := 0
 	var rejected_shots := 0
@@ -52,6 +57,7 @@ var _idle_parent: Node3D
 var _player: PlayerCraft
 var _combat_bounds := Rect2()
 var _interaction_range := InteractionRange.new()
+var _homing_targets_provider := Callable()
 var _pools: Array[PoolState] = [
 	PoolState.new(PLAYER_PROJECTILE_SCENE),
 	PoolState.new(ENEMY_PROJECTILE_SCENE),
@@ -82,6 +88,12 @@ func _physics_process(delta: float) -> void:
 		_update_homing(delta)
 
 
+## Native3DGameplay supplies its persistent enemy registry so Auto-Aim does not
+## rebuild a SceneTree group array every physics tick.
+func set_homing_targets_provider(provider: Callable) -> void:
+	_homing_targets_provider = provider
+
+
 func warm_projectile_pools() -> bool:
 	if is_ready:
 		return true
@@ -89,6 +101,7 @@ func warm_projectile_pools() -> bool:
 		return false
 	_warming = true
 	var warm_nodes: Array[Projectile] = []
+	var budget := FrameWorkBudget.new()
 	for pool in _pools:
 		for index in range(pool.capacity):
 			var projectile := ObjectPool.acquire(pool.scene, _active_parent) as Projectile
@@ -102,16 +115,19 @@ func warm_projectile_pools() -> bool:
 			projectile.prepare_visual_warmup()
 			warm_nodes.append(projectile)
 			pool.warmed_ids[projectile.get_instance_id()] = true
-			if (index + 1) % warm_batch_size == 0:
+			if budget.should_yield():
 				await get_tree().process_frame
+				budget.reset()
 	# Covered/minimized windows may stop drawing. Warm both families with one
 	# transition-only frame, rather than waiting indefinitely for post-draw.
 	if DisplayServer.get_name() != "headless":
 		RenderingServer.force_draw(false)
+	budget.reset()
 	for index in range(warm_nodes.size()):
 		warm_nodes[index].despawn()
-		if (index + 1) % warm_batch_size == 0:
+		if budget.should_yield():
 			await get_tree().process_frame
+			budget.reset()
 	await get_tree().process_frame
 	_warming = false
 	is_ready = true
@@ -150,7 +166,9 @@ func clear_enemy_projectiles() -> void:
 
 
 func _clear_pool(kind: Projectile.Kind) -> void:
-	for projectile in _pools[kind].checked_out.duplicate():
+	# despawn() only schedules the return, so the checkout array remains stable
+	# while this pass disables every currently checked-out projectile.
+	for projectile in _pools[kind].checked_out:
 		if is_instance_valid(projectile):
 			projectile.despawn()
 
@@ -217,10 +235,10 @@ func _fire(
 	if screen_direction.is_zero_approx():
 		screen_direction = Vector2.UP if kind == Projectile.Kind.PLAYER else Vector2.DOWN
 	var projectile_velocity := _flight_space.screen_motion_to_combat(screen_direction * speed_pixels)
-	pool.checked_out.append(projectile)
+	_track_checkout(pool, projectile)
 	projectile.pool_activate(combat_position, projectile_velocity, _combat_bounds, size_multiplier)
 	if not projectile.is_active:
-		pool.checked_out.erase(projectile)
+		_untrack_checkout(pool, projectile)
 		pool.rejected_shots += 1
 		return
 	if kind == Projectile.Kind.PLAYER and _player != null:
@@ -274,7 +292,43 @@ func _on_projectile_hit(
 
 
 func _on_projectile_returned(projectile: Area3D, pool: PoolState) -> void:
-	pool.checked_out.erase(projectile)
+	_untrack_checkout(pool, projectile as Projectile)
+
+
+func _track_checkout(pool: PoolState, projectile: Projectile) -> void:
+	var instance_id := projectile.get_instance_id()
+	pool.checked_out_indices[instance_id] = pool.checked_out.size()
+	pool.checked_out.append(projectile)
+
+
+func _untrack_checkout(pool: PoolState, projectile: Projectile) -> void:
+	if projectile == null:
+		return
+	var instance_id := projectile.get_instance_id()
+	if not pool.checked_out_indices.has(instance_id):
+		return
+	var index := int(pool.checked_out_indices[instance_id])
+	var last_index := pool.checked_out.size() - 1
+	if index != last_index:
+		var last_projectile := pool.checked_out[last_index]
+		pool.checked_out[index] = last_projectile
+		pool.checked_out_indices[last_projectile.get_instance_id()] = index
+	pool.checked_out.pop_back()
+	pool.checked_out_indices.erase(instance_id)
+
+
+## Disables incoming projectiles in a radius without allocating a group snapshot.
+func clear_enemy_projectiles_in_radius(center: Vector3, radius_pixels: float) -> void:
+	var radius_squared := radius_pixels * radius_pixels
+	var enemy_pool := _pools[Projectile.Kind.ENEMY]
+	for projectile in enemy_pool.checked_out:
+		if (
+			projectile.is_active
+			and not projectile.is_deflected
+			and _flight_space.combat_motion_to_screen(projectile.global_position - center).length_squared()
+			<= radius_squared
+		):
+			projectile.despawn()
 
 
 func _refresh_bounds() -> void:
@@ -347,20 +401,28 @@ func _pool_metrics(pool: PoolState) -> Dictionary:
 func _update_homing(delta: float) -> void:
 	if _player == null or not _player.has_elite_upgrade("auto_aim"):
 		return
-	var enemies := get_tree().get_nodes_in_group(&"native_3d_enemies")
+	var enemies: Array
+	if _homing_targets_provider.is_valid():
+		enemies = _homing_targets_provider.call()
+	else:
+		# Keep standalone manager/review compatibility when no gameplay registry
+		# has been configured.
+		enemies = get_tree().get_nodes_in_group(&"native_3d_enemies")
 	for projectile in _pools[Projectile.Kind.PLAYER].checked_out:
 		if not projectile.is_active or not projectile.homing:
 			continue
 		var nearest: Node3D
-		var distance := 420.0
+		var distance_squared := HOMING_RANGE_SQUARED
 		var screen_velocity := _flight_space.combat_motion_to_screen(projectile.velocity)
+		var screen_direction := screen_velocity.normalized()
 		for enemy in enemies:
 			if not enemy.is_active:
 				continue
 			var offset := _flight_space.combat_motion_to_screen(enemy.global_position - projectile.global_position)
-			if offset.length() < distance and screen_velocity.normalized().dot(offset.normalized()) > 0.2:
+			var candidate_distance_squared := offset.length_squared()
+			if candidate_distance_squared < distance_squared and screen_direction.dot(offset.normalized()) > 0.2:
 				nearest = enemy
-				distance = offset.length()
+				distance_squared = candidate_distance_squared
 		if nearest != null:
 			var desired := _flight_space.combat_motion_to_screen(nearest.global_position - projectile.global_position).normalized()
 			var angle := clampf(screen_velocity.angle_to(desired), -delta * 2.5, delta * 2.5)

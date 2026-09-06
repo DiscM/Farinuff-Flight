@@ -56,6 +56,10 @@ var _button_focus_tweens: Dictionary[Button, Tween] = {}
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	# Prime the next root scene while the player is choosing a loadout or
+	# browsing the title screen. ResourceCache keeps this request bounded and
+	# deduplicates the launch-time request below.
+	ResourceCache.prime_scene(NATIVE_RUN_PATH)
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	_apply_arcade_styles()
 	_build_pixel_planet()
@@ -306,6 +310,7 @@ func _on_play_pressed() -> void:
 func _open_launch_bay() -> void:
 	if _launching or _any_overlay_open():
 		return
+	ResourceCache.prime_scene(NATIVE_RUN_PATH)
 	_launch_bay = LAUNCH_BAY_SCENE.instantiate()
 	_launch_bay.connect("launch_confirmed", _on_launch_bay_confirmed)
 	_launch_bay.connect("closed", _on_launch_bay_closed)
@@ -343,7 +348,7 @@ func _on_launch_bay_closed() -> void:
 
 
 func _begin_launch() -> void:
-	ResourceLoader.load_threaded_request(NATIVE_RUN_PATH, "PackedScene")
+	ResourceCache.prime_scene(NATIVE_RUN_PATH)
 	_launching = true
 	play_button.disabled = true
 	hangar_button.disabled = true
@@ -360,14 +365,15 @@ func _begin_launch() -> void:
 
 
 func _on_ship_launch_finished() -> void:
-	var progress: Array = []
-	while ResourceLoader.load_threaded_get_status(NATIVE_RUN_PATH, progress) == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
-		play_button.text = "PREPARING FLIGHT… %d%%" % int(float(progress[0]) * 100.0) if not progress.is_empty() else "PREPARING FLIGHT…"
+	while not ResourceCache.is_scene_ready(NATIVE_RUN_PATH):
+		if ResourceCache.is_scene_failed(NATIVE_RUN_PATH):
+			break
+		var progress := ResourceCache.get_scene_progress(NATIVE_RUN_PATH)
+		play_button.text = "PREPARING FLIGHT… %d%%" % int(progress * 100.0)
 		await get_tree().process_frame
-	if ResourceLoader.load_threaded_get_status(NATIVE_RUN_PATH) == ResourceLoader.THREAD_LOAD_LOADED:
-		_native_run_scene = ResourceLoader.load_threaded_get(NATIVE_RUN_PATH) as PackedScene
-		if _native_run_scene != null and get_tree().change_scene_to_packed(_native_run_scene) == OK:
-			return
+	_native_run_scene = ResourceCache.get_scene(NATIVE_RUN_PATH)
+	if _native_run_scene != null and get_tree().change_scene_to_packed(_native_run_scene) == OK:
+		return
 	_launching = false
 	play_button.text = "RETRY LAUNCH"
 	play_button.disabled = false

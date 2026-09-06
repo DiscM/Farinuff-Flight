@@ -5,6 +5,8 @@ const NativeUpgradeCatalog := preload("res://entities/player/native_player_upgra
 const SHIP_PREVIEW_SCRIPT := preload("res://entities/player/ship_upgrade_preview.gd")
 const FALLBACK_ICON := "✦"
 const FALLBACK_NAME := "YOUR SHIP"
+const NATIVE_RUN_PATH := "res://scenes/native_3d_run.tscn"
+const MAIN_MENU_PATH := "res://ui/main_menu.tscn"
 
 @onready var score_label: Label = $VBoxContainer/ScoreLabel
 @onready var high_score_label: Label = $VBoxContainer/HighScoreLabel
@@ -14,9 +16,14 @@ const FALLBACK_NAME := "YOUR SHIP"
 @onready var salvage_breakdown_label: Label = $VBoxContainer/SalvageBreakdownLabel
 @onready var stats_label: Label = $VBoxContainer/StatsLabel
 @onready var loadout_label: Label = $VBoxContainer/LoadoutLabel
+var _transitioning := false
 
 ## Connects the retry and menu buttons to their respective handlers.
 func _ready() -> void:
+	# Retry is the common next action. The bounded cache keeps the packed root
+	# scene resident without creating another gameplay tree in the background.
+	ResourceCache.prime_scene(NATIVE_RUN_PATH)
+	ResourceCache.prime_scene(MAIN_MENU_PATH)
 	$VBoxContainer/RetryButton.pressed.connect(_on_retry_pressed)
 	$VBoxContainer/MenuButton.pressed.connect(_on_menu_pressed)
 	_build_native_preview()
@@ -122,12 +129,26 @@ func _safe_text(data: Dictionary, key: String, fallback: String) -> String:
 	var text := str(value).strip_edges()
 	return text if text != "" else fallback
 
-## Unpauses the game and reloads the game scene for a fresh run.
+## Unpauses the game and reuses the resident game scene for a fresh run.
 func _on_retry_pressed() -> void:
+	if _transitioning:
+		return
+	_transitioning = true
+	var run_scene := await ResourceCache.wait_for_scene(NATIVE_RUN_PATH)
 	get_tree().paused = false
+	if run_scene != null and get_tree().change_scene_to_packed(run_scene) == OK:
+		return
+	_transitioning = false
 	get_tree().change_scene_to_file("res://scenes/native_3d_run.tscn")
 
-## Unpauses the game and returns to the main menu.
+## Unpauses the game and reuses the resident title scene.
 func _on_menu_pressed() -> void:
+	if _transitioning:
+		return
+	_transitioning = true
+	var menu_scene := await ResourceCache.wait_for_scene(MAIN_MENU_PATH)
 	get_tree().paused = false
+	if menu_scene != null and get_tree().change_scene_to_packed(menu_scene) == OK:
+		return
+	_transitioning = false
 	get_tree().change_scene_to_file("res://ui/main_menu.tscn")
