@@ -29,7 +29,6 @@ const CHARGE_TRIGGER_DISTANCE_PIXELS := 240.0
 const CHARGE_TELEGRAPH_SECONDS := 0.55
 const CHARGE_DURATION_SECONDS := 0.45
 const CHARGE_SPEED_MULTIPLIER := 2.2
-const CHARGE_WARNING_LENGTH_PIXELS := 260.0
 
 @export var gameplay_stats: GenerationStats
 @export_range(1, 4, 1) var generation: int = 1
@@ -58,7 +57,6 @@ var _charge_used := false
 var _charge_state := 0
 var _charge_timer := 0.0
 var _charge_screen_direction := Vector2.ZERO
-var _charge_warning: MeshInstance3D
 
 
 func _ready() -> void:
@@ -122,7 +120,6 @@ func activate_generation(
 	_charge_state = 0
 	_charge_timer = 0.0
 	_charge_screen_direction = Vector2.ZERO
-	_clear_charge_warning()
 	_set_instance_parameter(&"instance_animation_time", 0.0)
 	_set_instance_parameter(&"instance_flash", 0.0)
 	_set_generation_visuals()
@@ -180,7 +177,6 @@ func _advance_movement(delta: float) -> void:
 		if _charge_timer <= 0.0:
 			_charge_state = 2
 			_charge_timer = CHARGE_DURATION_SECONDS
-			_clear_charge_warning()
 			charge_released.emit(get_combat_position(), _flight_space.screen_motion_to_combat(_charge_screen_direction))
 		return
 	if _charge_state == 2:
@@ -241,40 +237,7 @@ func _try_begin_charge() -> void:
 	_charge_timer = CHARGE_TELEGRAPH_SECONDS
 	_charge_screen_direction = to_player.normalized()
 	velocity = Vector3.ZERO
-	_create_charge_warning()
 	charge_started.emit(get_combat_position(), _flight_space.screen_motion_to_combat(_charge_screen_direction))
-
-
-func _create_charge_warning() -> void:
-	_clear_charge_warning()
-	_charge_warning = MeshInstance3D.new()
-	_charge_warning.name = "ChargeTelegraph"
-	var mesh := BoxMesh.new()
-	var length := _flight_space.screen_motion_to_combat(
-		_charge_screen_direction * CHARGE_WARNING_LENGTH_PIXELS
-	).length()
-	mesh.size = Vector3(0.12, 0.025, maxf(length, 0.1))
-	_charge_warning.mesh = mesh
-	var material := StandardMaterial3D.new()
-	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	material.albedo_color = Color(1.0, 0.2, 0.08, 0.78)
-	material.emission_enabled = true
-	material.emission = Color(1.0, 0.08, 0.02)
-	material.emission_energy_multiplier = 2.0
-	_charge_warning.material_override = material
-	add_child(_charge_warning)
-	_charge_warning.position = _flight_space.screen_motion_to_combat(
-		_charge_screen_direction * CHARGE_WARNING_LENGTH_PIXELS * 0.5
-	)
-	_charge_warning.position.y = 0.04
-	_charge_warning.rotation.y = atan2(-_charge_screen_direction.x, -_charge_screen_direction.y)
-
-
-func _clear_charge_warning() -> void:
-	if is_instance_valid(_charge_warning):
-		_charge_warning.queue_free()
-	_charge_warning = null
 
 
 func take_damage(amount: int) -> void:
@@ -336,7 +299,6 @@ func _finish(reason: FinishReason) -> void:
 	hide()
 	if _breathing != null:
 		_breathing.kill()
-	_clear_charge_warning()
 	# Contacts may arrive during a physics flush. Deactivate logically now and
 	# defer physics mutations; repeated damage/contact callbacks cannot finish twice.
 	set_deferred("collision_layer", 0)
