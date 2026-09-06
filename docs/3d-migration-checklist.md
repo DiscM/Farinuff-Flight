@@ -4,6 +4,21 @@
 
 The previous checklist and its detailed slice/approval history are available in Git history. This guide supersedes their parity, frozen-reference, parallel-runtime, and per-slice approval requirements. The current entry states implementation status; dated entries retain their original validation limits.
 
+## 2026-09-06 — Native completion hardening and runtime validation
+
+**Changed**
+
+- Completed the native reward surfaces: all 13 upgrade IDs are represented by the elite-choice flow, all three native hull previews are available in the launch bay and debrief screens, and empty, duplicate, fallback, loadout, and zero-stock retry states are explicit.
+- Added scene-owned presentation settings for the native effect pool, warm batches, local-light budget, and metrics interval. Native gameplay now exposes cached frame, pool-pressure, rejection, and post-warm-up growth metrics without allocating on effect events. Pooled presentation budgets are 64 effects, 16 warm-at-once, and four local lights.
+- Added deterministic native completion assertions to CI for the actor graph, warmed pools, stacked projectile modifiers, five boss variants and destructible sections, all 13 upgrades, generation resources, and Endless continuation.
+
+**Validation**
+
+- `python3 tools/check_native_transition.py` passed for 208 source/resources, six generated GLBs, 13 upgrade modules, and native entry points.
+- `python3 tests/check_native_completion.py` passed 334 file-only assertions; Python compilation and `git diff --check` also passed.
+- Godot 4.6.3 / Metal Forward+ loaded the native gameplay scene for a 75-frame run with no first-party diagnostics. The presentation monitors registered successfully. A live burst of 80 impact requests held the pool at 64 active effects, rejected 16 over-capacity requests, returned all effects to idle, and recorded zero pool growth; the host reported 145 FPS during the bounded check.
+- The Godot bridge emits its own unrelated MCP warnings. Target-resolution readability, cold-load timing, long heavy-wave balance, and complete input/playthrough coverage remain release-validation items rather than migration blockers.
+
 ## 2026-09-06 — Native 3D VFX replacement (file checks only)
 
 **Changed**

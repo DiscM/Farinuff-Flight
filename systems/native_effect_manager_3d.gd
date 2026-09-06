@@ -130,10 +130,9 @@ func _on_effect_returned(effect: Effect) -> void:
 func _can_claim_local_light(kind: Effect.EffectKind) -> bool:
 	if max_local_lights <= 0 or _lit_effects.size() >= max_local_lights:
 		return false
-	return kind in [
-		Effect.EffectKind.IMPACT,
-		Effect.EffectKind.DEATH,
-		Effect.EffectKind.BOOST,
-		Effect.EffectKind.EXPLOSION,
-		Effect.EffectKind.SHIELD,
-	]
+	match kind:
+		Effect.EffectKind.IMPACT, Effect.EffectKind.DEATH, Effect.EffectKind.BOOST:
+			return true
+		Effect.EffectKind.EXPLOSION, Effect.EffectKind.SHIELD:
+			return true
+	return false

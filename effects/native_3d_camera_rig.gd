@@ -4,6 +4,10 @@ class_name Native3DCameraRig
 
 const FlightConfig := preload("res://systems/flight_space_3d_config.gd")
 
+const CAMERA_NEAR_CLIP := 0.1
+const CAMERA_FAR_CLIP := 180.0
+const COMBAT_RENDER_LAYER := 1
+
 @export var configuration: FlightConfig
 
 @onready var projection_camera: Camera3D = $ProjectionCamera3D
@@ -29,15 +33,27 @@ func configure(value: FlightConfig) -> void:
 	configuration = value
 	position = configuration.get_camera_position()
 	rotation_degrees = Vector3(-configuration.camera_elevation_degrees, 0.0, 0.0)
-	var cameras: Array[Camera3D] = [projection_camera, active_camera]
-	for camera_node in cameras:
-		if camera_node == null:
-			continue
-		camera_node.projection = Camera3D.PROJECTION_ORTHOGONAL
-		camera_node.keep_aspect = Camera3D.KEEP_HEIGHT
-		camera_node.size = configuration.get_orthogonal_size()
-		camera_node.near = 0.1
-		camera_node.far = 200.0
+	_configure_camera(projection_camera)
+	_configure_camera(active_camera)
+	if projection_camera != null:
+		projection_camera.current = false
+	if active_camera != null:
+		active_camera.current = true
+
+
+func _configure_camera(camera_node: Camera3D) -> void:
+	if camera_node == null:
+		return
+	# KEEP_HEIGHT preserves the 1280x720 combat span vertically and reveals
+	# additional horizontal space at wider or higher-resolution viewports.
+	camera_node.projection = Camera3D.PROJECTION_ORTHOGONAL
+	camera_node.keep_aspect = Camera3D.KEEP_HEIGHT
+	camera_node.size = maxf(configuration.get_orthogonal_size(), 1.0)
+	camera_node.near = CAMERA_NEAR_CLIP
+	camera_node.far = CAMERA_FAR_CLIP
+	# Native combat nodes use the default 3D layer; keeping the mask explicit
+	# prevents future presentation-only layers from entering the flight view.
+	camera_node.cull_mask = COMBAT_RENDER_LAYER
 
 
 func _process(delta: float) -> void:

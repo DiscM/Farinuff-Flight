@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="Native3DPresentationSettings" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://effects/rendering/native_3d_presentation_settings.gd" id="1_settings"]
+
+[resource]
+script = ExtResource("1_settings")
+effect_pool_size = 64
+effect_warm_batch_size = 16
+max_local_effect_lights = 4
+metrics_enabled = true
+metrics_interval = 0.25

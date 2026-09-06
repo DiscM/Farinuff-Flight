@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3]
+[gd_scene load_steps=18 format=3]
 
 [ext_resource type="Script" path="res://scenes/native_3d_gameplay.gd" id="1_game"]
 [ext_resource type="Resource" path="res://systems/flight_space_3d_config.tres" id="2_config"]
@@ -16,9 +16,11 @@
 [ext_resource type="Script" path="res://systems/native_hazard_manager_3d.gd" id="14_hazards"]
 [ext_resource type="Script" path="res://systems/power_up_manager_3d.gd" id="15_power_ups"]
 [ext_resource type="Script" path="res://systems/special_attack_coordinator.gd" id="16_coordinator"]
+[ext_resource type="Resource" path="res://effects/rendering/native_3d_presentation_settings.tres" id="17_presentation"]
 
 [node name="Native3DGameplay" type="Node"]
 script = ExtResource("1_game")
+presentation_settings = ExtResource("17_presentation")
 
 [node name="Backdrop" parent="." instance=ExtResource("3_backdrop")]
 
@@ -62,6 +64,7 @@ script = ExtResource("11_projectiles")
 script = ExtResource("12_orbs")
 
 [node name="NativeEffectManager3D" type="Node" parent="GameplayManagers"]
+editor_description = "Bounded native feedback pool. The scene-owned presentation settings keep heavy-wave pressure visible through custom Performance monitors."
 script = ExtResource("13_effects")
 
 [node name="NativeHazardManager3D" type="Node" parent="GameplayManagers"]

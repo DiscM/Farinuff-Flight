@@ -16,8 +16,10 @@ void fragment() {
 	float bands = 0.76 + 0.24 * sin((UV.x + UV.y) * 22.0 + instance_phase);
 	float accent = clamp(rim * 0.72 + abs(centered.x) * 0.18, 0.0, 1.0);
 	vec3 color = mix(instance_color.rgb, instance_accent.rgb, accent);
-	float alpha = disc * bands * instance_alpha * instance_color.a;
+	// Keep the silhouette crisp at the 720p baseline and let the environment's
+	// restrained glow provide the soft edge at larger output resolutions.
+	float alpha = disc * (0.78 + bands * 0.22) * instance_alpha * instance_color.a;
 	ALBEDO = color;
-	EMISSION = color * instance_emission * (0.55 + rim * 0.9);
+	EMISSION = color * instance_emission * (0.46 + rim * 0.72);
 	ALPHA = alpha;
 }

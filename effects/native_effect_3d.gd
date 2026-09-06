@@ -23,6 +23,15 @@ enum EffectKind {
 const SHOCK_RING := preload("res://assets/models/native/shock_ring.glb")
 const MUZZLE_FLARE := preload("res://assets/models/native/muzzle_flare.glb")
 
+const DEFAULT_DURATION := 0.24
+const MAX_EFFECT_DURATION := 0.55
+const MIN_INTENSITY := 0.1
+const MAX_INTENSITY := 2.5
+## Keep the warm-up at the largest runtime particle buffer so no effect event
+## needs to grow a GPUParticles3D buffer on its first use.
+const WARMUP_PARTICLE_AMOUNT := 24
+const WARMUP_PARTICLE_LIFETIME := 0.48
+
 @onready var core_mesh: MeshInstance3D = $CoreMesh
 @onready var burst_mesh: MeshInstance3D = $BurstMesh
 @onready var pulse_mesh: MeshInstance3D = $PulseMesh
@@ -34,11 +43,12 @@ const MUZZLE_FLARE := preload("res://assets/models/native/muzzle_flare.glb")
 var _flare: Mesh
 var _impact_mesh: Mesh
 var _shock_ring: Mesh
+var _streak_mesh: Mesh
 var is_active := false
 var _idle_parent: Node3D
 var _kind := EffectKind.IMPACT
 var _elapsed := 0.0
-var _duration := 0.24
+var _duration := DEFAULT_DURATION
 var _intensity := 1.0
 var _phase_offset := 0.0
 var _local_light_enabled := false
@@ -46,6 +56,7 @@ var _local_light_enabled := false
 
 func _ready() -> void:
 	_impact_mesh = burst_mesh.mesh
+	_streak_mesh = streak_mesh.mesh
 	_flare = _extract_mesh(MUZZLE_FLARE)
 	_shock_ring = _extract_mesh(SHOCK_RING)
 	var effect_material := _impact_mesh.surface_get_material(0)
@@ -81,13 +92,17 @@ func prepare_visual_warmup() -> void:
 	_local_light_enabled = false
 	visible = true
 	burst_mesh.mesh = _impact_mesh
+	# Reuse the streak slot to draw the imported muzzle mesh during warm-up.
+	# It is restored before play, so this adds no pooled nodes or event-time
+	# allocations while warming both geometry families under the cover.
+	streak_mesh.mesh = _flare
 	core_mesh.visible = true
 	burst_mesh.visible = true
 	pulse_mesh.visible = true
 	secondary_ring.visible = true
 	streak_mesh.visible = true
-	particles.amount = 24
-	particles.lifetime = 0.3
+	particles.amount = WARMUP_PARTICLE_AMOUNT
+	particles.lifetime = WARMUP_PARTICLE_LIFETIME
 	burst_light.visible = false
 	burst_light.light_energy = 0.0
 	particles.restart()
@@ -106,9 +121,9 @@ func play(
 	if is_active or _idle_parent == null:
 		return false
 	_kind = kind
-	_intensity = maxf(intensity, 0.1)
+	_intensity = clampf(intensity, MIN_INTENSITY, MAX_INTENSITY)
 	_elapsed = 0.0
-	_duration = _get_duration(kind)
+	_duration = minf(_get_duration(kind), MAX_EFFECT_DURATION)
 	_phase_offset = float(Time.get_ticks_usec() % 1000) * 0.006
 	is_active = true
 	var visual_position := effect_position
@@ -120,17 +135,18 @@ func play(
 	process_mode = Node.PROCESS_MODE_INHERIT
 	set_process(true)
 	var color := _get_color(kind)
-	_set_shader_state(color, 1.0, _get_emission(kind))
 	burst_mesh.mesh = _flare if kind == EffectKind.MUZZLE else _impact_mesh
+	streak_mesh.mesh = _streak_mesh
 	core_mesh.visible = kind != EffectKind.TELEGRAPH
 	burst_mesh.visible = kind != EffectKind.TELEGRAPH
-	pulse_mesh.visible = kind not in [EffectKind.MUZZLE, EffectKind.PROJECTILE]
-	secondary_ring.visible = kind in [EffectKind.IMPACT, EffectKind.DEATH, EffectKind.BOOST, EffectKind.PICKUP, EffectKind.EXPLOSION, EffectKind.SHIELD, EffectKind.TELEGRAPH]
-	streak_mesh.visible = kind in [EffectKind.MUZZLE, EffectKind.PROJECTILE, EffectKind.BOOST, EffectKind.TELEGRAPH]
+	pulse_mesh.visible = _uses_pulse_mesh(kind)
+	secondary_ring.visible = _uses_secondary_ring(kind)
+	streak_mesh.visible = _uses_streak_mesh(kind)
 	particles.amount = _get_particle_amount(kind)
 	particles.lifetime = _get_particle_lifetime(kind)
 	particles.restart()
 	particles.emitting = true
+	_set_shader_state(color, 1.0, _get_emission(kind))
 	_local_light_enabled = emit_local_light and _get_light_energy(kind) > 0.0
 	burst_light.visible = _local_light_enabled
 	burst_light.light_color = color
@@ -215,9 +231,12 @@ func despawn() -> void:
 	burst_light.light_energy = 0.0
 	_local_light_enabled = false
 	burst_mesh.mesh = _impact_mesh
+	streak_mesh.mesh = _streak_mesh
+	particles.amount = WARMUP_PARTICLE_AMOUNT
+	particles.lifetime = WARMUP_PARTICLE_LIFETIME
 	_kind = EffectKind.IMPACT
 	_elapsed = 0.0
-	_duration = 0.24
+	_duration = DEFAULT_DURATION
 	_intensity = 1.0
 	_phase_offset = 0.0
 	core_mesh.scale = Vector3.ONE
@@ -234,70 +253,90 @@ func despawn() -> void:
 func _get_duration(kind: EffectKind) -> float:
 	match kind:
 		EffectKind.MUZZLE:
-			return 0.1
-		EffectKind.PROJECTILE:
 			return 0.08
+		EffectKind.PROJECTILE:
+			return 0.06
 		EffectKind.IMPACT:
-			return 0.2
+			return 0.16
 		EffectKind.DEATH:
-			return 0.52
+			return 0.42
 		EffectKind.BOOST:
-			return 0.34
+			return 0.28
 		EffectKind.PICKUP:
-			return 0.38
+			return 0.3
 		EffectKind.EXPLOSION:
-			return 0.62
+			return 0.52
 		EffectKind.SHIELD:
-			return 0.48
+			return 0.4
 		EffectKind.TELEGRAPH:
 			return 0.55
-	return 0.24
+	return DEFAULT_DURATION
 
 
 func _get_particle_amount(kind: EffectKind) -> int:
 	match kind:
 		EffectKind.MUZZLE:
-			return 8
-		EffectKind.PROJECTILE:
-			return 3
-		EffectKind.IMPACT:
-			return 12
-		EffectKind.DEATH:
-			return 28
-		EffectKind.BOOST:
-			return 20
-		EffectKind.PICKUP:
-			return 18
-		EffectKind.EXPLOSION:
-			return 40
-		EffectKind.SHIELD:
-			return 32
-		EffectKind.TELEGRAPH:
 			return 6
-	return 8
+		EffectKind.PROJECTILE:
+			return 2
+		EffectKind.IMPACT:
+			return 8
+		EffectKind.DEATH:
+			return 18
+		EffectKind.BOOST:
+			return 14
+		EffectKind.PICKUP:
+			return 12
+		EffectKind.EXPLOSION:
+			return WARMUP_PARTICLE_AMOUNT
+		EffectKind.SHIELD:
+			return 20
+		EffectKind.TELEGRAPH:
+			return 4
+	return 6
 
 
 func _get_particle_lifetime(kind: EffectKind) -> float:
 	match kind:
 		EffectKind.MUZZLE:
-			return 0.14
-		EffectKind.PROJECTILE:
 			return 0.08
+		EffectKind.PROJECTILE:
+			return 0.06
 		EffectKind.IMPACT:
-			return 0.2
+			return 0.14
 		EffectKind.DEATH:
-			return 0.46
+			return 0.38
 		EffectKind.BOOST:
-			return 0.32
+			return 0.24
 		EffectKind.PICKUP:
-			return 0.36
+			return 0.28
 		EffectKind.EXPLOSION:
-			return 0.56
+			return 0.48
 		EffectKind.SHIELD:
-			return 0.42
+			return 0.36
 		EffectKind.TELEGRAPH:
 			return 0.3
-	return 0.24
+	return DEFAULT_DURATION
+
+
+func _uses_pulse_mesh(kind: EffectKind) -> bool:
+	return kind != EffectKind.MUZZLE and kind != EffectKind.PROJECTILE
+
+
+func _uses_secondary_ring(kind: EffectKind) -> bool:
+	match kind:
+		EffectKind.IMPACT, EffectKind.DEATH, EffectKind.BOOST, EffectKind.PICKUP:
+			return true
+		EffectKind.EXPLOSION, EffectKind.SHIELD, EffectKind.TELEGRAPH:
+			return true
+	return false
+
+
+func _uses_streak_mesh(kind: EffectKind) -> bool:
+	match kind:
+		EffectKind.MUZZLE, EffectKind.PROJECTILE, EffectKind.BOOST, EffectKind.TELEGRAPH:
+			return true
+	return false
 
 
 func _get_color(kind: EffectKind) -> Color:

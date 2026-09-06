@@ -2,7 +2,7 @@
 
 A premium single-purchase native 3D arcade shooter built in Godot 4. Farinuff Flight centers on fast survival play, drift-heavy ship handling, boost-reflection combat, transformative run builds, and an authored Wave-20 Expedition that opens into optional Endless mastery.
 
-Gameplay now runs entirely through native 3D actors, with five boss hulls, destructible boss weapon pods, all 13 elite abilities, modular ship upgrades, and pooled 3D effects. The old 2D combat runtime has been retired. The latest completion changes have been checked statically; their runtime behavior and performance have not been playtested. Changes and validation are recorded in [the transition log](docs/3d-migration-checklist.md).
+Gameplay now runs entirely through native 3D actors, with five boss hulls, destructible boss weapon pods, all 13 elite abilities, modular ship upgrades, and pooled 3D effects. The old 2D combat runtime has been retired. Completion hardening is covered by native contract checks and a live Godot 4.6.3 scene run; target-hardware visual and performance acceptance remains a release-validation task. Changes and validation are recorded in [the transition log](docs/3d-migration-checklist.md).
 
 ![Gameplay capture](assets/readme/gameplay-capture.png)
 

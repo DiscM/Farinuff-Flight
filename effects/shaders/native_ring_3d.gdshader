@@ -17,6 +17,6 @@ void fragment() {
 	vec3 color = mix(instance_color.rgb, instance_accent.rgb, clamp(band * 0.72, 0.0, 1.0));
 	float alpha = edge * band * scan * instance_alpha * instance_color.a;
 	ALBEDO = color;
-	EMISSION = color * instance_emission * (0.55 + edge * 0.9);
+	EMISSION = color * instance_emission * (0.46 + edge * 0.72);
 	ALPHA = alpha;
 }
