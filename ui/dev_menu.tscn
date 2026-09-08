@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://dev_testing_menu"]
+
+[ext_resource type="Script" path="res://ui/dev_menu.gd" id="1_devmenu"]
+
+[node name="DevMenu" type="PanelContainer"]
+script = ExtResource("1_devmenu")

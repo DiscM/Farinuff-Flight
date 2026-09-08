@@ -338,16 +338,16 @@ def check_upgrades_and_projectiles() -> None:
     module_ids = re.findall(r'^\s*"([a-z_]+)":\s*preload\(', module_section, re.MULTILINE)
     require(sorted(module_ids) == sorted(UPGRADE_IDS), "every native upgrade must have one visual module")
     require("_elite_upgrades[upgrade_id] = true" in player, "successful native upgrades must be recorded locally")
-    require("not NativeUpgrades.SUPPORTED_IDS.has(upgrade_id) or has_elite_upgrade(upgrade_id)" in player, "native upgrade application must reject unsupported/duplicate IDs")
-    require("_upgrade_visuals.set_upgrade(upgrade_id, true)" in player, "native upgrade application must update visuals")
-    require("_elite_upgrades.clear()" in player and "func reset_elite_upgrades()" in player, "native upgrade reset must clear local state")
+    require("not NativeUpgrades.SUPPORTED_IDS.has(upgrade_id) or is_elite_upgrade_enabled(upgrade_id)" in player, "native upgrade application must reject unsupported/duplicate IDs")
+    require("_sync_upgrade_visual(upgrade_id)" in player, "native upgrade application must update visuals")
+    require("func reset_elite_upgrades()" in player and "set_elite_upgrade_enabled(upgrade_id, false)" in player, "native upgrade reset must clear local state")
 
     require_all(
         "entities/player/player_3d.gd",
         player,
         [
             ("elite spread gate", 'has_elite_upgrade("spread_shot_elite")'),
-            ("temporary/elite spread stack", 'if has_spread_shot and has_elite_upgrade("spread_shot_elite")'),
+            ("temporary/elite spread stack", 'if temporary_spread and has_elite_upgrade("spread_shot_elite")'),
             ("outer spread angles", "angles.append_array([-deg_to_rad(30.0), deg_to_rad(30.0)])"),
             ("twin cannon shots", 'has_elite_upgrade("twin_cannons")'),
             ("rear gunner shots", 'has_elite_upgrade("rear_gunner")'),

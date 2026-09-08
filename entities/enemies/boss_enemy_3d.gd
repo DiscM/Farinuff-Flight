@@ -14,6 +14,7 @@ var _warning_timer := 0.0
 var _volley_index := 0
 var _locked_aim := Vector2.DOWN
 var _sections: Array[Section] = []
+var dev_variant_override := -1
 
 func _ready() -> void:
 	super._ready()
@@ -31,7 +32,11 @@ func _configure_movement() -> void:
 func activate_generation(space: FlightSpace, origin: Vector3, direction: Vector3, stage: int) -> bool:
 	if not super.activate_generation(space, origin, direction, stage):
 		return false
-	variant = (maxi(floori(GameManager.current_wave / 5.0), 1) - 1) % TITLES.size()
+	variant = (
+		clampi(dev_variant_override, 0, TITLES.size() - 1)
+		if dev_variant_override >= 0
+		else (maxi(floori(GameManager.current_wave / 5.0), 1) - 1) % TITLES.size()
+	)
 	max_health = roundi((45.0 + GameManager.current_wave * 3.0) * GameManager.get_enemy_health_multiplier())
 	health = max_health
 	phase = 0

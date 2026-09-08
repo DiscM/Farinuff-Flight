@@ -4,6 +4,7 @@ extends Control
 
 signal resumed
 
+const DEV_MENU_SCENE := preload("res://ui/dev_menu.tscn")
 const SETTINGS_MENU_SCENE := preload("res://ui/settings_menu.tscn")
 const DOCK_TEXTURE := preload("res://assets/Game UI collection FREE version/PNG/Borders/Yellow/New folder/Group 4 copy.png")
 const BUTTON_BLUE_TEXTURE := preload("res://assets/Game UI collection FREE version/PNG/Button with border/Blue/1x/Asset 8.png")
@@ -12,6 +13,8 @@ const NATIVE_RUN_PATH := "res://scenes/native_3d_run.tscn"
 const MAIN_MENU_PATH := "res://ui/main_menu.tscn"
 
 var _settings_menu: Node = null
+var _dev_panel: PanelContainer = null
+var _dev_slot: VBoxContainer = null
 var _transitioning := false
 
 ## Builds the UI layout and plays the fade-in animation. The scene's full-rect
@@ -69,6 +72,19 @@ func _build_ui() -> void:
 	button_column.add_child(_make_btn("RetryWrap", "RESTART RUN", NeonUI.CYAN, _on_retry))
 	button_column.add_child(_make_btn("SettingsWrap", "OPTIONS", NeonUI.CYAN, _on_settings))
 	button_column.add_child(_make_btn("MenuWrap", "MAIN MENU", NeonUI.CYAN, _on_menu))
+	var gameplay := get_tree().get_first_node_in_group(&"native_3d_gameplay")
+	if OS.is_debug_build() and gameplay != null and gameplay.has_method(&"dev_spawn_archetype"):
+		button_column.add_child(_make_btn("DevWrap", "DEV TOOLS", NeonUI.GREEN, _on_dev_tools))
+
+	_dev_slot = VBoxContainer.new()
+	_dev_slot.name = "DevSlot"
+	_dev_slot.position = Vector2(270.0, 36.0)
+	_dev_slot.size = Vector2(minf(vp_size.x - 300.0, 430.0), vp_size.y - 72.0)
+	_dev_slot.visible = false
+	_dev_slot.alignment = BoxContainer.ALIGNMENT_CENTER
+	add_child(_dev_slot)
+
+
 ## Helper: creates a centered, styled button with the given label text,
 ## color, callback, and width.
 func _make_btn(control_name: String, label: String, accent: Color, callback: Callable, hot: bool = false) -> Control:
@@ -103,6 +119,18 @@ func _on_resume() -> void:
 		return
 	resumed.emit()
 	get_parent().queue_free()
+
+
+## Lazily mounts the debug-only command panel beside the pause dock.
+func _on_dev_tools() -> void:
+	if _transitioning or _dev_slot == null:
+		return
+	_dev_slot.visible = not _dev_slot.visible
+	if not _dev_slot.visible or is_instance_valid(_dev_panel):
+		return
+	_dev_panel = DEV_MENU_SCENE.instantiate() as PanelContainer
+	_dev_panel.force_close.connect(_on_resume)
+	_dev_slot.add_child(_dev_panel)
 
 ## Unpauses the game and reuses the resident game scene for a fresh retry.
 func _on_retry() -> void:

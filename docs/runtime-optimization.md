@@ -34,7 +34,8 @@ results do not establish a reduction in total process or GPU memory.
   sleeping a frame after every 4–8 objects. An individual instantiation or
   render can exceed that budget. Visual warmup and final deferred-return
   synchronization remain in place.
-- The menu begins loading the run while players browse or choose a loadout.
+- The resource-cache autoload begins loading the run at game boot, before the
+  title screen initializes. Launch only retries the request if it failed.
   A two-entry allowlist retains the menu and run PackedScenes across retries.
   Only resources are retained: each run still gets a fresh gameplay tree.
 - Projectile and pickup checkout removal uses an index map and swap removal.

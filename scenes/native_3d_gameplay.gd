@@ -440,6 +440,7 @@ func reset_native_progression() -> void:
 	player.reset_damage_state()
 	player.reset_elite_upgrades()
 	player.reset_power_up_state()
+	player.reset_developer_state()
 
 
 func _process(delta: float) -> void:

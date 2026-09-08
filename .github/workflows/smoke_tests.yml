@@ -32,6 +32,7 @@ jobs:
         run: |
           set -e
           for test_scene in \
+            dev_commands_smoke \
             in_house_vfx_smoke \
             native_completion_smoke \
             pooling_smoke \

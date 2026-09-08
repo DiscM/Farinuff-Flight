@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased] - 2026-09-08
+
+### Added
+- **Native Dev / Debug Commands:** Restored the debug-build pause panel against the production 3D runtime, including run actions, reversible player power and elite state, generation/archetype/boss controls, live threat status, exact boss-variant spawning, and non-collidable 3D overlays for the ship envelope, attachment anchors, muzzle origins, and collision capsule.
+- **Dev Command Smoke Coverage:** Added a headless runtime test for the panel, deterministic player overrides, run actions, native enemy controls, reward popups, and Tempest Core spawning.
+
 ## [0.5.0] - 2026-08-04
 
 ### Added

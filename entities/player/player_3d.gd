@@ -25,6 +25,10 @@ const FlightTuning := preload("res://entities/player/player_flight_tuning.gd")
 const WeaponTuning := preload("res://entities/player/player_weapon_tuning.gd")
 const DamageTuning := preload("res://entities/player/player_damage_tuning.gd")
 const PowerUpTypes := preload("res://entities/powerups/power_up_types.gd")
+const DEV_POWER_IDS: Array[String] = [
+	"rapid_fire", "spread_shot", "orbitals", "piercing", "explosive_rounds",
+]
+const VISUAL_DEBUG_FLAGS: Array[String] = ["envelope", "anchors", "muzzles", "collision"]
 
 @export var speed_pixels: float = FlightTuning.SPEED
 @export var acceleration: float = FlightTuning.ACCELERATION
@@ -81,6 +85,15 @@ var _shield_burst_clock := 0.0
 var _orbital_hit_clock := 0.0
 var _upgrade_visuals: UpgradeVisuals
 var _elite_upgrades: Dictionary[String, bool] = {}
+var dev_god_mode := false
+var _dev_power_overrides: Dictionary[String, bool] = {}
+var _visual_debug_flags: Dictionary[String, bool] = {
+	"envelope": false,
+	"anchors": false,
+	"muzzles": false,
+	"collision": false,
+}
+var _visual_debug_nodes: Dictionary[String, MeshInstance3D] = {}
 
 
 func _init() -> void:
@@ -114,6 +127,9 @@ func configure_flight_space(value: FlightSpace) -> void:
 	$Visuals/InterceptorHull.visible = MetaProgression.selected_ship == "ship_interceptor"
 	$Visuals/BulwarkHull.visible = MetaProgression.selected_ship == "ship_bulwark"
 	_flight_space = value
+	for flag in VISUAL_DEBUG_FLAGS:
+		if get_visual_debug(flag):
+			_rebuild_visual_debug(flag)
 	_reset_feedback_state()
 	if not get_viewport().size_changed.is_connected(_refresh_movement_bounds):
 		get_viewport().size_changed.connect(_refresh_movement_bounds)
@@ -146,7 +162,8 @@ func _update_visual_feedback(delta: float) -> void:
 	var flight_power := 1.0 if GameManager.is_game_active else 0.22
 	var engine_power := flight_power * (1.35 if is_boosting else 1.0)
 	var pulse := 0.86 + 0.14 * sin(_ship_visual_elapsed * 11.0)
-	core_glow.set_instance_shader_parameter(&"instance_color", Color(0.18, 0.8, 1.0, 1.0))
+	var core_color := Color(1.0, 0.9, 0.15, 1.0) if dev_god_mode else Color(0.18, 0.8, 1.0, 1.0)
+	core_glow.set_instance_shader_parameter(&"instance_color", core_color)
 	core_glow.set_instance_shader_parameter(&"instance_alpha", flight_power)
 	core_glow.set_instance_shader_parameter(&"instance_intensity", pulse * (1.0 + engine_power * 0.55))
 	core_glow.set_instance_shader_parameter(&"instance_phase", 0.0)
@@ -175,7 +192,7 @@ func _reset_feedback_state() -> void:
 ## Shield absorbs the hit and opens the reference's short immunity window;
 ## returns true only when this call consumed a life.
 func receive_damage(combat_position: Vector3, source: DamageSource) -> bool:
-	if not GameManager.is_game_active or is_invincible or GameManager.lives <= 0:
+	if not GameManager.is_game_active or is_invincible or dev_god_mode or GameManager.lives <= 0:
 		return false
 	if has_shield:
 		has_shield = false
@@ -221,6 +238,15 @@ func reset_power_up_state() -> void:
 	shield_visual.visible = false
 	_shield_visual_elapsed = 0.0
 	shield_visual.set_instance_shader_parameter(&"instance_pulse", 0.0)
+
+
+## Clears developer-only overrides without mutating normal run selections.
+func reset_developer_state() -> void:
+	set_dev_god_mode(false)
+	for power_id in DEV_POWER_IDS:
+		set_dev_power_override(power_id, false)
+	for flag in VISUAL_DEBUG_FLAGS:
+		set_visual_debug(flag, false)
 
 
 func get_power_up_status() -> Dictionary:
@@ -315,7 +341,7 @@ func _update_shooting() -> void:
 		1.0 - GameManager.bonus_fire_rate_pct - GameManager.meta_fire_rate_pct - GameManager.ship_fire_rate_pct,
 		WeaponTuning.MIN_FIRE_RATE_MULTIPLIER
 	)
-	if has_rapid_fire:
+	if has_rapid_fire or get_dev_power_override("rapid_fire"):
 		rate_multiplier *= 0.4
 	var interval := maxf(base_fire_interval * rate_multiplier, WeaponTuning.MIN_FIRE_INTERVAL)
 	if has_elite_upgrade("overclock") and fmod(_elite_clock, 16.0) < 2.5:
@@ -349,11 +375,12 @@ func _emit_muzzle_shot(muzzle: Marker3D, direction: Vector3) -> void:
 
 func _get_fire_directions() -> Array[Vector3]:
 	var directions: Array[Vector3] = [last_aim_direction]
-	if (not has_spread_shot and not has_elite_upgrade("spread_shot_elite")) or _flight_space == null:
+	var temporary_spread := has_spread_shot or get_dev_power_override("spread_shot")
+	if (not temporary_spread and not has_elite_upgrade("spread_shot_elite")) or _flight_space == null:
 		return directions
 	var screen_direction := _flight_space.combat_motion_to_screen(last_aim_direction).normalized()
 	var angles: Array[float] = [-deg_to_rad(15.0), deg_to_rad(15.0)]
-	if has_spread_shot and has_elite_upgrade("spread_shot_elite"):
+	if temporary_spread and has_elite_upgrade("spread_shot_elite"):
 		angles.append_array([-deg_to_rad(30.0), deg_to_rad(30.0)])
 	for spread_angle in angles:
 		var spread_screen_direction := screen_direction.rotated(spread_angle)
@@ -644,34 +671,199 @@ func get_power_up_timing(type: int) -> Vector2:
 
 
 func has_elite_upgrade(upgrade_id: String) -> bool:
+	return _elite_upgrades.get(upgrade_id, false) or _dev_power_overrides.get(upgrade_id, false)
+
+
+func is_elite_upgrade_enabled(upgrade_id: String) -> bool:
 	return _elite_upgrades.get(upgrade_id, false)
 
 
 ## Returns false for unsupported or duplicate selections. The reward controller
 ## records the global chosen ID only after this native application succeeds.
 func apply_elite_upgrade(upgrade_id: String) -> bool:
-	if not NativeUpgrades.SUPPORTED_IDS.has(upgrade_id) or has_elite_upgrade(upgrade_id):
+	if not NativeUpgrades.SUPPORTED_IDS.has(upgrade_id) or is_elite_upgrade_enabled(upgrade_id):
 		return false
-	_elite_upgrades[upgrade_id] = true
-	_upgrade_visuals.set_upgrade(upgrade_id, true)
+	set_elite_upgrade_enabled(upgrade_id, true, true)
+	return true
+
+
+## Deterministically enables or disables one native upgrade. Developer changes
+## stay separate from GameManager.chosen_upgrade_ids, and one-time rewards are
+## only granted when explicitly requested by the normal reward path.
+func set_elite_upgrade_enabled(
+	upgrade_id: String,
+	enabled: bool,
+	grant_one_time_reward: bool = false
+) -> bool:
+	if not NativeUpgrades.SUPPORTED_IDS.has(upgrade_id):
+		return false
+	if is_elite_upgrade_enabled(upgrade_id) == enabled:
+		return false
+	if enabled:
+		_elite_upgrades[upgrade_id] = true
+	else:
+		_elite_upgrades.erase(upgrade_id)
 	match upgrade_id:
 		"drone_escort":
-			set_drone_escort_enabled(true)
+			set_drone_escort_enabled(enabled)
 		"hull_plating":
-			GameManager.lives += 1
-			SignalBus.lives_changed.emit(GameManager.lives)
+			if enabled and grant_one_time_reward:
+				GameManager.lives += 1
+				SignalBus.lives_changed.emit(GameManager.lives)
+		"shield_burst":
+			_shield_burst_clock = 0.0
+		"orbitals":
+			_orbital_hit_clock = 0.0
+	_sync_upgrade_visual(upgrade_id)
 	return true
 
 
 ## Run reset calls this after GameManager has reset lives and chosen IDs.
 ## Continue/revive deliberately does not clear permanent upgrades.
 func reset_elite_upgrades() -> void:
-	_elite_upgrades.clear()
+	var installed := get_active_elite_upgrade_ids()
+	for upgrade_id in installed:
+		set_elite_upgrade_enabled(upgrade_id, false)
 	_elite_clock = 0.0
 	_shield_burst_clock = 0.0
 	_orbital_hit_clock = 0.0
-	_upgrade_visuals.reset()
-	set_drone_escort_enabled(false)
+
+
+func clear_elite_upgrades() -> void:
+	reset_elite_upgrades()
+
+
+func set_dev_god_mode(enabled: bool) -> void:
+	dev_god_mode = enabled
+	_update_visual_feedback(0.0)
+
+
+func set_dev_power_override(power_id: String, enabled: bool) -> bool:
+	if not DEV_POWER_IDS.has(power_id):
+		return false
+	if get_dev_power_override(power_id) == enabled:
+		return false
+	if enabled:
+		_dev_power_overrides[power_id] = true
+	else:
+		_dev_power_overrides.erase(power_id)
+	if NativeUpgrades.SUPPORTED_IDS.has(power_id):
+		_sync_upgrade_visual(power_id)
+	return true
+
+
+func get_dev_power_override(power_id: String) -> bool:
+	return _dev_power_overrides.get(power_id, false)
+
+
+func _sync_upgrade_visual(upgrade_id: String) -> void:
+	if is_instance_valid(_upgrade_visuals):
+		_upgrade_visuals.set_upgrade(upgrade_id, has_elite_upgrade(upgrade_id))
+
+
+func set_visual_debug(flag: String, enabled: bool) -> bool:
+	if not VISUAL_DEBUG_FLAGS.has(flag):
+		return false
+	if get_visual_debug(flag) == enabled:
+		return false
+	_visual_debug_flags[flag] = enabled
+	_rebuild_visual_debug(flag)
+	return true
+
+
+func get_visual_debug(flag: String) -> bool:
+	return _visual_debug_flags.get(flag, false)
+
+
+func _rebuild_visual_debug(flag: String) -> void:
+	var existing := _visual_debug_nodes.get(flag) as MeshInstance3D
+	if is_instance_valid(existing):
+		existing.queue_free()
+	_visual_debug_nodes.erase(flag)
+	if not get_visual_debug(flag) or _flight_space == null:
+		return
+	var vertices: Array[Vector3] = []
+	var color := Color.WHITE
+	match flag:
+		"envelope":
+			color = Color(1.0, 0.85, 0.2, 0.9)
+			var half_size := Vector2(52.0, 48.0)
+			var corners: Array[Vector2] = [
+				Vector2(-half_size.x, -half_size.y),
+				Vector2(half_size.x, -half_size.y),
+				Vector2(half_size.x, half_size.y),
+				Vector2(-half_size.x, half_size.y),
+			]
+			for index in corners.size():
+				_append_debug_line(
+					vertices,
+					_flight_space.screen_motion_to_combat(corners[index]) + Vector3.UP * 0.42,
+					_flight_space.screen_motion_to_combat(corners[(index + 1) % corners.size()]) + Vector3.UP * 0.42
+				)
+		"anchors":
+			color = Color(0.3, 1.0, 0.5, 0.95)
+			for socket_name in [&"EngineLeft", &"EngineRight", &"UpgradeLeft", &"UpgradeRight", &"Core", &"Shield", &"Boost", &"Death", &"Impact"]:
+				var marker := get_socket(socket_name)
+				if marker != null:
+					_append_debug_cross(vertices, to_local(marker.global_position), 0.16)
+		"muzzles":
+			color = Color(1.0, 0.3, 0.25, 0.95)
+			for socket_name in [&"MuzzleCenter", &"MuzzleLeft", &"MuzzleRight", &"MuzzleRear"]:
+				var marker := get_socket(socket_name)
+				if marker != null:
+					_append_debug_cross(vertices, to_local(marker.global_position), 0.2)
+		"collision":
+			color = Color(1.0, 0.2, 0.25, 0.95)
+			_append_collision_outline(vertices)
+	if vertices.is_empty():
+		return
+	var immediate := ImmediateMesh.new()
+	var material := StandardMaterial3D.new()
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.albedo_color = color
+	material.no_depth_test = true
+	immediate.surface_begin(Mesh.PRIMITIVE_LINES, material)
+	for vertex in vertices:
+		immediate.surface_add_vertex(vertex)
+	immediate.surface_end()
+	var lines := MeshInstance3D.new()
+	lines.name = "Debug" + flag.capitalize()
+	lines.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	lines.gi_mode = GeometryInstance3D.GI_MODE_DISABLED
+	lines.mesh = immediate
+	add_child(lines)
+	_visual_debug_nodes[flag] = lines
+
+
+func _append_debug_line(vertices: Array[Vector3], from: Vector3, to: Vector3) -> void:
+	vertices.append(from)
+	vertices.append(to)
+
+
+func _append_debug_cross(vertices: Array[Vector3], center: Vector3, radius: float) -> void:
+	center.y += 0.32
+	_append_debug_line(vertices, center + Vector3.LEFT * radius, center + Vector3.RIGHT * radius)
+	_append_debug_line(vertices, center + Vector3.FORWARD * radius, center + Vector3.BACK * radius)
+	_append_debug_line(vertices, center + Vector3.DOWN * radius, center + Vector3.UP * radius)
+
+
+func _append_collision_outline(vertices: Array[Vector3]) -> void:
+	var capsule := collision_shape.shape as CapsuleShape3D
+	if capsule == null:
+		return
+	var straight_half := maxf(capsule.height * 0.5 - capsule.radius, 0.0)
+	var points: Array[Vector3] = []
+	for index in range(13):
+		var angle := PI + PI * float(index) / 12.0
+		points.append(Vector3(cos(angle) * capsule.radius, -straight_half + sin(angle) * capsule.radius, 0.0))
+	for index in range(13):
+		var angle := PI * float(index) / 12.0
+		points.append(Vector3(cos(angle) * capsule.radius, straight_half + sin(angle) * capsule.radius, 0.0))
+	for index in points.size():
+		var from := collision_shape.transform * points[index] + Vector3.UP * 0.32
+		var to := collision_shape.transform * points[(index + 1) % points.size()] + Vector3.UP * 0.32
+		_append_debug_line(vertices, from, to)
 
 
 func _update_elite_abilities(delta: float) -> void:
