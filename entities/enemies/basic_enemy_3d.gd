@@ -17,7 +17,7 @@ const GenerationStats := preload("res://entities/enemies/enemy_generation_stats.
 const SpawnTuning := preload("res://entities/enemies/enemy_spawn_tuning.gd")
 const NativeHazardManager := preload("res://systems/native_hazard_manager_3d.gd")
 const ENEMY_MODEL_SHADER: Shader = preload(
-	"res://effects/shaders/models/corrupted_void_enemy_3d.gdshader"
+	"res://effects/shaders/models/imported_enemy_surface_3d.gdshader"
 )
 const GENERATION_STATS := [
 	preload("res://entities/enemies/basic_enemy_generation_1.tres"),
@@ -78,9 +78,8 @@ func _ready() -> void:
 
 
 func _adapt_imported_model_materials() -> void:
-	# Blender exports retain their authored palette and roughness, while this
-	# adapter restores the shared generation, hit-flash, and pause-aware shader
-	# contract that the single-mesh placeholder models received in their scenes.
+	# Preserve the Blender-authored PBR palette while restoring the shared
+	# generation, hit-flash, and pause-aware instance-uniform contract.
 	var adapted_materials: Dictionary[int, ShaderMaterial] = {}
 	for node in visuals.find_children("*", "MeshInstance3D", true, false):
 		var mesh_instance := node as MeshInstance3D
@@ -99,52 +98,28 @@ func _adapt_imported_model_materials() -> void:
 			var material := ShaderMaterial.new()
 			material.shader = ENEMY_MODEL_SHADER
 			var base_color := Color(0.18, 0.24, 0.34, 1.0)
-			var energy_color := Color(1.0, 0.231, 0.141, 1.0)
-			var glow_color := Color(0.0, 0.0, 0.0, 0.0)
+			var emission_color := Color(0.0, 0.0, 0.0, 0.0)
+			var emission_strength := 0.0
 			var metallic := 0.55
 			var roughness := 0.30
-			var emissive_surface := 0.0
-			var resource_name := ""
-			if source != null:
-				resource_name = source.resource_name.to_lower()
 			if source is BaseMaterial3D:
 				var source_3d := source as BaseMaterial3D
 				base_color = source_3d.albedo_color
 				metallic = source_3d.metallic
 				roughness = source_3d.roughness
 				if source_3d.emission_enabled:
-					energy_color = source_3d.emission
-					glow_color = Color(
+					emission_color = Color(
 						source_3d.emission.r,
 						source_3d.emission.g,
 						source_3d.emission.b,
 						1.0
 					)
-					emissive_surface = 1.0
-			if (
-				"energy" in resource_name
-				or "core" in resource_name
-				or "cyan" in resource_name
-			):
-				emissive_surface = 1.0
+					emission_strength = source_3d.emission_energy_multiplier
 			material.set_shader_parameter(&"base_color", base_color)
-			material.set_shader_parameter(&"energy_color", energy_color)
-			material.set_shader_parameter(&"accent_color", base_color.lightened(0.32))
-			material.set_shader_parameter(&"glow_color", glow_color)
+			material.set_shader_parameter(&"emission_color", emission_color)
+			material.set_shader_parameter(&"emission_strength", emission_strength)
 			material.set_shader_parameter(&"metallic", metallic)
 			material.set_shader_parameter(&"roughness", roughness)
-			material.set_shader_parameter(&"violet_bias", 0.20)
-			material.set_shader_parameter(&"circuit_amount", 0.05)
-			material.set_shader_parameter(&"fracture_density", 0.10)
-			material.set_shader_parameter(
-				&"reactor_focus",
-				0.24 if "reactor" in resource_name or "core" in resource_name else 0.12
-			)
-			material.set_shader_parameter(&"emissive_surface", emissive_surface)
-			material.set_shader_parameter(
-				&"emission_strength", 2.20 if emissive_surface > 0.0 else 0.70
-			)
-			material.set_shader_parameter(&"animation_speed", 0.0)
 			adapted_materials[source_id] = material
 			mesh_instance.set_surface_override_material(surface_index, material)
 
