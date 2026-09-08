@@ -2,11 +2,11 @@
 
 [ext_resource type="Script" path="res://tests/mockup_models_preview.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://assets/models/mockups/player_ship_mockup.glb" id="2_player"]
-[ext_resource type="PackedScene" path="res://assets/models/mockups/basic_enemy_mockup.glb" id="3_basic"]
-[ext_resource type="PackedScene" path="res://assets/models/mockups/fast_enemy_mockup.glb" id="4_fast"]
-[ext_resource type="PackedScene" path="res://assets/models/mockups/bomber_enemy_mockup.glb" id="5_bomber"]
-[ext_resource type="PackedScene" path="res://assets/models/mockups/tank_enemy_mockup.glb" id="6_tank"]
-[ext_resource type="PackedScene" path="res://assets/models/mockups/sniper_enemy_mockup.glb" id="7_sniper"]
+[ext_resource type="PackedScene" path="res://assets/models/redesign/next_round/basic_enemy.glb" id="3_basic"]
+[ext_resource type="PackedScene" path="res://assets/models/redesign/next_round/fast_enemy.glb" id="4_fast"]
+[ext_resource type="PackedScene" path="res://assets/models/redesign/next_round/bomber_enemy.glb" id="5_bomber"]
+[ext_resource type="PackedScene" path="res://assets/models/redesign/next_round/tank_enemy.glb" id="6_tank"]
+[ext_resource type="PackedScene" path="res://assets/models/redesign/next_round/sniper_enemy.glb" id="7_sniper"]
 
 [sub_resource type="Environment" id="Environment_showroom"]
 background_mode = 1
@@ -58,15 +58,20 @@ position = Vector3(-4.6, 0, -2.8)
 
 [node name="Basic" parent="Fleet" instance=ExtResource("3_basic")]
 position = Vector3(0, 0, -2.8)
+scale = Vector3(0.45, 0.45, 0.45)
 
 [node name="Fast" parent="Fleet" instance=ExtResource("4_fast")]
 position = Vector3(4.6, 0, -2.8)
+scale = Vector3(0.22, 0.22, 0.22)
 
 [node name="Bomber" parent="Fleet" instance=ExtResource("5_bomber")]
 position = Vector3(-4.6, 0, 2.4)
+scale = Vector3(0.37, 0.37, 0.37)
 
 [node name="Tank" parent="Fleet" instance=ExtResource("6_tank")]
 position = Vector3(0, 0, 2.4)
+scale = Vector3(0.68, 0.68, 0.68)
 
 [node name="Sniper" parent="Fleet" instance=ExtResource("7_sniper")]
 position = Vector3(4.6, 0, 2.4)
+scale = Vector3(0.33, 0.33, 0.33)

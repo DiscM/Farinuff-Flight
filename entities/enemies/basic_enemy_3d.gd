@@ -16,6 +16,9 @@ const PhysicsLayers := preload("res://systems/native_3d_physics_layers.gd")
 const GenerationStats := preload("res://entities/enemies/enemy_generation_stats.gd")
 const SpawnTuning := preload("res://entities/enemies/enemy_spawn_tuning.gd")
 const NativeHazardManager := preload("res://systems/native_hazard_manager_3d.gd")
+const ENEMY_MODEL_SHADER: Shader = preload(
+	"res://effects/shaders/models/corrupted_void_enemy_3d.gdshader"
+)
 const GENERATION_STATS := [
 	preload("res://entities/enemies/basic_enemy_generation_1.tres"),
 	preload("res://entities/enemies/basic_enemy_generation_2.tres"),
@@ -63,6 +66,7 @@ func _ready() -> void:
 	# Inert but visible before activation: the transition can warm the actual
 	# first enemy without collision, gameplay groups, timers, or reward effects.
 	set_physics_process(false)
+	_adapt_imported_model_materials()
 	for node in visuals.find_children("*", "MeshInstance3D", true, false):
 		_meshes.append(node as MeshInstance3D)
 	for child in sockets.get_children():
@@ -71,6 +75,78 @@ func _ready() -> void:
 	area_entered.connect(_on_area_entered)
 	_set_instance_parameter(&"instance_animation_time", 0.0)
 	_set_instance_parameter(&"instance_flash", 0.0)
+
+
+func _adapt_imported_model_materials() -> void:
+	# Blender exports retain their authored palette and roughness, while this
+	# adapter restores the shared generation, hit-flash, and pause-aware shader
+	# contract that the single-mesh placeholder models received in their scenes.
+	var adapted_materials: Dictionary[int, ShaderMaterial] = {}
+	for node in visuals.find_children("*", "MeshInstance3D", true, false):
+		var mesh_instance := node as MeshInstance3D
+		if mesh_instance.mesh == null:
+			continue
+		for surface_index in range(mesh_instance.mesh.get_surface_count()):
+			var source := mesh_instance.get_active_material(surface_index)
+			if source is ShaderMaterial and (source as ShaderMaterial).shader == ENEMY_MODEL_SHADER:
+				continue
+			var source_id := source.get_instance_id() if source != null else 0
+			if adapted_materials.has(source_id):
+				mesh_instance.set_surface_override_material(
+					surface_index, adapted_materials[source_id]
+				)
+				continue
+			var material := ShaderMaterial.new()
+			material.shader = ENEMY_MODEL_SHADER
+			var base_color := Color(0.18, 0.24, 0.34, 1.0)
+			var energy_color := Color(1.0, 0.231, 0.141, 1.0)
+			var glow_color := Color(0.0, 0.0, 0.0, 0.0)
+			var metallic := 0.55
+			var roughness := 0.30
+			var emissive_surface := 0.0
+			var resource_name := ""
+			if source != null:
+				resource_name = source.resource_name.to_lower()
+			if source is BaseMaterial3D:
+				var source_3d := source as BaseMaterial3D
+				base_color = source_3d.albedo_color
+				metallic = source_3d.metallic
+				roughness = source_3d.roughness
+				if source_3d.emission_enabled:
+					energy_color = source_3d.emission
+					glow_color = Color(
+						source_3d.emission.r,
+						source_3d.emission.g,
+						source_3d.emission.b,
+						1.0
+					)
+					emissive_surface = 1.0
+			if (
+				"energy" in resource_name
+				or "core" in resource_name
+				or "cyan" in resource_name
+			):
+				emissive_surface = 1.0
+			material.set_shader_parameter(&"base_color", base_color)
+			material.set_shader_parameter(&"energy_color", energy_color)
+			material.set_shader_parameter(&"accent_color", base_color.lightened(0.32))
+			material.set_shader_parameter(&"glow_color", glow_color)
+			material.set_shader_parameter(&"metallic", metallic)
+			material.set_shader_parameter(&"roughness", roughness)
+			material.set_shader_parameter(&"violet_bias", 0.20)
+			material.set_shader_parameter(&"circuit_amount", 0.05)
+			material.set_shader_parameter(&"fracture_density", 0.10)
+			material.set_shader_parameter(
+				&"reactor_focus",
+				0.24 if "reactor" in resource_name or "core" in resource_name else 0.12
+			)
+			material.set_shader_parameter(&"emissive_surface", emissive_surface)
+			material.set_shader_parameter(
+				&"emission_strength", 2.20 if emissive_surface > 0.0 else 0.70
+			)
+			material.set_shader_parameter(&"animation_speed", 0.0)
+			adapted_materials[source_id] = material
+			mesh_instance.set_surface_override_material(surface_index, material)
 
 
 func activate(flight_space: FlightSpace, combat_position: Vector3, direction: Vector3) -> bool:
