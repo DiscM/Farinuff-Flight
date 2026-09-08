@@ -20,6 +20,9 @@ var _last_errors: Dictionary = {}
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	set_process(false)
+	# Autoloads enter the tree before the title screen. Start the run resource
+	# load at boot, independently of menu, loadout, or launch interactions.
+	prime_scene(NATIVE_RUN_PATH)
 
 
 func _process(_delta: float) -> void:

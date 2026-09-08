@@ -5,6 +5,13 @@ var _failures: Array[String] = []
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	# This scene has no menu and has not requested a run. Preparation must
+	# already have started in the boot autoload.
+	_expect(
+		ResourceCache.is_scene_ready(ResourceCache.NATIVE_RUN_PATH)
+		or ResourceCache.is_scene_loading(ResourceCache.NATIVE_RUN_PATH),
+		"Boot starts caching the run before the first scene is ready"
+	)
 	_run.call_deferred()
 
 
@@ -15,7 +22,7 @@ func _run() -> void:
 	var run_path: String = ResourceCache.NATIVE_RUN_PATH
 	var menu_path: String = ResourceCache.MAIN_MENU_PATH
 	get_tree().paused = true
-	_expect(ResourceCache.prime_scene(run_path), "Run background load starts")
+	_expect(ResourceCache.prime_scene(run_path), "Boot request remains reusable")
 	_expect(ResourceCache.prime_scene(run_path), "Duplicate request is accepted without another load")
 	_expect(ResourceCache.get_pending_scene_count() <= 1, "Duplicate request keeps one pending entry")
 	_expect(ResourceCache.prime_scene(menu_path), "Menu background load starts")

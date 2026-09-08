@@ -11,6 +11,13 @@ const SCENES := {
 	&"sniper": preload("res://entities/enemies/sniper_enemy_3d.tscn"),
 	&"boss": preload("res://entities/enemies/boss_enemy_3d.tscn"),
 }
+const DEV_BOSS_VARIANTS := {
+	&"assault": {"index": 0, "wave": 5},
+	&"bulwark": {"index": 1, "wave": 10},
+	&"tempest": {"index": 2, "wave": 15},
+	&"harbinger": {"index": 3, "wave": 20},
+	&"core": {"index": 4, "wave": GameManager.FINAL_EXPEDITION_WAVE},
+}
 
 var gameplay: Node
 var threat: Threat
@@ -21,6 +28,7 @@ var started := false
 var _pending_boss_wave := 0
 var _pending_boss_points := 0
 var _configured := false
+var _dev_boss_variant_override := -1
 
 
 func configure(game: Node) -> void:
@@ -105,6 +113,48 @@ func spawn_enemy(kind: StringName) -> Enemy:
 	return actor
 
 
+func dev_spawn_archetype(kind: StringName) -> Enemy:
+	if not started or not GameManager.is_game_active or GameManager.boss_active or not SCENES.has(kind) or kind == &"boss":
+		return null
+	# A developer-requested actor should bypass the normal threat admission test,
+	# but it still uses the production scene, generation, registration, and spawn bounds.
+	var generation := threat.generation
+	var bounds: Rect2 = gameplay.flight_space.get_combat_bounds(60.0)
+	var origin := Vector3(bounds.get_center().x, 0.0, bounds.position.y)
+	var actor := SCENES[kind].instantiate() as Enemy
+	gameplay.actors_root.add_child(actor)
+	actor.archetype_id = kind
+	gameplay.register_enemy_feedback(actor)
+	if not actor.activate_generation(gameplay.flight_space, origin, Vector3.BACK, generation):
+		gameplay.unregister_enemy_feedback(actor)
+		actor.queue_free()
+		return null
+	actor.add_to_group(&"native_3d_regular_enemies")
+	threat.record_spawn(kind)
+	return actor
+
+
+func dev_spawn_boss_variant(variant: StringName) -> bool:
+	if not DEV_BOSS_VARIANTS.has(variant) or not started or not GameManager.is_game_active:
+		return false
+	var definition: Dictionary = DEV_BOSS_VARIANTS[variant]
+	_wave_epoch += 1
+	_pending_boss_wave = 0
+	_pending_boss_points = 0
+	_dev_boss_variant_override = int(definition["index"])
+	for enemy in get_tree().get_nodes_in_group(&"native_3d_enemies"):
+		if is_instance_valid(enemy):
+			enemy.queue_free()
+	gameplay.projectile_manager.clear_projectiles()
+	gameplay.hazard_manager.clear_hazards()
+	GameManager.current_wave = int(definition["wave"])
+	GameManager.orbs_collected_this_wave = 0
+	GameManager.orbs_needed_this_wave = GameManager.get_orb_threshold_for_wave(GameManager.current_wave)
+	GameManager.boss_active = true
+	SignalBus.wave_started.emit(GameManager.current_wave)
+	return true
+
+
 func spawn_pickup() -> void:
 	if not GameManager.is_game_active or GameManager.is_modifier_active("mod_no_powerups"):
 		return
@@ -139,10 +189,14 @@ func _begin_boss(epoch: int) -> void:
 	gameplay.hazard_manager.clear_hazards()
 	var bounds: Rect2 = gameplay.flight_space.get_combat_bounds()
 	var boss := SCENES[&"boss"].instantiate() as Enemy
+	if _dev_boss_variant_override >= 0:
+		boss.set("dev_variant_override", _dev_boss_variant_override)
 	gameplay.actors_root.add_child(boss)
 	gameplay.register_enemy_feedback(boss)
 	if boss.activate_generation(gameplay.flight_space, Vector3(bounds.get_center().x, 0, bounds.position.y + bounds.size.y * 0.22), Vector3.BACK, threat.generation):
+		_dev_boss_variant_override = -1
 		return
+	_dev_boss_variant_override = -1
 	gameplay.unregister_enemy_feedback(boss)
 	boss.queue_free()
 

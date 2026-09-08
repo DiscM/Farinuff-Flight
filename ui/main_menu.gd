@@ -56,10 +56,6 @@ var _button_focus_tweens: Dictionary[Button, Tween] = {}
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	# Prime the next root scene while the player is choosing a loadout or
-	# browsing the title screen. ResourceCache keeps this request bounded and
-	# deduplicates the launch-time request below.
-	ResourceCache.prime_scene(NATIVE_RUN_PATH)
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	_apply_arcade_styles()
 	_build_pixel_planet()
@@ -310,7 +306,6 @@ func _on_play_pressed() -> void:
 func _open_launch_bay() -> void:
 	if _launching or _any_overlay_open():
 		return
-	ResourceCache.prime_scene(NATIVE_RUN_PATH)
 	_launch_bay = LAUNCH_BAY_SCENE.instantiate()
 	_launch_bay.connect("launch_confirmed", _on_launch_bay_confirmed)
 	_launch_bay.connect("closed", _on_launch_bay_closed)
@@ -348,7 +343,9 @@ func _on_launch_bay_closed() -> void:
 
 
 func _begin_launch() -> void:
-	ResourceCache.prime_scene(NATIVE_RUN_PATH)
+	# The boot autoload owns preparation. Only restart a failed request here.
+	if ResourceCache.is_scene_failed(NATIVE_RUN_PATH):
+		ResourceCache.prime_scene(NATIVE_RUN_PATH)
 	_launching = true
 	play_button.disabled = true
 	hangar_button.disabled = true

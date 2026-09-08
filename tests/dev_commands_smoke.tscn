@@ -1,0 +1,8 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/native_3d_run.tscn" id="1"]
+[ext_resource type="Script" path="res://tests/dev_commands_smoke.gd" id="2"]
+
+[node name="DevCommandsSmoke" instance=ExtResource("1")]
+script = ExtResource("2")
+consume_field_supplies = false
