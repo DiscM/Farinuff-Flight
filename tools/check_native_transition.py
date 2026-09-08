@@ -34,7 +34,11 @@ for directory in ('entities', 'systems', 'scenes', 'effects', 'ui', 'autoloads',
         if path.relative_to(ROOT).parts[0] == 'entities' and re.search(r'(extends Area2D|type="Area2D")', source):
             errors.append(f'{path.relative_to(ROOT)}: legacy combat actor')
 
-assets = list((ROOT / 'assets/models/native').glob('*.glb'))
+asset_roots = [
+    ROOT / 'assets/models/native',
+    ROOT / 'assets/models/redesign/next_round',
+]
+assets = [asset for asset_root in asset_roots for asset in asset_root.glob('*.glb')]
 for asset in assets:
     blob = asset.read_bytes()
     magic, version, size = struct.unpack_from('<III', blob)

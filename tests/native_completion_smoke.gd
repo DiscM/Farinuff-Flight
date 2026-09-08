@@ -4,6 +4,52 @@ extends Native3DGameplay
 const BossScene := preload("res://entities/enemies/boss_enemy_3d.tscn")
 const BossScript := preload("res://entities/enemies/boss_enemy_3d.gd")
 const EnemyScene := preload("res://entities/enemies/basic_enemy_3d.tscn")
+const EnemyScenes := {
+	&"basic": preload("res://entities/enemies/basic_enemy_3d.tscn"),
+	&"fast": preload("res://entities/enemies/fast_enemy_3d.tscn"),
+	&"bomber": preload("res://entities/enemies/bomber_enemy_3d.tscn"),
+	&"tank": preload("res://entities/enemies/tank_enemy_3d.tscn"),
+	&"sniper": preload("res://entities/enemies/sniper_enemy_3d.tscn"),
+}
+const EnemyModelScales := {
+	&"basic": 0.45,
+	&"fast": 0.22,
+	&"bomber": 0.37,
+	&"tank": 0.68,
+	&"sniper": 0.33,
+}
+const EnemySocketBindings := {
+	&"basic": {
+		&"Socket_Muzzle": [&"MuzzleCenter"],
+		&"Socket_EngineLeft": [&"EngineLeft"],
+		&"Socket_EngineRight": [&"EngineRight"],
+	},
+	&"fast": {
+		&"Socket_Muzzle": [&"MuzzleCenter"],
+		&"Socket_EngineLeft": [&"EngineLeft"],
+		&"Socket_EngineRight": [&"EngineRight"],
+	},
+	&"bomber": {
+		&"Socket_Muzzle": [&"MuzzleCenter"],
+		&"Socket_EngineLeft": [&"EngineLeft"],
+		&"Socket_EngineRight": [&"EngineRight"],
+		&"Socket_PayloadLeft": [&"BombBayLeft"],
+		&"Socket_PayloadRight": [&"BombBayRight"],
+	},
+	&"tank": {
+		&"Socket_Muzzle": [&"MuzzleCenter"],
+		&"Socket_EngineLeft": [&"EngineLeft"],
+		&"Socket_EngineRight": [&"EngineRight"],
+	},
+	&"sniper": {
+		&"Socket_Muzzle": [&"MuzzleCenter", &"LaserOrigin"],
+		&"Socket_EngineLeft": [&"EngineLeft"],
+		&"Socket_EngineRight": [&"EngineRight"],
+	},
+}
+const EnemyModelShader: Shader = preload(
+	"res://effects/shaders/models/corrupted_void_enemy_3d.gdshader"
+)
 const UpgradeCatalog := preload("res://entities/player/native_player_upgrades.gd")
 const PhysicsLayers := preload("res://systems/native_3d_physics_layers.gd")
 var _failures: Array[String] = []
@@ -21,6 +67,7 @@ func _run_checks() -> void:
 	_expect(GameManager.is_game_active, "Native scene must initialize")
 	_check_native_actor_graph()
 	_check_generation_resources()
+	await _check_enemy_model_integrations()
 	_check_pool_contract()
 	await _check_native_registries_and_checkout_reuse()
 	_check_upgrade_contract()
@@ -77,6 +124,63 @@ func _check_generation_resources() -> void:
 		_expect(stats.max_health > 0, "Generation %d has health" % (index + 1))
 		_expect(stats.move_speed > 0.0, "Generation %d has movement speed" % (index + 1))
 		_expect(stats.base_points > 0, "Generation %d has reward points" % (index + 1))
+
+
+func _check_enemy_model_integrations() -> void:
+	for archetype in EnemyScenes:
+		var enemy := (EnemyScenes[archetype] as PackedScene).instantiate() as BasicEnemy
+		actors_root.add_child(enemy)
+		var model_root := enemy.get_node("Visuals").get_child(0) as Node3D
+		var expected_scale := Vector3.ONE * float(EnemyModelScales[archetype])
+		_expect(
+			model_root.scale.is_equal_approx(expected_scale),
+			"%s enemy uses its authored runtime fit scale" % archetype
+		)
+		var meshes := model_root.find_children("*", "MeshInstance3D", true, false)
+		_expect(
+			meshes.size() >= 4 and meshes.size() <= 8,
+			"%s enemy uses a bounded material-mesh budget" % archetype
+		)
+		var visual_bounds := AABB()
+		var has_visual_bounds := false
+		var surface_count := 0
+		var shader_surface_count := 0
+		for node in meshes:
+			var mesh_instance := node as MeshInstance3D
+			var to_enemy := enemy.global_transform.affine_inverse() * mesh_instance.global_transform
+			var mesh_bounds := to_enemy * mesh_instance.get_aabb()
+			visual_bounds = visual_bounds.merge(mesh_bounds) if has_visual_bounds else mesh_bounds
+			has_visual_bounds = true
+			for surface_index in range(mesh_instance.mesh.get_surface_count()):
+				surface_count += 1
+				var material := mesh_instance.get_active_material(surface_index)
+				if (
+					material is ShaderMaterial
+					and (material as ShaderMaterial).shader == EnemyModelShader
+				):
+					shader_surface_count += 1
+		_expect(
+			shader_surface_count == surface_count and surface_count > 0,
+			"%s enemy adapts every Blender surface to the runtime enemy shader" % archetype
+		)
+		var hitbox := enemy.get_node("CollisionShape3D").shape as BoxShape3D
+		_expect(
+			has_visual_bounds and hitbox.size.x <= visual_bounds.size.x * 1.25,
+			"%s enemy hitbox does not extend far beyond its visible hull" % archetype
+		)
+		for imported_name in EnemySocketBindings[archetype]:
+			var imported_socket := model_root.find_child(imported_name, true, false) as Node3D
+			_expect(imported_socket != null, "%s imports %s" % [archetype, imported_name])
+			if imported_socket == null:
+				continue
+			for wrapper_name in EnemySocketBindings[archetype][imported_name]:
+				var wrapper := enemy.get_node("Attachments/Sockets/%s" % wrapper_name) as Node3D
+				_expect(
+					wrapper.global_position.distance_to(imported_socket.global_position) < 0.002,
+					"%s %s matches authored %s" % [archetype, wrapper_name, imported_name]
+				)
+		enemy.queue_free()
+		await get_tree().process_frame
 
 
 func _check_pool_contract() -> void:

@@ -1,0 +1,62 @@
+{
+  "schema_version": 1,
+  "set_id": "farinuff-next-round-enemy-fleet",
+  "status": "blender-built-static-models",
+  "license": "project-original",
+  "blender_source": "assets/models/redesign/sources/farinuff_next_round_enemy_fleet.blend",
+  "fleet_preview": "renders/drafts/next-round-3d-models/enemy_fleet_lineup.png",
+  "orientation": "+Y nose; XY combat plane; Z height; glTF exported Y-up",
+  "topology_budget": "4..8 material meshes and maximum 12000 triangles per ship",
+  "assets": [
+    {
+      "id": "basic_enemy",
+      "source_reference": "renders/drafts/next-round-3d-concepts/basic-enemy.png",
+      "glb": "assets/models/redesign/next_round/basic_enemy.glb",
+      "preview": "renders/drafts/next-round-3d-models/basic_enemy.png",
+      "meshes": 7,
+      "vertices": 1005,
+      "triangles": 1890,
+      "sockets": 3
+    },
+    {
+      "id": "fast_enemy",
+      "source_reference": "renders/drafts/next-round-3d-concepts/fast-enemy.png",
+      "glb": "assets/models/redesign/next_round/fast_enemy.glb",
+      "preview": "renders/drafts/next-round-3d-models/fast_enemy.png",
+      "meshes": 5,
+      "vertices": 406,
+      "triangles": 760,
+      "sockets": 3
+    },
+    {
+      "id": "bomber_enemy",
+      "source_reference": "renders/drafts/next-round-3d-concepts/bomber-enemy-core-variant.png",
+      "glb": "assets/models/redesign/next_round/bomber_enemy.glb",
+      "preview": "renders/drafts/next-round-3d-models/bomber_enemy.png",
+      "meshes": 7,
+      "vertices": 1290,
+      "triangles": 2392,
+      "sockets": 5
+    },
+    {
+      "id": "sniper_enemy",
+      "source_reference": "renders/drafts/next-round-3d-concepts/sniper-enemy.png",
+      "glb": "assets/models/redesign/next_round/sniper_enemy.glb",
+      "preview": "renders/drafts/next-round-3d-models/sniper_enemy.png",
+      "meshes": 7,
+      "vertices": 926,
+      "triangles": 1748,
+      "sockets": 4
+    },
+    {
+      "id": "tank_enemy",
+      "source_reference": "renders/drafts/next-round-3d-concepts/tank-enemy.png",
+      "glb": "assets/models/redesign/next_round/tank_enemy.glb",
+      "preview": "renders/drafts/next-round-3d-models/tank_enemy.png",
+      "meshes": 8,
+      "vertices": 1414,
+      "triangles": 2640,
+      "sockets": 5
+    }
+  ]
+}

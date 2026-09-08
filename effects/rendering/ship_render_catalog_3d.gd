@@ -9,11 +9,11 @@ const VisualStyle := preload("res://effects/rendering/visual_style_settings.gd")
 
 const MODEL_SCENES := {
 	&"player": preload("res://assets/models/redesign/player_butterfly.glb"),
-	&"basic": preload("res://assets/models/mockups/basic_enemy_mockup.glb"),
-	&"fast": preload("res://assets/models/mockups/fast_enemy_mockup.glb"),
-	&"bomber": preload("res://assets/models/mockups/bomber_enemy_mockup.glb"),
-	&"tank": preload("res://assets/models/mockups/tank_enemy_mockup.glb"),
-	&"sniper": preload("res://assets/models/mockups/sniper_enemy_mockup.glb"),
+	&"basic": preload("res://assets/models/redesign/next_round/basic_enemy.glb"),
+	&"fast": preload("res://assets/models/redesign/next_round/fast_enemy.glb"),
+	&"bomber": preload("res://assets/models/redesign/next_round/bomber_enemy.glb"),
+	&"tank": preload("res://assets/models/redesign/next_round/tank_enemy.glb"),
+	&"sniper": preload("res://assets/models/redesign/next_round/sniper_enemy.glb"),
 	&"boss_assault": preload("res://assets/models/mockups/boss_assault_mockup.glb"),
 	&"boss_bulwark": preload("res://assets/models/mockups/boss_bulwark_mockup.glb"),
 	&"boss_tempest": preload("res://assets/models/mockups/boss_tempest_mockup.glb"),
@@ -25,11 +25,11 @@ const MODEL_SCENES := {
 
 const MODEL_PATHS := {
 	&"player": "res://assets/models/redesign/player_butterfly.glb",
-	&"basic": "res://assets/models/mockups/basic_enemy_mockup.glb",
-	&"fast": "res://assets/models/mockups/fast_enemy_mockup.glb",
-	&"bomber": "res://assets/models/mockups/bomber_enemy_mockup.glb",
-	&"tank": "res://assets/models/mockups/tank_enemy_mockup.glb",
-	&"sniper": "res://assets/models/mockups/sniper_enemy_mockup.glb",
+	&"basic": "res://assets/models/redesign/next_round/basic_enemy.glb",
+	&"fast": "res://assets/models/redesign/next_round/fast_enemy.glb",
+	&"bomber": "res://assets/models/redesign/next_round/bomber_enemy.glb",
+	&"tank": "res://assets/models/redesign/next_round/tank_enemy.glb",
+	&"sniper": "res://assets/models/redesign/next_round/sniper_enemy.glb",
 	&"boss_assault": "res://assets/models/mockups/boss_assault_mockup.glb",
 	&"boss_bulwark": "res://assets/models/mockups/boss_bulwark_mockup.glb",
 	&"boss_tempest": "res://assets/models/mockups/boss_tempest_mockup.glb",
@@ -37,6 +37,14 @@ const MODEL_PATHS := {
 	&"boss_tempest_core": "res://assets/models/mockups/boss_tempest_core_mockup.glb",
 	&"tempest_section": "res://assets/models/mockups/tempest_section_mockup.glb",
 	&"drone_escort": "res://assets/models/redesign/butterfly_elites/bf_elite_drone_escort.glb",
+}
+
+const MODEL_SCALES := {
+	&"basic": 0.45,
+	&"fast": 0.22,
+	&"bomber": 0.37,
+	&"tank": 0.68,
+	&"sniper": 0.33,
 }
 
 const CLASS_ENERGY := {
@@ -184,4 +192,7 @@ static func instantiate_model(archetype: StringName) -> Node3D:
 	if not MODEL_SCENES.has(archetype):
 		return null
 	var packed_scene := MODEL_SCENES[archetype] as PackedScene
-	return packed_scene.instantiate() as Node3D
+	var model := packed_scene.instantiate() as Node3D
+	if model != null and MODEL_SCALES.has(archetype):
+		model.scale = Vector3.ONE * float(MODEL_SCALES[archetype])
+	return model

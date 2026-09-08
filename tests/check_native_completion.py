@@ -421,6 +421,9 @@ def check_bosses_and_generations() -> None:
     for archetype in ARCHETYPES:
         actor_path = f"entities/enemies/{archetype}_enemy_3d.tscn"
         actor = read(actor_path)
+        model_path = f"assets/models/redesign/next_round/{archetype}_enemy.glb"
+        require((ROOT / model_path).exists(), f"{model_path}: redesigned runtime model missing")
+        require(f'res://{model_path}' in actor, f"{actor_path}: redesigned runtime model not wired")
         require(f"res://entities/enemies/{archetype}_enemy_generation_1.tres" in actor, f"{actor_path}: generation I resource not wired")
         require("gameplay_stats = ExtResource(\"3_stats\")" in actor, f"{actor_path}: gameplay_stats must be resource-backed")
         for generation in GENERATION_NUMBERS:
