@@ -48,7 +48,7 @@ const EnemySocketBindings := {
 	},
 }
 const EnemyModelShader: Shader = preload(
-	"res://effects/shaders/models/corrupted_void_enemy_3d.gdshader"
+	"res://effects/shaders/models/imported_enemy_surface_3d.gdshader"
 )
 const UpgradeCatalog := preload("res://entities/player/native_player_upgrades.gd")
 const PhysicsLayers := preload("res://systems/native_3d_physics_layers.gd")
@@ -145,6 +145,8 @@ func _check_enemy_model_integrations() -> void:
 		var has_visual_bounds := false
 		var surface_count := 0
 		var shader_surface_count := 0
+		var emissive_surface_count := 0
+		var authored_colors: Array[Color] = []
 		for node in meshes:
 			var mesh_instance := node as MeshInstance3D
 			var to_enemy := enemy.global_transform.affine_inverse() * mesh_instance.global_transform
@@ -159,9 +161,21 @@ func _check_enemy_model_integrations() -> void:
 					and (material as ShaderMaterial).shader == EnemyModelShader
 				):
 					shader_surface_count += 1
+					var shader_material := material as ShaderMaterial
+					authored_colors.append(shader_material.get_shader_parameter(&"base_color"))
+					if float(shader_material.get_shader_parameter(&"emission_strength")) > 0.0:
+						emissive_surface_count += 1
 		_expect(
 			shader_surface_count == surface_count and surface_count > 0,
 			"%s enemy adapts every Blender surface to the runtime enemy shader" % archetype
+		)
+		_expect(
+			_has_authored_role_color(archetype, authored_colors),
+			"%s enemy preserves its authored role palette: %s" % [archetype, authored_colors]
+		)
+		_expect(
+			emissive_surface_count > 0,
+			"%s enemy preserves authored emissive surfaces" % archetype
 		)
 		var hitbox := enemy.get_node("CollisionShape3D").shape as BoxShape3D
 		_expect(
@@ -181,6 +195,27 @@ func _check_enemy_model_integrations() -> void:
 				)
 		enemy.queue_free()
 		await get_tree().process_frame
+
+
+func _has_authored_role_color(archetype: StringName, colors: Array[Color]) -> bool:
+	for color in colors:
+		match archetype:
+			&"basic":
+				if color.r > 0.75 and color.r > color.g * 3.0 and color.r > color.b * 3.5:
+					return true
+			&"fast":
+				if color.r > 0.90 and color.g > 0.25 and color.g < 0.40 and color.b < 0.15:
+					return true
+			&"bomber":
+				if color.g > 0.35 and color.g > color.r * 1.50 and color.g > color.b * 2.0:
+					return true
+			&"tank":
+				if color.b > 0.70 and color.b > color.r * 1.40 and color.b > color.g * 2.5:
+					return true
+			&"sniper":
+				if color.b > 0.75 and color.b > color.g * 1.35 and color.b > color.r * 4.0:
+					return true
+	return false
 
 
 func _check_pool_contract() -> void:

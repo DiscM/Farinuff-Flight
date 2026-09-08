@@ -386,6 +386,7 @@ def check_bosses_and_generations() -> None:
     boss_script = read("entities/enemies/boss_enemy_3d.gd")
     boss_scene = read("entities/enemies/boss_enemy_3d.tscn")
     basic_script = read("entities/enemies/basic_enemy_3d.gd")
+    imported_surface_shader = read("effects/shaders/models/imported_enemy_surface_3d.gdshader")
     smoke = read("tests/native_completion_smoke.gd")
 
     titles = extract_array(boss_script, "TITLES")
@@ -418,6 +419,14 @@ def check_bosses_and_generations() -> None:
 
     require(len(re.findall(r'preload\("res://entities/enemies/basic_enemy_generation_[1-4]\.tres"\)', basic_script)) == 4, "basic native lineage must preload four basic generation resources")
     require("func _get_generation_stats()" in basic_script, "native enemies must resolve generation resources through one seam")
+    require(
+        'res://effects/shaders/models/imported_enemy_surface_3d.gdshader' in basic_script,
+        "redesigned enemies must use the authored-material runtime shader",
+    )
+    require(
+        "ALBEDO = mix(authored_body" in imported_surface_shader,
+        "enemy runtime shader must preserve authored surface color in its final albedo",
+    )
     for archetype in ARCHETYPES:
         actor_path = f"entities/enemies/{archetype}_enemy_3d.tscn"
         actor = read(actor_path)
