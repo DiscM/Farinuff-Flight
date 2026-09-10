@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="BossMilestoneDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://campaign/boss_milestone_definition.gd" id="1_boss"]
+
+[resource]
+script = ExtResource("1_boss")
+id = &"harbinger"
+display_name = "Void Harbinger"
+wave = 25
+production_variant_index = 3

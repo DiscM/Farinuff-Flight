@@ -4,6 +4,15 @@ extends BasicEnemy3D
 const Section := preload("res://entities/enemies/boss_section_3d.gd")
 const ProjectileManager := preload("res://systems/projectile_manager_3d.gd")
 const TITLES := ["ASSAULT COMMANDER", "IRON BULWARK", "TEMPEST", "VOID HARBINGER", "TEMPEST CORE"]
+## Authored Expedition milestones are stable content IDs. Keep this mapping
+## explicit so the Wave-20 finale cannot change when the title catalog grows.
+const MILESTONE_VARIANTS := {
+	5: 0, # Assault Commander
+	10: 1, # Iron Bulwark
+	15: 2, # Tempest
+	20: 4, # Tempest Core
+	25: 3, # Void Harbinger, first Endless revelation
+}
 var max_health := 60
 var variant := 0
 var phase := 0
@@ -15,6 +24,16 @@ var _volley_index := 0
 var _locked_aim := Vector2.DOWN
 var _sections: Array[Section] = []
 var dev_variant_override := -1
+
+
+## Public boss-selection seam used by production activation and contract tests.
+## Waves after the authored milestones retain the existing five-hull rotation
+## for Endless play, while the milestone table always wins for its exact waves.
+static func resolve_variant_for_wave(wave: int) -> int:
+	if MILESTONE_VARIANTS.has(wave):
+		return int(MILESTONE_VARIANTS[wave])
+	var cycle := maxi(floori(float(wave) / 5.0) - 1, 0)
+	return cycle % TITLES.size()
 
 func _ready() -> void:
 	super._ready()
@@ -35,7 +54,7 @@ func activate_generation(space: FlightSpace, origin: Vector3, direction: Vector3
 	variant = (
 		clampi(dev_variant_override, 0, TITLES.size() - 1)
 		if dev_variant_override >= 0
-		else (maxi(floori(GameManager.current_wave / 5.0), 1) - 1) % TITLES.size()
+		else resolve_variant_for_wave(GameManager.current_wave)
 	)
 	max_health = roundi((45.0 + GameManager.current_wave * 3.0) * GameManager.get_enemy_health_multiplier())
 	health = max_health

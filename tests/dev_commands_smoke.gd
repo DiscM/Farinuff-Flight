@@ -119,6 +119,24 @@ func _check_reward_commands() -> void:
 
 
 func _check_boss_command() -> void:
+	var expected_overrides := {
+		&"assault": {"index": 0, "wave": 5},
+		&"bulwark": {"index": 1, "wave": 10},
+		&"tempest": {"index": 2, "wave": 15},
+		&"core": {"index": 4, "wave": 20},
+		&"harbinger": {"index": 3, "wave": 25},
+	}
+	for variant: StringName in expected_overrides:
+		var expected: Dictionary = expected_overrides[variant]
+		var definition: Dictionary = encounters.DEV_BOSS_VARIANTS.get(variant, {})
+		_expect(
+			int(definition.get("index", -1)) == int(expected["index"]),
+			"Developer override keeps %s on variant %d" % [variant, int(expected["index"])]
+		)
+		_expect(
+			int(definition.get("wave", -1)) == int(expected["wave"]),
+			"Developer override keeps %s on Wave %d" % [variant, int(expected["wave"])]
+		)
 	_expect(dev_spawn_boss_variant(&"core"), "Tempest Core command is accepted")
 	await get_tree().process_frame
 	await get_tree().process_frame

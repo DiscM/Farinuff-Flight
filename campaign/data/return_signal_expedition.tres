@@ -1,0 +1,43 @@
+[gd_resource type="Resource" script_class="CampaignDefinition" load_steps=30 format=3]
+
+[ext_resource type="Script" path="res://campaign/campaign_definition.gd" id="1_campaign"]
+[ext_resource type="Resource" path="res://campaign/data/routes/iron_wake.tres" id="2_iron_profile"]
+[ext_resource type="Resource" path="res://campaign/data/routes/ghost_lanes.tres" id="3_ghost_profile"]
+[ext_resource type="Resource" path="res://campaign/data/routes/tempest_veil.tres" id="4_veil_profile"]
+[ext_resource type="Resource" path="res://campaign/data/routes/echo_field.tres" id="5_echo_profile"]
+[ext_resource type="Resource" path="res://campaign/data/nodes/far_reach.tres" id="6_far_node"]
+[ext_resource type="Resource" path="res://campaign/data/nodes/iron_wake.tres" id="7_iron_node"]
+[ext_resource type="Resource" path="res://campaign/data/nodes/ghost_lanes.tres" id="8_ghost_node"]
+[ext_resource type="Resource" path="res://campaign/data/nodes/tempest_veil.tres" id="9_veil_node"]
+[ext_resource type="Resource" path="res://campaign/data/nodes/echo_field.tres" id="10_echo_node"]
+[ext_resource type="Resource" path="res://campaign/data/nodes/quiet_core.tres" id="11_core_node"]
+[ext_resource type="Resource" path="res://campaign/data/bosses/assault.tres" id="12_assault_boss"]
+[ext_resource type="Resource" path="res://campaign/data/bosses/bulwark.tres" id="13_bulwark_boss"]
+[ext_resource type="Resource" path="res://campaign/data/bosses/tempest.tres" id="14_tempest_boss"]
+[ext_resource type="Resource" path="res://campaign/data/bosses/core.tres" id="15_core_boss"]
+[ext_resource type="Resource" path="res://campaign/data/bosses/harbinger.tres" id="16_harbinger_boss"]
+[ext_resource type="Resource" path="res://campaign/data/story/far_reach_briefing.tres" id="17_far_briefing"]
+[ext_resource type="Resource" path="res://campaign/data/story/far_reach_debrief.tres" id="18_far_debrief"]
+[ext_resource type="Resource" path="res://campaign/data/story/broken_perimeter_briefing.tres" id="19_broken_briefing"]
+[ext_resource type="Resource" path="res://campaign/data/story/broken_perimeter_debrief.tres" id="20_broken_debrief"]
+[ext_resource type="Resource" path="res://campaign/data/story/tempest_reach_briefing.tres" id="21_tempest_briefing"]
+[ext_resource type="Resource" path="res://campaign/data/story/tempest_reach_debrief.tres" id="22_tempest_debrief"]
+[ext_resource type="Resource" path="res://campaign/data/story/quiet_core_briefing.tres" id="23_core_briefing"]
+[ext_resource type="Resource" path="res://campaign/data/story/expedition_victory.tres" id="24_victory"]
+[ext_resource type="Resource" path="res://campaign/data/story/iron_wake_fragment.tres" id="25_iron_fragment"]
+[ext_resource type="Resource" path="res://campaign/data/story/ghost_lanes_fragment.tres" id="26_ghost_fragment"]
+[ext_resource type="Resource" path="res://campaign/data/story/tempest_veil_fragment.tres" id="27_veil_fragment"]
+[ext_resource type="Resource" path="res://campaign/data/story/echo_field_fragment.tres" id="28_echo_fragment"]
+
+[resource]
+script = ExtResource("1_campaign")
+id = &"return_signal_expedition"
+display_name = "The Return Signal Expedition"
+premise_key = &"campaign.premise.return_signal"
+sector_names = PackedStringArray("The Far Reach", "The Broken Perimeter", "Tempest Reach", "The Quiet Core")
+start_node_id = &"far_reach"
+final_node_id = &"quiet_core"
+nodes = [ExtResource("6_far_node"), ExtResource("7_iron_node"), ExtResource("8_ghost_node"), ExtResource("9_veil_node"), ExtResource("10_echo_node"), ExtResource("11_core_node")]
+route_profiles = [ExtResource("2_iron_profile"), ExtResource("3_ghost_profile"), ExtResource("4_veil_profile"), ExtResource("5_echo_profile")]
+boss_milestones = [ExtResource("12_assault_boss"), ExtResource("13_bulwark_boss"), ExtResource("14_tempest_boss"), ExtResource("15_core_boss"), ExtResource("16_harbinger_boss")]
+story_beats = [ExtResource("17_far_briefing"), ExtResource("18_far_debrief"), ExtResource("19_broken_briefing"), ExtResource("20_broken_debrief"), ExtResource("21_tempest_briefing"), ExtResource("22_tempest_debrief"), ExtResource("23_core_briefing"), ExtResource("24_victory"), ExtResource("25_iron_fragment"), ExtResource("26_ghost_fragment"), ExtResource("27_veil_fragment"), ExtResource("28_echo_fragment")]

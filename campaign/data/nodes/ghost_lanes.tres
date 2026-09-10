@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="RouteNodeDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://campaign/route_node_definition.gd" id="1_node"]
+
+[resource]
+script = ExtResource("1_node")
+id = &"ghost_lanes"
+display_name = "Ghost Lanes"
+description_key = &"campaign.node.ghost_lanes.description"
+sector_index = 2
+first_wave = 6
+last_wave = 10
+map_position = Vector2(0.32, 0.66)
+outgoing_node_ids = [&"tempest_veil", &"echo_field"]
+boss_variant_id = &"bulwark"
+encounter_profile_id = &"profile_ghost_lanes"
+briefing_beat_id = &"broken_perimeter_briefing"
+debrief_beat_id = &"broken_perimeter_debrief"
+fragment_beat_id = &"ghost_lanes_fragment"
+threat_tags = PackedStringArray("speed", "range", "crossfire")
+accent_id = &"magenta"
+discovery_glyph_id = &"route"
+completion_glyph_id = &"check"

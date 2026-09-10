@@ -384,12 +384,25 @@ func _check_boss_variants() -> void:
 	]
 	_expect(BossScript.TITLES == expected_titles, "Boss hull titles remain ordered")
 	var original_wave := GameManager.current_wave
-	for index in 5:
-		GameManager.current_wave = (index + 1) * 5
+	var expected_milestones := [
+		{"wave": 5, "variant": 0},
+		{"wave": 10, "variant": 1},
+		{"wave": 15, "variant": 2},
+		{"wave": 20, "variant": 4},
+		{"wave": 25, "variant": 3},
+	]
+	for milestone: Dictionary in expected_milestones:
+		var wave := int(milestone["wave"])
+		var index := int(milestone["variant"])
+		GameManager.current_wave = wave
+		_expect(
+			BossScript.resolve_variant_for_wave(wave) == index,
+			"Public boss selection resolves Wave %d to variant %d" % [wave, index]
+		)
 		var boss := BossScene.instantiate()
 		actors_root.add_child(boss)
 		_expect(boss.activate_generation(flight_space, Vector3.ZERO, Vector3.BACK, 1), "Boss activates")
-		_expect(boss.variant == index, "Wave selects correct boss hull")
+		_expect(boss.variant == index, "Wave %d selects the stable boss hull variant %d" % [wave, index])
 		var visible_hulls := 0
 		for hull in boss.get_node("Visuals").get_children():
 			if hull is Node3D and hull.visible:
