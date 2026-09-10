@@ -10,9 +10,9 @@ const SAVE_PATH := "user://" + SAVE_FILE_NAME
 const SAVE_TEMP_PATH := "user://" + SAVE_TEMP_FILE_NAME
 const SAVE_BACKUP_PATH := "user://" + SAVE_BACKUP_FILE_NAME
 ## Schema version of the save file. Bump when the layout changes and add a
-## migration path in _load_data. Version 2 adds the first-run Flight School
-## flag while keeping all v1 fields compatible.
-const SAVE_VERSION := 2
+## migration path in _load_data. Version 3 adds durable campaign discovery
+## state while keeping active-run state intentionally in memory only.
+const SAVE_VERSION := 3
 const LEGACY_SAVE_VERSION := 1
 const DEFAULT_SETTINGS: Dictionary = {
 	"master_volume": 0.8,
@@ -23,6 +23,12 @@ const DEFAULT_SETTINGS: Dictionary = {
 	"alt_controls": false,
 	"fullscreen": false,
 	"reduced_flashing": false,
+}
+const DEFAULT_CAMPAIGN_STATE: Dictionary = {
+	"discovered_node_ids": [],
+	"seen_story_beat_ids": [],
+	"expedition_clear_count": 0,
+	"last_ending_id": "",
 }
 
 var high_score: int = 0
@@ -46,6 +52,9 @@ var stat_best_wave: int = 0
 ## First-run onboarding state. Kept in the save so the player sees Flight
 ## School once, but can reopen it from the main menu at any time.
 var has_seen_flight_school: bool = false
+## Durable campaign-only state. Current route, wave, score, upgrades, and
+## active entities are deliberately excluded because runs cannot resume after exit.
+var campaign_state: Dictionary = DEFAULT_CAMPAIGN_STATE.duplicate(true)
 ## A newer build's save is preserved read-only until a compatible migration
 ## exists. This prevents a settings change from replacing buyer progress.
 var _save_read_only_due_to_future_version := false
@@ -113,6 +122,18 @@ func save_meta(state: Dictionary) -> void:
 	stat_best_wave = maxi(int(state.get("stat_best_wave", stat_best_wave)), 0)
 	_save_data()
 
+
+## Stores only the durable v3 campaign fields. ExpeditionManager owns the
+## campaign invariants; this boundary rejects malformed primitive values and
+## never serializes active-run data supplied by a caller.
+func save_campaign(state: Dictionary) -> void:
+	campaign_state = _normalize_campaign_state(state)
+	_save_data()
+
+
+func get_campaign_state() -> Dictionary:
+	return campaign_state.duplicate(true)
+
 ## Loads saved data (high score and settings) from the JSON save file.
 ## Falls back to defaults if the file doesn't exist, can't be opened,
 ## or contains malformed data. Only overwrites settings keys that exist
@@ -174,6 +195,10 @@ func _load_data() -> void:
 	var stored_flight_school: Variant = data.get("has_seen_flight_school", null)
 	if stored_flight_school is bool:
 		has_seen_flight_school = stored_flight_school
+	var stored_campaign: Variant = data.get("campaign", {})
+	campaign_state = _normalize_campaign_state(
+		stored_campaign as Dictionary if stored_campaign is Dictionary else {}
+	)
 	var stored_settings: Variant = data.get("settings", {})
 	if stored_settings is Dictionary:
 		for key in DEFAULT_SETTINGS:
@@ -184,6 +209,32 @@ func _load_data() -> void:
 				var value: Variant = stored_settings[key]
 				if typeof(value) == typeof(DEFAULT_SETTINGS[key]):
 					settings[key] = value
+
+
+func _normalize_campaign_state(raw_state: Dictionary) -> Dictionary:
+	var ending_value: Variant = raw_state.get("last_ending_id", "")
+	return {
+		"discovered_node_ids": _unique_string_entries(raw_state.get("discovered_node_ids", [])),
+		"seen_story_beat_ids": _unique_string_entries(raw_state.get("seen_story_beat_ids", [])),
+		"expedition_clear_count": _non_negative_integer(
+			raw_state.get("expedition_clear_count", 0)
+		),
+		"last_ending_id": str(ending_value) if ending_value is String else "",
+	}
+
+
+func _unique_string_entries(value: Variant) -> Array[String]:
+	var result: Array[String] = []
+	if not value is Array:
+		return result
+	for entry: Variant in value:
+		if entry is String and not result.has(entry):
+			result.append(entry)
+	return result
+
+
+func _non_negative_integer(value: Variant) -> int:
+	return maxi(int(value), 0) if value is int or value is float else 0
 
 
 ## Reads and validates one save candidate. Returning null rather than an empty
@@ -250,6 +301,7 @@ func _save_data() -> void:
 		"stat_total_kills": stat_total_kills,
 		"stat_best_wave": stat_best_wave,
 		"has_seen_flight_school": has_seen_flight_school,
+		"campaign": campaign_state,
 		"settings": settings,
 	}
 	var file := FileAccess.open(SAVE_TEMP_PATH, FileAccess.WRITE)

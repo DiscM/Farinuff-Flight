@@ -20,6 +20,10 @@ func _run() -> void:
 	_check_object_pool()
 	await _check_save_manager()
 	await _check_meta_progression()
+	# ResourceCache starts a threaded run-scene load at boot. Drain it before
+	# this logic-only smoke exits so Godot does not report cancelled imports as
+	# unrelated parse errors during teardown.
+	await ResourceCache.wait_for_scene(ResourceCache.NATIVE_RUN_PATH)
 
 	if _failures.is_empty():
 		print("PASS: autoload smoke tests")
@@ -104,6 +108,7 @@ func _check_save_manager() -> void:
 	var original_settings: Dictionary = SaveManager.settings.duplicate(true)
 	var original_high_score: int = SaveManager.high_score
 	var original_flight_school_seen: bool = SaveManager.has_seen_flight_school
+	var original_campaign_state: Dictionary = SaveManager.get_campaign_state()
 	var original_save_read_only: bool = SaveManager._save_read_only_due_to_future_version
 
 	# Remove transactional leftovers for deterministic test fixtures. Restore
@@ -152,12 +157,63 @@ func _check_save_manager() -> void:
 	SaveManager._load_data()
 	_expect(SaveManager.high_score == 700, "Malformed primary save must recover from its backup")
 
-	# Additive v2 fields load without invalidating a v1-compatible save.
+	# A v2 save remains compatible and receives default v3 campaign state.
 	_write_save('{"version": 2, "high_score": 800, "has_seen_flight_school": true, "settings": {}}')
+	SaveManager.campaign_state = {
+		"discovered_node_ids": ["stale_node"],
+		"seen_story_beat_ids": ["stale_beat"],
+		"expedition_clear_count": 9,
+		"last_ending_id": "stale_ending",
+	}
 	SaveManager.has_seen_flight_school = false
 	SaveManager._load_data()
-	_expect(SaveManager.high_score == 800, "Current schema save must load normally")
-	_expect(SaveManager.has_seen_flight_school, "Current schema onboarding state must load")
+	_expect(SaveManager.high_score == 800, "A v2 save must load existing progress normally")
+	_expect(SaveManager.has_seen_flight_school, "A v2 save must retain onboarding state")
+	_expect(SaveManager.SAVE_VERSION == 3, "Campaign persistence must use save schema v3")
+	_expect(
+		SaveManager.get_campaign_state() == SaveManager.DEFAULT_CAMPAIGN_STATE,
+		"A v2 save must migrate to default durable campaign state"
+	)
+
+	# The v3 campaign object retains only durable, typed campaign fields.
+	_write_save('{"version": 3, "campaign": {"discovered_node_ids": ["far_reach", "far_reach", 5], "seen_story_beat_ids": ["launch_briefing", false], "expedition_clear_count": 2, "last_ending_id": "return_home", "active_node_id": "must_not_persist"}, "settings": {}}')
+	SaveManager._load_data()
+	_expect(
+		SaveManager.get_campaign_state() == {
+			"discovered_node_ids": ["far_reach"],
+			"seen_story_beat_ids": ["launch_briefing"],
+			"expedition_clear_count": 2,
+			"last_ending_id": "return_home",
+		},
+		"A v3 campaign payload must load normalized durable state only"
+	)
+	SaveManager.save_campaign({
+		"discovered_node_ids": ["far_reach", "ghost_lanes"],
+		"seen_story_beat_ids": ["launch_briefing"],
+		"expedition_clear_count": 3,
+		"last_ending_id": "follow_signal",
+		"current_route": ["must_not_persist"],
+	})
+	var campaign_save: Variant = JSON.parse_string(FileAccess.get_file_as_string(save_path))
+	_expect(campaign_save is Dictionary, "Campaign state must write a valid JSON save")
+	if campaign_save is Dictionary:
+		_expect(int(campaign_save.get("version", 0)) == 3, "Campaign state writes schema v3")
+		var persisted_campaign := campaign_save.get("campaign", {}) as Dictionary
+		_expect(
+			not persisted_campaign.has("current_route"),
+			"Campaign saves must exclude active-run state"
+		)
+	SaveManager.campaign_state = SaveManager.DEFAULT_CAMPAIGN_STATE.duplicate(true)
+	SaveManager._load_data()
+	_expect(
+		SaveManager.get_campaign_state() == {
+			"discovered_node_ids": ["far_reach", "ghost_lanes"],
+			"seen_story_beat_ids": ["launch_briefing"],
+			"expedition_clear_count": 3,
+			"last_ending_id": "follow_signal",
+		},
+		"Campaign state must round-trip through the nested campaign object"
+	)
 
 	SaveManager.has_seen_flight_school = false
 	SaveManager.mark_flight_school_seen()
@@ -184,6 +240,7 @@ func _check_save_manager() -> void:
 	SaveManager.settings = original_settings
 	SaveManager.high_score = original_high_score
 	SaveManager.has_seen_flight_school = original_flight_school_seen
+	SaveManager.campaign_state = original_campaign_state
 	SaveManager._save_read_only_due_to_future_version = original_save_read_only
 	SaveManager._apply_audio_settings()
 	SaveManager._apply_control_scheme()

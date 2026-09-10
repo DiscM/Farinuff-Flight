@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="StoryBeatDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://campaign/story_beat_definition.gd" id="1_story"]
+
+[resource]
+script = ExtResource("1_story")
+id = &"ghost_lanes_fragment"
+trigger_type = &"fragment"
+text_key = &"campaign.story.ghost_lanes.fragment"
+once_policy = &"first_discovery"

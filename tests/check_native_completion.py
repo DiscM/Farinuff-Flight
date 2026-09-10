@@ -398,7 +398,11 @@ def check_bosses_and_generations() -> None:
         "TEMPEST CORE",
     ]
     require(titles == expected_titles, "boss titles must preserve all five ordered variants")
-    require("% TITLES.size()" in boss_script, "boss variant selection must wrap over the five-title catalog")
+    require("const MILESTONE_VARIANTS :=" in boss_script, "boss milestones must use an explicit variant map")
+    for wave, variant in ((5, 0), (10, 1), (15, 2), (20, 4), (25, 3)):
+        require(f"{wave}: {variant}" in boss_script, f"boss milestone Wave {wave} must resolve to variant {variant}")
+    require("func resolve_variant_for_wave(wave: int) -> int" in boss_script, "boss selection must expose a public wave seam")
+    require("return cycle % TITLES.size()" in boss_script, "later Endless boss milestones must retain a bounded rotation")
     require("for index in visuals.get_child_count():" in boss_script, "boss activation must select one visible hull")
     require("section.activate" in boss_script and "section.deactivate" in boss_script, "boss sections must activate/deactivate per variant")
     require("func _active_section_count()" in boss_script, "boss must expose active section accounting")
@@ -409,8 +413,10 @@ def check_bosses_and_generations() -> None:
         "tests/native_completion_smoke.gd",
         smoke,
         [
-            ("five boss loop", "for index in 5"),
-            ("wave-driven variant", "(index + 1) * 5"),
+            ("five boss milestones", "expected_milestones"),
+            ("Wave-20 Core milestone", '"wave": 20, "variant": 4'),
+            ("Wave-25 Harbinger milestone", '"wave": 25, "variant": 3'),
+            ("public boss selection seam", "BossScript.resolve_variant_for_wave(wave)"),
             ("variant assertion", "boss.variant == index"),
             ("section destruction", "boss._sections[0].take_damage(99999)"),
             ("remaining section assertion", "boss._active_section_count() == 1"),

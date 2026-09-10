@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="StoryBeatDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://campaign/story_beat_definition.gd" id="1_story"]
+
+[resource]
+script = ExtResource("1_story")
+id = &"far_reach_briefing"
+trigger_type = &"pre_sector"
+text_key = &"campaign.story.far_reach.briefing"
+once_policy = &"first_run"
+blocking = true

@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="RouteNodeDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://campaign/route_node_definition.gd" id="1_node"]
+
+[resource]
+script = ExtResource("1_node")
+id = &"far_reach"
+display_name = "The Far Reach"
+description_key = &"campaign.node.far_reach.description"
+sector_index = 1
+first_wave = 1
+last_wave = 5
+map_position = Vector2(0.1, 0.5)
+outgoing_node_ids = [&"iron_wake", &"ghost_lanes"]
+boss_variant_id = &"assault"
+briefing_beat_id = &"far_reach_briefing"
+debrief_beat_id = &"far_reach_debrief"
+threat_tags = PackedStringArray("isolation", "first_reflection")
+accent_id = &"cyan"
+discovery_glyph_id = &"relay"
+completion_glyph_id = &"check"

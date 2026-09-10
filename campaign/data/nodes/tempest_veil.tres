@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="RouteNodeDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://campaign/route_node_definition.gd" id="1_node"]
+
+[resource]
+script = ExtResource("1_node")
+id = &"tempest_veil"
+display_name = "Tempest Veil"
+description_key = &"campaign.node.tempest_veil.description"
+sector_index = 3
+first_wave = 11
+last_wave = 15
+map_position = Vector2(0.61, 0.34)
+outgoing_node_ids = [&"quiet_core"]
+boss_variant_id = &"tempest"
+encounter_profile_id = &"profile_tempest_veil"
+briefing_beat_id = &"tempest_reach_briefing"
+debrief_beat_id = &"tempest_reach_debrief"
+fragment_beat_id = &"tempest_veil_fragment"
+threat_tags = PackedStringArray("mobility", "mines", "unstable_space")
+accent_id = &"cyan"
+discovery_glyph_id = &"route"
+completion_glyph_id = &"check"

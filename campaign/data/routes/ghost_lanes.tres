@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="SectorEncounterProfile" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://campaign/sector_encounter_profile.gd" id="1_profile"]
+
+[resource]
+script = ExtResource("1_profile")
+id = &"profile_ghost_lanes"
+route_name = "Ghost Lanes"
+threat_tags = PackedStringArray("speed", "range", "crossfire")
+basic_weight = 0.9
+fast_weight = 1.35
+bomber_weight = 0.75
+tank_weight = 0.75
+sniper_weight = 1.3
+spawn_multiplier = 1.0
+orb_multiplier = 1.0
+pickup_multiplier = 1.0
+threat_budget_multiplier = 1.0

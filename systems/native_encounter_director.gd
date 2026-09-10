@@ -2,6 +2,7 @@ extends Node
 ## Scene-owned native encounter loop. No 2D actors or scene-coordinate adapters.
 
 const Enemy := preload("res://entities/enemies/basic_enemy_3d.gd")
+const BomberEnemy3D := preload("res://entities/enemies/bomber_enemy_3d.gd")
 const Threat := preload("res://systems/threat_director.gd")
 const SCENES := {
 	&"basic": preload("res://entities/enemies/basic_enemy_3d.tscn"),
@@ -15,7 +16,7 @@ const DEV_BOSS_VARIANTS := {
 	&"assault": {"index": 0, "wave": 5},
 	&"bulwark": {"index": 1, "wave": 10},
 	&"tempest": {"index": 2, "wave": 15},
-	&"harbinger": {"index": 3, "wave": 20},
+	&"harbinger": {"index": 3, "wave": 25},
 	&"core": {"index": 4, "wave": GameManager.FINAL_EXPEDITION_WAVE},
 }
 
@@ -101,6 +102,8 @@ func spawn_enemy(kind: StringName) -> Enemy:
 		if gameplay.flight_space.combat_motion_to_screen(origin - gameplay.player.global_position).length() >= 160.0:
 			break
 	var actor := SCENES[kind].instantiate() as Enemy
+	if actor is BomberEnemy3D:
+		actor.configure_hazard_manager(gameplay.hazard_manager)
 	gameplay.actors_root.add_child(actor)
 	actor.archetype_id = kind
 	gameplay.register_enemy_feedback(actor)
@@ -122,6 +125,8 @@ func dev_spawn_archetype(kind: StringName) -> Enemy:
 	var bounds: Rect2 = gameplay.flight_space.get_combat_bounds(60.0)
 	var origin := Vector3(bounds.get_center().x, 0.0, bounds.position.y)
 	var actor := SCENES[kind].instantiate() as Enemy
+	if actor is BomberEnemy3D:
+		actor.configure_hazard_manager(gameplay.hazard_manager)
 	gameplay.actors_root.add_child(actor)
 	actor.archetype_id = kind
 	gameplay.register_enemy_feedback(actor)

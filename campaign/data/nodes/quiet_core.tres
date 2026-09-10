@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="RouteNodeDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://campaign/route_node_definition.gd" id="1_node"]
+
+[resource]
+script = ExtResource("1_node")
+id = &"quiet_core"
+display_name = "The Quiet Core"
+description_key = &"campaign.node.quiet_core.description"
+sector_index = 4
+first_wave = 16
+last_wave = 20
+map_position = Vector2(0.9, 0.5)
+outgoing_node_ids = []
+boss_variant_id = &"core"
+briefing_beat_id = &"quiet_core_briefing"
+debrief_beat_id = &"expedition_victory"
+threat_tags = PackedStringArray("apex", "final_route")
+accent_id = &"yellow"
+discovery_glyph_id = &"core"
+completion_glyph_id = &"check"

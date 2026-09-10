@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="RouteNodeDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://campaign/route_node_definition.gd" id="1_node"]
+
+[resource]
+script = ExtResource("1_node")
+id = &"iron_wake"
+display_name = "Iron Wake"
+description_key = &"campaign.node.iron_wake.description"
+sector_index = 2
+first_wave = 6
+last_wave = 10
+map_position = Vector2(0.32, 0.34)
+outgoing_node_ids = [&"tempest_veil", &"echo_field"]
+boss_variant_id = &"bulwark"
+encounter_profile_id = &"profile_iron_wake"
+briefing_beat_id = &"broken_perimeter_briefing"
+debrief_beat_id = &"broken_perimeter_debrief"
+fragment_beat_id = &"iron_wake_fragment"
+threat_tags = PackedStringArray("armor", "mines", "broad_denial")
+accent_id = &"yellow"
+discovery_glyph_id = &"route"
+completion_glyph_id = &"check"
