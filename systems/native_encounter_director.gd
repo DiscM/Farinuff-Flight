@@ -2,7 +2,6 @@ extends Node
 ## Scene-owned native encounter loop. No 2D actors or scene-coordinate adapters.
 
 const Enemy := preload("res://entities/enemies/basic_enemy_3d.gd")
-const BomberEnemy3D := preload("res://entities/enemies/bomber_enemy_3d.gd")
 const Threat := preload("res://systems/threat_director.gd")
 const SCENES := {
 	&"basic": preload("res://entities/enemies/basic_enemy_3d.tscn"),

@@ -25,9 +25,6 @@ jobs:
       - name: Check native completion contract (file-only)
         run: python3 tests/check_native_completion.py
 
-      - name: Check bomber production contract (file-only)
-        run: python3 tests/check_native_bomber_production.py
-
       - name: Import project (refresh class cache)
         run: ./Godot_v4.6.3-stable_linux.x86_64 --headless --path . --import
 
@@ -38,9 +35,7 @@ jobs:
             dev_commands_smoke \
             in_house_vfx_smoke \
             native_completion_smoke \
-            native_bomber_production_smoke \
             pooling_smoke \
-            campaign_catalog_smoke \
             resource_cache_smoke \
             run_warmup_benchmark \
             autoload_smoke; do

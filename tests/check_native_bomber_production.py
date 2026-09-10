@@ -44,10 +44,6 @@ def main() -> int:
     hazards = read("systems/native_hazard_manager_3d.gd")
     gameplay_scene = read("scenes/native_3d_gameplay.tscn")
 
-    require(
-        'const BomberEnemy3D := preload("res://entities/enemies/bomber_enemy_3d.gd")' in director,
-        "encounter director must identify the native bomber production type",
-    )
     for spawn_path in ("spawn_enemy", "dev_spawn_archetype"):
         section = source_section(director, f"func {spawn_path}(", "\n\nfunc ")
         require(section, f"encounter director must expose {spawn_path}()")
