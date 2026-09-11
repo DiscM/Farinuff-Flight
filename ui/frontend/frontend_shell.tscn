@@ -1,0 +1,203 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://ui/frontend/frontend_shell.gd" id="1_shell"]
+[ext_resource type="Theme" path="res://ui/themes/farinuff_frontend_theme.tres" id="2_theme"]
+
+[node name="FrontendShell" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("2_theme")
+script = ExtResource("1_shell")
+
+[node name="Backdrop" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.004, 0.008, 0.035, 1)
+
+[node name="RootLayout" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="StatusRail" type="PanelContainer" parent="RootLayout"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(0, 52)
+
+[node name="StatusBox" type="HBoxContainer" parent="RootLayout/StatusRail"]
+layout_mode = 2
+theme_override_constants/separation = 28
+
+[node name="SalvageValue" type="Label" parent="RootLayout/StatusRail/StatusBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "SALVAGE  ⬡ 0"
+theme_override_colors/font_color = Color(0.9, 0.98, 1, 1)
+
+[node name="HullValue" type="Label" parent="RootLayout/StatusRail/StatusBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "HULL  SWALLOWTAIL"
+theme_override_colors/font_color = Color(0.9, 0.98, 1, 1)
+
+[node name="WaveValue" type="Label" parent="RootLayout/StatusRail/StatusBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "BEST WAVE  0"
+theme_override_colors/font_color = Color(0.9, 0.98, 1, 1)
+
+[node name="ObjectiveValue" type="Label" parent="RootLayout/StatusRail/StatusBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "OBJECTIVE  Return the signal to the last charted relay"
+autowrap_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.98, 1, 1)
+
+[node name="TopTabs" type="PanelContainer" parent="RootLayout"]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+custom_minimum_size = Vector2(0, 52)
+
+[node name="TabList" type="HBoxContainer" parent="RootLayout/TopTabs"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="Middle" type="HBoxContainer" parent="RootLayout"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="LeftNav" type="PanelContainer" parent="RootLayout/Middle"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(240, 0)
+size_flags_vertical = 3
+
+[node name="NavList" type="VBoxContainer" parent="RootLayout/Middle/LeftNav"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="ContentCanvas" type="Control" parent="RootLayout/Middle"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="ContextDrawer" type="PanelContainer" parent="RootLayout/Middle"]
+unique_name_in_owner = true
+layout_mode = 2
+custom_minimum_size = Vector2(330, 0)
+size_flags_vertical = 3
+
+[node name="DrawerBox" type="VBoxContainer" parent="RootLayout/Middle/ContextDrawer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="DrawerTitle" type="Label" parent="RootLayout/Middle/ContextDrawer/DrawerBox"]
+layout_mode = 2
+text = "CONTEXT"
+theme_override_colors/font_color = Color(0.17, 0.95, 1, 1)
+
+[node name="DrawerBody" type="Label" parent="RootLayout/Middle/ContextDrawer/DrawerBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Select a page to see its context here."
+autowrap_mode = 2
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.55, 0.63, 0.78, 1)
+
+[node name="FooterBar" type="PanelContainer" parent="RootLayout"]
+layout_mode = 2
+custom_minimum_size = Vector2(0, 44)
+
+[node name="FooterBox" type="HBoxContainer" parent="RootLayout/FooterBar"]
+layout_mode = 2
+theme_override_constants/separation = 24
+
+[node name="AcceptPrompt" type="Label" parent="RootLayout/FooterBar/FooterBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.17, 0.95, 1, 1)
+
+[node name="BackPrompt" type="Label" parent="RootLayout/FooterBar/FooterBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.17, 0.95, 1, 1)
+
+[node name="DetailsPrompt" type="Label" parent="RootLayout/FooterBar/FooterBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.17, 0.95, 1, 1)
+
+[node name="TabPrompt" type="Label" parent="RootLayout/FooterBar/FooterBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.17, 0.95, 1, 1)
+
+[node name="BuildLabel" type="Label" parent="RootLayout/FooterBar/FooterBox"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "BUILD 0.5.0"
+horizontal_alignment = 2
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.36, 1, 0.59, 1)
+
+[node name="DetailsOverlay" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchor_left = 0.05
+anchor_top = 0.5
+anchor_right = 0.95
+anchor_bottom = 0.94
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="OverlayBox" type="VBoxContainer" parent="DetailsOverlay"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="OverlayTitle" type="Label" parent="DetailsOverlay/OverlayBox"]
+layout_mode = 2
+text = "CONTEXT"
+theme_override_colors/font_color = Color(0.17, 0.95, 1, 1)
+
+[node name="OverlayBody" type="Label" parent="DetailsOverlay/OverlayBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Select a page to see its context here."
+autowrap_mode = 2
+theme_override_font_sizes/font_size = 14
+theme_override_colors/font_color = Color(0.55, 0.63, 0.78, 1)
+
+[node name="ModalLayer" type="Control" parent="."]
+unique_name_in_owner = true
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
