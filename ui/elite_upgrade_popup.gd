@@ -1,5 +1,5 @@
 extends Control
-## Elite upgrade popup — shown after the Wave 10 (elite) boss is defeated.
+## Elite upgrade popup — offered at authored Expedition build milestones.
 ## Presents up to 3 randomly selected native ship modules. Solo selection
 ## resumes play; combined milestones wait for point allocation to finish.
 
@@ -36,6 +36,7 @@ var panel_only: bool = false
 ## Picks 3 random upgrades from the available pool, builds the card-based
 ## UI, already at its final transform with no entrance interpolation.
 func _ready() -> void:
+	add_to_group("scalable_ui")
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_pick_upgrades()
 	_build_ui()
@@ -65,10 +66,7 @@ func _pick_upgrades() -> void:
 		seen_ids[upgrade_id] = true
 		pool.append(_normalize_upgrade(raw, upgrade_id))
 	_available_upgrade_count = pool.size()
-	pool.shuffle()
-	chosen_upgrades.clear()
-	for index in range(mini(pool.size(), MAX_CHOICES)):
-		chosen_upgrades.append(pool[index])
+	chosen_upgrades = NativeUpgradeCatalog.draft(pool, MAX_CHOICES)
 
 
 func _normalize_upgrade(raw: Dictionary, upgrade_id: String) -> Dictionary:
@@ -238,7 +236,7 @@ func _make_card(upg: Dictionary) -> PanelContainer:
 
 	# Description
 	var desc_lbl := Label.new()
-	desc_lbl.text = _safe_text(upg, "description", FALLBACK_DESCRIPTION)
+	desc_lbl.text = str(upg.get("role", "Utility")).to_upper() + "\n\n" + _safe_text(upg, "description", FALLBACK_DESCRIPTION)
 	desc_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	desc_lbl.add_theme_color_override("font_color", Color(0.8, 0.88, 1.0))
 	desc_lbl.add_theme_font_size_override("font_size", 11 if panel_only else 14)
@@ -275,7 +273,7 @@ func _on_card_hover(card: PanelContainer, style: StyleBoxFlat, color: Color) -> 
 	if selection_locked:
 		return
 	style.bg_color = Color(color.r * 0.15, color.g * 0.15, color.b * 0.15)
-	card.scale = Vector2(1.04, 1.04)
+	card.scale = Vector2.ONE if bool(SaveManager.get_setting("reduced_motion", false)) else Vector2(1.04, 1.04)
 
 ## Restores the idle state immediately.
 func _on_card_unhover(card: PanelContainer, style: StyleBoxFlat) -> void:

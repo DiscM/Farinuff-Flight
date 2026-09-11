@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="EncounterPattern" load_steps=2 format=3]
+[ext_resource type="Script" path="res://campaign/encounter_pattern.gd" id="1"]
+[resource]
+script = ExtResource("1")
+title = "ARMORED ADVANCE"
+archetypes = Array[StringName]([&"basic", &"tank", &"basic"])
+lanes = PackedFloat32Array(0.22, 0.36, 0.50)
+warning_seconds = 1.5
+maximum_seconds = 8.0
+interval_seconds = 1.1

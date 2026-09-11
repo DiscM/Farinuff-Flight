@@ -175,6 +175,8 @@ func show_result(final_wave: int) -> void:
 	var hull_id := _selected_hull_id()
 	var ship_name := _selected_ship_name()
 	_body_label.text = "%s BREAKS THE FORMATION.\nTHE EXPEDITION IS YOURS." % ship_name
+	if int(SaveManager.get_setting("story_frequency", 0)) != 2:
+		_body_label.text += "\nMOTH // The homeward relay is open. The signal continues beyond its source."
 	_salvage_label.text = "RUN SALVAGE: %s  ·  BOSS BANKED: %s" % [
 		_format_salvage(GameManager.run_salvage),
 		_format_salvage(GameManager.run_salvage_boss),

@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="EncounterPattern" load_steps=2 format=3]
+[ext_resource type="Script" path="res://campaign/encounter_pattern.gd" id="1"]
+[resource]
+script = ExtResource("1")
+title = "PREDICTION NET"
+archetypes = Array[StringName]([&"basic", &"sniper", &"basic", &"sniper"])
+lanes = PackedFloat32Array(0.22, 0.32, 0.48, 0.48)
+opposite_edges = PackedByteArray(0, 0, 1, 1)
+entry_edges = PackedInt32Array(2, 3)
+minimum_wave = 11
+warning_seconds = 2.2
+maximum_seconds = 11.0
+interval_seconds = 1.25

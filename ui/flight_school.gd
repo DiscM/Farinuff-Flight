@@ -6,6 +6,7 @@ extends Control
 ## movement, boost reflection, orb/life economy, build choices, and the
 ## finite Wave-20 Expedition target.
 
+signal practice_requested(boss_wave: int)
 signal finished
 
 const PAGE_TITLES: Array[String] = [
@@ -19,7 +20,7 @@ const PAGE_TEXT: Array[String] = [
 	"MOVE WITH WASD OR THE ARROW KEYS. ON A GAMEPAD, USE THE LEFT STICK. AIM WITH THE MOUSE OR RIGHT STICK. HOLD FIRE TO KEEP PRESSURE ON.",
 	"BOOST THROUGH ENEMY FIRE TO EVADE AND REFLECT PROJECTILES. REFLECTED SHOTS RETURN AS YOUR GREEN FIRE.",
 	"COLLECT XP ORBS TO CLEAR WAVES. EVERY 12 ORB VALUE RESTORES A LIFE. BOSSES ARRIVE EVERY FIFTH WAVE.",
-	"TEMPORARY PICKUPS SHAPE THIS RUN. BOSS MILESTONES OFFER UPGRADES THAT TRANSFORM YOUR SHIP. SALVAGE UNLOCKS FUTURE OPTIONS IN THE HANGAR.",
+	"TEMPORARY PICKUPS SHAPE THIS RUN. WAVES 5, 10, AND 15 OFFER UPGRADES THAT TRANSFORM YOUR SHIP. SALVAGE UNLOCKS FUTURE OPTIONS IN THE HANGAR.",
 	"REACH WAVE 20 AND BREAK THE TEMPEST CORE. AFTER THE CLEAR, CONTINUE INTO ENDLESS OR RETURN TO THE HANGAR.",
 ]
 const PAGE_TIPS: Array[String] = [
@@ -36,6 +37,7 @@ const YELLOW := Color(1.0, 0.84, 0.12)
 const MAGENTA := Color(1.0, 0.16, 0.55)
 const INK := Color(0.005, 0.012, 0.04, 0.98)
 
+var _practice_picker: OptionButton
 var _page_index := 0
 var _finished := false
 var _eyebrow: Label
@@ -49,8 +51,11 @@ var _skip_button: Button
 
 
 func _ready() -> void:
+	add_to_group("scalable_ui")
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_build_ui()
+	InputBindings.bindings_changed.connect(_render_page)
+	InputBindings.device_changed.connect(_render_page)
 	_render_page()
 	_back_button.grab_focus()
 
@@ -86,10 +91,26 @@ func _build_ui() -> void:
 	margin.add_theme_constant_override("margin_bottom", 18)
 	panel.add_child(margin)
 
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(300, minf(500.0, get_viewport_rect().size.y - 90.0))
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	margin.add_child(scroll)
 	var content := VBoxContainer.new()
+	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	content.add_theme_constant_override("separation", 10)
-	margin.add_child(content)
+	scroll.add_child(content)
 
+	_practice_picker = OptionButton.new()
+	_practice_picker.add_item("Practice movement and reflection", 0)
+	var names := {5: "Assault Commander", 10: "Iron Bulwark", 15: "Tempest", 20: "Tempest Core", 25: "Void Harbinger"}
+	for wave in [5, 10, 15, 20, 25]:
+		if SaveManager.encountered_boss_waves.has(wave):
+			_practice_picker.add_item("Practice " + str(names[wave]), wave)
+	content.add_child(_practice_picker)
+	var practice_button := Button.new()
+	practice_button.text = "START PRACTICE"
+	practice_button.pressed.connect(func(): practice_requested.emit(_practice_picker.get_selected_id()))
+	content.add_child(practice_button)
 	_eyebrow = Label.new()
 	_eyebrow.add_theme_color_override("font_color", GREEN)
 	_eyebrow.add_theme_font_size_override("font_size", 12)
@@ -195,7 +216,7 @@ func _button_style(fill: Color, border: Color, radius: int, width: int) -> Style
 func _render_page() -> void:
 	_eyebrow.text = "TRAINING // %02d OF %02d" % [_page_index + 1, get_page_count()]
 	_page_title.text = PAGE_TITLES[_page_index]
-	_body.text = PAGE_TEXT[_page_index]
+	_body.text = get_page_text(_page_index)
 	_tip.text = PAGE_TIPS[_page_index]
 	_back_button.disabled = _page_index == 0
 	_next_button.text = "BEGIN FLIGHT" if _page_index == get_page_count() - 1 else "NEXT"
@@ -211,6 +232,10 @@ func get_page_count() -> int:
 func get_page_text(index: int) -> String:
 	if index < 0 or index >= PAGE_TEXT.size():
 		return ""
+	if index == 0:
+		return "MOVE: %s / %s / %s / %s. AIM WITH THE MOUSE OR RIGHT STICK. HOLD %s TO FIRE. PAUSE: %s." % [InputBindings.binding_label("move_up"), InputBindings.binding_label("move_left"), InputBindings.binding_label("move_down"), InputBindings.binding_label("move_right"), InputBindings.binding_label("shoot"), InputBindings.binding_label("pause")]
+	if index == 1:
+		return "BOOST WITH %s TO EVADE AND REFLECT PROJECTILES. REFLECTED SHOTS RETURN AS YOUR GREEN FIRE." % InputBindings.binding_label("boost")
 	return PAGE_TEXT[index]
 
 
@@ -257,3 +282,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif event.is_action_pressed("ui_right"):
 		advance()
 		get_viewport().set_input_as_handled()
+
+
+func get_primary_safe_action() -> Control:
+	return _next_button

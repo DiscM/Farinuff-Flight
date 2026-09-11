@@ -43,6 +43,10 @@ var _planet: Control
 var _settings_menu: Node
 var _hangar_menu: Node
 var _launch_bay: Node
+var _frontend: FrontendShell
+var _frontend_launch_layer: CanvasLayer
+var _return_to_school := false
+var _expedition_map: Control
 var _flight_school: Node
 var _pending_launch_after_school := false
 const NATIVE_RUN_PATH := "res://scenes/native_3d_run.tscn"
@@ -55,6 +59,8 @@ var _button_focus_tweens: Dictionary[Button, Tween] = {}
 
 
 func _ready() -> void:
+	_return_to_school = GameManager.return_to_flight_school
+	GameManager.return_to_flight_school = false
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	_apply_arcade_styles()
@@ -95,8 +101,7 @@ func _finish_setup() -> void:
 	_layout_scene(true)
 	_apply_visual_settings()
 	_update_status()
-	play_button.grab_focus()
-	_play_title_intro()
+	_mount_command_deck()
 
 
 func _build_pixel_planet() -> void:
@@ -292,7 +297,7 @@ func _apply_visual_settings() -> void:
 		crt_material.set_shader_parameter(parameter, profile[parameter])
 
 
-## START RUN opens the launch bay loadout screen; the actual launch happens
+## START RUN opens the Expedition chart, then the launch bay; launch happens
 ## when the bay confirms (see _on_launch_bay_confirmed).
 func _on_play_pressed() -> void:
 	if _launching or _any_overlay_open():
@@ -300,7 +305,7 @@ func _on_play_pressed() -> void:
 	if not SaveManager.has_seen_flight_school:
 		_show_flight_school(true)
 		return
-	_open_launch_bay()
+	_open_expedition_map()
 
 
 func _open_launch_bay() -> void:
@@ -318,6 +323,7 @@ func _show_flight_school(auto_launch: bool) -> void:
 	_pending_launch_after_school = auto_launch
 	_flight_school = FLIGHT_SCHOOL_SCENE.instantiate()
 	_flight_school.finished.connect(_on_flight_school_finished)
+	_flight_school.practice_requested.connect(_on_practice_requested)
 	add_child(_flight_school)
 
 
@@ -326,7 +332,7 @@ func _on_flight_school_finished() -> void:
 	_pending_launch_after_school = false
 	_flight_school = null
 	if should_launch:
-		_open_launch_bay()
+		_open_expedition_map()
 	else:
 		help_button.grab_focus()
 
@@ -339,7 +345,7 @@ func _on_launch_bay_confirmed() -> void:
 
 func _on_launch_bay_closed() -> void:
 	_launch_bay = null
-	play_button.grab_focus()
+	_open_expedition_map.call_deferred()
 
 
 func _begin_launch() -> void:
@@ -381,7 +387,7 @@ func _on_ship_launch_finished() -> void:
 
 
 func _any_overlay_open() -> bool:
-	return is_instance_valid(_settings_menu) or is_instance_valid(_hangar_menu) or is_instance_valid(_launch_bay) or is_instance_valid(_flight_school)
+	return is_instance_valid(_expedition_map) or is_instance_valid(_settings_menu) or is_instance_valid(_hangar_menu) or is_instance_valid(_launch_bay) or is_instance_valid(_flight_school)
 
 
 func _on_help_pressed() -> void:
@@ -425,3 +431,82 @@ func _on_resized() -> void:
 func _update_status() -> void:
 	var version := str(ProjectSettings.get_setting("application/config/version", "0.5.0"))
 	status_label.text = "BUILD  %s      SIGNAL  LOCKED   ▂▄▆█" % version
+
+
+func _on_practice_requested(boss_wave: int) -> void:
+	if _launching:
+		return
+	_launching = true
+	_pending_launch_after_school = false
+	GameManager.practice_boss_wave = boss_wave
+	get_tree().change_scene_to_file("res://scenes/flight_practice.tscn")
+
+
+func _open_expedition_map() -> void:
+	if _launching or _any_overlay_open():
+		return
+	_expedition_map = preload("res://ui/frontend/expedition_map_screen.gd").new()
+	_expedition_map.closed.connect(_close_expedition_map)
+	_expedition_map.expedition_requested.connect(_chart_to_launch_bay)
+	add_child(_expedition_map)
+
+func _close_expedition_map() -> void:
+	if is_instance_valid(_expedition_map):
+		_expedition_map.queue_free()
+	_expedition_map = null
+	play_button.grab_focus()
+
+func _chart_to_launch_bay() -> void:
+	_close_expedition_map()
+	_open_launch_bay()
+
+
+func _mount_command_deck() -> void:
+	cabinet_layout.hide()
+	$ShipStage.hide()
+	$ShipStage.process_mode = Node.PROCESS_MODE_DISABLED
+	set_process(false)
+	_frontend = preload("res://ui/frontend/frontend_shell.tscn").instantiate() as FrontendShell
+	_frontend.name = "CommandDeckShell"
+	var first_flight := not SaveManager.has_seen_flight_school
+	_frontend.initial_page = &"flight_school" if _return_to_school or first_flight else &"command_deck"
+	_frontend.initial_payload = {"first_flight": first_flight and not _return_to_school}
+	_frontend.expedition_requested.connect(_launch_from_frontend)
+	_frontend.practice_requested.connect(_practice_from_frontend)
+	add_child(_frontend)
+	# Keep the established CRT presentation above the shared menu shell.
+	move_child(_frontend, crt_overlay.get_index())
+	_frontend.get_node("Backdrop").color = Color(0.004, 0.008, 0.035, 0.91)
+
+func _launch_from_frontend() -> void:
+	_prepare_frontend_flight(NATIVE_RUN_PATH)
+
+func _practice_from_frontend(wave: int) -> void:
+	if _launching:
+		return
+	GameManager.practice_boss_wave = wave
+	_prepare_frontend_flight("res://scenes/flight_practice.tscn")
+
+func _prepare_frontend_flight(path: String) -> void:
+	if _launching:
+		return
+	_launching = true
+	_frontend.set_navigation_locked(true)
+	_frontend_launch_layer = CanvasLayer.new()
+	_frontend_launch_layer.layer = 70
+	add_child(_frontend_launch_layer)
+	var transition := preload("res://ui/frontend/launch_transition.gd").new()
+	transition.scene_path = path
+	transition.returned.connect(_recover_frontend_launch)
+	_frontend_launch_layer.add_child(transition)
+	var scene := await ResourceCache.wait_for_scene(path)
+	if scene != null and get_tree().change_scene_to_packed(scene) == OK:
+		return
+	transition.show_failure()
+
+func _recover_frontend_launch() -> void:
+	_frontend_launch_layer.queue_free()
+	_frontend_launch_layer = null
+	_launching = false
+	_frontend.set_navigation_locked(false)
+	_frontend.return_to_command_deck()

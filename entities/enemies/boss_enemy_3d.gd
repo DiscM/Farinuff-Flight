@@ -39,6 +39,7 @@ func _ready() -> void:
 	super._ready()
 	for section in $Attachments/Sections.get_children():
 		_sections.append(section as Section)
+		section.destroyed.connect(_on_section_destroyed)
 
 func _is_basic_lineage() -> bool:
 	return false
@@ -73,6 +74,9 @@ func activate_generation(space: FlightSpace, origin: Vector3, direction: Vector3
 			section.deactivate()
 	add_to_group(&"native_3d_bosses")
 	SignalBus.boss_spawned.emit(health, max_health, TITLES[variant])
+	if not GameManager.practice_mode:
+		SaveManager.record_boss_encounter(GameManager.current_wave)
+	SignalBus.combat_notice.emit("TARGET WEAPON PODS TO BREAK ARMOR" if variant in [1, 4] else "DESTROY WEAPON PODS TO REDUCE FIRE" if variant > 0 else "WATCH THE CHARGE · BOOST THROUGH THE VOLLEY")
 	return true
 
 func _advance_movement(delta: float) -> void:
@@ -170,3 +174,8 @@ func _before_finish(reason: FinishReason, _position: Vector3) -> void:
 		var director := get_tree().get_first_node_in_group(&"native_encounter_director")
 		if director != null:
 			Callable(director, "finish_boss").call_deferred(GameManager.current_wave, get_reward_points())
+
+
+func _on_section_destroyed(_position: Vector3) -> void:
+	AudioManager.play_explosion(true)
+	SignalBus.combat_notice.emit("ARMOR BROKEN · CORE EXPOSED" if variant in [1, 4] and _active_section_count() == 0 else "WEAPON POD DESTROYED · FIRE REDUCED")

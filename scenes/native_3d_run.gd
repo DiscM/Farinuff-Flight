@@ -16,6 +16,8 @@ var _run_overlay: CanvasLayer
 var _allocation_queue: Array[int] = []
 var _ended := false
 var _elite_pending := false
+var _campaign_steps: Array[Dictionary] = []
+var _active_campaign_step: Dictionary = {}
 
 
 func _ready() -> void:
@@ -23,6 +25,7 @@ func _ready() -> void:
 	encounters.name = "EncounterDirector"
 	$GameplayManagers.add_child(encounters)
 	encounters.configure(self)
+	SignalBus.wave_cleared.connect(_queue_campaign_milestone)
 	SignalBus.game_over.connect(_end_run)
 	SignalBus.allocation_triggered.connect(_queue_allocation)
 	SignalBus.elite_upgrade_triggered.connect(_queue_elite_reward)
@@ -32,7 +35,10 @@ func _ready() -> void:
 		return
 	$HUD/FlightInstructions.hide()
 	projectile_status.hide()
+	ExpeditionManager.start_new_expedition()
+	_queue_arrival_story()
 	encounters.start()
+	_show_next_reward.call_deferred()
 	if GameManager.pending_start_powerup:
 		GameManager.pending_start_powerup = false
 		SignalBus.power_up_collected.emit(randi_range(0, 4), player.global_position)
@@ -85,12 +91,12 @@ func _revive() -> void:
 	_ended = false
 	# Preserve any boss and the current wave rather than scheduling it again.
 	encounters.started = true
-	hud.show()
-	get_tree().paused = false
+	_show_next_reward.call_deferred()
 
 
 func _show_game_over(score: int) -> void:
 	GameManager.finalize_run()
+	ExpeditionManager.abandon_expedition()
 	ResourceCache.prime_scene(MAIN_MENU_PATH)
 	ResourceCache.prime_scene(NATIVE_RUN_PATH)
 	if is_instance_valid(_run_overlay):
@@ -126,6 +132,9 @@ func _show_next_reward() -> void:
 			elite.upgrade_chosen.connect(_finish_reward)
 			return
 	if _allocation_queue.is_empty():
+		if not _campaign_steps.is_empty():
+			_show_campaign_step()
+			return
 		hud.show()
 		get_tree().paused = false
 		return
@@ -151,6 +160,7 @@ func _queue_elite_reward() -> void:
 
 
 func _show_victory(wave: int) -> void:
+	_campaign_steps.clear()
 	encounters.started = false
 	projectile_manager.clear_projectiles()
 	hazard_manager.clear_hazards()
@@ -164,6 +174,7 @@ func _show_victory(wave: int) -> void:
 
 
 func _continue_endless() -> void:
+	ExpeditionManager.complete_expedition(ExpeditionManager.FINAL_ENDING_FOLLOW_SIGNAL)
 	_run_overlay.queue_free()
 	_run_overlay = null
 	if GameManager.continue_into_endless():
@@ -173,6 +184,7 @@ func _continue_endless() -> void:
 
 
 func _return_to_menu() -> void:
+	ExpeditionManager.complete_expedition(ExpeditionManager.FINAL_ENDING_RETURN_HOME)
 	GameManager.finalize_run()
 	get_tree().paused = false
 	var menu_scene := ResourceCache.get_scene(MAIN_MENU_PATH)
@@ -243,3 +255,75 @@ func _unhandled_input(event: InputEvent) -> void:
 	if _ended or is_instance_valid(_run_overlay) or _elite_pending or not _allocation_queue.is_empty():
 		return
 	super._unhandled_input(event)
+
+
+func _queue_campaign_milestone(wave: int) -> void:
+	if wave % 5 != 0 or wave > GameManager.FINAL_EXPEDITION_WAVE:
+		return
+	var transition := ExpeditionManager.record_milestone(wave)
+	if transition.finale:
+		return
+	for beat_id in transition.story_beat_ids:
+		_queue_story(beat_id)
+	if not transition.next_reachable_node_ids.is_empty():
+		_campaign_steps.append({"kind": "route"})
+	get_tree().paused = true
+	_show_next_reward.call_deferred()
+
+
+func _queue_story(beat_id: StringName) -> void:
+	if int(SaveManager.get_setting("story_frequency", 0)) == 2:
+		return
+	if ExpeditionManager.get_snapshot().seen_story_beat_ids.has(beat_id):
+		return
+	var beat := ExpeditionManager.get_story_beat(beat_id)
+	if beat != null:
+		_campaign_steps.append({"kind": "story", "beat": beat})
+
+
+func _queue_arrival_story() -> void:
+	var node := ExpeditionManager.get_current_node()
+	if node != null:
+		_queue_story(node.briefing_beat_id)
+
+
+func _show_campaign_step() -> void:
+	_active_campaign_step = _campaign_steps.pop_front()
+	_run_overlay = _new_overlay()
+	var panel := preload("res://ui/sector_interlude.gd").new()
+	if _active_campaign_step.kind == "route":
+		panel.heading = "SELECT THE NEXT SECTOR"
+		panel.body = "Choose the threats ahead. Your ship build carries into the next sector. Route choices change enemy composition; salvage and wave length stay unchanged."
+		panel.routes = ExpeditionManager.get_route_options()
+	else:
+		panel.body = preload("res://campaign/story_copy.gd").for_beat(_active_campaign_step.beat)
+		if int(SaveManager.get_setting("story_frequency", 0)) == 1:
+			panel.body = panel.body.split(". ")[0] + "."
+	panel.allow_abandon = true
+	panel.abandon_requested.connect(_abandon_from_interlude)
+	panel.resolved.connect(_finish_campaign_step)
+	_run_overlay.add_child(panel)
+
+
+func _finish_campaign_step(node_id: StringName) -> void:
+	if _active_campaign_step.kind == "route":
+		ExpeditionManager.choose_route(node_id)
+		_queue_arrival_story()
+	else:
+		ExpeditionManager.record_story_viewed(_active_campaign_step.beat.id)
+	_active_campaign_step = {}
+	_finish_reward()
+
+
+func abandon_run() -> void:
+	encounters.objectives.cancel()
+	encounters.started = false
+	GameManager.is_game_active = false
+	GameManager.finalize_run()
+	ExpeditionManager.abandon_expedition()
+
+
+func _abandon_from_interlude() -> void:
+	abandon_run()
+	get_tree().paused = false
+	get_tree().change_scene_to_file(MAIN_MENU_PATH)

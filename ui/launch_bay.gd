@@ -365,6 +365,10 @@ func _on_back_pressed() -> void:
 
 ## Handles ESC key to back out of the launch bay.
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventKey and event.keycode == KEY_ESCAPE and event.pressed and not event.echo:
+	if event.is_action_pressed("ui_cancel") and not event.is_echo():
 		get_viewport().set_input_as_handled()
 		_on_back_pressed()
+
+
+func get_primary_safe_action() -> Control:
+	return _launch_button

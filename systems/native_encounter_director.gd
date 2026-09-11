@@ -5,6 +5,7 @@ const Enemy := preload("res://entities/enemies/basic_enemy_3d.gd")
 const Threat := preload("res://systems/threat_director.gd")
 const SCENES := {
 	&"basic": preload("res://entities/enemies/basic_enemy_3d.tscn"),
+	&"courier": preload("res://entities/enemies/courier_enemy_3d.tscn"),
 	&"fast": preload("res://entities/enemies/fast_enemy_3d.tscn"),
 	&"bomber": preload("res://entities/enemies/bomber_enemy_3d.tscn"),
 	&"tank": preload("res://entities/enemies/tank_enemy_3d.tscn"),
@@ -19,6 +20,24 @@ const DEV_BOSS_VARIANTS := {
 	&"core": {"index": 4, "wave": GameManager.FINAL_EXPEDITION_WAVE},
 }
 
+const INTERCEPTION := preload("res://campaign/data/encounters/interception.tres")
+const ARMORED_ADVANCE := preload("res://campaign/data/encounters/armored_advance.tres")
+const SNIPER_CROSSFIRE := preload("res://campaign/data/encounters/sniper_crossfire.tres")
+const MINE_SWEEP := preload("res://campaign/data/encounters/mine_sweep.tres")
+const PREDICTION_NET := preload("res://campaign/data/encounters/prediction_net.tres")
+const ROUTE_PATTERNS := {
+	&"profile_iron_wake": [ARMORED_ADVANCE, INTERCEPTION],
+	&"profile_ghost_lanes": [SNIPER_CROSSFIRE, INTERCEPTION],
+	&"profile_tempest_veil": [MINE_SWEEP, INTERCEPTION],
+	&"profile_echo_field": [PREDICTION_NET, SNIPER_CROSSFIRE],
+}
+var _last_pattern_title := ""
+var _pattern: Resource
+var _pattern_index := 0
+var _pattern_age := 0.0
+var _pattern_edge := 0
+var _encounter_in := 9.0
+var objectives: Node
 var gameplay: Node
 var threat: Threat
 var _spawn_in := 0.5
@@ -41,6 +60,9 @@ func configure(game: Node) -> void:
 	add_child(threat)
 	if not SignalBus.wave_started.is_connected(_on_wave_started):
 		SignalBus.wave_started.connect(_on_wave_started)
+	objectives = preload("res://systems/field_objective_controller.gd").new()
+	add_child(objectives)
+	objectives.configure(self)
 	_configured = true
 
 
@@ -72,34 +94,46 @@ func _physics_process(delta: float) -> void:
 		spawn_pickup()
 	if GameManager.boss_active:
 		return
+	_encounter_in -= delta
+	if _pattern != null:
+		_pattern_age += delta
+		if _pattern_age > float(_pattern.maximum_seconds):
+			_pattern = null
+	elif _encounter_in <= 0.0 and GameManager.current_wave >= 3:
+		_begin_pattern()
 	_spawn_in -= delta
 	if _spawn_in <= 0.0:
 		_spawn_in = GameManager.get_spawn_interval()
-		spawn_enemy(_pick_kind())
+		if _pattern != null:
+			_spawn_pattern_member()
+		elif not objectives.try_start():
+			spawn_enemy(_pick_kind())
 
 
-func spawn_enemy(kind: StringName) -> Enemy:
+func spawn_enemy(kind: StringName, entry_edge: int = -1, lane: float = 0.5) -> Enemy:
 	if not started or not GameManager.is_game_active or GameManager.boss_active or not SCENES.has(kind) or kind == &"boss" or not threat.can_spawn(kind):
 		return null
 	var bounds: Rect2 = gameplay.flight_space.get_combat_bounds(60.0)
 	var origin := Vector3.ZERO
 	var direction := Vector3.ZERO
 	for attempt in range(6):
-		match randi_range(0, 3):
+		match entry_edge if entry_edge >= 0 else randi_range(0, 3):
 			0:
-				origin = Vector3(randf_range(bounds.position.x + 3, bounds.end.x - 3), 0, bounds.position.y)
+				origin = Vector3(lerpf(bounds.position.x + 3, bounds.end.x - 3, lane) if entry_edge >= 0 else randf_range(bounds.position.x + 3, bounds.end.x - 3), 0, bounds.position.y)
 				direction = Vector3.BACK
 			1:
-				origin = Vector3(randf_range(bounds.position.x + 3, bounds.end.x - 3), 0, bounds.end.y)
+				origin = Vector3(lerpf(bounds.position.x + 3, bounds.end.x - 3, lane) if entry_edge >= 0 else randf_range(bounds.position.x + 3, bounds.end.x - 3), 0, bounds.end.y)
 				direction = Vector3.FORWARD
 			2:
-				origin = Vector3(bounds.position.x, 0, randf_range(bounds.position.y + 3, bounds.end.y - 3))
+				origin = Vector3(bounds.position.x, 0, lerpf(bounds.position.y + 3, bounds.end.y - 3, lane) if entry_edge >= 0 else randf_range(bounds.position.y + 3, bounds.end.y - 3))
 				direction = Vector3.RIGHT
 			3:
-				origin = Vector3(bounds.end.x, 0, randf_range(bounds.position.y + 3, bounds.end.y - 3))
+				origin = Vector3(bounds.end.x, 0, lerpf(bounds.position.y + 3, bounds.end.y - 3, lane) if entry_edge >= 0 else randf_range(bounds.position.y + 3, bounds.end.y - 3))
 				direction = Vector3.LEFT
 		if gameplay.flight_space.combat_motion_to_screen(origin - gameplay.player.global_position).length() >= 160.0:
 			break
+	if gameplay.flight_space.combat_motion_to_screen(origin - gameplay.player.global_position).length() < 160.0:
+		return null
 	var actor := SCENES[kind].instantiate() as Enemy
 	if actor is BomberEnemy3D:
 		actor.configure_hazard_manager(gameplay.hazard_manager)
@@ -111,7 +145,7 @@ func spawn_enemy(kind: StringName) -> Enemy:
 		actor.queue_free()
 		return null
 	actor.add_to_group(&"native_3d_regular_enemies")
-	threat.record_spawn(kind)
+	threat.record_spawn(&"fast" if kind == &"courier" else kind)
 	return actor
 
 
@@ -123,6 +157,8 @@ func dev_spawn_archetype(kind: StringName) -> Enemy:
 	var generation := threat.generation
 	var bounds: Rect2 = gameplay.flight_space.get_combat_bounds(60.0)
 	var origin := Vector3(bounds.get_center().x, 0.0, bounds.position.y)
+	if gameplay.flight_space.combat_motion_to_screen(origin - gameplay.player.global_position).length() < 160.0:
+		return null
 	var actor := SCENES[kind].instantiate() as Enemy
 	if actor is BomberEnemy3D:
 		actor.configure_hazard_manager(gameplay.hazard_manager)
@@ -134,7 +170,7 @@ func dev_spawn_archetype(kind: StringName) -> Enemy:
 		actor.queue_free()
 		return null
 	actor.add_to_group(&"native_3d_regular_enemies")
-	threat.record_spawn(kind)
+	threat.record_spawn(&"fast" if kind == &"courier" else kind)
 	return actor
 
 
@@ -170,13 +206,30 @@ func spawn_pickup() -> void:
 
 
 func _pick_kind() -> StringName:
-	if threat.needs_light_enemy() or GameManager.current_wave <= 2:
-		return &"basic" if randf() < 0.65 else &"fast"
-	var choices: Array[StringName] = [&"basic", &"basic", &"fast", &"fast", &"bomber", &"tank", &"sniper"]
-	return choices.pick_random()
+	var light_only := threat.needs_light_enemy() or GameManager.current_wave <= 2
+	var weights := {&"basic": 2.0, &"fast": 2.0, &"bomber": 1.0, &"tank": 1.0, &"sniper": 1.0}
+	if GameManager.current_wave <= 2:
+		weights[&"basic"] = 0.65
+		weights[&"fast"] = 0.35
+	var profile := ExpeditionManager.get_current_route_profile()
+	var total := 0.0
+	for kind: StringName in weights:
+		if light_only and kind not in [&"basic", &"fast"]:
+			weights[kind] = 0.0
+		elif profile != null:
+			weights[kind] = float(weights[kind]) * float(profile.get(String(kind) + "_weight"))
+		total += float(weights[kind])
+	var roll := randf() * total
+	for kind: StringName in weights:
+		roll -= float(weights[kind])
+		if roll < 0.0:
+			return kind
+	return &"basic"
 
 
 func _on_wave_started(wave: int) -> void:
+	_pattern = null
+	_encounter_in = 7.0
 	_wave_epoch += 1
 	threat.set_generation(GameManager.get_enemy_generation(wave))
 	_spawn_in = 0.5
@@ -224,3 +277,44 @@ func finish_boss(wave: int, points: int) -> void:
 	gameplay.projectile_manager.clear_enemy_projectiles()
 	gameplay.hazard_manager.clear_hazards()
 	SignalBus.boss_died.emit(points)
+
+
+func _begin_pattern() -> void:
+	_encounter_in = randf_range(15.0, 22.0)
+	var profile := ExpeditionManager.get_current_route_profile()
+	var candidates: Array = ROUTE_PATTERNS.get(profile.id, [INTERCEPTION]) if profile != null else [INTERCEPTION, ARMORED_ADVANCE]
+	var eligible: Array[Resource] = []
+	for candidate: Resource in candidates:
+		if GameManager.current_wave >= int(candidate.minimum_wave) and str(candidate.title) != _last_pattern_title:
+			eligible.append(candidate)
+	_pattern = eligible.pick_random() if not eligible.is_empty() else INTERCEPTION
+	_last_pattern_title = str(_pattern.title)
+	_pattern_edge = int(_pattern.entry_edges[randi_range(0, _pattern.entry_edges.size() - 1)])
+	_pattern_index = 0
+	_pattern_age = 0.0
+	_spawn_in = float(_pattern.warning_seconds)
+	var edge_names := ["TOP", "BOTTOM", "LEFT", "RIGHT"]
+	var entry_text: String = edge_names[_pattern_edge]
+	if _pattern.opposite_edges.has(1):
+		entry_text = "TOP + BOTTOM" if _pattern_edge < 2 else "LEFT + RIGHT"
+	SignalBus.combat_notice.emit("%s · %s · %s" % [_pattern.title, entry_text, "ENTERS LEFT HALF" if _pattern_edge < 2 else "ENTERS UPPER HALF"])
+
+
+func _spawn_pattern_member() -> void:
+	if _pattern == null:
+		return
+	var kind: StringName = _pattern.archetypes[_pattern_index]
+	# A required light ship takes the slot before the next heavy member.
+	if threat.needs_light_enemy() and kind not in [&"basic", &"fast"]:
+		spawn_enemy(_pick_kind())
+		return
+	var edge := _pattern_edge
+	if _pattern_index < _pattern.opposite_edges.size() and _pattern.opposite_edges[_pattern_index] == 1:
+		edge = [1, 0, 3, 2][_pattern_edge]
+	var actor := spawn_enemy(kind, edge, float(_pattern.lanes[_pattern_index]))
+	_spawn_in = maxf(GameManager.get_spawn_interval(), float(_pattern.interval_seconds))
+	if actor == null:
+		return
+	_pattern_index += 1
+	if _pattern_index >= _pattern.archetypes.size():
+		_pattern = null

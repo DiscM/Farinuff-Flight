@@ -30,12 +30,13 @@ func _ready() -> void:
 	map_button.pressed.connect(_on_map_pressed)
 	hangar_button.pressed.connect(_on_hangar_pressed)
 	settings_button.pressed.connect(_on_settings_pressed)
-	launch_button.tooltip_text = "Begin a new Expedition from the selected hull and modifiers."
+	launch_button.tooltip_text = "Review the Expedition chart, then choose your hull and modifiers in the Launch Bay."
 	map_button.tooltip_text = "Open the Expedition Map to plan the return route."
 	hangar_button.tooltip_text = "Open the Hangar to spend salvage and adjust the loadout."
 	settings_button.tooltip_text = "Open Settings to adjust audio, display, and accessibility."
-	version_label.text = "BUILD %s  ·  SWALLOWTAIL  ·  SIGNAL LOCKED" % _build_version()
+	version_label.text = "BUILD %s  ·  %s  ·  SIGNAL LOCKED" % [_build_version(), MetaProgression.selected_ship.trim_prefix("ship_").to_upper()]
 	_apply_payload(_payload)
+	_arrange_command_deck()
 
 
 ## Shell page protocol: hands the page its routing payload before first focus.
@@ -52,7 +53,9 @@ func get_primary_safe_action() -> Control:
 
 func _apply_payload(payload: Dictionary) -> void:
 	var objective := str(payload.get("objective_text", DEFAULT_OBJECTIVE))
-	var discovery := str(payload.get("discovery_text", DEFAULT_DISCOVERY))
+	var fragments := ExpeditionManager.get_recovered_fragments()
+	var fallback_discovery := DEFAULT_DISCOVERY if fragments.is_empty() else "%d / 4 signal fragments recovered. Open the chart to read the Archives." % fragments.size()
+	var discovery := str(payload.get("discovery_text", fallback_discovery))
 	if _launch_armed:
 		objective = "The Expedition is launching — stand by the map."
 	objective_label.text = "%s" % objective
@@ -60,8 +63,7 @@ func _apply_payload(payload: Dictionary) -> void:
 
 
 func _on_launch_pressed() -> void:
-	_launch_armed = true
-	expedition_requested.emit()
+	open_section.emit(&"expedition_map")
 
 
 func _on_map_pressed() -> void:
@@ -78,3 +80,21 @@ func _on_settings_pressed() -> void:
 
 func _build_version() -> String:
 	return str(ProjectSettings.get_setting("application/config/version", "0.5.0"))
+
+func _arrange_command_deck() -> void:
+	var margin := $Margin
+	var column := $Margin/VBox
+	margin.remove_child(column)
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.follow_focus = true
+	margin.add_child(scroll)
+	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(column)
+	var preview := preload("res://entities/player/ship_upgrade_preview.gd").new()
+	var modules: Array[String] = []
+	preview.configure(modules, "", MetaProgression.selected_ship)
+	preview.custom_minimum_size = Vector2(280, 140)
+	preview.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	column.add_child(preview)
+	column.move_child(preview, 2)

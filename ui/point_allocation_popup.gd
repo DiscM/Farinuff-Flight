@@ -28,6 +28,7 @@ var confirm_btn: Button
 ## Builds the allocation UI and plays the entrance animation.
 ## Runs in PROCESS_MODE_ALWAYS so it works while the game is paused.
 func _ready() -> void:
+	add_to_group("scalable_ui")
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_build_ui()
 	_animate_in()
@@ -237,6 +238,8 @@ func _refresh_ui() -> void:
 
 ## Plays a fade-in entrance animation.
 func _animate_in() -> void:
+	if bool(SaveManager.get_setting("reduced_motion", false)):
+		return
 	modulate.a = 0.0
 	var tween := create_tween()
 	tween.tween_property(self, "modulate:a", 1.0, 0.3).set_ease(Tween.EASE_OUT)

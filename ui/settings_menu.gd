@@ -5,10 +5,13 @@ signal closed
 
 var volume_label: Label
 var music_label: Label
+var _controls_layer: CanvasLayer
+var _controls_button: Button
 
 ## Sets up the settings panel as a process-always full-rect control and
 ## builds the UI contents.
 func _ready() -> void:
+	add_to_group("scalable_ui")
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	_build_ui()
@@ -25,9 +28,9 @@ func _build_ui() -> void:
 	var panel := PanelContainer.new()
 	panel.set_anchors_preset(Control.PRESET_CENTER)
 	panel.offset_left = -180.0
-	panel.offset_top = -305.0
+	panel.offset_top = -minf(285.0, get_viewport_rect().size.y * 0.5 - 20.0)
 	panel.offset_right = 180.0
-	panel.offset_bottom = 305.0
+	panel.offset_bottom = minf(285.0, get_viewport_rect().size.y * 0.5 - 20.0)
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(0.04, 0.06, 0.15)
 	style.border_color = Color(0.2, 0.75, 1.0, 0.8)
@@ -37,9 +40,14 @@ func _build_ui() -> void:
 	panel.add_theme_stylebox_override("panel", style)
 	add_child(panel)
 
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(300, minf(520.0, get_viewport_rect().size.y - 100.0))
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	panel.add_child(scroll)
 	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 18)
-	panel.add_child(column)
+	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	column.add_theme_constant_override("separation", 12)
+	scroll.add_child(column)
 
 	var title := Label.new()
 	title.text = "SETTINGS"
@@ -76,12 +84,44 @@ func _build_ui() -> void:
 	column.add_child(music)
 	_refresh_music_label(music.value)
 
+	var story := OptionButton.new()
+	story.add_item("Story: full", 0)
+	story.add_item("Story: brief", 1)
+	story.add_item("Story: off", 2)
+	story.select(clampi(int(SaveManager.get_setting("story_frequency", 0)), 0, 2))
+	story.item_selected.connect(func(index: int): SaveManager.update_setting("story_frequency", index))
+	column.add_child(story)
 	column.add_child(_make_toggle("Screen shake", "screen_shake"))
 	column.add_child(_make_toggle("CRT scanline effect", "crt_effect"))
 	column.add_child(_make_toggle("Screen distortion", "screen_distortion"))
 	column.add_child(_make_toggle("Fullscreen", "fullscreen", false))
 	column.add_child(_make_toggle("Reduced flashing effects", "reduced_flashing", false))
-	column.add_child(_make_toggle("Alt controls: LMB shoot, Space boost", "alt_controls", false))
+	column.add_child(_make_toggle("Reduced menu motion", "reduced_motion", false))
+	var text_size := OptionButton.new()
+	for percent: int in [100, 115, 130]:
+		text_size.add_item("Menu text size: %d%%" % percent)
+	text_size.select(clampi(roundi((float(SaveManager.get_setting("menu_text_scale", 1.0)) - 1.0) / 0.15), 0, 2))
+	text_size.item_selected.connect(func(index: int): SaveManager.update_setting("menu_text_scale", 1.0 + index * 0.15))
+	column.add_child(text_size)
+	var deadzone_label := Label.new()
+	deadzone_label.text = "Right stick aim deadzone: %d%%" % roundi(float(SaveManager.get_setting("aim_deadzone", 0.4)) * 100)
+	column.add_child(deadzone_label)
+	var deadzone := HSlider.new()
+	deadzone.min_value = 0.15
+	deadzone.max_value = 0.6
+	deadzone.step = 0.05
+	deadzone.value = float(SaveManager.get_setting("aim_deadzone", 0.4))
+	deadzone.custom_minimum_size.y = 34
+	deadzone.value_changed.connect(func(value: float):
+		SaveManager.update_setting("aim_deadzone", value)
+		deadzone_label.text = "Right stick aim deadzone: %d%%" % roundi(value * 100)
+	)
+	column.add_child(deadzone)
+	_controls_button = Button.new()
+	_controls_button.text = "CUSTOMIZE FLIGHT CONTROLS"
+	_controls_button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	_controls_button.pressed.connect(_open_controls)
+	column.add_child(_controls_button)
 
 	var note := Label.new()
 	note.text = "Preferences and high score are saved automatically."
@@ -144,6 +184,24 @@ func _on_close_pressed() -> void:
 
 ## Handles ESC key to close the settings panel.
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventKey and event.keycode == KEY_ESCAPE and event.pressed and not event.echo:
+	if is_instance_valid(_controls_layer):
+		return
+	if event.is_action_pressed("ui_cancel") and not event.is_echo():
 		get_viewport().set_input_as_handled()
 		_on_close_pressed()
+
+
+func _open_controls() -> void:
+	if is_instance_valid(_controls_layer):
+		return
+	_controls_layer = CanvasLayer.new()
+	_controls_layer.layer = 90
+	_controls_layer.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(_controls_layer)
+	var controls := preload("res://ui/controls_menu.gd").new()
+	controls.closed.connect(func():
+		_controls_layer.queue_free()
+		_controls_layer = null
+		_controls_button.grab_focus()
+	)
+	_controls_layer.add_child(controls)

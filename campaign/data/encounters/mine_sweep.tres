@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="EncounterPattern" load_steps=2 format=3]
+[ext_resource type="Script" path="res://campaign/encounter_pattern.gd" id="1"]
+[resource]
+script = ExtResource("1")
+title = "MINE SWEEP"
+archetypes = Array[StringName]([&"fast", &"bomber", &"basic", &"bomber"])
+lanes = PackedFloat32Array(0.22, 0.36, 0.5, 0.22)
+opposite_edges = PackedByteArray(0, 0, 0, 0)
+entry_edges = PackedInt32Array(0, 1)
+minimum_wave = 11
+warning_seconds = 1.8
+maximum_seconds = 11.0
+interval_seconds = 1.25

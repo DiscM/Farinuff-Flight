@@ -2,6 +2,11 @@ extends Node
 ## Manages global game state: score, lives, waves, combos, difficulty scaling, and stat allocation.
 
 # --- State ---
+var return_to_flight_school := false
+var practice_mode := false
+var practice_boss_wave := 0
+var run_objectives_completed := 0
+var run_objectives_attempted := 0
 var score: int = 0
 var high_score: int = 0
 ## True when the finished run beat the previous high score. Set once at
@@ -35,6 +40,7 @@ const ALL_UPGRADES: Array[Dictionary] = [
 	# ── Original 5 ─────────────────────────────────────────────────────────────
 	{
 		"id": "twin_cannons",
+		"role": "Firepower",
 		"name": "Twin Cannons",
 		"icon": "🔫",
 		"description": "Fire two additional bullets\nwith every shot.",
@@ -42,6 +48,7 @@ const ALL_UPGRADES: Array[Dictionary] = [
 	},
 	{
 		"id": "auto_aim",
+		"role": "Precision",
 		"name": "Auto-Aim Core",
 		"icon": "🎯",
 		"description": "Bullets home in on\nthe nearest enemy.",
@@ -49,6 +56,7 @@ const ALL_UPGRADES: Array[Dictionary] = [
 	},
 	{
 		"id": "drone_escort",
+		"role": "Support",
 		"name": "Drone Escort",
 		"icon": "🤖",
 		"description": "A combat drone joins you,\nauto-firing at enemies.",
@@ -56,6 +64,7 @@ const ALL_UPGRADES: Array[Dictionary] = [
 	},
 	{
 		"id": "hull_plating",
+		"role": "Survival",
 		"name": "Hull Plating",
 		"icon": "🛡️",
 		"description": "Reinforce the hull.\nGain +1 life.",
@@ -63,6 +72,7 @@ const ALL_UPGRADES: Array[Dictionary] = [
 	},
 	{
 		"id": "afterburner",
+		"role": "Mobility",
 		"name": "Afterburner",
 		"icon": "🚀",
 		"description": "+20% speed and +15% acceleration.\nSnappier maneuverability.",
@@ -71,13 +81,15 @@ const ALL_UPGRADES: Array[Dictionary] = [
 	# ── New Wave-10 Upgrades ────────────────────────────────────────────────────
 	{
 		"id": "spread_shot_elite",
+		"role": "Coverage",
 		"name": "Spread Shot",
 		"icon": "✦",
-		"description": "Fire a permanent 3-way fan.\nStacks with Twin Cannons → 5 bullets.",
+		"description": "Permanent 3-way fan. Temporary Spread\nwidens the central fan to 5 shots.",
 		"color": Color(1.0, 0.55, 0.9),
 	},
 	{
 		"id": "shield_burst",
+		"role": "Survival",
 		"name": "Shield Burst",
 		"icon": "💥",
 		"description": "Every 10 s, emit a shockwave\nthat clears bullets & damages enemies.",
@@ -85,6 +97,7 @@ const ALL_UPGRADES: Array[Dictionary] = [
 	},
 	{
 		"id": "magnet_field",
+		"role": "Support",
 		"name": "Orb Magnet",
 		"icon": "🧲",
 		"description": "Permanently attract XP orbs\nand power-ups (faster pull).",
@@ -92,6 +105,7 @@ const ALL_UPGRADES: Array[Dictionary] = [
 	},
 	{
 		"id": "overclock",
+		"role": "Firepower",
 		"name": "Overclock",
 		"icon": "⚡",
 		"description": "Triple fire rate for 2.5 s\nevery 16 s. Stacks with Rapid Fire.",
@@ -99,6 +113,7 @@ const ALL_UPGRADES: Array[Dictionary] = [
 	},
 	{
 		"id": "rear_gunner",
+		"role": "Coverage",
 		"name": "Rear Gunner",
 		"icon": "🔺",
 		"description": "A rear cannon fires backward\neach shot. Inherits all bullet mods.",
@@ -111,6 +126,7 @@ const ALL_UPGRADES: Array[Dictionary] = [
 const META_ELITE_UPGRADES: Array[Dictionary] = [
 	{
 		"id": "orbitals",
+		"role": "Survival",
 		"name": "Orbital Array",
 		"icon": "🛰️",
 		"description": "Three projectiles orbit your ship,\ndamaging enemies on contact.",
@@ -119,6 +135,7 @@ const META_ELITE_UPGRADES: Array[Dictionary] = [
 	},
 	{
 		"id": "piercing",
+		"role": "Precision",
 		"name": "Piercing Rounds",
 		"icon": "🗡️",
 		"description": "Bullets pass through enemies\ninstead of stopping on impact.",
@@ -127,6 +144,7 @@ const META_ELITE_UPGRADES: Array[Dictionary] = [
 	},
 	{
 		"id": "explosive_rounds",
+		"role": "Coverage",
 		"name": "Explosive Rounds",
 		"icon": "💣",
 		"description": "Bullets deal area damage\non impact.",
@@ -213,6 +231,8 @@ func _ready() -> void:
 ## multiplies the kill points by the current combo, adds the result
 ## to the score, and emits score/combo change signals.
 func _on_enemy_killed(points: int, _position: Vector3) -> void:
+	if practice_mode:
+		return
 	combo += 1
 	run_kills += 1
 	var multiplied_points := points * combo
@@ -220,10 +240,12 @@ func _on_enemy_killed(points: int, _position: Vector3) -> void:
 	SignalBus.score_changed.emit(score)
 	SignalBus.combo_changed.emit(combo)
 
-## Called when the boss dies. Bosses clear every fifth wave, Wave-10/15
-## encounters can offer an elite upgrade, and Wave 20 completes the finite
+## Called when the boss dies. Bosses clear every fifth wave; Wave-5/10/15
+## encounters grant build choices, and Wave 20 completes the finite
 ## Expedition before the player chooses whether to continue into Endless.
 func _on_boss_died(_points: int) -> void:
+	if practice_mode:
+		return
 	boss_active = false
 	# Bosses are the primary salvage source during a run: elite bosses pay double.
 	var base_reward := MetaProgression.SALVAGE_PER_ELITE_BOSS if current_wave % 10 == 0 else MetaProgression.SALVAGE_PER_BOSS
@@ -244,7 +266,7 @@ func _on_boss_died(_points: int) -> void:
 
 	# Emit elite upgrade trigger FIRST so the game pauses before wave advances + spawning restarts.
 	# But ONLY if we haven't already collected all possible elite upgrades.
-	if current_wave % 10 == 0 and chosen_upgrade_ids.size() < get_upgrade_pool().size():
+	if offers_elite_reward(current_wave) and chosen_upgrade_ids.size() < get_upgrade_pool().size():
 		SignalBus.elite_upgrade_triggered.emit()
 	_advance_wave()
 
@@ -280,7 +302,7 @@ func _on_orb_collected(value: int) -> void:
 	SignalBus.orb_meter_changed.emit(orbs_collected, orbs_per_heart)
 
 	orbs_collected_this_wave += value
-	if orbs_collected_this_wave >= orbs_needed_this_wave and not boss_active:
+	if not practice_mode and orbs_collected_this_wave >= orbs_needed_this_wave and not boss_active:
 		_advance_wave()
 
 # --- Point Allocation ---
@@ -307,6 +329,10 @@ func apply_stat_point(stat_name: String) -> void:
 ## a life, records the damage timestamp for screen-shake logic, and
 ## triggers game over if lives reach 0 (saving a new high score if earned).
 func _on_player_hit() -> void:
+	if practice_mode:
+		lives = maxi(1, lives - 1)
+		SignalBus.lives_changed.emit(lives)
+		return
 	combo = 0
 	SignalBus.combo_changed.emit(combo)
 	lives -= 1
@@ -422,6 +448,8 @@ func get_late_game_speed_multiplier(wave_number: int = current_wave) -> float:
 ## True when the given challenge modifier was toggled on in the launch bay
 ## (and is owned). Effects read this at their source system.
 func is_modifier_active(modifier_id: String) -> bool:
+	if practice_mode:
+		return false
 	return MetaProgression.is_modifier_active(modifier_id)
 
 # --- Run Finalization ---
@@ -432,7 +460,7 @@ func is_modifier_active(modifier_id: String) -> bool:
 ## first-clear milestones, records lifetime stats, and adds all of it on top
 ## of any boss salvage already banked during the run.
 func finalize_run() -> void:
-	if _run_finalized:
+	if practice_mode or _run_finalized:
 		return
 	_run_finalized = true
 	var waves_cleared := maxi(current_wave - 1, 0)
@@ -453,7 +481,10 @@ func finalize_run() -> void:
 ## allocations, orb meter, damage history, try-again stocks, and chosen
 ## upgrades — then emits signals to refresh the HUD. Isolated non-combat
 ## reviews can keep persistent Hangar consumables intact.
-func start_game(consume_field_supplies: bool = true) -> void:
+func start_game(consume_field_supplies: bool = true, practice: bool = false) -> void:
+	practice_mode = practice
+	run_objectives_completed = 0
+	run_objectives_attempted = 0
 	score = 0
 	combo = 0
 	lives = 3
@@ -493,7 +524,7 @@ func start_game(consume_field_supplies: bool = true) -> void:
 	# Consume Hangar field supply: stockpiled try-again stocks and an armed
 	# drop pod (the game scene applies the random power-up at spawn).
 	pending_start_powerup = false
-	if consume_field_supplies:
+	if consume_field_supplies and not practice_mode:
 		try_again_stocks += MetaProgression.consume_stockpile()
 		pending_start_powerup = MetaProgression.consume_powerup_pod()
 
@@ -505,6 +536,14 @@ func start_game(consume_field_supplies: bool = true) -> void:
 	if is_modifier_active("mod_frail"):
 		lives -= 1
 	lives = maxi(lives, 1)
+	if practice_mode:
+		lives = 3
+		meta_speed_pct = 0.0
+		meta_fire_rate_pct = 0.0
+		ship_speed_pct = 0.0
+		ship_fire_rate_pct = 0.0
+		try_again_stocks = 0
+		run_salvage_multiplier = 1.0
 	# Try-again revives restore to the loadout's starting lives, not a flat 3.
 	starting_lives = lives
 
@@ -515,3 +554,17 @@ func start_game(consume_field_supplies: bool = true) -> void:
 	SignalBus.lives_changed.emit(lives)
 	SignalBus.wave_started.emit(current_wave)
 	SignalBus.orb_meter_changed.emit(orbs_collected, orbs_per_heart)
+
+
+func offers_elite_reward(wave: int) -> bool:
+	if wave < FINAL_EXPEDITION_WAVE:
+		return wave in [5, 10, 15]
+	return wave > FINAL_EXPEDITION_WAVE and wave % 10 == 0
+
+
+func award_objective_score(points: int) -> void:
+	if practice_mode or not is_game_active:
+		return
+	score += clampi(points, 0, 1000)
+	run_objectives_completed += 1
+	SignalBus.score_changed.emit(score)

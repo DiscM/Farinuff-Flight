@@ -54,6 +54,7 @@ func show_score(final_score: int) -> void:
 		breakdown += "\n+ FIRST-CLEAR MILESTONE BONUS ⬡%d" % GameManager.run_salvage_milestones
 	if GameManager.run_salvage_multiplier > 1.0:
 		breakdown += "\n(INCLUDES ×%.2f MODIFIER BONUS)" % GameManager.run_salvage_multiplier
+	breakdown += "\nCOURIERS INTERCEPTED: %d / %d" % [GameManager.run_objectives_completed, GameManager.run_objectives_attempted]
 	salvage_breakdown_label.text = breakdown
 	stats_label.text = "LIFETIME — RUNS: %d · KILLS: %d" % [
 		MetaProgression.stat_total_runs,

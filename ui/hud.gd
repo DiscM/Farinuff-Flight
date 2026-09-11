@@ -43,10 +43,14 @@ const SHIELD_CHIP: Dictionary = {"key": &"shield", "label": "SHIELD", "color": C
 
 var _effect_chips: Dictionary = {}  # StringName key -> {panel, time, bar}
 var _player: Node = null
+var _wave_progress: ProgressBar
+var _wave_progress_label: Label
+var _route_label: Label
 
 ## Connects all HUD-relevant signals from the SignalBus, hides the boss
 ## bar initially, and builds the orb meter UI.
 func _ready() -> void:
+	_build_wave_progress()
 	_apply_mockup_style()
 	SignalBus.score_changed.connect(_on_score_changed)
 	SignalBus.combo_changed.connect(_on_combo_changed)
@@ -203,6 +207,14 @@ func _on_boss_died(_points: int) -> void:
 ## magnet) show a live countdown and a depleting bar; the shield shows a
 ## persistent "HELD" chip until it absorbs a hit.
 func _process(_delta: float) -> void:
+	if _wave_progress != null:
+		_wave_progress.max_value = maxi(GameManager.orbs_needed_this_wave, 1)
+		_wave_progress.value = GameManager.orbs_collected_this_wave
+		_wave_progress.visible = not GameManager.boss_active
+		_wave_progress_label.text = "DEFEAT THE BOSS" if GameManager.boss_active else "NEXT WAVE  %d / %d" % [GameManager.orbs_collected_this_wave, GameManager.orbs_needed_this_wave]
+	if _route_label != null:
+		var route := ExpeditionManager.get_current_node()
+		_route_label.text = "PRACTICE" if GameManager.practice_mode else str(route.display_name).to_upper() if route != null and ExpeditionManager.is_expedition_active() else "ENDLESS" if GameManager.current_wave > 20 else "EXPEDITION"
 	_sync_power_up_timers()
 
 func _sync_power_up_timers() -> void:
@@ -327,7 +339,7 @@ func _on_power_up_collected(type: int, _pos: Vector3) -> void:
 func _on_orb_meter_changed(current: int, max_orbs: int) -> void:
 	orb_bar.max_value = max_orbs
 	orb_bar.value = current
-	orb_label.text = str(current) + "/" + str(max_orbs)
+	orb_label.text = "NEXT LIFE\n%d / %d" % [current, max_orbs]
 
 	# Pulse on collection
 	var tween := create_tween()
@@ -338,3 +350,22 @@ func _on_orb_meter_changed(current: int, max_orbs: int) -> void:
 	else:
 		tween.tween_property(orb_bar, "scale", Vector2(1.1, 1.3), 0.06)
 		tween.tween_property(orb_bar, "scale", Vector2.ONE, 0.12)
+
+
+func _build_wave_progress() -> void:
+	var box := VBoxContainer.new()
+	wave_panel.remove_child(wave_label)
+	wave_panel.add_child(box)
+	box.add_child(wave_label)
+	_route_label = Label.new()
+	_route_label.add_theme_font_size_override("font_size", 10)
+	_route_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	box.add_child(_route_label)
+	_wave_progress_label = Label.new()
+	_wave_progress_label.add_theme_font_size_override("font_size", 12)
+	box.add_child(_wave_progress_label)
+	_wave_progress = ProgressBar.new()
+	_wave_progress.show_percentage = false
+	_wave_progress.custom_minimum_size = Vector2(0, 7)
+	box.add_child(_wave_progress)
+	_style_progress_bar(_wave_progress, NeonUI.CYAN)

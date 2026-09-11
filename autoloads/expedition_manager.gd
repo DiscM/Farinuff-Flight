@@ -4,7 +4,7 @@ extends Node
 ##
 ## This module is a deep seam: callers read mission state through get_snapshot()
 ## and record progress through the public methods. Discovery arrays, the current
-## route, and the save payload stay behind these calls. Only the four durable
+## route, and the save payload stay behind these calls. Only durable
 ## campaign fields ever reach SaveManager.save_campaign; active-run state (route,
 ## wave, score, entities) intentionally never persists.
 
@@ -35,6 +35,7 @@ var _campaign_ready := false
 ## Durable campaign state (survives process exit through SaveManager).
 var _discovered_node_ids: Array[StringName] = []
 var _seen_story_beat_ids: Array[StringName] = []
+var _recovered_fragment_ids: Array[StringName] = []
 var _expedition_clear_count := 0
 var _last_ending_id: StringName = &""
 
@@ -140,6 +141,8 @@ func record_milestone(cleared_wave: int) -> CampaignTransition:
 	if _cleared_in_run_node_ids.has(node.id):
 		return _noop_transition()
 	_cleared_in_run_node_ids.append(node.id)
+	if not node.fragment_beat_id.is_empty() and not _recovered_fragment_ids.has(node.fragment_beat_id):
+		_recovered_fragment_ids.append(node.fragment_beat_id)
 	_selected_route_id = &""
 	_current_node_id = node.id
 	var reachable: Array[StringName] = node.outgoing_node_ids.duplicate()
@@ -173,6 +176,7 @@ func get_snapshot() -> CampaignSnapshot:
 	snapshot.cleared_node_ids = _cleared_in_run_node_ids.duplicate()
 	snapshot.discovered_node_ids = _discovered_node_ids.duplicate()
 	snapshot.seen_story_beat_ids = _seen_story_beat_ids.duplicate()
+	snapshot.recovered_fragment_ids = _recovered_fragment_ids.duplicate()
 	snapshot.pending_route_choice = _pending_route_choice
 	snapshot.selected_route_id = _selected_route_id
 	snapshot.selected_route_profile_id = _selected_route_profile_id()
@@ -261,7 +265,7 @@ func set_route_override(profile_id: StringName) -> bool:
 	return true
 
 
-## Reloads the four durable campaign fields from SaveManager. Test surface used
+## Reloads durable campaign fields from SaveManager. Test surface used
 ## by smoke scenes to force deterministic fixtures; production loads once in _ready().
 func _load_durable_state() -> void:
 	var state: Dictionary = SaveManager.get_campaign_state()
@@ -273,12 +277,16 @@ func _load_durable_state() -> void:
 	for entry: Variant in state.get("seen_story_beat_ids", []):
 		if entry is String:
 			_seen_story_beat_ids.append(StringName(entry))
+	_recovered_fragment_ids.clear()
+	for entry: Variant in state.get("recovered_fragment_ids", []):
+		if entry is String and entry.ends_with("_fragment") and _campaign_has_story_beat(StringName(entry)):
+			_recovered_fragment_ids.append(StringName(entry))
 	_expedition_clear_count = maxi(int(state.get("expedition_clear_count", 0)), 0)
 	var ending_value: Variant = state.get("last_ending_id", "")
 	_last_ending_id = StringName(ending_value) if ending_value is String and ending_value != "" else &""
 
 
-## Persists exactly the four durable campaign fields. Active-run state is never
+## Persists campaign discoveries, fragment recovery, and ending history. Active-run state is never
 ## sent to the save layer.
 func _persist() -> void:
 	if not _campaign_ready:
@@ -289,9 +297,13 @@ func _persist() -> void:
 	var seen: Array[String] = []
 	for beat_id in _seen_story_beat_ids:
 		seen.append(String(beat_id))
+	var fragments: Array[String] = []
+	for beat_id in _recovered_fragment_ids:
+		fragments.append(String(beat_id))
 	SaveManager.save_campaign({
 		"discovered_node_ids": discovered,
 		"seen_story_beat_ids": seen,
+		"recovered_fragment_ids": fragments,
 		"expedition_clear_count": _expedition_clear_count,
 		"last_ending_id": String(_last_ending_id),
 	})
@@ -414,3 +426,67 @@ func _copy_transition(transition: CampaignTransitionResource) -> CampaignTransit
 	copy.finale = transition.finale
 	copy.abandoned = transition.abandoned
 	return copy
+
+func get_route_options() -> Array[Resource]:
+	var options: Array[Resource] = []
+	for node_id in get_snapshot().next_reachable_node_ids:
+		var node := _get_node(node_id)
+		if node != null:
+			options.append(node)
+	return options
+
+
+func get_current_node() -> Resource:
+	return _get_node(_current_node_id)
+
+
+func get_story_beat(beat_id: StringName) -> Resource:
+	if _campaign == null:
+		return null
+	for beat in _campaign.story_beats:
+		if beat.id == beat_id:
+			return beat
+	return null
+
+
+func get_route_description(node: Resource) -> String:
+	var profile := _resolve_profile(node.encounter_profile_id)
+	if profile == null:
+		return "Basic and fast patrols · Learn boost reflection" if node.sector_index == 1 else "Final approach · Apex defenders · Tempest Core"
+	return " · ".join(profile.threat_tags).replace("_", " ")
+
+
+func get_chart_nodes() -> Array[Resource]:
+	var nodes: Array[Resource] = []
+	if _campaign != null:
+		for node in _campaign.nodes:
+			nodes.append(node)
+	return nodes
+
+
+func get_node_dossier(node_id: StringName) -> Dictionary:
+	var node := _get_node(node_id)
+	if node == null:
+		return {}
+	var boss_name := ""
+	for boss in _campaign.boss_milestones:
+		if boss.id == node.boss_variant_id:
+			boss_name = str(boss.display_name)
+	return {
+		"title": node.display_name,
+		"waves": "Waves %d–%d" % [node.first_wave, node.last_wave],
+		"boss": boss_name,
+		"threats": get_route_description(node),
+		"discovered": _discovered_node_ids.has(node.id),
+		"cleared": _cleared_in_run_node_ids.has(node.id),
+	}
+
+
+func get_recovered_fragments() -> Array[Resource]:
+	var fragments: Array[Resource] = []
+	if _campaign == null:
+		return fragments
+	for beat in _campaign.story_beats:
+		if _recovered_fragment_ids.has(beat.id):
+			fragments.append(beat)
+	return fragments

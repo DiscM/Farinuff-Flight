@@ -16,19 +16,22 @@ var _settings_menu: Node = null
 var _dev_panel: PanelContainer = null
 var _dev_slot: VBoxContainer = null
 var _transitioning := false
+var _build_panel: Control
+var _confirmation: ConfirmationDialog
 
 ## Builds the UI layout and plays the fade-in animation. The scene's full-rect
 ## anchors fill the viewport. Runs in PROCESS_MODE_ALWAYS so it functions while
 ## the tree is paused.
 func _ready() -> void:
+	add_to_group("scalable_ui")
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_build_ui()
 	_animate_in()
 
 ## Handles the ESC key to resume gameplay and close the pause menu.
 func _unhandled_input(event: InputEvent) -> void:
-	if event is InputEventKey and event.keycode == KEY_ESCAPE and event.pressed and not event.echo:
-		if _transitioning:
+	if (event.is_action_pressed("pause") or event.is_action_pressed("ui_cancel")) and not event.is_echo():
+		if _transitioning or is_instance_valid(_settings_menu) or is_instance_valid(_build_panel) or is_instance_valid(_confirmation):
 			return
 		get_viewport().set_input_as_handled()
 		resumed.emit()
@@ -70,6 +73,7 @@ func _build_ui() -> void:
 
 	button_column.add_child(_make_btn("ResumeWrap", "RESUME", NeonUI.YELLOW, _on_resume, true))
 	button_column.add_child(_make_btn("RetryWrap", "RESTART RUN", NeonUI.CYAN, _on_retry))
+	button_column.add_child(_make_btn("BuildWrap", "SHIP BUILD", NeonUI.GREEN, _on_build))
 	button_column.add_child(_make_btn("SettingsWrap", "OPTIONS", NeonUI.CYAN, _on_settings))
 	button_column.add_child(_make_btn("MenuWrap", "MAIN MENU", NeonUI.CYAN, _on_menu))
 	var gameplay := get_tree().get_first_node_in_group(&"native_3d_gameplay")
@@ -133,7 +137,7 @@ func _on_dev_tools() -> void:
 	_dev_slot.add_child(_dev_panel)
 
 ## Unpauses the game and reuses the resident game scene for a fresh retry.
-func _on_retry() -> void:
+func _restart_confirmed() -> void:
 	if _transitioning:
 		return
 	_transitioning = true
@@ -144,6 +148,8 @@ func _on_retry() -> void:
 		get_tree().paused = false
 		get_tree().reload_current_scene()
 		return
+	if current_scene.has_method("abandon_run"):
+		current_scene.abandon_run()
 	var run_scene := await ResourceCache.wait_for_scene(NATIVE_RUN_PATH)
 	get_tree().paused = false
 	if run_scene != null and get_tree().change_scene_to_packed(run_scene) == OK:
@@ -152,10 +158,13 @@ func _on_retry() -> void:
 	get_tree().reload_current_scene()
 
 ## Unpauses the game and reuses the resident title scene.
-func _on_menu() -> void:
+func _menu_confirmed() -> void:
 	if _transitioning:
 		return
 	_transitioning = true
+	var current_scene := get_tree().current_scene
+	if current_scene != null and current_scene.has_method("abandon_run"):
+		current_scene.abandon_run()
 	var menu_scene := await ResourceCache.wait_for_scene(MAIN_MENU_PATH)
 	get_tree().paused = false
 	if menu_scene != null and get_tree().change_scene_to_packed(menu_scene) == OK:
@@ -175,9 +184,63 @@ func _on_settings() -> void:
 
 ## Plays a quick fade-in and scale-up entrance animation for the pause menu.
 func _animate_in() -> void:
+	if bool(SaveManager.get_setting("reduced_motion", false)):
+		return
 	modulate.a = 0.0
 	scale = Vector2(0.95, 0.95)
 	pivot_offset = size / 2.0
 	var tween := create_tween().set_parallel(true)
 	tween.tween_property(self, "modulate:a", 1.0, 0.2).set_ease(Tween.EASE_OUT)
 	tween.tween_property(self, "scale", Vector2.ONE, 0.2).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+
+
+func _on_build() -> void:
+	if is_instance_valid(_build_panel):
+		return
+	var panel := preload("res://ui/sector_interlude.gd").new()
+	_build_panel = panel
+	panel.heading = "SHIP BUILD"
+	panel.show_route_map = false
+	var lines := PackedStringArray()
+	for upgrade in GameManager.ALL_UPGRADES + GameManager.META_ELITE_UPGRADES:
+		if GameManager.chosen_upgrade_ids.has(str(upgrade.id)):
+			lines.append("%s · %s\n%s" % [upgrade.name, upgrade.get("role", "Utility"), upgrade.description])
+	if lines.is_empty():
+		lines.append("Your first transformation arrives after Wave 5.")
+	lines.append("Allocated systems · Fire rate %d · Hull %d · Speed %d" % [GameManager.stat_fire_rate_level, GameManager.stat_health_level, GameManager.stat_speed_level])
+	panel.body = "\n\n".join(lines)
+	panel.resolved.connect(func(_route: StringName):
+		panel.queue_free()
+		get_node("LeftDock/MenuButtons/BuildWrap/Button").grab_focus()
+	)
+	add_child(panel)
+
+
+func _on_retry() -> void:
+	if GameManager.practice_mode:
+		_restart_confirmed()
+	else:
+		_confirm_transition("Restart Expedition?", "Bank earned salvage and start again. Your current ship build will be lost.", _restart_confirmed)
+
+
+func _on_menu() -> void:
+	if GameManager.practice_mode:
+		GameManager.return_to_flight_school = true
+		_menu_confirmed()
+	else:
+		_confirm_transition("End Expedition?", "Bank earned salvage and return to the Hangar. This run cannot be resumed.", _menu_confirmed)
+
+
+func _confirm_transition(heading: String, message: String, action: Callable) -> void:
+	if _transitioning or is_instance_valid(_confirmation):
+		return
+	_confirmation = ConfirmationDialog.new()
+	_confirmation.title = heading
+	_confirmation.dialog_text = message
+	_confirmation.confirmed.connect(func():
+		_confirmation.queue_free()
+		action.call()
+	)
+	_confirmation.canceled.connect(func(): _confirmation.queue_free())
+	add_child(_confirmation)
+	_confirmation.popup_centered()

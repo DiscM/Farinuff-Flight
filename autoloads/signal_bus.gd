@@ -83,3 +83,6 @@ signal screen_shake(intensity: float, duration: float)
 @warning_ignore("unused_signal")
 ## Emitted when the player loses all lives and the game ends. Carries the final score.
 signal game_over(final_score: int)
+
+
+signal combat_notice(message: String)

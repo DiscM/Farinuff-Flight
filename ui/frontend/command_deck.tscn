@@ -37,7 +37,9 @@ theme_override_colors/font_color = Color(0.17, 0.95, 1, 1)
 
 [node name="Title" type="Label" parent="Margin/VBox"]
 layout_mode = 2
-text = "COMMAND DECK"
+text = "FARINUFF FLIGHT"
+autowrap_mode = 2
+theme_override_font_sizes/font_size = 38
 theme_override_colors/font_color = Color(1, 0.86, 0.26, 1)
 theme_override_colors/font_outline_color = Color(0.22, 0.07, 0.43, 1)
 theme_override_constants/outline_size = 3
@@ -59,17 +61,17 @@ layout_mode = 2
 unique_name_in_owner = true
 layout_mode = 2
 custom_minimum_size = Vector2(0, 52)
-text = "LAUNCH"
+text = "PLAN EXPEDITION"
 alignment = 1
 theme_override_font_sizes/font_size = 22
-accessibility_name = "Launch Expedition"
-accessibility_description = "Starts a new Expedition with the current hull and modifiers."
+accessibility_name = "Plan Expedition"
+accessibility_description = "Open the Expedition chart before choosing a hull and launching."
 
 [node name="Spacer2" type="Control" parent="Margin/VBox"]
 custom_minimum_size = Vector2(0, 6)
 layout_mode = 2
 
-[node name="Sections" type="HBoxContainer" parent="Margin/VBox"]
+[node name="Sections" type="HFlowContainer" parent="Margin/VBox"]
 layout_mode = 2
 theme_override_constants/separation = 10
 
