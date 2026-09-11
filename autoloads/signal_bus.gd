@@ -86,3 +86,6 @@ signal game_over(final_score: int)
 
 
 signal combat_notice(message: String)
+
+## Native boss phase transition; emitted only for a living boss.
+signal boss_phase_changed(variant: int, phase: int)

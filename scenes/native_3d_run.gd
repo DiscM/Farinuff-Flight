@@ -11,6 +11,7 @@ const VICTORY := preload("res://ui/expedition_victory.tscn")
 const MAIN_MENU_PATH := "res://ui/main_menu.tscn"
 const NATIVE_RUN_PATH := "res://scenes/native_3d_run.tscn"
 
+var _comms: Node
 var encounters: EncounterDirector
 var _run_overlay: CanvasLayer
 var _allocation_queue: Array[int] = []
@@ -36,6 +37,10 @@ func _ready() -> void:
 	$HUD/FlightInstructions.hide()
 	projectile_status.hide()
 	ExpeditionManager.start_new_expedition()
+	_comms = preload("res://systems/campaign_comms.gd").new()
+	add_child(_comms)
+	_comms.configure(self, hud.get_node("CommsTicker"))
+	_comms.route_arrived()
 	_queue_arrival_story()
 	encounters.start()
 	_show_next_reward.call_deferred()
@@ -309,6 +314,7 @@ func _finish_campaign_step(node_id: StringName) -> void:
 	if _active_campaign_step.kind == "route":
 		ExpeditionManager.choose_route(node_id)
 		_queue_arrival_story()
+		_comms.route_arrived()
 	else:
 		ExpeditionManager.record_story_viewed(_active_campaign_step.beat.id)
 	_active_campaign_step = {}

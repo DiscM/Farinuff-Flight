@@ -151,7 +151,9 @@ func _ready() -> void:
 	transition_overlay.hide()
 	if hud.has_method("update_all"):
 		hud.update_all()
-	hud.add_child(preload("res://ui/combat_notice.gd").new())
+	var comms_ticker := preload("res://ui/combat_notice.gd").new()
+	comms_ticker.name = "CommsTicker"
+	hud.add_child(comms_ticker)
 	var boost_meter := preload("res://ui/boost_meter.gd").new()
 	boost_meter.player = player
 	boost_meter.status = boost_status

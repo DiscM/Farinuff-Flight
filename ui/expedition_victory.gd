@@ -23,9 +23,11 @@ var _ship_preview: ShipUpgradePreview
 var _continue_button: Button
 var _menu_button: Button
 var _resolved := false
+var _reveal_presented := false
 
 
 func _ready() -> void:
+	add_to_group("scalable_ui")
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_build_ui()
 	_continue_button.grab_focus()
@@ -44,7 +46,7 @@ func _build_ui() -> void:
 	add_child(center)
 
 	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(430.0, 560.0)
+	panel.custom_minimum_size = Vector2(minf(740.0, get_viewport_rect().size.x - 40.0), maxf(320.0, get_viewport_rect().size.y - 40.0))
 	panel.add_theme_stylebox_override("panel", _panel_style())
 	center.add_child(panel)
 
@@ -55,10 +57,19 @@ func _build_ui() -> void:
 	margin.add_theme_constant_override("margin_bottom", 20)
 	panel.add_child(margin)
 
+	var layout := VBoxContainer.new()
+	layout.add_theme_constant_override("separation", 12)
+	margin.add_child(layout)
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.follow_focus = true
+	layout.add_child(scroll)
 	var content := VBoxContainer.new()
+	content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	content.alignment = BoxContainer.ALIGNMENT_CENTER
 	content.add_theme_constant_override("separation", 10)
-	margin.add_child(content)
+	scroll.add_child(content)
 
 	var eyebrow := Label.new()
 	eyebrow.text = "EXPEDITION // COMPLETE"
@@ -68,6 +79,7 @@ func _build_ui() -> void:
 
 	var title := Label.new()
 	title.text = "TEMPEST CORE BROKEN"
+	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_color_override("font_color", CYAN)
 	title.add_theme_font_size_override("font_size", 26)
@@ -120,20 +132,21 @@ func _build_ui() -> void:
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	content.add_child(spacer)
 
-	_continue_button = _make_button("CONTINUE TO ENDLESS", YELLOW)
+	_continue_button = _make_button("FOLLOW THE SIGNAL / ENDLESS", YELLOW)
 	_continue_button.custom_minimum_size = Vector2(0.0, 52.0)
 	_continue_button.pressed.connect(_on_continue_pressed)
-	content.add_child(_continue_button)
+	layout.add_child(_continue_button)
 
-	_menu_button = _make_button("END RUN / MAIN MENU", MAGENTA)
+	_menu_button = _make_button("RETURN HOME / BANK RUN", MAGENTA)
 	_menu_button.custom_minimum_size = Vector2(0.0, 44.0)
 	_menu_button.pressed.connect(_on_menu_pressed)
-	content.add_child(_menu_button)
+	layout.add_child(_menu_button)
 
 
 func _make_button(label: String, color: Color) -> Button:
 	var button := Button.new()
 	button.text = label
+	button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	button.focus_mode = Control.FOCUS_ALL
 	button.add_theme_font_size_override("font_size", 14)
 	button.add_theme_color_override("font_color", color)
@@ -175,8 +188,15 @@ func show_result(final_wave: int) -> void:
 	var hull_id := _selected_hull_id()
 	var ship_name := _selected_ship_name()
 	_body_label.text = "%s BREAKS THE FORMATION.\nTHE EXPEDITION IS YOURS." % ship_name
-	if int(SaveManager.get_setting("story_frequency", 0)) != 2:
-		_body_label.text += "\nMOTH // The homeward relay is open. The signal continues beyond its source."
+	var frequency := int(SaveManager.get_setting("story_frequency", 0))
+	if frequency != 2:
+		var beat := ExpeditionManager.get_story_beat(&"expedition_victory")
+		var seen := ExpeditionManager.get_snapshot().seen_story_beat_ids.has(&"expedition_victory")
+		if frequency == 0 and not seen and beat != null:
+			_body_label.text += "\n\n" + preload("res://campaign/story_copy.gd").for_beat(beat)
+		else:
+			_body_label.text += "\nMOTH // The homeward relay is open. The signal continues beyond its source."
+		_reveal_presented = true
 	_salvage_label.text = "RUN SALVAGE: %s  ·  BOSS BANKED: %s" % [
 		_format_salvage(GameManager.run_salvage),
 		_format_salvage(GameManager.run_salvage_boss),
@@ -256,6 +276,7 @@ func _on_continue_pressed() -> void:
 	if _resolved:
 		return
 	_resolved = true
+	_record_reveal()
 	continue_endless.emit()
 
 
@@ -263,6 +284,7 @@ func _on_menu_pressed() -> void:
 	if _resolved:
 		return
 	_resolved = true
+	_record_reveal()
 	return_to_menu.emit()
 
 
@@ -272,3 +294,8 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel"):
 		_on_menu_pressed()
 		get_viewport().set_input_as_handled()
+
+
+func _record_reveal() -> void:
+	if _reveal_presented:
+		ExpeditionManager.record_story_viewed(&"expedition_victory")

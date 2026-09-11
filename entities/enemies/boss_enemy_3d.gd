@@ -154,8 +154,11 @@ func take_damage(amount: int) -> void:
 		return
 	if (variant == 1 or variant == 4) and _active_section_count() > 0:
 		amount = maxi(1, ceili(amount * 0.5))
+	var previous_phase := phase
 	super.take_damage(amount)
 	phase = 2 if health <= float(max_health) / 3.0 else 1 if health <= float(max_health) * 2.0 / 3.0 else 0
+	if health > 0 and phase != previous_phase:
+		SignalBus.boss_phase_changed.emit(variant, phase)
 	SignalBus.boss_health_changed.emit(maxi(health, 0))
 
 func get_reward_points() -> int:
