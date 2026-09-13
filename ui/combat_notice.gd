@@ -1,5 +1,5 @@
 extends Label
-## One non-modal channel: tactical messages take priority over optional story.
+## Optional story transmissions; attack callouts are not displayed beneath the HUD.
 signal transmission_completed(beat_id: StringName)
 const MAX_PENDING := 6
 var _queue: Array[Dictionary] = []
@@ -13,8 +13,8 @@ func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
 	offset_left = -220
 	offset_right = 220
-	offset_top = 84
-	offset_bottom = 130
+	offset_top = 106
+	offset_bottom = 140
 	horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -22,15 +22,10 @@ func _ready() -> void:
 	add_theme_color_override("font_shadow_color", Color(0.0, 0.0, 0.02, 0.95))
 	add_theme_constant_override("shadow_offset_x", 1)
 	add_theme_constant_override("shadow_offset_y", 2)
-	SignalBus.combat_notice.connect(_show_notice)
-	SignalBus.encounter_warning.connect(_show_encounter_warning)
 	SignalBus.game_over.connect(func(_score: int): clear_messages())
 	SignalBus.wave_cleared.connect(func(_wave: int): clear_messages())
 	SaveManager.settings_changed.connect(_apply_story_frequency)
 	hide()
-
-func _show_notice(message: String) -> void:
-	post(message, StringName(message), 2, 3.5)
 
 func post(message: String, key: StringName, priority: int = 0, duration: float = 3.0, story: bool = false) -> void:
 	if message.is_empty() or (story and (int(SaveManager.get_setting("story_frequency", 0)) == 2 or _completed.has(key))):
@@ -98,13 +93,3 @@ func _apply_story_frequency() -> void:
 		_active = {}
 		_remaining = 0.0
 		hide()
-
-
-func _show_encounter_warning(message: String, seconds: float) -> void:
-	# Authoritative telegraphs supersede queued prose and older tactical hints.
-	clear_messages()
-	_active = {"text": message, "key": StringName(message), "priority": 3, "duration": seconds, "story": false, "expires": _clock + seconds}
-	_remaining = maxf(seconds, 0.5)
-	text = message
-	add_theme_color_override("font_color", Color(1.0, 0.9, 0.5))
-	show()

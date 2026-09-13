@@ -7,7 +7,7 @@ Selected direction: B, Neon Cabinet. The concept board is `approved-direction.pn
 - Bold italic headings, cyan outlines, near-black panels, yellow commit actions, and white focus outlines. Body text stays upright.
 - Play launches the saved hull and challenge configuration directly. Route details, loadout, and Flight School remain optional supporting pages. Hangar, Settings, and Archives remain accessible in the compact navigation bar.
 - Loadout decisions stay visible below the scrolling ship and modifier list.
-- Score and wave progress sit at the top; lives, life restoration, and effects share a bottom strip, with boost immediately below. CRT and distortion affect the game world below the UI.
+- Score, multiplier, wave progress, lives, life restoration, boost, and effects share a compact 40-pixel header. It narrows to 720 pixels when no effects are active and grows to fit active chips. The boss bar sits immediately below; the bottom playfield stays clear. See `combat-header.png` and `combat-header-effects.png` for the updated layout. CRT and distortion affect the game world below the UI.
 - Upgrade selection is reversible. A checked yellow card identifies the choice; Install & Continue commits it exactly once.
 - Pause and result screens reuse the same typography and primary-action treatment.
 
