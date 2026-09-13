@@ -156,7 +156,7 @@ func _on_lives_changed(new_lives: int) -> void:
 		heart.add_theme_color_override("font_color", NeonUI.PINK)
 		heart.add_theme_font_size_override("font_size", 20)
 		lives_container.add_child(heart)
-	lives_count_label.text = str(new_lives)
+	lives_count_label.text = "♥ %d" % new_lives
 	if new_lives > MAX_VISIBLE_HEARTS:
 		var overflow_label := Label.new()
 		overflow_label.text = "+" + str(new_lives - MAX_VISIBLE_HEARTS)
@@ -233,6 +233,7 @@ func _process(_delta: float) -> void:
 		_wave_progress.value = GameManager.orbs_collected_this_wave
 		_wave_progress.visible = not GameManager.boss_active
 		_wave_progress_label.text = "DEFEAT THE BOSS" if GameManager.boss_active else "NEXT WAVE  %d / %d" % [GameManager.orbs_collected_this_wave, GameManager.orbs_needed_this_wave]
+		wave_panel.tooltip_text = _wave_progress_label.text
 	if _route_label != null:
 		var route := ExpeditionManager.get_current_node()
 		_route_label.text = "PRACTICE" if GameManager.practice_mode else str(route.display_name).to_upper() if route != null and ExpeditionManager.is_expedition_active() else "ENDLESS" if GameManager.current_wave > 20 else "EXPEDITION"
@@ -276,23 +277,26 @@ func _update_effect_chip(cfg: Dictionary, remaining: float, duration: float) -> 
 func _build_effect_chip(cfg: Dictionary) -> Dictionary:
 	var accent: Color = cfg["color"]
 	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(40, 30)
+	panel.custom_minimum_size = Vector2(48, 26)
 	panel.add_theme_stylebox_override("panel", _hud_outline(accent, Color(0.01, 0.04, 0.09, 0.28), 4))
 	var vbox := VBoxContainer.new()
 	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
 	vbox.add_theme_constant_override("separation", 1)
 	panel.add_child(vbox)
+	var line := HBoxContainer.new()
+	line.add_theme_constant_override("separation", 3)
+	vbox.add_child(line)
 	var name_label := Label.new()
 	name_label.text = cfg["label"]
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_label.add_theme_color_override("font_color", accent)
-	name_label.add_theme_font_size_override("font_size", 7)
-	vbox.add_child(name_label)
+	name_label.add_theme_font_size_override("font_size", 9)
+	line.add_child(name_label)
 	var time_label := Label.new()
 	time_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	time_label.add_theme_color_override("font_color", NeonUI.WHITE)
-	time_label.add_theme_font_size_override("font_size", 7)
-	vbox.add_child(time_label)
+	time_label.add_theme_font_size_override("font_size", 9)
+	line.add_child(time_label)
 	var bar := ProgressBar.new()
 	bar.custom_minimum_size = Vector2(0, 3)
 	bar.min_value = 0.0
@@ -393,37 +397,85 @@ func _build_wave_progress() -> void:
 
 
 func _arrange_cabinet_hud() -> void:
-	var orb_title := orb_panel.get_node("OrbRow/OrbTitle") as Label
-	orb_title.text = "LIFE RESTORE"
-	orb_title.add_theme_font_size_override("font_size", 12)
-	left_dock.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
-	left_dock.position = Vector2(20, 20)
-	left_dock.size = Vector2(190, 88)
-	score_label.add_theme_font_size_override("font_size", 22)
-	score_label.add_theme_font_override("font", NeonUI.HEADING_FONT)
-	wave_panel.reparent(self)
-	wave_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
-	wave_panel.offset_left = -145
-	wave_panel.offset_right = 145
-	wave_panel.offset_top = 16
-	wave_panel.offset_bottom = 96
-	wave_label.add_theme_font_override("font", NeonUI.HEADING_FONT)
-	wave_label.add_theme_font_size_override("font_size", 22)
-	boss_dock.offset_top = 112
-	boss_dock.offset_bottom = 178
-	var strip := HBoxContainer.new()
-	strip.name = "CabinetStatusStrip"
-	strip.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
-	strip.offset_left = 20
-	strip.offset_right = -20
-	strip.offset_top = -124
-	strip.offset_bottom = -68
-	strip.add_theme_constant_override("separation", 16)
-	add_child(strip)
-	for panel in [lives_panel, orb_panel, power_up_panel]:
-		panel.reparent(strip)
-		panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		panel.add_theme_stylebox_override("panel", NeonUI.plaque(NeonUI.CYAN, NeonUI.INK_DARK, 1, 1))
-	right_dock.hide()
-	for label in [lives_count_label, orb_label]:
+	var header := PanelContainer.new()
+	header.name = "CombatHeader"
+	header.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	header.add_theme_stylebox_override("panel", _hud_outline(NeonUI.CYAN, NeonUI.INK_DARK))
+	add_child(header)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	header.add_child(row)
+	for panel in [score_panel, combo_panel, wave_panel, lives_panel, orb_panel, power_up_panel]:
+		panel.reparent(row)
+		panel.custom_minimum_size = Vector2.ZERO
+		panel.size_flags_horizontal = Control.SIZE_FILL
+		panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+		panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	score_panel.custom_minimum_size.x = 100
+	combo_panel.custom_minimum_size.x = 52
+	wave_panel.custom_minimum_size.x = 130
+	lives_panel.custom_minimum_size.x = 54
+	orb_panel.custom_minimum_size.x = 140
+	power_up_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	for label in [score_label, wave_label]:
+		label.add_theme_font_override("font", NeonUI.HEADING_FONT)
 		label.add_theme_font_size_override("font_size", 14)
+	combo_label.add_theme_font_size_override("font_size", 11)
+	_route_label.hide()
+	_wave_progress_label.hide()
+	_wave_progress.custom_minimum_size.y = 3
+	(wave_label.get_parent() as VBoxContainer).add_theme_constant_override("separation", 3)
+	lives_panel.get_node("LivesRow/LivesTitle").hide()
+	lives_container.hide()
+	lives_count_label.add_theme_font_size_override("font_size", 16)
+	lives_count_label.add_theme_color_override("font_color", NeonUI.PINK)
+	lives_count_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var orb_title := orb_panel.get_node("OrbRow/OrbTitle") as Label
+	orb_title.text = "+♥"
+	orb_title.custom_minimum_size.x = 18
+	orb_title.add_theme_font_size_override("font_size", 12)
+	orb_panel.tooltip_text = "Collect orbs to restore a life"
+	orb_bar.custom_minimum_size = Vector2(48, 3)
+	orb_label.add_theme_font_size_override("font_size", 11)
+	power_up_panel.get_node("PowerUpVBox/PowerUpTitle").hide()
+	power_up_container.alignment = BoxContainer.ALIGNMENT_END
+	var boost_slot := VBoxContainer.new()
+	boost_slot.name = "BoostSlot"
+	boost_slot.custom_minimum_size.x = 170
+	boost_slot.alignment = BoxContainer.ALIGNMENT_CENTER
+	boost_slot.add_theme_constant_override("separation", 3)
+	row.add_child(boost_slot)
+	row.move_child(boost_slot, power_up_panel.get_index())
+	left_dock.hide()
+	right_dock.hide()
+	boss_dock.offset_top = 58
+	boss_dock.offset_bottom = 96
+	boss_dock.offset_left = -180
+	boss_dock.offset_right = 180
+	boss_health_bar.custom_minimum_size.y = 4
+	header.minimum_size_changed.connect(_fit_combat_header)
+	get_viewport().size_changed.connect(_fit_combat_header)
+	_fit_combat_header()
+
+
+func _fit_combat_header() -> void:
+	var header := get_node("CombatHeader") as PanelContainer
+	var width := minf(maxf(720.0, header.get_combined_minimum_size().x), get_viewport().get_visible_rect().size.x - 24.0)
+	header.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+	header.offset_left = -width / 2.0
+	header.offset_right = width / 2.0
+	header.offset_top = 10
+	header.offset_bottom = 50
+
+
+## The flight controller adds its meter after the HUD has entered the tree.
+func mount_boost(meter: ProgressBar, status: Label) -> void:
+	var slot := get_node("CombatHeader").find_child("BoostSlot", true, false)
+	status.reparent(slot)
+	status.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+	status.custom_minimum_size = Vector2.ZERO
+	status.add_theme_font_size_override("font_size", 11)
+	status.clip_text = true
+	meter.reparent(slot)
+	meter.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+	meter.custom_minimum_size = Vector2(0, 3)

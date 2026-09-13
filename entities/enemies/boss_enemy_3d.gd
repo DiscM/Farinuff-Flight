@@ -5,6 +5,7 @@ const Section := preload("res://entities/enemies/boss_section_3d.gd")
 const ProjectileManager := preload("res://systems/projectile_manager_3d.gd")
 const Shot := preload("res://entities/projectiles/projectile_3d.gd")
 const RAM_DURATION := 1.0
+const HEALTH_MULTIPLIER := 1.25
 const ArenaPatterns := preload("res://systems/boss_arena_patterns.gd")
 var _arena_patterns: ArenaPatterns
 var _roam_target := Vector3.ZERO
@@ -101,7 +102,7 @@ func activate_generation(space: FlightSpace, origin: Vector3, direction: Vector3
 		if dev_variant_override >= 0
 		else resolve_variant_for_wave(GameManager.current_wave)
 	)
-	max_health = roundi((400.0 + GameManager.current_wave * 32.0) * (1.15 if variant in [1, 4] else 1.0) * GameManager.get_enemy_health_multiplier() * 0.32)
+	max_health = roundi((400.0 + GameManager.current_wave * 32.0) * (1.15 if variant in [1, 4] else 1.0) * GameManager.get_enemy_health_multiplier() * 0.32 * HEALTH_MULTIPLIER)
 	health = max_health
 	phase = 0
 	_phase_transition = 0.0

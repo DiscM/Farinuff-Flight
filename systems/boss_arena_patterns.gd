@@ -2,6 +2,8 @@ extends Node2D
 ## Independent arena pressure: telegraph, staggered release, then breathing room.
 ## World-space warning geometry stays aligned while the player camera moves.
 const Shot := preload("res://entities/projectiles/projectile_3d.gd")
+const PROJECTILE_SPEED := 260.0
+const AXIS_SPREAD_SPEED := PROJECTILE_SPEED * 1.25
 var boss: Node3D
 var space: FlightSpace3D
 var manager: ProjectileManager3D
@@ -173,7 +175,9 @@ func _release(event: Dictionary) -> void:
 	elif manager != null:
 		var variant: int = boss.get("variant")
 		var colors: Array[Color] = [Color.CORAL, Color.GOLD, Color.MEDIUM_PURPLE, Color.HOT_PINK, Color.IVORY]
-		manager.fire_enemy_projectile(origin, space.input_to_combat_direction(event.direction), 260.0, int(event.motion), colors[variant], variant)
+		# Crosswind, siege gates, and closing-box volleys cross the arena axes.
+		var speed := AXIS_SPREAD_SPEED if variant in [0, 1, 3] else PROJECTILE_SPEED
+		manager.fire_enemy_projectile(origin, space.input_to_combat_direction(event.direction), speed, int(event.motion), colors[variant], variant)
 
 func _mine_returned(mine: EnemyMine3D) -> void:
 	mines.erase(mine)

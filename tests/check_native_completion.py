@@ -105,11 +105,10 @@ def check_native_entry_and_transitions() -> None:
         menu,
         [
             ("native run path", f'const NATIVE_RUN_PATH := "{NATIVE_RUN}"'),
-            ("Play handler", "func _on_play_pressed()"),
-            ("launch-bay handoff", "_open_launch_bay()"),
-            ("bounded native cache prime", "ResourceCache.prime_scene(NATIVE_RUN_PATH)"),
-            ("cache-backed native polling", "ResourceCache.is_scene_ready(NATIVE_RUN_PATH)"),
-            ("native packed-scene transition", "get_tree().change_scene_to_packed(_native_run_scene)"),
+            ("shared frontend entry", "func _mount_command_deck()"),
+            ("frontend launch handler", "func _launch_from_frontend()"),
+            ("cache-backed native wait", "await ResourceCache.wait_for_scene(path)"),
+            ("native packed-scene transition", "get_tree().change_scene_to_packed(scene)"),
         ],
     )
     require(
