@@ -1,6 +1,9 @@
 extends Node
 class_name FlightSpace3D
-## Stateless adapter between viewport coordinates and the Y=0 Combat Plane.
+signal bounds_changed
+const BOSS_ARENA_SCALE := 2.2
+var _boss_arena_active := false
+## Projection adapter and fixed normal/boss arena bounds on the Y=0 plane.
 
 const FlightConfig := preload("res://systems/flight_space_3d_config.gd")
 const COMBAT_PLANE := Plane(Vector3.UP, 0.0)
@@ -14,12 +17,19 @@ const COMBAT_PLANE := Plane(Vector3.UP, 0.0)
 
 
 func _ready() -> void:
+	process_physics_priority = -100
 	if active_camera == null:
 		push_error("FlightSpace3D requires the active Camera3D reference")
 	if stable_camera == null:
 		push_error("FlightSpace3D requires the stable Camera3D reference")
 	if configuration == null:
 		push_error("FlightSpace3D requires a FlightSpace3DConfig resource")
+
+
+func _physics_process(_delta: float) -> void:
+	if _boss_arena_active != GameManager.boss_active:
+		_boss_arena_active = GameManager.boss_active
+		bounds_changed.emit()
 
 
 ## Projects a viewport position through the rendered gameplay camera and onto
@@ -90,6 +100,15 @@ func combat_to_screen(combat_position: Vector3) -> Vector2:
 ## margin expands the rectangle for off-plane spawning and despawning. Scale
 ## that margin with viewport height so its world-space distance stays fixed.
 func get_combat_bounds(baseline_margin_pixels: float = 0.0) -> Rect2:
+	var bounds := get_view_bounds()
+	if GameManager.boss_active:
+		bounds = Rect2(bounds.get_center() - bounds.size * BOSS_ARENA_SCALE * 0.5, bounds.size * BOSS_ARENA_SCALE)
+	var margin := screen_motion_to_combat(Vector2.ONE * baseline_margin_pixels)
+	return Rect2(bounds.position - Vector2(margin.x, margin.z), bounds.size + Vector2(margin.x, margin.z) * 2.0)
+
+
+## The unmoving projection camera defines the arena origin, independent of follow.
+func get_view_bounds(baseline_margin_pixels: float = 0.0) -> Rect2:
 	if stable_camera == null or configuration == null:
 		return Rect2()
 	var viewport_rect := stable_camera.get_viewport().get_visible_rect()

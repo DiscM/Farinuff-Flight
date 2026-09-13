@@ -20,6 +20,8 @@ var _transitioning := false
 
 ## Connects the retry and menu buttons to their respective handlers.
 func _ready() -> void:
+	add_to_group("scalable_ui")
+	theme = preload("res://ui/themes/farinuff_frontend_theme.tres")
 	# Retry is the common next action. The bounded cache keeps the packed root
 	# scene resident without creating another gameplay tree in the background.
 	ResourceCache.prime_scene(NATIVE_RUN_PATH)
@@ -27,6 +29,7 @@ func _ready() -> void:
 	$VBoxContainer/RetryButton.pressed.connect(_on_retry_pressed)
 	$VBoxContainer/MenuButton.pressed.connect(_on_menu_pressed)
 	_build_native_preview()
+	preload("res://ui/shared/result_layout.gd").mount(self, $VBoxContainer, [$VBoxContainer/RetryButton, $VBoxContainer/MenuButton])
 
 ## Displays the final score, the all-time high score (highlighted when the
 ## run set a new record), the wave the player reached against the persisted

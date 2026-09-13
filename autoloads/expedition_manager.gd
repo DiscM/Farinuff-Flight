@@ -143,6 +143,7 @@ func record_milestone(cleared_wave: int) -> CampaignTransition:
 	_cleared_in_run_node_ids.append(node.id)
 	if not node.fragment_beat_id.is_empty() and not _recovered_fragment_ids.has(node.fragment_beat_id):
 		_recovered_fragment_ids.append(node.fragment_beat_id)
+		MenuAudio.play(&"MAP.NODE.DISCOVER")
 	_selected_route_id = &""
 	_current_node_id = node.id
 	var reachable: Array[StringName] = node.outgoing_node_ids.duplicate()
@@ -348,7 +349,8 @@ func _derive_reachable() -> Array[StringName]:
 ## Unseen debrief and fragment beats authored on a cleared node.
 func _unseen_beats_on_node(node: RouteNodeDefinitionResource) -> Array[StringName]:
 	var beats: Array[StringName] = []
-	for beat_id in [node.debrief_beat_id, node.fragment_beat_id]:
+	# Fragments are optional reading in Archives, not blocking debrief overlays.
+	for beat_id in [node.debrief_beat_id]:
 		if beat_id.is_empty() or _seen_story_beat_ids.has(beat_id):
 			continue
 		beats.append(beat_id)

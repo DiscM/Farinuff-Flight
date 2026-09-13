@@ -89,3 +89,7 @@ signal combat_notice(message: String)
 
 ## Native boss phase transition; emitted only for a living boss.
 signal boss_phase_changed(variant: int, phase: int)
+signal boss_phase_presented(phase: int, phase_name: String, projectile_color: Color)
+
+## Encounter telegraph must be visible before its admission delay elapses.
+signal encounter_warning(message: String, seconds: float)

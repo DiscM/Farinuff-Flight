@@ -19,6 +19,7 @@ const LEGACY_SAVE_VERSION := 1
 const DEFAULT_SETTINGS: Dictionary = {
 	"master_volume": 0.8,
 	"music_volume": 0.8,
+	"ui_volume": 0.8,
 	"screen_shake": true,
 	"crt_effect": true,
 	"screen_distortion": true,
@@ -26,6 +27,7 @@ const DEFAULT_SETTINGS: Dictionary = {
 	"fullscreen": false,
 	"reduced_flashing": false,
 	"reduced_motion": false,
+	"hold_to_confirm": false,
 	"menu_text_scale": 1.0,
 	"aim_deadzone": 0.4,
 	"story_frequency": 0,
@@ -344,13 +346,22 @@ func _save_data() -> void:
 	# Rotate the known-good live copy before promoting the complete temporary
 	# file. A failed rename never leaves a half-written primary save.
 	if FileAccess.file_exists(SAVE_PATH):
-		if FileAccess.file_exists(SAVE_BACKUP_PATH):
-			directory.remove(SAVE_BACKUP_FILE_NAME)
-		var backup_error := directory.rename(SAVE_FILE_NAME, SAVE_BACKUP_FILE_NAME)
-		if backup_error != OK:
-			push_warning("Unable to rotate the previous player save.")
-			directory.remove(SAVE_TEMP_FILE_NAME)
-			return
+		var previous: Variant = _read_save_data(SAVE_PATH)
+		if previous is Dictionary and _is_supported_save_version(previous):
+			if FileAccess.file_exists(SAVE_BACKUP_PATH):
+				directory.remove(SAVE_BACKUP_FILE_NAME)
+			var backup_error := directory.rename(SAVE_FILE_NAME, SAVE_BACKUP_FILE_NAME)
+			if backup_error != OK:
+				push_warning("Unable to rotate the previous player save.")
+				directory.remove(SAVE_TEMP_FILE_NAME)
+				return
+		else:
+			# Recovery loaded the backup. Do not replace it with the broken
+			# primary when writing the recovered state back to disk.
+			if directory.remove(SAVE_FILE_NAME) != OK:
+				push_warning("Unable to replace the invalid player save.")
+				directory.remove(SAVE_TEMP_FILE_NAME)
+				return
 
 	var promote_error := directory.rename(SAVE_TEMP_FILE_NAME, SAVE_FILE_NAME)
 	if promote_error != OK:
@@ -366,6 +377,7 @@ func _save_data() -> void:
 func _apply_audio_settings() -> void:
 	_apply_bus_volume("Master", float(settings.get("master_volume", 0.8)))
 	_apply_bus_volume("Music", float(settings.get("music_volume", 0.8)))
+	_apply_bus_volume("UI", float(settings.get("ui_volume", 0.8)))
 
 func _apply_bus_volume(bus_name: String, raw_volume: float) -> void:
 	var bus_index := AudioServer.get_bus_index(bus_name)

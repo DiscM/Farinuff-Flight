@@ -51,6 +51,7 @@ func _pick_upgrades() -> void:
 	var pool: Array[Dictionary] = []
 	var source_pool: Array = custom_upgrade_pool if use_custom_upgrade_pool else NativeUpgradeCatalog.available()
 	var seen_ids: Dictionary = {}
+	var owned := GameManager.get_owned_elite_ids()
 	for raw_upgrade: Variant in source_pool:
 		if not raw_upgrade is Dictionary:
 			continue
@@ -60,7 +61,7 @@ func _pick_upgrades() -> void:
 			upgrade_id == ""
 			or not NativeUpgradeCatalog.SUPPORTED_IDS.has(upgrade_id)
 			or seen_ids.has(upgrade_id)
-			or GameManager.chosen_upgrade_ids.has(upgrade_id)
+			or owned.has(upgrade_id)
 		):
 			continue
 		seen_ids[upgrade_id] = true
@@ -135,6 +136,8 @@ func _build_ui() -> void:
 	subtitle.add_theme_color_override("font_color", Color(0.65, 0.75, 1.0))
 	subtitle.add_theme_font_size_override("font_size", 13 if compact_layout else 16)
 	outer.add_child(subtitle)
+	if GameManager.elite_supply_pending and chosen_upgrades.is_empty():
+		subtitle.text = "Elite collection complete · Supply reward"
 	confirmation_label = subtitle
 
 	# Cards row
@@ -168,7 +171,7 @@ func _make_empty_state() -> PanelContainer:
 	card.add_child(content)
 
 	var message := Label.new()
-	message.text = "NO NATIVE UPGRADES AVAILABLE\nAll remaining reward slots are installed or unavailable."
+	message.text = "ALL ELITE UPGRADES INSTALLED\nClaim 50 orbs and 5 health.\nOrbs also grant their normal progress and healing." if GameManager.elite_supply_pending else "NO NATIVE UPGRADES AVAILABLE\nAll remaining reward slots are installed or unavailable."
 	message.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	message.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	message.add_theme_color_override("font_color", Color(0.75, 0.84, 0.98))
@@ -176,10 +179,11 @@ func _make_empty_state() -> PanelContainer:
 	content.add_child(message)
 
 	var continue_button := Button.new()
-	continue_button.text = "CONTINUE"
+	continue_button.text = "CLAIM 50 ORBS + 5 HEALTH" if GameManager.elite_supply_pending else "CONTINUE"
 	continue_button.custom_minimum_size = Vector2(0, 36)
 	continue_button.pressed.connect(_on_empty_state_continue)
 	content.add_child(continue_button)
+	continue_button.grab_focus.call_deferred()
 	return card
 
 ## Creates a single upgrade card panel: styled border in the upgrade's color,
@@ -326,6 +330,9 @@ func _on_empty_state_continue() -> void:
 	if selection_locked:
 		return
 	selection_locked = true
+	if GameManager.elite_supply_pending and not GameManager.claim_elite_supplies():
+		selection_locked = false
+		return
 	upgrade_chosen.emit()
 	if not panel_only:
 		_close_popup()

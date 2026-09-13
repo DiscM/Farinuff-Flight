@@ -30,6 +30,7 @@ func _ready() -> void:
 	add_child(margin)
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.follow_focus = true
 	margin.add_child(scroll)
 	_column = VBoxContainer.new()
 	_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -54,6 +55,11 @@ func _ready() -> void:
 	var back := make_button("BACK", _column, _close)
 	_refresh()
 	back.grab_focus()
+	# The first focus change precedes container layout, so follow_focus alone
+	# cannot calculate the initial scroll offset yet.
+	await get_tree().process_frame
+	if is_instance_valid(scroll) and back.has_focus():
+		scroll.ensure_control_visible(back)
 
 func label(text: String, parent: Node, font_size: int = 16) -> Label:
 	var control := Label.new()
@@ -99,6 +105,14 @@ func _begin_capture(action: String, device_family: String, button: Button) -> vo
 	_swap = make_button("SWAP BINDINGS", box, _confirm_swap)
 	_swap.hide()
 	_cancel = make_button("CANCEL", box, _end_capture)
+	for dialog_button: Button in [_swap, _cancel]:
+		var other: Button = _cancel if dialog_button == _swap else _swap
+		dialog_button.focus_neighbor_top = dialog_button.get_path_to(other)
+		dialog_button.focus_neighbor_bottom = dialog_button.get_path_to(other)
+		dialog_button.focus_neighbor_left = dialog_button.get_path_to(other)
+		dialog_button.focus_neighbor_right = dialog_button.get_path_to(other)
+		dialog_button.focus_next = dialog_button.get_path_to(other)
+		dialog_button.focus_previous = dialog_button.get_path_to(other)
 	_cancel.grab_focus()
 
 func _input(event: InputEvent) -> void:

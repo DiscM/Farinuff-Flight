@@ -25,7 +25,7 @@ func _refresh() -> void:
 		_scale_branch(root, factor)
 
 func _scale_branch(node: Node, factor: float) -> void:
-	if node is Label or node is BaseButton or node is LineEdit:
+	if node is Label or node is BaseButton or node is LineEdit or node is TabBar:
 		if not node.has_meta("base_menu_font"):
 			node.set_meta("base_menu_font", node.get_theme_font_size("font_size"))
 		node.add_theme_font_size_override("font_size", roundi(float(node.get_meta("base_menu_font")) * factor))

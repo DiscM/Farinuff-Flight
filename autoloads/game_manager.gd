@@ -243,8 +243,10 @@ func _on_enemy_killed(points: int, _position: Vector3) -> void:
 ## Called when the boss dies. Bosses clear every fifth wave; Wave-5/10/15
 ## encounters grant build choices, and Wave 20 completes the finite
 ## Expedition before the player chooses whether to continue into Endless.
+var elite_supply_pending := false
+
 func _on_boss_died(_points: int) -> void:
-	if practice_mode:
+	if practice_mode or not boss_active or not is_game_active:
 		return
 	boss_active = false
 	# Bosses are the primary salvage source during a run: elite bosses pay double.
@@ -265,11 +267,36 @@ func _on_boss_died(_points: int) -> void:
 		return
 
 	# Emit elite upgrade trigger FIRST so the game pauses before wave advances + spawning restarts.
-	# But ONLY if we haven't already collected all possible elite upgrades.
-	if offers_elite_reward(current_wave) and chosen_upgrade_ids.size() < get_upgrade_pool().size():
+	if offers_elite_reward(current_wave):
+		elite_supply_pending = has_all_available_elites()
 		SignalBus.elite_upgrade_triggered.emit()
 	_advance_wave()
 
+
+func get_owned_elite_ids() -> Array[String]:
+	var owned: Array[String] = chosen_upgrade_ids.duplicate()
+	var player := get_tree().get_first_node_in_group(&"player_craft")
+	if player != null and player.has_method("get_active_elite_upgrade_ids"):
+		for upgrade_id in player.get_active_elite_upgrade_ids():
+			if not owned.has(upgrade_id):
+				owned.append(upgrade_id)
+	return owned
+
+func has_all_available_elites() -> bool:
+	var owned := get_owned_elite_ids()
+	for upgrade in get_upgrade_pool():
+		if not owned.has(str(upgrade.id)):
+			return false
+	return true
+
+func claim_elite_supplies() -> bool:
+	if not elite_supply_pending or practice_mode or not is_game_active or not has_all_available_elites():
+		return false
+	elite_supply_pending = false
+	lives += 5
+	SignalBus.lives_changed.emit(lives)
+	SignalBus.xp_orb_collected.emit(50)
+	return true
 
 ## Resumes an Expedition after the Wave-20 victory overlay chooses Endless.
 ## Returns false when called before the finite campaign has been completed.
@@ -488,6 +515,7 @@ func start_game(consume_field_supplies: bool = true, practice: bool = false) -> 
 	score = 0
 	combo = 0
 	lives = 3
+	elite_supply_pending = false
 	current_wave = 1
 	expedition_completed = false
 	orbs_collected_this_wave = 0

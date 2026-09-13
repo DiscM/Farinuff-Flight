@@ -24,6 +24,7 @@ func _ready() -> void:
 	add_child(margin)
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.follow_focus = true
 	margin.add_child(scroll)
 	var column := VBoxContainer.new()
 	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -40,6 +41,12 @@ func _ready() -> void:
 	column.add_child(instructions)
 	_chart = preload("res://ui/expedition_chart.gd").new()
 	column.add_child(_chart)
+	var legend := Label.new()
+	legend.text = "◇ Reachable · ✓ Cleared · ◈ Discovered · ▣ Locked\nWhite frame: input focus. Gold frame: selected relay. Confirm a relay to inspect it."
+	if ExpeditionManager.get_snapshot().expedition_clear_count > 0:
+		legend.text += "\nVOID REACH · Follow the signal after Wave 20 to enter Endless. First contact: Void Harbinger, Wave 25."
+	legend.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	column.add_child(legend)
 	_launch_button = Button.new()
 	_launch_button.text = "REVIEW LOADOUT · LAUNCH FROM WAVE 1"
 	_launch_button.custom_minimum_size.y = 48
@@ -59,6 +66,13 @@ func _ready() -> void:
 	back.pressed.connect(_close)
 	column.add_child(back)
 	_launch_button.grab_focus()
+	column.resized.connect(func():
+		if _launch_button.has_focus():
+			scroll.ensure_control_visible.call_deferred(_launch_button)
+	)
+	await get_tree().process_frame
+	if is_instance_valid(scroll) and _launch_button.has_focus():
+		scroll.ensure_control_visible(_launch_button)
 
 func get_primary_safe_action() -> Control:
 	return _launch_button

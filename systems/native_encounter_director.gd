@@ -297,7 +297,7 @@ func _begin_pattern() -> void:
 	var entry_text: String = edge_names[_pattern_edge]
 	if _pattern.opposite_edges.has(1):
 		entry_text = "TOP + BOTTOM" if _pattern_edge < 2 else "LEFT + RIGHT"
-	SignalBus.combat_notice.emit("%s · %s · %s" % [_pattern.title, entry_text, "ENTERS LEFT HALF" if _pattern_edge < 2 else "ENTERS UPPER HALF"])
+	SignalBus.encounter_warning.emit("%s · %s · %s" % [_pattern.title, entry_text, "ENTERS LEFT HALF" if _pattern_edge < 2 else "ENTERS UPPER HALF"], float(_pattern.warning_seconds))
 
 
 func _spawn_pattern_member() -> void:

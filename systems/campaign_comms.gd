@@ -1,11 +1,11 @@
 extends Node
 ## Binds production flight events to authored, optional transmissions.
 const StoryCopy := preload("res://campaign/story_copy.gd")
-const CommsTicker := preload("res://ui/combat_notice.gd")
-var _ticker: CommsTicker
+const NoticeChannel := preload("res://ui/combat_notice.gd")
+var _ticker: NoticeChannel
 var _first_chain := false
 
-func configure(gameplay: Node, ticker: CommsTicker) -> void:
+func configure(gameplay: Node, ticker: NoticeChannel) -> void:
 	_ticker = ticker
 	_ticker.transmission_completed.connect(_on_transmission_completed)
 	gameplay.player.boost_chained.connect(_on_chain)

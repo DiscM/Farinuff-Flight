@@ -60,6 +60,19 @@ func _ready() -> void:
 	SignalBus.power_up_collected.connect(_on_power_up_collected)
 	SignalBus.boss_spawned.connect(_on_boss_spawned)
 	SignalBus.boss_health_changed.connect(_on_boss_health_changed)
+	SignalBus.boss_phase_presented.connect(_on_boss_phase_presented)
+	# Fixed thirds match the native boss phase thresholds and survive UI resizing.
+	for fraction in [1.0 / 3.0, 2.0 / 3.0]:
+		var marker := ColorRect.new()
+		marker.color = Color(1.0, 1.0, 1.0, 0.8)
+		marker.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		boss_health_bar.add_child(marker)
+		marker.anchor_left = fraction
+		marker.anchor_right = fraction
+		marker.anchor_bottom = 1.0
+		marker.offset_left = -1.0
+		marker.offset_right = 1.0
+
 	SignalBus.boss_died.connect(_on_boss_died)
 	SignalBus.orb_meter_changed.connect(_on_orb_meter_changed)
 	boss_bar_container.visible = false
@@ -186,6 +199,12 @@ func _on_boss_spawned(health: int, max_health: int, boss_name: String) -> void:
 	tween.set_loops(3)
 	tween.tween_property(boss_bar_container, "modulate:a", 0.3, 0.15)
 	tween.tween_property(boss_bar_container, "modulate:a", 1.0, 0.15)
+
+## Persistent phase identity complements the short combat transition notice.
+func _on_boss_phase_presented(phase: int, phase_name: String, projectile_color: Color) -> void:
+	boss_class_label.text = "PHASE %d / 3 · %s" % [phase + 1, phase_name]
+	boss_class_label.add_theme_color_override("font_color", projectile_color)
+	_style_progress_bar(boss_health_bar, projectile_color)
 
 ## Updates the boss health bar value whenever the boss takes damage.
 func _on_boss_health_changed(health: int) -> void:

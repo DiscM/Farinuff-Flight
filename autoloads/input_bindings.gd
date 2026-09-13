@@ -11,6 +11,19 @@ var _defaults: Dictionary = {}
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	# Do not rely on platform-specific built-in UI actions containing joypad
+	# buttons. These safety bindings remain independent of flight remapping.
+	for menu_action: String in ["ui_accept", "ui_cancel"]:
+		var button := JOY_BUTTON_A if menu_action == "ui_accept" else JOY_BUTTON_B
+		var present := false
+		for existing: InputEvent in InputMap.action_get_events(menu_action):
+			if existing is InputEventJoypadButton and existing.button_index == button and existing.device == -1:
+				present = true
+		if not present:
+			var menu_event := InputEventJoypadButton.new()
+			menu_event.button_index = button
+			menu_event.device = -1
+			InputMap.action_add_event(menu_action, menu_event)
 	for action: String in ACTIONS:
 		var config: Dictionary = ProjectSettings.get_setting("input/" + action, {})
 		_defaults[action] = config.get("events", []).duplicate(true)
@@ -83,26 +96,40 @@ func encode(event: InputEvent) -> Dictionary:
 	return {}
 
 func decode(data: Dictionary) -> InputEvent:
-	var code := int(data.get("code", -1))
-	if code < 0:
+	var stored_code: Variant = data.get("code", -1)
+	if not (stored_code is int or stored_code is float):
+		return null
+	var code := int(stored_code)
+	if code < 0 or float(code) != float(stored_code):
 		return null
 	match str(data.get("kind", "")):
 		"key":
+			if code == KEY_NONE:
+				return null
 			var event := InputEventKey.new()
 			event.physical_keycode = code
 			return event
 		"mouse":
+			if code not in [MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT, MOUSE_BUTTON_MIDDLE, MOUSE_BUTTON_XBUTTON1, MOUSE_BUTTON_XBUTTON2]:
+				return null
 			var event := InputEventMouseButton.new()
 			event.button_index = code
 			return event
 		"button":
+			if code >= JOY_BUTTON_MAX:
+				return null
 			var event := InputEventJoypadButton.new()
 			event.button_index = code
 			return event
 		"axis":
+			if code >= JOY_AXIS_MAX or code in [JOY_AXIS_RIGHT_X, JOY_AXIS_RIGHT_Y]:
+				return null
+			var direction: Variant = data.get("direction", 1)
+			if not (direction is int or direction is float) or direction not in [-1, 1]:
+				return null
 			var event := InputEventJoypadMotion.new()
 			event.axis = code
-			event.axis_value = -1.0 if int(data.get("direction", 1)) < 0 else 1.0
+			event.axis_value = float(direction)
 			return event
 	return null
 
@@ -170,7 +197,7 @@ func event_label(event: InputEvent) -> String:
 				return "Left trigger"
 			JOY_AXIS_TRIGGER_RIGHT:
 				return "Right trigger"
-	return event.as_text().replace(" (Physical)", "")
+	return event.as_text().replace(" (Physical)", "").replace(" - Physical", "")
 
 func is_pause_event(event: InputEvent) -> bool:
 	return event.is_action_pressed("pause") or (event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE)

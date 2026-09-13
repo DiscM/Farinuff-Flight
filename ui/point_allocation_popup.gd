@@ -29,6 +29,7 @@ var confirm_btn: Button
 ## Runs in PROCESS_MODE_ALWAYS so it works while the game is paused.
 func _ready() -> void:
 	add_to_group("scalable_ui")
+	theme = preload("res://ui/themes/farinuff_frontend_theme.tres")
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_build_ui()
 	_animate_in()
@@ -39,6 +40,11 @@ func set_points(p: int) -> void:
 	points_remaining = p
 	if points_label:
 		_refresh_ui()
+		if not panel_only:
+			if points_remaining > 0:
+				fire_rate_btn.grab_focus()
+			else:
+				confirm_btn.grab_focus()
 
 # ── UI Construction ──────────────────────────────────────────────
 
@@ -178,6 +184,8 @@ func _on_plus_pressed(stat_id: String) -> void:
 		"speed":
 			alloc_speed += 1
 	_refresh_ui()
+	if points_remaining == 0:
+		confirm_btn.grab_focus()
 
 ## Called when the "CONFIRM" button is pressed. Applies all temporarily
 ## allocated points to GameManager's stat system, emits allocation_done,

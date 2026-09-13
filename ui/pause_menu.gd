@@ -17,12 +17,13 @@ var _dev_panel: PanelContainer = null
 var _dev_slot: VBoxContainer = null
 var _transitioning := false
 var _build_panel: Control
-var _confirmation: ConfirmationDialog
+var _confirmation: Control
 
 ## Builds the UI layout and plays the fade-in animation. The scene's full-rect
 ## anchors fill the viewport. Runs in PROCESS_MODE_ALWAYS so it functions while
 ## the tree is paused.
 func _ready() -> void:
+	theme = preload("res://ui/themes/farinuff_frontend_theme.tres")
 	add_to_group("scalable_ui")
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_build_ui()
@@ -234,7 +235,7 @@ func _on_menu() -> void:
 func _confirm_transition(heading: String, message: String, action: Callable) -> void:
 	if _transitioning or is_instance_valid(_confirmation):
 		return
-	_confirmation = ConfirmationDialog.new()
+	_confirmation = preload("res://ui/shared/run_confirmation.gd").new()
 	_confirmation.title = heading
 	_confirmation.dialog_text = message
 	_confirmation.confirmed.connect(func():
@@ -243,4 +244,3 @@ func _confirm_transition(heading: String, message: String, action: Callable) -> 
 	)
 	_confirmation.canceled.connect(func(): _confirmation.queue_free())
 	add_child(_confirmation)
-	_confirmation.popup_centered()

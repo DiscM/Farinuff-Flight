@@ -210,6 +210,7 @@ func show_modal(scene: PackedScene, payload: Dictionary = {}) -> void:
 func back() -> bool:
 	if _navigation_locked:
 		return false
+	MenuAudio.play(&"UI.NAV.CANCEL")
 	if details_overlay.visible:
 		_close_details()
 		return true
@@ -479,6 +480,8 @@ func _resolve_primary_action(root: Node) -> Control:
 func _bind_hover_focus(root: Node) -> void:
 	for control in root.find_children("*", "Control", true, false):
 		if control is Button:
+			if not control.focus_entered.is_connected(_play_navigation_tick):
+				control.focus_entered.connect(_play_navigation_tick)
 			if not control.mouse_entered.is_connected(_on_gated_mouse_entered):
 				control.mouse_entered.connect(_on_gated_mouse_entered.bind(control))
 
@@ -809,3 +812,7 @@ func _close_details() -> void:
 	if is_instance_valid(_details_invoker) and _details_invoker.is_visible_in_tree():
 		_details_invoker.grab_focus()
 	_details_invoker = null
+
+
+func _play_navigation_tick() -> void:
+	MenuAudio.play(&"UI.NAV.MOVE")

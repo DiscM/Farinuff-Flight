@@ -62,6 +62,7 @@ var boost_duration_timer := 0.0
 var boost_cooldown_timer := 0.0
 var boost_distance_remaining_pixels := 0.0
 var boost_reflected_projectiles := 0
+var _chain_followup := false
 var boost_chain_window_timer := 0.0
 var post_boost_slide_timer := 0.0
 var drift_speed_bonus := 1.0
@@ -129,6 +130,8 @@ func configure_flight_space(value: FlightSpace) -> void:
 	$Visuals/InterceptorHull.visible = selected_hull == "ship_interceptor"
 	$Visuals/BulwarkHull.visible = selected_hull == "ship_bulwark"
 	_flight_space = value
+	if not _flight_space.bounds_changed.is_connected(_refresh_movement_bounds):
+		_flight_space.bounds_changed.connect(_refresh_movement_bounds)
 	for flag in VISUAL_DEBUG_FLAGS:
 		if get_visual_debug(flag):
 			_rebuild_visual_debug(flag)
@@ -278,15 +281,15 @@ func is_drone_escort_enabled() -> bool:
 	return drone_escort_enabled
 
 
-## Counts successful reflections only during an active boost. Reflections in
-## the short post-boost window remain defensive but do not build a new chain.
+## Counts reflections during the dash. The post-boost window permits one
+## follow-up input only; it does not extend projectile protection.
 func register_boost_reflection() -> void:
 	if is_boosting:
 		boost_reflected_projectiles += 1
 
 
 func can_deflect_projectiles() -> bool:
-	return is_boosting or boost_chain_window_timer > 0.0
+	return is_boosting
 
 
 func _on_area_entered(area: Area3D) -> void:
@@ -540,22 +543,23 @@ func _update_boost(delta: float) -> void:
 			boost_distance_remaining_pixels = 0.0
 			if _has_boost_chain():
 				boost_chain_window_timer = FlightTuning.BOOST_CHAIN_WINDOW
-				boost_cooldown_timer = 0.0
+				boost_cooldown_timer = _get_boost_cooldown()
 			else:
 				boost_cooldown_timer = _get_boost_cooldown()
 			post_boost_slide_timer = FlightTuning.POST_BOOST_SLIDE_DURATION
 	else:
 		if boost_chain_window_timer > 0.0:
 			boost_chain_window_timer = maxf(boost_chain_window_timer - delta, 0.0)
-			deflection_requested.emit(global_position, velocity)
 		drift_speed_bonus = move_toward(drift_speed_bonus, 1.0, FlightTuning.DRIFT_DECAY_RATE * delta)
 		boost_cooldown_timer = maxf(boost_cooldown_timer - delta, 0.0)
-		if Input.is_action_just_pressed("boost") and boost_cooldown_timer <= 0.0:
+		if Input.is_action_just_pressed("boost") and (boost_cooldown_timer <= 0.0 or (_has_boost_chain() and boost_chain_window_timer > 0.0)):
 			_begin_boost()
 
 
 func _begin_boost() -> void:
-	if _has_boost_chain() and (is_boosting or boost_chain_window_timer > 0.0):
+	var is_chain := _has_boost_chain() and (is_boosting or boost_chain_window_timer > 0.0)
+	_chain_followup = is_chain
+	if is_chain:
 		boost_chained.emit()
 	is_boosting = true
 	boost_duration_timer = FlightTuning.BOOST_DURATION
@@ -574,11 +578,11 @@ func _begin_boost() -> void:
 
 
 func _has_boost_chain() -> bool:
-	return boost_reflected_projectiles >= FlightTuning.BOOST_CHAIN_REFLECT_THRESHOLD
+	return not _chain_followup and boost_reflected_projectiles >= FlightTuning.BOOST_CHAIN_REFLECT_THRESHOLD
 
 
 func _get_boost_cooldown() -> float:
-	if boost_reflected_projectiles <= 0:
+	if _chain_followup or boost_reflected_projectiles <= 0:
 		return FlightTuning.BOOST_COOLDOWN
 	var additional_reflections := boost_reflected_projectiles - 1
 	return maxf(
@@ -911,8 +915,9 @@ func get_boost_state() -> Dictionary:
 	var remaining := maxf(boost_duration_timer, 0.0) + FlightTuning.BOOST_CHAIN_WINDOW if is_boosting else boost_chain_window_timer
 	return {
 		"boosting": is_boosting,
+		"chain_followup": _chain_followup,
 		"chain_ready": chain_ready,
-		"reflections": mini(boost_reflected_projectiles, FlightTuning.BOOST_CHAIN_REFLECT_THRESHOLD) if is_boosting or chain_ready else 0,
+		"reflections": mini(boost_reflected_projectiles, FlightTuning.BOOST_CHAIN_REFLECT_THRESHOLD) if (is_boosting or chain_ready) and not _chain_followup else 0,
 		"threshold": FlightTuning.BOOST_CHAIN_REFLECT_THRESHOLD,
 		"chain_remaining": remaining if chain_ready else 0.0,
 		"chain_fraction": clampf(remaining / (FlightTuning.BOOST_DURATION + FlightTuning.BOOST_CHAIN_WINDOW), 0.0, 1.0),

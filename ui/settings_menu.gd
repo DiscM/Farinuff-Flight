@@ -12,6 +12,7 @@ var _controls_button: Button
 ## builds the UI contents.
 func _ready() -> void:
 	add_to_group("scalable_ui")
+	theme = preload("res://ui/themes/farinuff_frontend_theme.tres")
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	_build_ui()
@@ -27,9 +28,9 @@ func _build_ui() -> void:
 
 	var panel := PanelContainer.new()
 	panel.set_anchors_preset(Control.PRESET_CENTER)
-	panel.offset_left = -180.0
+	panel.offset_left = -minf(340.0, get_viewport_rect().size.x * 0.5 - 20.0)
 	panel.offset_top = -minf(285.0, get_viewport_rect().size.y * 0.5 - 20.0)
-	panel.offset_right = 180.0
+	panel.offset_right = minf(340.0, get_viewport_rect().size.x * 0.5 - 20.0)
 	panel.offset_bottom = minf(285.0, get_viewport_rect().size.y * 0.5 - 20.0)
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(0.04, 0.06, 0.15)
@@ -40,14 +41,10 @@ func _build_ui() -> void:
 	panel.add_theme_stylebox_override("panel", style)
 	add_child(panel)
 
-	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(300, minf(520.0, get_viewport_rect().size.y - 100.0))
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	panel.add_child(scroll)
 	var column := VBoxContainer.new()
 	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	column.add_theme_constant_override("separation", 12)
-	scroll.add_child(column)
+	panel.add_child(column)
 
 	var title := Label.new()
 	title.text = "SETTINGS"
@@ -55,10 +52,20 @@ func _build_ui() -> void:
 	title.add_theme_font_size_override("font_size", 30)
 	title.add_theme_color_override("font_color", Color(0.3, 0.85, 1.0))
 	column.add_child(title)
+	var tabs := TabContainer.new()
+	tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	tabs.custom_minimum_size.y = minf(340.0, maxf(160.0, get_viewport_rect().size.y - 260.0))
+	tabs.use_hidden_tabs_for_min_size = false
+	column.add_child(tabs)
+	var audio := _make_category(tabs, "Audio")
+	var display := _make_category(tabs, "Display")
+	var access := _make_category(tabs, "Access")
+	var controls := _make_category(tabs, "Controls")
+	tabs.tab_changed.connect(func(_index: int): MenuAudio.play(&"UI.NAV.MOVE"))
 
 	volume_label = Label.new()
 	volume_label.add_theme_color_override("font_color", Color(0.8, 0.9, 1.0))
-	column.add_child(volume_label)
+	audio.add_child(volume_label)
 
 	var volume := HSlider.new()
 	volume.min_value = 0.0
@@ -67,12 +74,12 @@ func _build_ui() -> void:
 	volume.value = float(SaveManager.get_setting("master_volume", 0.8))
 	volume.custom_minimum_size = Vector2(260, 34)
 	volume.value_changed.connect(_on_volume_changed)
-	column.add_child(volume)
+	audio.add_child(volume)
 	_refresh_volume_label(volume.value)
 
 	music_label = Label.new()
 	music_label.add_theme_color_override("font_color", Color(0.8, 0.9, 1.0))
-	column.add_child(music_label)
+	audio.add_child(music_label)
 
 	var music := HSlider.new()
 	music.min_value = 0.0
@@ -81,31 +88,46 @@ func _build_ui() -> void:
 	music.value = float(SaveManager.get_setting("music_volume", 0.8))
 	music.custom_minimum_size = Vector2(260, 34)
 	music.value_changed.connect(_on_music_changed)
-	column.add_child(music)
+	audio.add_child(music)
 	_refresh_music_label(music.value)
 
+	var ui_label := Label.new()
+	ui_label.text = "Menu audio: %d%%" % roundi(float(SaveManager.get_setting("ui_volume", 0.8)) * 100)
+	audio.add_child(ui_label)
+	var ui_volume := HSlider.new()
+	ui_volume.min_value = 0.0
+	ui_volume.max_value = 1.0
+	ui_volume.step = 0.05
+	ui_volume.value = float(SaveManager.get_setting("ui_volume", 0.8))
+	ui_volume.custom_minimum_size.y = 34
+	ui_volume.value_changed.connect(func(value: float):
+		SaveManager.update_setting("ui_volume", value)
+		ui_label.text = "Menu audio: %d%%" % roundi(value * 100)
+	)
+	audio.add_child(ui_volume)
 	var story := OptionButton.new()
 	story.add_item("Story: full", 0)
 	story.add_item("Story: brief", 1)
 	story.add_item("Story: off", 2)
 	story.select(clampi(int(SaveManager.get_setting("story_frequency", 0)), 0, 2))
 	story.item_selected.connect(func(index: int): SaveManager.update_setting("story_frequency", index))
-	column.add_child(story)
-	column.add_child(_make_toggle("Screen shake", "screen_shake"))
-	column.add_child(_make_toggle("CRT scanline effect", "crt_effect"))
-	column.add_child(_make_toggle("Screen distortion", "screen_distortion"))
-	column.add_child(_make_toggle("Fullscreen", "fullscreen", false))
-	column.add_child(_make_toggle("Reduced flashing effects", "reduced_flashing", false))
-	column.add_child(_make_toggle("Reduced menu motion", "reduced_motion", false))
+	access.add_child(story)
+	display.add_child(_make_toggle("Screen shake", "screen_shake"))
+	display.add_child(_make_toggle("CRT scanline effect", "crt_effect"))
+	display.add_child(_make_toggle("Screen distortion", "screen_distortion"))
+	display.add_child(_make_toggle("Fullscreen", "fullscreen", false))
+	access.add_child(_make_toggle("Reduced flashing effects", "reduced_flashing", false))
+	access.add_child(_make_toggle("Reduced menu motion", "reduced_motion", false))
+	access.add_child(_make_toggle("Hold to confirm ending a run", "hold_to_confirm", false))
 	var text_size := OptionButton.new()
 	for percent: int in [100, 115, 130]:
 		text_size.add_item("Menu text size: %d%%" % percent)
 	text_size.select(clampi(roundi((float(SaveManager.get_setting("menu_text_scale", 1.0)) - 1.0) / 0.15), 0, 2))
 	text_size.item_selected.connect(func(index: int): SaveManager.update_setting("menu_text_scale", 1.0 + index * 0.15))
-	column.add_child(text_size)
+	access.add_child(text_size)
 	var deadzone_label := Label.new()
 	deadzone_label.text = "Right stick aim deadzone: %d%%" % roundi(float(SaveManager.get_setting("aim_deadzone", 0.4)) * 100)
-	column.add_child(deadzone_label)
+	controls.add_child(deadzone_label)
 	var deadzone := HSlider.new()
 	deadzone.min_value = 0.15
 	deadzone.max_value = 0.6
@@ -116,12 +138,12 @@ func _build_ui() -> void:
 		SaveManager.update_setting("aim_deadzone", value)
 		deadzone_label.text = "Right stick aim deadzone: %d%%" % roundi(value * 100)
 	)
-	column.add_child(deadzone)
+	controls.add_child(deadzone)
 	_controls_button = Button.new()
 	_controls_button.text = "CUSTOMIZE FLIGHT CONTROLS"
 	_controls_button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_controls_button.pressed.connect(_open_controls)
-	column.add_child(_controls_button)
+	controls.add_child(_controls_button)
 
 	var note := Label.new()
 	note.text = "Preferences and high score are saved automatically."
@@ -137,6 +159,7 @@ func _build_ui() -> void:
 	close_button.add_theme_font_size_override("font_size", 18)
 	close_button.pressed.connect(_on_close_pressed)
 	column.add_child(close_button)
+	tabs.get_tab_bar().grab_focus()
 
 ## Helper: creates a CheckButton toggle with a label, initialized from
 ## the persisted setting value (using the given fallback when the key has
@@ -205,3 +228,16 @@ func _open_controls() -> void:
 		_controls_button.grab_focus()
 	)
 	_controls_layer.add_child(controls)
+
+
+func _make_category(tabs: TabContainer, category_name: String) -> VBoxContainer:
+	var scroll := ScrollContainer.new()
+	scroll.name = category_name
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.follow_focus = true
+	tabs.add_child(scroll)
+	var contents := VBoxContainer.new()
+	contents.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	contents.add_theme_constant_override("separation", 14)
+	scroll.add_child(contents)
+	return contents

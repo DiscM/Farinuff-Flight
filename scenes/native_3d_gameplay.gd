@@ -131,6 +131,7 @@ func _ready() -> void:
 	player.fire_requested.connect(projectile_manager.fire_player_projectile)
 	player.muzzle_feedback_requested.connect(_on_player_fired)
 	player.deflection_requested.connect(projectile_manager.deflect_enemy_projectiles)
+	projectile_manager.deflected_projectile_hit.connect(_on_reflected_projectile_hit)
 	player.boost_started.connect(_on_player_boost_started)
 	player.damage_taken.connect(_on_player_damage_taken)
 	player.shield_absorbed.connect(_on_shield_absorbed)
@@ -167,6 +168,13 @@ func _on_player_projectile_hit(target: Area3D, _combat_position: Vector3) -> voi
 	effect_manager.play_effect(NativeEffect.EffectKind.IMPACT, combat_position)
 	if target != null and target.has_method("take_damage"):
 		target.take_damage(WeaponTuning.BASE_DAMAGE + GameManager.bonus_damage)
+
+
+func _on_reflected_projectile_hit(target: Area3D, combat_position: Vector3) -> void:
+	effect_manager.play_effect(NativeEffect.EffectKind.IMPACT, combat_position)
+	# Enemy fire is a defensive counterattack, independent of weapon upgrades.
+	if target != null and target.has_method("take_damage"):
+		target.take_damage(1)
 
 
 func _on_enemy_projectile_hit(target: Area3D, combat_position: Vector3) -> void:

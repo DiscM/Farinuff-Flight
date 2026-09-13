@@ -19,6 +19,11 @@ const NativeHazardManager := preload("res://systems/native_hazard_manager_3d.gd"
 const ENEMY_MODEL_SHADER: Shader = preload(
 	"res://effects/shaders/models/imported_enemy_surface_3d.gdshader"
 )
+## One immutable conversion per authored material, rather than per spawn.
+## Resource keys retain the source as well as its conversion, avoiding ID
+## reuse and material teardown while Forward+ still processes removed meshes.
+## Generation, animation, and damage feedback remain instance uniforms.
+static var _adapted_model_materials: Dictionary = {}
 const GENERATION_STATS := [
 	preload("res://entities/enemies/basic_enemy_generation_1.tres"),
 	preload("res://entities/enemies/basic_enemy_generation_2.tres"),
@@ -80,7 +85,6 @@ func _ready() -> void:
 func _adapt_imported_model_materials() -> void:
 	# Preserve the Blender-authored PBR palette while restoring the shared
 	# generation, hit-flash, and pause-aware instance-uniform contract.
-	var adapted_materials: Dictionary[int, ShaderMaterial] = {}
 	for node in visuals.find_children("*", "MeshInstance3D", true, false):
 		var mesh_instance := node as MeshInstance3D
 		if mesh_instance.mesh == null:
@@ -89,10 +93,9 @@ func _adapt_imported_model_materials() -> void:
 			var source := mesh_instance.get_active_material(surface_index)
 			if source is ShaderMaterial and (source as ShaderMaterial).shader == ENEMY_MODEL_SHADER:
 				continue
-			var source_id := source.get_instance_id() if source != null else 0
-			if adapted_materials.has(source_id):
+			if _adapted_model_materials.has(source):
 				mesh_instance.set_surface_override_material(
-					surface_index, adapted_materials[source_id]
+					surface_index, _adapted_model_materials[source]
 				)
 				continue
 			var material := ShaderMaterial.new()
@@ -120,7 +123,7 @@ func _adapt_imported_model_materials() -> void:
 			material.set_shader_parameter(&"emission_strength", emission_strength)
 			material.set_shader_parameter(&"metallic", metallic)
 			material.set_shader_parameter(&"roughness", roughness)
-			adapted_materials[source_id] = material
+			_adapted_model_materials[source] = material
 			mesh_instance.set_surface_override_material(surface_index, material)
 
 
@@ -257,16 +260,23 @@ func _update_targeting(delta: float) -> void:
 	var player := get_tree().get_first_node_in_group(&"player_craft") as Node3D
 	if player == null:
 		return
-	var desired_screen := _flight_space.combat_motion_to_screen(
-		player.global_position - global_position
-	).normalized()
+	var displacement := _flight_space.combat_motion_to_screen(player.global_position - global_position)
+	var player_velocity: Vector3 = player.get("velocity")
+	var lead_seconds := clampf(displacement.length() / maxf(_speed_pixels, 1.0) * 0.3, 0.0, 0.65)
+	var interception := displacement + _flight_space.combat_motion_to_screen(player_velocity) * lead_seconds
+	# Stable opposite approach lanes stop a group collapsing into one trailing line.
+	# Close-range convergence preserves a dodgeable, committed approach.
+	var flank_side := -1.0 if get_instance_id() % 2 == 0 else 1.0
+	var flank_weight := clampf((displacement.length() - 100.0) / 220.0, 0.0, 1.0)
+	interception += displacement.normalized().orthogonal() * flank_side * 90.0 * flank_weight
+	var desired_screen := interception.normalized()
 	var current_screen := _flight_space.combat_motion_to_screen(_heading).normalized()
 	if desired_screen.is_zero_approx() or current_screen.is_zero_approx():
 		return
 	var turn := clampf(
 		current_screen.angle_to(desired_screen),
-		-STEERING_RATE_RADIANS * delta,
-		STEERING_RATE_RADIANS * delta
+		-STEERING_RATE_RADIANS * (1.25 + generation * 0.15) * delta,
+		STEERING_RATE_RADIANS * (1.25 + generation * 0.15) * delta
 	)
 	var new_screen_direction := current_screen.rotated(turn)
 	_heading = _flight_space.input_to_combat_direction(new_screen_direction)

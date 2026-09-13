@@ -99,12 +99,28 @@ func _advance_movement(delta: float) -> void:
 
 func _change_pattern() -> void:
 	_pattern_timer = randf_range(1.4, 2.2)
-	var old_offset := sin(_weave_time * _frequency) * _amplitude
+	var old_offset := _screen_travel_direction * (_speed_pixels * _weave_time)
+	old_offset += _screen_perpendicular * sin(_weave_time * _frequency) * _amplitude
+	if _inside_view():
+		var player := get_tree().get_first_node_in_group(&"player_craft") as Node3D
+		if player != null:
+			var player_velocity: Vector3 = player.get("velocity")
+			var target := player.global_position + player_velocity * 0.4
+			var desired := _flight_space.combat_motion_to_screen(target - global_position).normalized()
+			var entry_direction := _flight_space.combat_motion_to_screen(_heading).normalized()
+			# Keep a forward exit route: intercept, never orbit or chase indefinitely.
+			if not desired.is_zero_approx():
+				var entry_angle := clampf(entry_direction.angle_to(desired), -PI / 4.0, PI / 4.0)
+				var intercept_direction := entry_direction.rotated(entry_angle)
+				var turn := clampf(_screen_travel_direction.angle_to(intercept_direction), -PI / 8.0, PI / 8.0)
+				_screen_travel_direction = _screen_travel_direction.rotated(turn)
+				_screen_perpendicular = _screen_travel_direction.orthogonal()
 	_amplitude = randf_range(48.0, 104.0)
 	_frequency = randf_range(2.4, 4.6)
-	var new_offset := sin(_weave_time * _frequency) * _amplitude
-	# Recenter when changing frequency so the new pattern starts continuously.
-	_start_position += _flight_space.screen_motion_to_combat(_screen_perpendicular * (old_offset - new_offset))
+	var new_offset := _screen_travel_direction * (_speed_pixels * _weave_time)
+	new_offset += _screen_perpendicular * sin(_weave_time * _frequency) * _amplitude
+	# Recenter both the weave and interception turn without teleporting the craft.
+	_start_position += _flight_space.screen_motion_to_combat(old_offset - new_offset)
 	if _inside_view():
 		_play_feedback(0.35)
 

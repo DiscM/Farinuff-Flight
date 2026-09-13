@@ -84,13 +84,12 @@ func _build_version() -> String:
 func _arrange_command_deck() -> void:
 	var margin := $Margin
 	var column := $Margin/VBox
-	margin.remove_child(column)
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.follow_focus = true
 	margin.add_child(scroll)
 	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(column)
+	column.reparent(scroll)
 	var preview := preload("res://entities/player/ship_upgrade_preview.gd").new()
 	var modules: Array[String] = []
 	preview.configure(modules, "", MetaProgression.selected_ship)

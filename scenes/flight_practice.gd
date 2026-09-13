@@ -78,7 +78,7 @@ func _show_step() -> void:
 	_lesson.text = [
 		"FLIGHT SCHOOL · 1 / 4\nMove across the combat plane, aim, and fire. Practice cannot cost a run or spend supplies.",
 		"FLIGHT SCHOOL · 2 / 4\nBoost into the slow volley to reflect it. You can keep practicing after a hit.",
-		"FLIGHT SCHOOL · 3 / 4\nReflect three shots in one boost. Press boost again while CHAIN is lit.",
+		"FLIGHT SCHOOL · 3 / 4\nReflect three shots in one boost. Press boost while CHAIN is lit for one follow-up, then recharge.",
 		"FLIGHT SCHOOL · 4 / 4\nCollect the orbs. Each orb fills NEXT WAVE and NEXT LIFE; twelve orb value restores a life.",
 		"FLIGHT SCHOOL COMPLETE\nReflection turns incoming fire into your weapon. Launch an Expedition when you are ready.",
 	][_step]

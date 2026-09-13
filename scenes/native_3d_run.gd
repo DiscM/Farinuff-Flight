@@ -14,10 +14,8 @@ const NATIVE_RUN_PATH := "res://scenes/native_3d_run.tscn"
 var _comms: Node
 var encounters: EncounterDirector
 var _run_overlay: CanvasLayer
-var _allocation_queue: Array[int] = []
+var _interludes := preload("res://systems/run_interlude_coordinator.gd").new()
 var _ended := false
-var _elite_pending := false
-var _campaign_steps: Array[Dictionary] = []
 var _active_campaign_step: Dictionary = {}
 
 
@@ -30,7 +28,7 @@ func _ready() -> void:
 	SignalBus.game_over.connect(_end_run)
 	SignalBus.allocation_triggered.connect(_queue_allocation)
 	SignalBus.elite_upgrade_triggered.connect(_queue_elite_reward)
-	SignalBus.expedition_completed.connect(_show_victory)
+	SignalBus.expedition_completed.connect(_queue_victory)
 	await super._ready()
 	if not GameManager.is_game_active:
 		return
@@ -54,6 +52,9 @@ func _prepare_run_actors() -> void:
 
 
 func _new_overlay() -> CanvasLayer:
+	# Optional interceptions end at every safe boundary, including ordinary
+	# wave allocations, so their countdown cannot resume after a reward screen.
+	encounters.objectives.cancel()
 	var overlay := CanvasLayer.new()
 	overlay.layer = 40
 	overlay.process_mode = Node.PROCESS_MODE_ALWAYS
@@ -67,6 +68,8 @@ func _end_run(score: int) -> void:
 	if _ended:
 		return
 	_ended = true
+	_interludes.suspend()
+	_clear_run_overlay()
 	encounters.started = false
 	get_tree().paused = true
 	if GameManager.try_again_stocks > 0:
@@ -100,6 +103,7 @@ func _revive() -> void:
 
 
 func _show_game_over(score: int) -> void:
+	_interludes.clear()
 	GameManager.finalize_run()
 	ExpeditionManager.abandon_expedition()
 	ResourceCache.prime_scene(MAIN_MENU_PATH)
@@ -113,7 +117,7 @@ func _show_game_over(score: int) -> void:
 
 
 func _queue_allocation(points: int) -> void:
-	_allocation_queue.append(points)
+	_interludes.enqueue({"kind": "allocation", "points": points})
 	get_tree().paused = true
 	_show_next_reward.call_deferred()
 
@@ -121,12 +125,24 @@ func _queue_allocation(points: int) -> void:
 func _show_next_reward() -> void:
 	if _ended or is_instance_valid(_run_overlay):
 		return
-	if _elite_pending:
-		_elite_pending = false
-		var choices := NativeUpgrades.available()
-		if choices.is_empty():
-			_allocation_queue.push_front(3)
-		else:
+	var step := _interludes.take_next()
+	# Settings can change while an earlier reward owns the screen. Recheck at
+	# presentation time; discarded prose remains unread in the Archives.
+	while not step.is_empty() and str(step.kind) == "story" and int(SaveManager.get_setting("story_frequency", 0)) == 2:
+		_interludes.complete(int(step.token))
+		step = _interludes.take_next()
+	if step.is_empty():
+		hud.show()
+		get_tree().paused = false
+		return
+	var token := int(step.token)
+	match str(step.kind):
+		"elite":
+			var choices := NativeUpgrades.available()
+			# Resolve ownership at presentation time too: loadouts/dev grants may
+			# install upgrades without passing through the draft selection history.
+			if choices.is_empty() and GameManager.has_all_available_elites():
+				GameManager.elite_supply_pending = true
 			_run_overlay = _new_overlay()
 			var elite := ELITE_REWARD.instantiate()
 			elite.use_custom_upgrade_pool = true
@@ -134,38 +150,50 @@ func _show_next_reward() -> void:
 			elite.upgrade_target = player
 			elite.show_ship_previews = true
 			_run_overlay.add_child(elite)
-			elite.upgrade_chosen.connect(_finish_reward)
-			return
-	if _allocation_queue.is_empty():
-		if not _campaign_steps.is_empty():
-			_show_campaign_step()
-			return
-		hud.show()
-		get_tree().paused = false
-		return
-	_run_overlay = _new_overlay()
-	var popup := ALLOCATION.instantiate()
-	_run_overlay.add_child(popup)
-	popup.set_points(_allocation_queue.pop_front())
-	popup.allocation_done.connect(_finish_reward)
+			elite.upgrade_chosen.connect(_finish_reward.bind(token))
+		"allocation":
+			_run_overlay = _new_overlay()
+			var popup := ALLOCATION.instantiate()
+			_run_overlay.add_child(popup)
+			popup.set_points(int(step.points))
+			popup.allocation_done.connect(_finish_reward.bind(token))
+		"story", "route":
+			_show_campaign_step(step)
+		"victory":
+			_show_victory(int(step.wave))
 
 
-func _finish_reward() -> void:
-	_run_overlay.queue_free()
+func _clear_run_overlay() -> void:
+	if is_instance_valid(_run_overlay):
+		_run_overlay.hide()
+		_run_overlay.queue_free()
 	_run_overlay = null
-	# Keep the tree paused until every milestone reward is resolved. Deferred
-	# presentation also lets the closing popup finish its own signal handler.
+
+
+func _finish_reward(token: int) -> void:
+	if not _interludes.complete(token):
+		return
+	_clear_run_overlay()
 	_show_next_reward.call_deferred()
 
 
 func _queue_elite_reward() -> void:
-	_elite_pending = true
+	_interludes.enqueue({"kind": "elite"})
+	get_tree().paused = true
+	_show_next_reward.call_deferred()
+
+
+func _queue_victory(wave: int) -> void:
+	_interludes.clear()
+	# A simultaneous death keeps its retry/results surface; victory waits for revival.
+	if not _ended:
+		_clear_run_overlay()
+	_interludes.enqueue({"kind": "victory", "wave": wave})
 	get_tree().paused = true
 	_show_next_reward.call_deferred()
 
 
 func _show_victory(wave: int) -> void:
-	_campaign_steps.clear()
 	encounters.started = false
 	projectile_manager.clear_projectiles()
 	hazard_manager.clear_hazards()
@@ -179,6 +207,7 @@ func _show_victory(wave: int) -> void:
 
 
 func _continue_endless() -> void:
+	_interludes.clear()
 	ExpeditionManager.complete_expedition(ExpeditionManager.FINAL_ENDING_FOLLOW_SIGNAL)
 	_run_overlay.queue_free()
 	_run_overlay = null
@@ -257,7 +286,7 @@ func get_dev_debug_state() -> String:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if _ended or is_instance_valid(_run_overlay) or _elite_pending or not _allocation_queue.is_empty():
+	if _ended or is_instance_valid(_run_overlay) or _interludes.has_work():
 		return
 	super._unhandled_input(event)
 
@@ -271,7 +300,7 @@ func _queue_campaign_milestone(wave: int) -> void:
 	for beat_id in transition.story_beat_ids:
 		_queue_story(beat_id)
 	if not transition.next_reachable_node_ids.is_empty():
-		_campaign_steps.append({"kind": "route"})
+		_interludes.enqueue({"kind": "route"})
 	get_tree().paused = true
 	_show_next_reward.call_deferred()
 
@@ -283,7 +312,7 @@ func _queue_story(beat_id: StringName) -> void:
 		return
 	var beat := ExpeditionManager.get_story_beat(beat_id)
 	if beat != null:
-		_campaign_steps.append({"kind": "story", "beat": beat})
+		_interludes.enqueue({"kind": "story", "beat": beat})
 
 
 func _queue_arrival_story() -> void:
@@ -292,8 +321,8 @@ func _queue_arrival_story() -> void:
 		_queue_story(node.briefing_beat_id)
 
 
-func _show_campaign_step() -> void:
-	_active_campaign_step = _campaign_steps.pop_front()
+func _show_campaign_step(step: Dictionary) -> void:
+	_active_campaign_step = step
 	_run_overlay = _new_overlay()
 	var panel := preload("res://ui/sector_interlude.gd").new()
 	if _active_campaign_step.kind == "route":
@@ -306,11 +335,13 @@ func _show_campaign_step() -> void:
 			panel.body = panel.body.split(". ")[0] + "."
 	panel.allow_abandon = true
 	panel.abandon_requested.connect(_abandon_from_interlude)
-	panel.resolved.connect(_finish_campaign_step)
+	panel.resolved.connect(_finish_campaign_step.bind(int(step.token)))
 	_run_overlay.add_child(panel)
 
 
-func _finish_campaign_step(node_id: StringName) -> void:
+func _finish_campaign_step(node_id: StringName, token: int) -> void:
+	if _ended or int(_active_campaign_step.get("token", -1)) != token:
+		return
 	if _active_campaign_step.kind == "route":
 		ExpeditionManager.choose_route(node_id)
 		_queue_arrival_story()
@@ -318,10 +349,11 @@ func _finish_campaign_step(node_id: StringName) -> void:
 	else:
 		ExpeditionManager.record_story_viewed(_active_campaign_step.beat.id)
 	_active_campaign_step = {}
-	_finish_reward()
+	_finish_reward(token)
 
 
 func abandon_run() -> void:
+	_interludes.clear()
 	encounters.objectives.cancel()
 	encounters.started = false
 	GameManager.is_game_active = false

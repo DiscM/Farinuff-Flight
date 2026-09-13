@@ -8,6 +8,7 @@ var heading := "THE RETURN SIGNAL"
 var body := ""
 var routes: Array[Resource] = []
 var _resolved := false
+var _confirmation: Control
 
 func _ready() -> void:
 	add_to_group("scalable_ui")
@@ -82,19 +83,22 @@ func _choose(node_id: StringName) -> void:
 	if _resolved:
 		return
 	_resolved = true
-	AudioManager.play_ui_click()
+	MenuAudio.play(&"MAP.SECTOR.DEPART" if not node_id.is_empty() else &"UI.NAV.CONFIRM")
 	resolved.emit(node_id)
 
 func _unhandled_input(event: InputEvent) -> void:
+	if is_instance_valid(_confirmation):
+		return
 	if routes.is_empty() and event.is_action_pressed("ui_cancel"):
 		get_viewport().set_input_as_handled()
 		_choose(&"")
 
 
 func _confirm_abandon() -> void:
-	if _resolved:
+	if _resolved or is_instance_valid(_confirmation):
 		return
-	var confirmation := ConfirmationDialog.new()
+	var confirmation := preload("res://ui/shared/run_confirmation.gd").new()
+	_confirmation = confirmation
 	confirmation.title = "End this Expedition?"
 	confirmation.dialog_text = "Bank earned salvage and return to the Hangar. This run's ship build will end."
 	confirmation.confirmed.connect(func():
@@ -106,4 +110,3 @@ func _confirm_abandon() -> void:
 	)
 	confirmation.canceled.connect(confirmation.queue_free)
 	add_child(confirmation)
-	confirmation.popup_centered()

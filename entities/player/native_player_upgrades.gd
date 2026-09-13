@@ -12,9 +12,10 @@ const SUPPORTED_IDS: Array[String] = [
 
 static func available() -> Array[Dictionary]:
 	var upgrades: Array[Dictionary] = []
+	var owned := GameManager.get_owned_elite_ids()
 	for upgrade in GameManager.get_upgrade_pool():
 		var upgrade_id := str(upgrade["id"])
-		if SUPPORTED_IDS.has(upgrade_id) and not GameManager.chosen_upgrade_ids.has(upgrade_id):
+		if SUPPORTED_IDS.has(upgrade_id) and not owned.has(upgrade_id):
 			upgrades.append(upgrade)
 	return upgrades
 

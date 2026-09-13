@@ -43,7 +43,6 @@ func _embed_panel() -> void:
 	if panels.is_empty():
 		return
 	var panel := panels[0] as PanelContainer
-	panel.get_parent().remove_child(panel)
 	for child in _menu.get_children():
 		if child is Control:
 			child.hide()
@@ -58,7 +57,7 @@ func _embed_panel() -> void:
 	panel.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	panel.custom_minimum_size = Vector2.ZERO
-	scroll.add_child(panel)
+	panel.reparent(scroll)
 	panel.show()
 
 func _back() -> void:

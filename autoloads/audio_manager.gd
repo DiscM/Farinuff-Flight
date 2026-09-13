@@ -16,6 +16,12 @@ const UI_CLICK := preload("res://assets/Shapeforms Audio Free Sound Effects/Futu
 const POOL_SIZE: int = 16
 ## Baseline music loudness before the music_volume setting is applied.
 const MUSIC_VOLUME_DB := -16.0
+## Shared first-pass score grid from design/audio_direction.md. The ambient
+## bed has no beat metadata; keep musical cues on a continuous transport even
+## when that bed loops or gameplay is paused.
+const MUSIC_BPM := 120.0
+const MUSIC_BAR_SECONDS := 4.0 * 60.0 / MUSIC_BPM
+var _music_started_usec := 0
 
 var _players: Array[AudioStreamPlayer] = []
 var _last_played: Dictionary = {}
@@ -56,6 +62,13 @@ func _start_music() -> void:
 	_music_player.volume_db = MUSIC_VOLUME_DB
 	add_child(_music_player)
 	_music_player.play()
+	_music_started_usec = Time.get_ticks_usec()
+
+
+func seconds_to_next_music_bar() -> float:
+	var elapsed := float(Time.get_ticks_usec() - _music_started_usec) / 1000000.0
+	var phase := fposmod(elapsed, MUSIC_BAR_SECONDS)
+	return 0.0 if phase < 0.01 else MUSIC_BAR_SECONDS - phase
 
 func play_hit_marker() -> void:
 	_play_rate_limited("hit_marker", HIT_MARKER, -27.0, 0.045, 0.92, 1.08)
@@ -83,7 +96,9 @@ func play_xp_orb() -> void:
 	_play_rate_limited("xp_orb", XP_ORB, -20.0, 0.035, 1.08, 1.32)
 
 func play_ui_click() -> void:
-	_play(UI_CLICK, -12.0, 0.98, 1.02)
+	var menu_audio := get_node_or_null("/root/MenuAudio")
+	if menu_audio != null:
+		menu_audio.play(&"UI.NAV.CONFIRM")
 
 func _play_rate_limited(key: String, stream: AudioStream, volume_db: float, cooldown: float, pitch_min: float, pitch_max: float) -> void:
 	var now := Time.get_ticks_msec() * 0.001
