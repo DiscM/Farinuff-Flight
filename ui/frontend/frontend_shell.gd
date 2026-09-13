@@ -23,16 +23,13 @@ const PAGE_REGISTRY: Dictionary = {
 }
 const PAGE_NAV_ORDER: Array[StringName] = [
 	&"command_deck",
-	&"expedition_map",
-	&"launch_bay",
 	&"hangar",
-	&"flight_school",
 	&"settings",
 	&"archives",
 ]
 const PAGE_DISPLAY_NAMES: Dictionary = {
-	&"command_deck": "Command Deck",
-	&"expedition_map": "Expedition Map",
+	&"command_deck": "Play",
+	&"expedition_map": "Expedition Chart",
 	&"launch_bay": "Launch Bay",
 	&"hangar": "Hangar",
 	&"flight_school": "Flight School",
@@ -257,7 +254,7 @@ func get_open_modal() -> Node:
 
 
 func get_nav_button(page_id: StringName) -> Button:
-	return _nav_buttons.get(page_id) as Button
+	return _nav_tab_buttons.get(page_id) as Button
 
 
 func set_objective(text: String) -> void:
@@ -521,7 +518,7 @@ func _make_nav_entry(
 	marker.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_child(marker)
 	var button := Button.new()
-	button.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	button.alignment = HORIZONTAL_ALIGNMENT_CENTER
 	button.custom_minimum_size = Vector2(0, 44)
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	button.set_meta(&"frontend_page_id", page_id)
@@ -688,21 +685,10 @@ func _on_viewport_resized() -> void:
 	wave_value.visible = width >= 800.0
 	build_label.visible = width >= 900.0
 	tab_prompt.visible = width >= 740.0
-	var aspect := viewport_size.x / maxf(viewport_size.y, 1.0)
-	var nav_width := NAV_RAIL_WIDTH
-	if aspect > 1.25 and aspect < 1.6:
-		nav_width = NAV_RAIL_WIDTH_NARROW
-	left_nav.custom_minimum_size.x = nav_width
-	if width < NARROW_BREAKPOINT:
-		left_nav.visible = false
-		top_tabs.visible = true
-		drawer.visible = false
-		details_overlay.visible = false
-	else:
-		left_nav.visible = true
-		top_tabs.visible = false
-		drawer.visible = width >= 1440.0
-		details_overlay.visible = false
+	left_nav.hide()
+	top_tabs.show()
+	drawer.hide()
+	details_overlay.hide()
 
 
 # --- Shared style conveniences --------------------------------------------------

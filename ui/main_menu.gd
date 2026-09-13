@@ -474,9 +474,9 @@ func _mount_command_deck() -> void:
 	_frontend.expedition_requested.connect(_launch_from_frontend)
 	_frontend.practice_requested.connect(_practice_from_frontend)
 	add_child(_frontend)
-	# Keep the established CRT presentation above the shared menu shell.
-	move_child(_frontend, crt_overlay.get_index())
-	_frontend.get_node("Backdrop").color = Color(0.004, 0.008, 0.035, 0.91)
+	# Keep CRT effects behind readable menu text and controls.
+	move_child(_frontend, get_child_count() - 1)
+	_frontend.get_node("Backdrop").color = Color(0.004, 0.008, 0.025, 0.38)
 
 func _launch_from_frontend() -> void:
 	_prepare_frontend_flight(NATIVE_RUN_PATH)

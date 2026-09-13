@@ -6,6 +6,12 @@ var _chain_was_ready := false
 
 func _ready() -> void:
 	show_percentage = false
+	var fill := StyleBoxFlat.new()
+	fill.bg_color = NeonUI.YELLOW
+	add_theme_stylebox_override("fill", fill)
+	if is_instance_valid(status):
+		status.add_theme_color_override("font_color", NeonUI.YELLOW)
+		status.add_theme_font_override("font", NeonUI.HEADING_FONT)
 	max_value = 1.0
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
@@ -30,7 +36,7 @@ func _process(_delta: float) -> void:
 		value = float(state.reflections) / float(state.threshold)
 	else:
 		value = float(state.recharge)
-		status.text = "BOOST [%s]  ◇◇◇" % InputBindings.binding_hint("boost") if value >= 1.0 else "BOOST RECHARGING"
+		status.text = "BOOST READY [%s]  ◇◇◇" % InputBindings.binding_hint("boost") if value >= 1.0 else "BOOST RECHARGING"
 	if ready and not _chain_was_ready:
 		AudioManager.play_ui_click()
 	_chain_was_ready = ready

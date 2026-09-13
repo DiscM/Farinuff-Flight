@@ -31,5 +31,8 @@ static func mount(host: Control, body: VBoxContainer, actions: Array[Control]) -
 	for child: Node in body.get_children():
 		if child is Label:
 			child.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	NeonUI.style_screen(host)
 	if not actions.is_empty():
+		if actions[0] is Button:
+			NeonUI.style_primary(actions[0])
 		actions[0].grab_focus()

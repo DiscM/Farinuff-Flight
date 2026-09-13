@@ -50,8 +50,10 @@ var _route_label: Label
 ## Connects all HUD-relevant signals from the SignalBus, hides the boss
 ## bar initially, and builds the orb meter UI.
 func _ready() -> void:
+	layer = 3
 	_build_wave_progress()
 	_apply_mockup_style()
+	_arrange_cabinet_hud()
 	SignalBus.score_changed.connect(_on_score_changed)
 	SignalBus.combo_changed.connect(_on_combo_changed)
 	SignalBus.lives_changed.connect(_on_lives_changed)
@@ -89,12 +91,12 @@ func _apply_mockup_style() -> void:
 	_style_progress_bar(orb_bar, NeonUI.CYAN)
 	_style_progress_bar(boss_health_bar, NeonUI.PINK)
 
-func _hud_outline(accent: Color, fill: Color, radius: int = 6) -> StyleBoxFlat:
+func _hud_outline(accent: Color, fill: Color, _radius: int = 6) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = fill
 	style.border_color = Color(accent, 0.86)
 	style.set_border_width_all(1)
-	style.set_corner_radius_all(radius)
+	style.set_corner_radius_all(1)
 	style.shadow_color = Color(0, 0, 0, 0.22)
 	style.shadow_size = 2
 	style.shadow_offset = Vector2(1, 1)
@@ -151,8 +153,8 @@ func _on_lives_changed(new_lives: int) -> void:
 	for i in range(visible_hearts):
 		var heart := Label.new()
 		heart.text = "♥"
-		heart.add_theme_color_override("font_color", NeonUI.GREEN)
-		heart.add_theme_font_size_override("font_size", 9)
+		heart.add_theme_color_override("font_color", NeonUI.PINK)
+		heart.add_theme_font_size_override("font_size", 20)
 		lives_container.add_child(heart)
 	lives_count_label.text = str(new_lives)
 	if new_lives > MAX_VISIBLE_HEARTS:
@@ -164,7 +166,7 @@ func _on_lives_changed(new_lives: int) -> void:
 
 ## Updates the persistent top-bar wave label.
 func _on_wave_started(wave_number: int) -> void:
-	wave_label.text = "WAVE " + str(wave_number)
+	wave_label.text = "WAVE %02d / 20" % wave_number if wave_number <= 20 else "ENDLESS / %02d" % wave_number
 
 func _compact_number(value: int) -> String:
 	if value >= 1000000:
@@ -358,7 +360,7 @@ func _on_power_up_collected(type: int, _pos: Vector3) -> void:
 func _on_orb_meter_changed(current: int, max_orbs: int) -> void:
 	orb_bar.max_value = max_orbs
 	orb_bar.value = current
-	orb_label.text = "NEXT LIFE\n%d / %d" % [current, max_orbs]
+	orb_label.text = "%d / %d" % [current, max_orbs]
 
 	# Pulse on collection
 	var tween := create_tween()
@@ -388,3 +390,40 @@ func _build_wave_progress() -> void:
 	_wave_progress.custom_minimum_size = Vector2(0, 7)
 	box.add_child(_wave_progress)
 	_style_progress_bar(_wave_progress, NeonUI.CYAN)
+
+
+func _arrange_cabinet_hud() -> void:
+	var orb_title := orb_panel.get_node("OrbRow/OrbTitle") as Label
+	orb_title.text = "LIFE RESTORE"
+	orb_title.add_theme_font_size_override("font_size", 12)
+	left_dock.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+	left_dock.position = Vector2(20, 20)
+	left_dock.size = Vector2(190, 88)
+	score_label.add_theme_font_size_override("font_size", 22)
+	score_label.add_theme_font_override("font", NeonUI.HEADING_FONT)
+	wave_panel.reparent(self)
+	wave_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+	wave_panel.offset_left = -145
+	wave_panel.offset_right = 145
+	wave_panel.offset_top = 16
+	wave_panel.offset_bottom = 96
+	wave_label.add_theme_font_override("font", NeonUI.HEADING_FONT)
+	wave_label.add_theme_font_size_override("font_size", 22)
+	boss_dock.offset_top = 112
+	boss_dock.offset_bottom = 178
+	var strip := HBoxContainer.new()
+	strip.name = "CabinetStatusStrip"
+	strip.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
+	strip.offset_left = 20
+	strip.offset_right = -20
+	strip.offset_top = -124
+	strip.offset_bottom = -68
+	strip.add_theme_constant_override("separation", 16)
+	add_child(strip)
+	for panel in [lives_panel, orb_panel, power_up_panel]:
+		panel.reparent(strip)
+		panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		panel.add_theme_stylebox_override("panel", NeonUI.plaque(NeonUI.CYAN, NeonUI.INK_DARK, 1, 1))
+	right_dock.hide()
+	for label in [lives_count_label, orb_label]:
+		label.add_theme_font_size_override("font_size", 14)

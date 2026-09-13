@@ -1,0 +1,7 @@
+[gd_resource type="SystemFont" format=3]
+
+[resource]
+font_names = PackedStringArray("Arial", "Helvetica", "sans-serif")
+font_italic = true
+font_weight = 800
+font_stretch = 75

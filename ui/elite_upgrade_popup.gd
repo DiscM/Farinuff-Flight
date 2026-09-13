@@ -9,8 +9,8 @@ const NativeUpgradeCatalog := preload("res://entities/player/native_player_upgra
 const SHIP_PREVIEW_SCRIPT := preload("res://entities/player/ship_upgrade_preview.gd")
 const MAX_CHOICES := 3
 const FALLBACK_ICON := "✦"
-const FALLBACK_NAME := "NATIVE UPGRADE"
-const FALLBACK_DESCRIPTION := "Native module data unavailable."
+const FALLBACK_NAME := "UPGRADE"
+const FALLBACK_DESCRIPTION := "Module details unavailable."
 const FALLBACK_COLOR := Color(0.3, 1.0, 0.6)
 
 var use_custom_upgrade_pool := false
@@ -27,6 +27,8 @@ var cards_by_id: Dictionary = {}
 var selection_locked: bool = false
 var confirmation_label: Label = null
 var _available_upgrade_count := 0
+var _pending_upgrade_id := ""
+var _install_button: Button
 
 # When true, no fullscreen overlay bg is drawn — used for side-by-side layout
 var panel_only: bool = false
@@ -36,6 +38,7 @@ var panel_only: bool = false
 ## Picks 3 random upgrades from the available pool, builds the card-based
 ## UI, already at its final transform with no entrance interpolation.
 func _ready() -> void:
+	theme = preload("res://ui/themes/farinuff_frontend_theme.tres")
 	add_to_group("scalable_ui")
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_pick_upgrades()
@@ -120,20 +123,17 @@ func _build_ui() -> void:
 	outer.add_child(title_bg)
 
 	var title := Label.new()
-	title.text = "✦  NATIVE ELITE REWARD  ✦"
+	title.text = "CHOOSE AN UPGRADE ///"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_color_override("font_color", Color(1.0, 0.92, 0.3))
+	title.add_theme_font_override("font", NeonUI.HEADING_FONT)
 	title.add_theme_font_size_override("font_size", 26 if compact_layout else 34)
 	outer.add_child(title)
 
 	var subtitle := Label.new()
-	subtitle.text = "Choose one native module  ·  %d available  ·  showing %d/%d" % [
-		_available_upgrade_count,
-		chosen_upgrades.size(),
-		MAX_CHOICES,
-	]
+	subtitle.text = "Choose a module. Preview your build, then install."
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	subtitle.add_theme_color_override("font_color", Color(0.65, 0.75, 1.0))
+	subtitle.add_theme_color_override("font_color", NeonUI.WHITE)
 	subtitle.add_theme_font_size_override("font_size", 13 if compact_layout else 16)
 	outer.add_child(subtitle)
 	if GameManager.elite_supply_pending and chosen_upgrades.is_empty():
@@ -152,6 +152,13 @@ func _build_ui() -> void:
 	else:
 		for upg in chosen_upgrades:
 			cards_row.add_child(_make_card(upg))
+		_install_button = NeonUI.make_button("InstallButton", "INSTALL & CONTINUE >>>", NeonUI.YELLOW, Vector2(280, 48))
+		_install_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		_install_button.disabled = true
+		_install_button.pressed.connect(func(): _on_upgrade_selected(_pending_upgrade_id))
+		outer.add_child(_install_button)
+		var first := cards_by_id[str(chosen_upgrades[0]["id"])] as PanelContainer
+		(first.get_meta("select_button") as Button).grab_focus.call_deferred()
 
 
 func _make_empty_state() -> PanelContainer:
@@ -161,7 +168,7 @@ func _make_empty_state() -> PanelContainer:
 	style.bg_color = Color(0.04, 0.06, 0.15)
 	style.border_color = Color(0.35, 0.48, 0.68, 0.8)
 	style.set_border_width_all(2)
-	style.set_corner_radius_all(12)
+	style.set_corner_radius_all(2)
 	style.set_content_margin_all(18)
 	card.add_theme_stylebox_override("panel", style)
 
@@ -171,7 +178,7 @@ func _make_empty_state() -> PanelContainer:
 	card.add_child(content)
 
 	var message := Label.new()
-	message.text = "ALL ELITE UPGRADES INSTALLED\nClaim 50 orbs and 5 health.\nOrbs also grant their normal progress and healing." if GameManager.elite_supply_pending else "NO NATIVE UPGRADES AVAILABLE\nAll remaining reward slots are installed or unavailable."
+	message.text = "ALL ELITE UPGRADES INSTALLED\nClaim 50 orbs and 5 health.\nOrbs also grant their normal progress and healing." if GameManager.elite_supply_pending else "NO UPGRADES AVAILABLE\nAll remaining reward slots are installed or unavailable."
 	message.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	message.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	message.add_theme_color_override("font_color", Color(0.75, 0.84, 0.98))
@@ -191,16 +198,16 @@ func _make_empty_state() -> PanelContainer:
 ## state changes.
 func _make_card(upg: Dictionary) -> PanelContainer:
 	var upgrade_id := str(upg.get("id", ""))
-	var upgrade_color := _safe_color(upg, "color", FALLBACK_COLOR)
+	var upgrade_color := NeonUI.CYAN
 	var card := PanelContainer.new()
 	card.custom_minimum_size = Vector2(168, 214) if panel_only else Vector2(192, 260)
 
 	# Stylebox for the card background
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.06, 0.06, 0.16)
+	style.bg_color = NeonUI.INK
 	style.border_color = upgrade_color
 	style.set_border_width_all(2)
-	style.set_corner_radius_all(14)
+	style.set_corner_radius_all(2)
 	style.set_content_margin_all(12 if panel_only else 18)
 	card.add_theme_stylebox_override("panel", style)
 
@@ -213,6 +220,8 @@ func _make_card(upg: Dictionary) -> PanelContainer:
 	icon.text = _safe_text(upg, "icon", FALLBACK_ICON)
 	icon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	icon.add_theme_font_size_override("font_size", 22 if panel_only else 28)
+	# The actual ship preview identifies the module without platform-dependent emoji.
+	icon.visible = not show_ship_previews
 	inner.add_child(icon)
 
 	if show_ship_previews:
@@ -221,6 +230,8 @@ func _make_card(upg: Dictionary) -> PanelContainer:
 		var current_upgrades: Array[String] = []
 		if player != null and player.has_method("get_active_elite_upgrade_ids"):
 			current_upgrades = player.get_active_elite_upgrade_ids()
+		preview.render_size = Vector2i(384, 256)
+		preview.camera_size = 5.0
 		preview.configure(current_upgrades, upgrade_id)
 		inner.add_child(preview)
 
@@ -229,6 +240,7 @@ func _make_card(upg: Dictionary) -> PanelContainer:
 	name_lbl.text = _safe_text(upg, "name", FALLBACK_NAME)
 	name_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_lbl.add_theme_color_override("font_color", upgrade_color)
+	name_lbl.add_theme_font_override("font", NeonUI.HEADING_FONT)
 	name_lbl.add_theme_font_size_override("font_size", 16 if panel_only else 20)
 	name_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	inner.add_child(name_lbl)
@@ -261,7 +273,7 @@ func _make_card(upg: Dictionary) -> PanelContainer:
 	btn.add_theme_color_override("font_color", upgrade_color)
 	btn.custom_minimum_size = Vector2(0, 34 if panel_only else 42)
 	btn.tooltip_text = _safe_text(upg, "description", FALLBACK_DESCRIPTION)
-	btn.pressed.connect(_on_upgrade_selected.bind(upgrade_id))
+	btn.pressed.connect(_stage_upgrade.bind(upgrade_id))
 	inner.add_child(btn)
 	card.set_meta("select_button", btn)
 	cards_by_id[upgrade_id] = card
@@ -277,13 +289,13 @@ func _on_card_hover(card: PanelContainer, style: StyleBoxFlat, color: Color) -> 
 	if selection_locked:
 		return
 	style.bg_color = Color(color.r * 0.15, color.g * 0.15, color.b * 0.15)
-	card.scale = Vector2.ONE if bool(SaveManager.get_setting("reduced_motion", false)) else Vector2(1.04, 1.04)
+	card.scale = Vector2.ONE
 
 ## Restores the idle state immediately.
 func _on_card_unhover(card: PanelContainer, style: StyleBoxFlat) -> void:
 	if selection_locked:
 		return
-	style.bg_color = Color(0.06, 0.06, 0.16)
+	style.bg_color = NeonUI.INK
 	card.scale = Vector2.ONE
 
 
@@ -306,7 +318,7 @@ func _on_upgrade_selected(upgrade_id: String) -> void:
 		upgrade_target = get_tree().get_first_node_in_group("player_craft")
 	if not is_instance_valid(upgrade_target) or not upgrade_target.has_method("apply_elite_upgrade"):
 		if confirmation_label:
-			confirmation_label.text = "NATIVE SHIP UNAVAILABLE"
+			confirmation_label.text = "SHIP UNAVAILABLE"
 		return
 	if not upgrade_target.apply_elite_upgrade(upgrade_id):
 		return
@@ -367,3 +379,19 @@ func _show_selection_feedback(upgrade_id: String, upgrade: Dictionary) -> void:
 				style.set_border_width_all(4)
 		else:
 			card.modulate.a = 0.25
+
+
+func _stage_upgrade(upgrade_id: String) -> void:
+	if selection_locked or not cards_by_id.has(upgrade_id):
+		return
+	_pending_upgrade_id = upgrade_id
+	for id in cards_by_id:
+		var card := cards_by_id[id] as PanelContainer
+		var selected: bool = id == upgrade_id
+		var style := card.get_theme_stylebox("panel") as StyleBoxFlat
+		style.border_color = NeonUI.YELLOW if selected else NeonUI.CYAN
+		style.set_border_width_all(3 if selected else 1)
+		var button := card.get_meta("select_button") as Button
+		button.text = "✓ SELECTED" if selected else "SELECT"
+	_install_button.disabled = false
+	_install_button.grab_focus()

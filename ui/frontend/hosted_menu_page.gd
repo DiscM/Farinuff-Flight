@@ -51,14 +51,24 @@ func _embed_panel() -> void:
 	for side in ["left", "right", "top", "bottom"]:
 		margin.add_theme_constant_override("margin_" + side, 12)
 	_menu.add_child(margin)
+	var layout := VBoxContainer.new()
+	layout.add_theme_constant_override("separation", 12)
+	margin.add_child(layout)
 	var scroll := ScrollContainer.new()
 	scroll.follow_focus = true
-	margin.add_child(scroll)
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	layout.add_child(scroll)
 	panel.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	panel.custom_minimum_size = Vector2.ZERO
 	panel.reparent(scroll)
 	panel.show()
+	if menu_kind == "launch_bay":
+		# Keep the launch and back decisions visible while loadout details scroll.
+		var action := _menu.get_primary_safe_action() as Button
+		if action != null:
+			action.get_parent().reparent(layout)
+	NeonUI.style_screen(_menu)
 
 func _back() -> void:
 	if _leaving:

@@ -113,8 +113,9 @@ func _build_ui() -> void:
 	confirm_btn.text = "CONFIRM"
 	confirm_btn.custom_minimum_size = Vector2(180 if compact_layout else 200, 46 if compact_layout else 50)
 	confirm_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	NeonUI.style_primary(confirm_btn)
 	confirm_btn.add_theme_font_size_override("font_size", 18 if compact_layout else 20)
-	confirm_btn.add_theme_color_override("font_color", Color(0.3, 1.0, 0.5))
+	confirm_btn.add_theme_color_override("font_color", NeonUI.INK_DARK)
 	confirm_btn.disabled = true
 	confirm_btn.pressed.connect(_on_confirm)
 	vbox.add_child(confirm_btn)

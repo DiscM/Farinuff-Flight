@@ -54,29 +54,23 @@ func _build_ui() -> void:
 	dock.size = Vector2(236.0, minf(660.0, vp_size.y - 24.0))
 	add_child(dock)
 
-	var frame := TextureRect.new()
-	frame.name = "DockFrame"
-	frame.texture = DOCK_TEXTURE
-	frame.position = Vector2(-6.0, -18.0)
-	frame.size = Vector2(250.0, dock.size.y + 36.0)
-	frame.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	frame.stretch_mode = TextureRect.STRETCH_SCALE
-	frame.modulate = Color(1, 1, 1, 0.9)
-	frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	dock.add_child(frame)
+	var heading := NeonUI.make_label("PAUSED ///", 36, NeonUI.WHITE)
+	heading.position = Vector2(22, 110)
+	heading.size = Vector2(280, 54)
+	dock.add_child(heading)
 
 	var button_column := VBoxContainer.new()
 	button_column.name = "MenuButtons"
 	button_column.position = Vector2(22, 178)
-	button_column.size = Vector2(194, 328)
+	button_column.size = Vector2(260, 328)
 	button_column.add_theme_constant_override("separation", 18)
 	dock.add_child(button_column)
 
 	button_column.add_child(_make_btn("ResumeWrap", "RESUME", NeonUI.YELLOW, _on_resume, true))
 	button_column.add_child(_make_btn("RetryWrap", "RESTART RUN", NeonUI.CYAN, _on_retry))
-	button_column.add_child(_make_btn("BuildWrap", "SHIP BUILD", NeonUI.GREEN, _on_build))
-	button_column.add_child(_make_btn("SettingsWrap", "OPTIONS", NeonUI.CYAN, _on_settings))
-	button_column.add_child(_make_btn("MenuWrap", "MAIN MENU", NeonUI.CYAN, _on_menu))
+	button_column.add_child(_make_btn("BuildWrap", "SHIP BUILD", NeonUI.CYAN, _on_build))
+	button_column.add_child(_make_btn("SettingsWrap", "SETTINGS", NeonUI.CYAN, _on_settings))
+	button_column.add_child(_make_btn("MenuWrap", "QUIT TO MENU", NeonUI.CYAN, _on_menu))
 	var gameplay := get_tree().get_first_node_in_group(&"native_3d_gameplay")
 	if OS.is_debug_build() and gameplay != null and gameplay.has_method(&"dev_spawn_archetype"):
 		button_column.add_child(_make_btn("DevWrap", "DEV TOOLS", NeonUI.GREEN, _on_dev_tools))
@@ -92,25 +86,18 @@ func _build_ui() -> void:
 
 ## Helper: creates a centered, styled button with the given label text,
 ## color, callback, and width.
-func _make_btn(control_name: String, label: String, accent: Color, callback: Callable, hot: bool = false) -> Control:
+func _make_btn(control_name: String, label: String, accent: Color, callback: Callable, _hot: bool = false) -> Control:
 	var button_wrapper := Control.new()
 	button_wrapper.name = control_name
-	button_wrapper.custom_minimum_size = Vector2(194, 48)
+	button_wrapper.custom_minimum_size = Vector2(260, 48)
 
-	var texture := TextureRect.new()
-	texture.texture = BUTTON_YELLOW_TEXTURE if hot else BUTTON_BLUE_TEXTURE
-	texture.set_anchors_preset(Control.PRESET_FULL_RECT)
-	texture.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	texture.stretch_mode = TextureRect.STRETCH_SCALE
-	texture.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	button_wrapper.add_child(texture)
 
 	var btn := NeonUI.make_button("Button", label, accent, Vector2(0, 0))
 	btn.set_anchors_preset(Control.PRESET_FULL_RECT)
 	btn.offset_left = 16
-	btn.offset_top = 6
+	btn.offset_top = 0
 	btn.offset_right = -14
-	btn.offset_bottom = -6
+	btn.offset_bottom = 0
 	btn.pressed.connect(callback)
 	btn.pressed.connect(AudioManager.play_ui_click)
 	button_wrapper.add_child(btn)

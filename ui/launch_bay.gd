@@ -30,6 +30,7 @@ var _launch_button: Button
 ## Sets up the launch bay as a process-always full-rect control and builds
 ## the UI from the MetaProgression catalogs.
 func _ready() -> void:
+	theme = preload("res://ui/themes/farinuff_frontend_theme.tres")
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	_build_ui()
@@ -50,7 +51,7 @@ func _build_ui() -> void:
 	style.bg_color = Color(0.04, 0.06, 0.15)
 	style.border_color = Color(0.2, 0.75, 1.0, 0.85)
 	style.set_border_width_all(2)
-	style.set_corner_radius_all(12)
+	style.set_corner_radius_all(2)
 	style.set_content_margin_all(20)
 	panel.add_theme_stylebox_override("panel", style)
 	add_child(panel)
@@ -60,8 +61,9 @@ func _build_ui() -> void:
 	panel.add_child(column)
 
 	var title := Label.new()
-	title.text = "▲  LAUNCH BAY  ▲"
+	title.text = "LAUNCH BAY ///"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_font_override("font", NeonUI.HEADING_FONT)
 	title.add_theme_font_size_override("font_size", 26)
 	title.add_theme_color_override("font_color", Color(0.3, 0.85, 1.0))
 	column.add_child(title)
@@ -119,12 +121,13 @@ func _build_ui() -> void:
 
 	_launch_button = Button.new()
 	var launch_button := _launch_button
-	launch_button.text = "▲  LAUNCH"
-	launch_button.custom_minimum_size = Vector2(190, 44)
+	launch_button.text = "LAUNCH EXPEDITION >>>"
+	launch_button.custom_minimum_size = Vector2(260, 48)
 	launch_button.add_theme_font_size_override("font_size", 20)
 	launch_button.add_theme_color_override("font_color", Color(0.3, 1.0, 0.55))
 	launch_button.pressed.connect(_on_launch_pressed)
 	buttons_row.add_child(launch_button)
+	NeonUI.style_primary(launch_button)
 	_refresh_launch_button()
 	launch_button.grab_focus()
 
@@ -150,7 +153,7 @@ func _make_ship_card(ship: Dictionary) -> PanelContainer:
 	card.custom_minimum_size = Vector2(148, 212)
 	card.tooltip_text = ship_description
 	var style := StyleBoxFlat.new()
-	style.set_corner_radius_all(8)
+	style.set_corner_radius_all(2)
 	style.set_border_width_all(2)
 	style.set_content_margin_all(10)
 	card.add_theme_stylebox_override("panel", style)
@@ -198,10 +201,10 @@ func _make_ship_card(ship: Dictionary) -> PanelContainer:
 
 func _make_ship_preview(hull_id: String) -> Control:
 	if not NATIVE_HULL_IDS.has(hull_id):
-		return _make_catalog_placeholder("NATIVE PREVIEW UNAVAILABLE")
+		return _make_catalog_placeholder("PREVIEW UNAVAILABLE")
 	var preview := SHIP_PREVIEW_SCRIPT.new() as ShipUpgradePreview
 	if preview == null:
-		return _make_catalog_placeholder("NATIVE PREVIEW UNAVAILABLE")
+		return _make_catalog_placeholder("PREVIEW UNAVAILABLE")
 	preview.configure([], "", hull_id)
 	preview.custom_minimum_size = Vector2(0, 76)
 	return preview
@@ -277,10 +280,10 @@ func _refresh_selected_ship_label() -> void:
 	var selected_id := str(MetaProgression.selected_ship)
 	var entry: Dictionary = _ship_cards_by_id.get(selected_id, {})
 	if entry.is_empty():
-		_selected_ship_label.text = "SELECTED HULL: UNAVAILABLE — CHOOSE AN UNLOCKED NATIVE HULL"
+		_selected_ship_label.text = "SELECTED HULL: UNAVAILABLE — CHOOSE AN UNLOCKED HULL"
 		return
 	var ship: Dictionary = entry["ship"]
-	_selected_ship_label.text = "SELECTED HULL: %s  ·  NATIVE 3D" % _safe_text(ship, "name", FALLBACK_NAME).to_upper()
+	_selected_ship_label.text = "SELECTED HULL: %s " % _safe_text(ship, "name", FALLBACK_NAME).to_upper()
 
 
 func _refresh_launch_button() -> void:
@@ -290,7 +293,7 @@ func _refresh_launch_button() -> void:
 	var entry: Dictionary = _ship_cards_by_id.get(selected_id, {})
 	var can_launch := not entry.is_empty() and MetaProgression.is_unlocked(selected_id)
 	_launch_button.disabled = not can_launch
-	_launch_button.text = "▲  LAUNCH" if can_launch else "SELECT AN UNLOCKED HULL"
+	_launch_button.text = "LAUNCH EXPEDITION >>>" if can_launch else "SELECT AN UNLOCKED HULL"
 
 # --- Modifier toggles ---
 
