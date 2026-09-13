@@ -12,6 +12,7 @@ var next_reachable_node_ids: Array[StringName] = []
 var cleared_node_ids: Array[StringName] = []
 var discovered_node_ids: Array[StringName] = []
 var seen_story_beat_ids: Array[StringName] = []
+var recovered_fragment_ids: Array[StringName] = []
 var pending_route_choice: bool = false
 var selected_route_id: StringName = &""
 var selected_route_profile_id: StringName = &""

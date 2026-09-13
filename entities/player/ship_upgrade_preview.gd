@@ -11,6 +11,9 @@ const SUPPORTED_HULL_IDS: Array[String] = [
 
 const PREVIEW_SIZE := Vector2i(256, 128)
 
+var render_size := PREVIEW_SIZE
+var camera_size := 7.0
+
 var _current_upgrades: Array[String] = []
 var _candidate_id := ""
 var _requested_hull_id := ""
@@ -62,7 +65,7 @@ func get_hull_id() -> String:
 func _build_3d_preview() -> void:
 	_preview_viewport = SubViewport.new()
 	_preview_viewport.name = "UpgradePreviewViewport"
-	_preview_viewport.size = PREVIEW_SIZE
+	_preview_viewport.size = render_size
 	_preview_viewport.transparent_bg = true
 	_preview_viewport.handle_input_locally = false
 	_preview_viewport.own_world_3d = true
@@ -93,7 +96,7 @@ func _build_3d_preview() -> void:
 	var camera := Camera3D.new()
 	camera.name = "Camera3D"
 	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
-	camera.size = 7.0
+	camera.size = camera_size
 	camera.position = Vector3(0.0, 8.0, 5.0)
 	camera.current = true
 	_preview_world.add_child(camera)

@@ -24,7 +24,7 @@ const FrameWorkBudget := preload("res://systems/frame_work_budget.gd")
 const HOMING_RANGE_SQUARED := 420.0 * 420.0
 
 @export_range(1, 512, 1) var player_pool_size: int = 512
-@export_range(1, 512, 1) var enemy_pool_size: int = 256
+@export_range(1, 2048, 1) var enemy_pool_size: int = 1024
 ## Legacy inspector setting retained for scene compatibility. Warmup now yields
 ## from the shared elapsed-work budget instead of a fixed item count.
 @export_range(1, 16, 1) var warm_batch_size: int = 8
@@ -145,8 +145,8 @@ func fire_drone_projectile(combat_position: Vector3, direction: Vector3) -> void
 	_fire(Projectile.Kind.PLAYER, combat_position, direction, WeaponTuning.PROJECTILE_SPEED, 1.0)
 
 
-func fire_enemy_projectile(combat_position: Vector3, direction: Vector3, speed_pixels: float = EnemyTuning.DEFAULT_SPEED) -> void:
-	_fire(Projectile.Kind.ENEMY, combat_position, direction, speed_pixels)
+func fire_enemy_projectile(combat_position: Vector3, direction: Vector3, speed_pixels: float = EnemyTuning.DEFAULT_SPEED, motion: Projectile.Motion = Projectile.Motion.STRAIGHT, tint: Color = Color.TRANSPARENT, boss_style: int = -1) -> void:
+	_fire(Projectile.Kind.ENEMY, combat_position, direction, speed_pixels, 1.0, motion, tint, boss_style)
 
 
 ## Clears both native projectile families for review reset and scene teardown.
@@ -216,7 +216,10 @@ func _fire(
 	combat_position: Vector3,
 	direction: Vector3,
 	speed_pixels: float,
-	size_multiplier: float = 1.0
+	size_multiplier: float = 1.0,
+	enemy_motion: Projectile.Motion = Projectile.Motion.STRAIGHT,
+	enemy_tint: Color = Color.TRANSPARENT,
+	boss_style: int = -1
 ) -> void:
 	if not is_ready or not GameManager.is_game_active:
 		return
@@ -241,6 +244,10 @@ func _fire(
 		_untrack_checkout(pool, projectile)
 		pool.rejected_shots += 1
 		return
+	if kind == Projectile.Kind.ENEMY:
+		if GameManager.boss_active:
+			projectile.remaining_lifetime = 14.0
+		projectile.configure_enemy_motion(enemy_motion, enemy_tint, boss_style)
 	if kind == Projectile.Kind.PLAYER and _player != null:
 		projectile.piercing = _player.has_elite_upgrade("piercing")
 		projectile.explosive = _player.has_elite_upgrade("explosive_rounds")
@@ -284,7 +291,6 @@ func _on_projectile_hit(
 		if projectile.explosive:
 			explosion_requested.emit(combat_position, target)
 	elif projectile.is_deflected:
-		player_projectile_hit.emit(target, combat_position)
 		AudioManager.play_hit_marker()
 		deflected_projectile_hit.emit(target, combat_position)
 	else:
@@ -332,6 +338,8 @@ func clear_enemy_projectiles_in_radius(center: Vector3, radius_pixels: float) ->
 
 
 func _refresh_bounds() -> void:
+	if not _flight_space.bounds_changed.is_connected(_refresh_bounds):
+		_flight_space.bounds_changed.connect(_refresh_bounds)
 	_combat_bounds = _flight_space.get_combat_bounds()
 	for pool in _pools:
 		for projectile in pool.checked_out:

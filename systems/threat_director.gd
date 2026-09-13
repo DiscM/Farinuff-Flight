@@ -7,6 +7,7 @@ const THREAT_BUDGETS := [12.0, 11.0, 10.0, 9.0]
 const COSTS := {
 	&"basic": 1.0,
 	&"fast": 1.25,
+	&"courier": 1.25,
 	&"bomber": 2.0,
 	&"sniper": 2.25,
 	&"tank": 3.0,

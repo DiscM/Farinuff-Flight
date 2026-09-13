@@ -13,6 +13,8 @@ const FALLBACK_NAME := "YOUR SHIP"
 ## Builds the try-again UI and plays the entrance animation.
 ## Runs in PROCESS_MODE_ALWAYS so it works while the game is paused.
 func _ready() -> void:
+	add_to_group("scalable_ui")
+	theme = preload("res://ui/themes/farinuff_frontend_theme.tres")
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_build_ui()
 	_animate_in()
@@ -110,6 +112,7 @@ func _build_ui() -> void:
 	timer_lbl.name = "TimerLabel"
 	vbox.add_child(timer_lbl)
 	_start_countdown(timer_lbl)
+	preload("res://ui/shared/result_layout.gd").mount(self, vbox, [yes_btn, no_btn, timer_lbl])
 
 ## Returns a string of star emoji icons representing the remaining stock
 ## count, or a dash if none remain.
@@ -249,6 +252,8 @@ func _safe_text(data: Dictionary, key: String, fallback: String) -> String:
 
 ## Plays a fade-in entrance animation for the popup.
 func _animate_in() -> void:
+	if bool(SaveManager.get_setting("reduced_motion", false)):
+		return
 	modulate.a = 0.0
 	var tween := create_tween()
 	tween.tween_property(self, "modulate:a", 1.0, 0.3).set_ease(Tween.EASE_OUT)

@@ -12,8 +12,26 @@ const SUPPORTED_IDS: Array[String] = [
 
 static func available() -> Array[Dictionary]:
 	var upgrades: Array[Dictionary] = []
+	var owned := GameManager.get_owned_elite_ids()
 	for upgrade in GameManager.get_upgrade_pool():
 		var upgrade_id := str(upgrade["id"])
-		if SUPPORTED_IDS.has(upgrade_id) and not GameManager.chosen_upgrade_ids.has(upgrade_id):
+		if SUPPORTED_IDS.has(upgrade_id) and not owned.has(upgrade_id):
 			upgrades.append(upgrade)
 	return upgrades
+
+
+static func draft(pool: Array[Dictionary], count: int = 3) -> Array[Dictionary]:
+	var remaining: Array[Dictionary] = pool.duplicate()
+	remaining.shuffle()
+	var result: Array[Dictionary] = []
+	var roles: Array[String] = []
+	while not remaining.is_empty() and result.size() < count:
+		var choice := 0
+		for index in remaining.size():
+			if not roles.has(str(remaining[index].get("role", "Utility"))):
+				choice = index
+				break
+		var upgrade: Dictionary = remaining.pop_at(choice)
+		roles.append(str(upgrade.get("role", "Utility")))
+		result.append(upgrade)
+	return result

@@ -12,6 +12,18 @@ const FlightSpace := preload("res://systems/flight_space_3d.gd")
 const EnemyTuning := preload("res://entities/projectiles/enemy_projectile_tuning.gd")
 
 enum Kind { PLAYER, ENEMY }
+enum Motion { STRAIGHT, ACCELERATING, CURVE_LEFT, CURVE_RIGHT, BOOST_BREAKER, BRAKING, ORBIT_LEFT, ORBIT_RIGHT, RETURNING, STOP_RELEASE }
+
+static var _breaker_mesh: SphereMesh
+var _default_projectile_mesh: Mesh
+
+var enemy_motion: Motion = Motion.STRAIGHT
+var _motion_age := 0.0
+var _launch_speed := 0.0
+var _launch_direction := Vector2.ZERO
+var _launch_position := Vector3.ZERO
+var _orbit_center := Vector3.ZERO
+var _orbit_radius := Vector2.ZERO
 
 @export var kind: Kind = Kind.PLAYER
 
@@ -54,6 +66,13 @@ var _hit_target_mask := 0
 
 
 func _ready() -> void:
+	_default_projectile_mesh = projectile_mesh.mesh
+	if _breaker_mesh == null:
+		_breaker_mesh = SphereMesh.new()
+		_breaker_mesh.radius = 0.9
+		_breaker_mesh.height = 1.8
+		_breaker_mesh.radial_segments = 4
+		_breaker_mesh.rings = 1
 	_reset_faction_contract()
 	area_entered.connect(_on_area_entered)
 	set_physics_process(false)
@@ -85,6 +104,8 @@ func pool_activate(
 	transform = Transform3D.IDENTITY
 	scale = Vector3.ONE * maxf(size_multiplier, 1.0)
 	is_deflected = false
+	enemy_motion = Motion.STRAIGHT
+	_motion_age = 0.0
 	piercing = false
 	explosive = false
 	homing = false
@@ -126,6 +147,7 @@ func _physics_process(delta: float) -> void:
 	if remaining_lifetime <= 0.0 or not _inside_bounds(global_position):
 		despawn()
 		return
+	_advance_enemy_motion(delta)
 	var motion := velocity * delta
 	_update_collision_arming(motion)
 	var redirected_on_contact := false
@@ -137,6 +159,94 @@ func _physics_process(delta: float) -> void:
 		if not _inside_bounds(global_position):
 			despawn()
 	last_step_usec = Time.get_ticks_usec() - started
+
+
+## Motion never retargets after launch. Reflection immediately restores straight flight.
+func configure_enemy_motion(profile: Motion, tint: Color = Color.TRANSPARENT, boss_style: int = -1) -> void:
+	enemy_motion = profile
+	_motion_age = 0.0
+	_launch_speed = _flight_space.combat_motion_to_screen(velocity).length()
+	_launch_direction = _flight_space.combat_motion_to_screen(velocity).normalized()
+	_launch_position = global_position
+	if profile == Motion.RETURNING:
+		remaining_lifetime = minf(remaining_lifetime, 1.9)
+	_orbit_center = Vector3.ZERO
+	_orbit_radius = Vector2.ZERO
+	if profile in [Motion.ORBIT_LEFT, Motion.ORBIT_RIGHT]:
+		var sign := 1.0 if profile == Motion.ORBIT_LEFT else -1.0
+		var tangent := _flight_space.combat_motion_to_screen(velocity).normalized()
+		var to_center := tangent.rotated(sign * PI * 0.5) * 140.0
+		_orbit_center = global_position + _flight_space.screen_motion_to_combat(to_center)
+		_orbit_radius = -to_center
+		remaining_lifetime = minf(remaining_lifetime, 3.0)
+	if boss_style >= 0 and profile != Motion.BOOST_BREAKER:
+		projectile_mesh.mesh = _get_boss_mesh(boss_style)
+	var color := Color.TRANSPARENT
+	match profile:
+		Motion.BOOST_BREAKER:
+			color = Color(0.05, 0.95, 1.0)
+			projectile_mesh.mesh = _breaker_mesh
+			projectile_mesh.set_instance_shader_parameter(&"instance_base_override", Color(0.02, 0.45, 0.65))
+			projectile_mesh.set_instance_shader_parameter(&"instance_accent_override", Color.WHITE)
+		Motion.ACCELERATING:
+			color = Color(1.0, 0.65, 0.08)
+		Motion.CURVE_LEFT, Motion.CURVE_RIGHT:
+			color = Color(0.7, 0.25, 1.0)
+	if profile == Motion.BRAKING:
+		color = Color(1.0, 0.35, 0.5)
+	if tint.a > 0.0 and profile != Motion.BOOST_BREAKER:
+		color = tint
+		projectile_mesh.set_instance_shader_parameter(&"instance_base_override", tint.darkened(0.35))
+	# Shape communicates motion as well as color; only cyan has diamond geometry.
+	if profile == Motion.ACCELERATING:
+		visuals.scale = Vector3(0.8, 0.8, 1.6)
+	elif profile == Motion.BRAKING:
+		visuals.scale = Vector3(1.2, 0.8, 1.2)
+	projectile_mesh.set_instance_shader_parameter(&"instance_energy_override", color)
+	projectile_mesh.set_instance_shader_parameter(&"instance_glow_override", color)
+
+## Shared meshes keep the pooled silhouettes immutable and allocation bounded.
+static func _get_boss_mesh(style: int) -> Mesh:
+	return preload("res://assets/models/projectiles/boss_projectile_meshes.gd").get_mesh(style)
+
+func _advance_enemy_motion(delta: float) -> void:
+	if kind != Kind.ENEMY or is_deflected or enemy_motion in [Motion.STRAIGHT, Motion.BOOST_BREAKER]:
+		return
+	if enemy_motion in [Motion.ORBIT_LEFT, Motion.ORBIT_RIGHT]:
+		_motion_age += delta
+		var sign := 1.0 if enemy_motion == Motion.ORBIT_LEFT else -1.0
+		var angle := _motion_age * _launch_speed / 140.0 * sign
+		var next_position := _orbit_center + _flight_space.screen_motion_to_combat(_orbit_radius.rotated(angle))
+		velocity = (next_position - global_position) / maxf(delta, 0.00001)
+		rotation.y = atan2(-velocity.x, -velocity.z)
+		return
+	if enemy_motion == Motion.RETURNING:
+		_motion_age += delta
+		# Outbound, brief suspended beat, then retrace the same path to its origin.
+		var distance := _launch_speed * (minf(_motion_age, 0.8) - clampf(_motion_age - 1.1, 0.0, 0.8))
+		var target := _launch_position + _flight_space.screen_motion_to_combat(_launch_direction * distance)
+		velocity = (target - global_position) / maxf(delta, 0.00001)
+		return
+	if enemy_motion == Motion.STOP_RELEASE:
+		_motion_age += delta
+		var multiplier := 0.55 if _motion_age < 0.65 else 0.0 if _motion_age < 1.35 else 1.35
+		velocity = _flight_space.screen_motion_to_combat(_launch_direction * _launch_speed * multiplier)
+		projectile_mesh.set_instance_shader_parameter(&"instance_flash", 0.35 if multiplier == 0.0 else 0.0)
+		return
+	var previous_age := _motion_age
+	_motion_age += delta
+	var screen_velocity := _flight_space.combat_motion_to_screen(velocity)
+	if enemy_motion == Motion.BRAKING:
+		screen_velocity = screen_velocity.normalized() * _launch_speed * lerpf(1.0, 0.45, clampf((_motion_age - 0.3) / 0.8, 0.0, 1.0))
+	elif enemy_motion == Motion.ACCELERATING:
+		# A slow readable launch becomes a fast lance over the first second.
+		screen_velocity = screen_velocity.normalized() * _launch_speed * lerpf(1.0, 1.85, clampf((_motion_age - 0.25) / 0.9, 0.0, 1.0))
+	else:
+		# Bend for a bounded duration, then continue along the exit tangent.
+		var curve_delta := minf(_motion_age, 1.2) - minf(previous_age, 1.2)
+		screen_velocity = screen_velocity.rotated(curve_delta * (0.55 if enemy_motion == Motion.CURVE_LEFT else -0.55))
+	velocity = _flight_space.screen_motion_to_combat(screen_velocity)
+	rotation.y = atan2(-velocity.x, -velocity.z)
 
 
 func _update_collision_arming(motion: Vector3) -> void:
@@ -152,7 +262,7 @@ func _update_collision_arming(motion: Vector3) -> void:
 ## Motion is calculated in the shared screen-pixel metric, then mapped back
 ## onto the Combat Plane so the reference speed and velocity bias stay exact.
 func deflect(deflector_position: Vector3, deflector_velocity: Vector3) -> bool:
-	if kind != Kind.ENEMY or not is_active or is_deflected or _return_pending or _flight_space == null:
+	if kind != Kind.ENEMY or not is_active or is_deflected or _return_pending or _flight_space == null or enemy_motion == Motion.BOOST_BREAKER:
 		return false
 	var current_screen_velocity := _flight_space.combat_motion_to_screen(velocity)
 	var reflected_direction := _flight_space.combat_motion_to_screen(
@@ -172,6 +282,8 @@ func deflect(deflector_position: Vector3, deflector_velocity: Vector3) -> bool:
 		EnemyTuning.DEFLECT_MIN_SPEED
 	)
 	is_deflected = true
+	projectile_mesh.set_instance_shader_parameter(&"instance_flash", 0.0)
+	enemy_motion = Motion.STRAIGHT
 	velocity = _flight_space.screen_motion_to_combat(reflected_direction * reflected_speed)
 	velocity.y = 0.0
 	rotation.y = atan2(-velocity.x, -velocity.z)
@@ -309,6 +421,7 @@ func _finish_return() -> void:
 
 
 func _reset_visuals() -> void:
+	projectile_mesh.mesh = _default_projectile_mesh
 	visuals.transform = Transform3D.IDENTITY
 	projectile_mesh.set_instance_shader_parameter(&"instance_modulate", Color.WHITE)
 	projectile_mesh.set_instance_shader_parameter(&"instance_flash", 0.0)

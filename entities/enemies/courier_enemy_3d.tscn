@@ -1,0 +1,5 @@
+[gd_scene load_steps=3 format=3]
+[ext_resource type="PackedScene" path="res://entities/enemies/fast_enemy_3d.tscn" id="1"]
+[ext_resource type="Script" path="res://entities/enemies/courier_enemy_3d.gd" id="2"]
+[node name="CourierEnemy3D" instance=ExtResource("1")]
+script = ExtResource("2")

@@ -6,6 +6,7 @@ class_name Player3D
 signal fire_requested(combat_position: Vector3, direction: Vector3)
 signal muzzle_feedback_requested(visual_position: Vector3, direction: Vector3)
 signal deflection_requested(deflector_position: Vector3, deflector_velocity: Vector3)
+signal boost_chained
 signal boost_started(combat_position: Vector3, direction: Vector3)
 signal damage_taken(combat_position: Vector3, source: DamageSource, remaining_lives: int)
 signal invulnerability_changed(active: bool)
@@ -61,6 +62,7 @@ var boost_duration_timer := 0.0
 var boost_cooldown_timer := 0.0
 var boost_distance_remaining_pixels := 0.0
 var boost_reflected_projectiles := 0
+var _chain_followup := false
 var boost_chain_window_timer := 0.0
 var post_boost_slide_timer := 0.0
 var drift_speed_bonus := 1.0
@@ -123,10 +125,13 @@ func configure_flight_space(value: FlightSpace) -> void:
 	_upgrade_visuals.reset()
 	for id in _elite_upgrades:
 		_upgrade_visuals.set_upgrade(id, true)
-	$Visuals/PlayerHullGLB.visible = MetaProgression.selected_ship == "ship_swallowtail"
-	$Visuals/InterceptorHull.visible = MetaProgression.selected_ship == "ship_interceptor"
-	$Visuals/BulwarkHull.visible = MetaProgression.selected_ship == "ship_bulwark"
+	var selected_hull := "ship_swallowtail" if GameManager.practice_mode else MetaProgression.selected_ship
+	$Visuals/PlayerHullGLB.visible = selected_hull == "ship_swallowtail"
+	$Visuals/InterceptorHull.visible = selected_hull == "ship_interceptor"
+	$Visuals/BulwarkHull.visible = selected_hull == "ship_bulwark"
 	_flight_space = value
+	if not _flight_space.bounds_changed.is_connected(_refresh_movement_bounds):
+		_flight_space.bounds_changed.connect(_refresh_movement_bounds)
 	for flag in VISUAL_DEBUG_FLAGS:
 		if get_visual_debug(flag):
 			_rebuild_visual_debug(flag)
@@ -204,7 +209,7 @@ func receive_damage(combat_position: Vector3, source: DamageSource) -> bool:
 		_start_invincibility(DamageTuning.SHIELD_INVULNERABILITY)
 		return false
 	combat_position.y = 0.0
-	var survives_hit := GameManager.lives > 1
+	var survives_hit := GameManager.lives > 1 or GameManager.practice_mode
 	AudioManager.play_player_hit()
 	SignalBus.player_hit.emit()
 	if survives_hit:
@@ -276,15 +281,15 @@ func is_drone_escort_enabled() -> bool:
 	return drone_escort_enabled
 
 
-## Counts successful reflections only during an active boost. Reflections in
-## the short post-boost window remain defensive but do not build a new chain.
+## Counts reflections during the dash. The post-boost window permits one
+## follow-up input only; it does not extend projectile protection.
 func register_boost_reflection() -> void:
 	if is_boosting:
 		boost_reflected_projectiles += 1
 
 
 func can_deflect_projectiles() -> bool:
-	return is_boosting or boost_chain_window_timer > 0.0
+	return is_boosting
 
 
 func _on_area_entered(area: Area3D) -> void:
@@ -538,21 +543,24 @@ func _update_boost(delta: float) -> void:
 			boost_distance_remaining_pixels = 0.0
 			if _has_boost_chain():
 				boost_chain_window_timer = FlightTuning.BOOST_CHAIN_WINDOW
-				boost_cooldown_timer = 0.0
+				boost_cooldown_timer = _get_boost_cooldown()
 			else:
 				boost_cooldown_timer = _get_boost_cooldown()
 			post_boost_slide_timer = FlightTuning.POST_BOOST_SLIDE_DURATION
 	else:
 		if boost_chain_window_timer > 0.0:
 			boost_chain_window_timer = maxf(boost_chain_window_timer - delta, 0.0)
-			deflection_requested.emit(global_position, velocity)
 		drift_speed_bonus = move_toward(drift_speed_bonus, 1.0, FlightTuning.DRIFT_DECAY_RATE * delta)
 		boost_cooldown_timer = maxf(boost_cooldown_timer - delta, 0.0)
-		if Input.is_action_just_pressed("boost") and boost_cooldown_timer <= 0.0:
+		if Input.is_action_just_pressed("boost") and (boost_cooldown_timer <= 0.0 or (_has_boost_chain() and boost_chain_window_timer > 0.0)):
 			_begin_boost()
 
 
 func _begin_boost() -> void:
+	var is_chain := _has_boost_chain() and (is_boosting or boost_chain_window_timer > 0.0)
+	_chain_followup = is_chain
+	if is_chain:
+		boost_chained.emit()
 	is_boosting = true
 	boost_duration_timer = FlightTuning.BOOST_DURATION
 	boost_reflected_projectiles = 0
@@ -570,11 +578,11 @@ func _begin_boost() -> void:
 
 
 func _has_boost_chain() -> bool:
-	return boost_reflected_projectiles >= FlightTuning.BOOST_CHAIN_REFLECT_THRESHOLD
+	return not _chain_followup and boost_reflected_projectiles >= FlightTuning.BOOST_CHAIN_REFLECT_THRESHOLD
 
 
 func _get_boost_cooldown() -> float:
-	if boost_reflected_projectiles <= 0:
+	if _chain_followup or boost_reflected_projectiles <= 0:
 		return FlightTuning.BOOST_COOLDOWN
 	var additional_reflections := boost_reflected_projectiles - 1
 	return maxf(
@@ -586,10 +594,10 @@ func _get_boost_cooldown() -> float:
 
 func _update_aiming() -> void:
 	var stick_direction := Vector2(
-		Input.get_joy_axis(0, JOY_AXIS_RIGHT_X),
-		Input.get_joy_axis(0, JOY_AXIS_RIGHT_Y)
+		Input.get_joy_axis(InputBindings.active_gamepad, JOY_AXIS_RIGHT_X),
+		Input.get_joy_axis(InputBindings.active_gamepad, JOY_AXIS_RIGHT_Y)
 	)
-	if stick_direction.length() > FlightTuning.AIM_STICK_DEADZONE:
+	if stick_direction.length() > clampf(float(SaveManager.get_setting("aim_deadzone", 0.4)), 0.15, 0.6):
 		last_aim_direction = _flight_space.input_to_combat_direction(stick_direction)
 		is_using_free_aim = true
 	var mouse_position := get_viewport().get_mouse_position()
@@ -900,3 +908,18 @@ func prepare_visual_warmup() -> void:
 	_upgrade_visuals.prepare_visual_warmup()
 	$Visuals/InterceptorHull.show()
 	$Visuals/BulwarkHull.show()
+
+
+func get_boost_state() -> Dictionary:
+	var chain_ready := _has_boost_chain() and (is_boosting or boost_chain_window_timer > 0.0)
+	var remaining := maxf(boost_duration_timer, 0.0) + FlightTuning.BOOST_CHAIN_WINDOW if is_boosting else boost_chain_window_timer
+	return {
+		"boosting": is_boosting,
+		"chain_followup": _chain_followup,
+		"chain_ready": chain_ready,
+		"reflections": mini(boost_reflected_projectiles, FlightTuning.BOOST_CHAIN_REFLECT_THRESHOLD) if (is_boosting or chain_ready) and not _chain_followup else 0,
+		"threshold": FlightTuning.BOOST_CHAIN_REFLECT_THRESHOLD,
+		"chain_remaining": remaining if chain_ready else 0.0,
+		"chain_fraction": clampf(remaining / (FlightTuning.BOOST_DURATION + FlightTuning.BOOST_CHAIN_WINDOW), 0.0, 1.0),
+		"recharge": 1.0 - clampf(boost_cooldown_timer / maxf(_get_boost_cooldown(), 0.01), 0.0, 1.0),
+	}

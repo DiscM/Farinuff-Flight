@@ -33,6 +33,7 @@ var _drop_timer := 0.0
 var _drop_left := true
 var _mine_timer := MINE_FIRST_DROP_SECONDS
 var _mine_count := 0
+var _route_timer := 0.0
 var _hazard_manager: NativeHazardManager
 
 
@@ -58,11 +59,17 @@ func _configure_movement() -> void:
 	_drop_left = true
 	_mine_timer = MINE_FIRST_DROP_SECONDS
 	_mine_count = 0
+	_route_timer = randf_range(0.65, 1.1)
 	velocity = _flight_space.screen_motion_to_combat(_screen_travel_direction * _speed_pixels)
 	velocity.y = 0.0
 
 
 func _advance_movement(delta: float) -> void:
+	if generation >= 2 and _is_inside_combat_view():
+		_route_timer -= delta
+		if _route_timer <= 0.0:
+			_route_timer = 1.1
+			_choose_interception_lane()
 	var screen_motion := _screen_travel_direction * (_speed_pixels * delta)
 	screen_motion += _screen_perpendicular * (drift_speed_pixels * _drift_direction * delta)
 	var next_position := global_position + _flight_space.screen_motion_to_combat(screen_motion)
@@ -111,6 +118,20 @@ func _advance_movement(delta: float) -> void:
 		if _mine_timer <= 0.0 and _can_begin_special():
 			_mine_timer = MINE_FIRST_DROP_SECONDS
 			_try_drop_mine()
+
+
+func _choose_interception_lane() -> void:
+	var player := get_tree().get_first_node_in_group(&"player_craft") as Node3D
+	if player == null:
+		return
+	var player_velocity: Vector3 = player.get("velocity")
+	var target := player.global_position + player_velocity * 0.65
+	var offset := _flight_space.combat_motion_to_screen(target - global_position)
+	var lateral_distance := offset.dot(_screen_perpendicular)
+	# Commit between decisions; a dead band prevents jitter when lanes align.
+	# The original forward travel, boundary bounce and exit behavior stay intact.
+	if absf(lateral_distance) > 60.0:
+		_drift_direction = signf(lateral_distance)
 
 
 func _is_inside_combat_view() -> bool:

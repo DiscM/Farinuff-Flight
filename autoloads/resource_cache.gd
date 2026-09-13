@@ -1,5 +1,5 @@
 extends Node
-## Bounded cache for the two root scenes that are crossed repeatedly.
+## Bounded cache for the menu, Expedition, and practice root scenes.
 ##
 ## ResourceLoader already caches individual resources, but every transition
 ## still has to resolve and instantiate its PackedScene. Keeping only these
@@ -8,9 +8,10 @@ extends Node
 
 const MAIN_MENU_PATH := "res://ui/main_menu.tscn"
 const NATIVE_RUN_PATH := "res://scenes/native_3d_run.tscn"
-const CACHEABLE_SCENES: PackedStringArray = [MAIN_MENU_PATH, NATIVE_RUN_PATH]
-const MAX_CACHED_SCENES := 2
-const MAX_PENDING_LOADS := 2
+const PRACTICE_PATH := "res://scenes/flight_practice.tscn"
+const CACHEABLE_SCENES: PackedStringArray = [MAIN_MENU_PATH, NATIVE_RUN_PATH, PRACTICE_PATH]
+const MAX_CACHED_SCENES := 3
+const MAX_PENDING_LOADS := 3
 
 var _packed_scenes: Dictionary = {}
 var _pending_paths: Dictionary = {}

@@ -51,13 +51,15 @@ func pool_activate(flight_space: FlightSpace, origin: Vector3, direction: Vector
 	var across := flight_space.screen_motion_to_combat(Vector2(-screen_direction.y, screen_direction.x))
 	global_transform = Transform3D.IDENTITY
 	global_position = Vector3(origin.x, 0.0, origin.z)
+	var arena := flight_space.get_combat_bounds()
+	var lane_length := maxf(1600.0, flight_space.combat_motion_to_screen(Vector3(arena.size.x, 0.0, arena.size.y)).length())
 	var lane_basis := Basis(across, Vector3.UP, along)
-	warning.transform = Transform3D(lane_basis.scaled_local(Vector3(3.0, 1.0, 1600.0)), along * 800.0 + Vector3.UP * 0.04)
-	beam.transform = Transform3D(lane_basis.scaled_local(Vector3(18.0, 1.0, 1600.0)), along * 800.0 + Vector3.UP * 0.04)
+	warning.transform = Transform3D(lane_basis.scaled_local(Vector3(3.0, 1.0, lane_length)), along * lane_length * 0.5 + Vector3.UP * 0.04)
+	beam.transform = Transform3D(lane_basis.scaled_local(Vector3(18.0, 1.0, lane_length)), along * lane_length * 0.5 + Vector3.UP * 0.04)
 	# Convex primitive vertices preserve the affine camera projection without
 	# unsupported shearing/scaling of a physics shape transform.
 	var points := PackedVector3Array()
-	for length in [0.0, 1600.0]:
+	for length in [0.0, lane_length]:
 		for width in [-9.0, 9.0]:
 			for height in [-0.25, 0.25]:
 				points.append(along * length + across * width + Vector3.UP * height)

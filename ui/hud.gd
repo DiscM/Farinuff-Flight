@@ -43,11 +43,17 @@ const SHIELD_CHIP: Dictionary = {"key": &"shield", "label": "SHIELD", "color": C
 
 var _effect_chips: Dictionary = {}  # StringName key -> {panel, time, bar}
 var _player: Node = null
+var _wave_progress: ProgressBar
+var _wave_progress_label: Label
+var _route_label: Label
 
 ## Connects all HUD-relevant signals from the SignalBus, hides the boss
 ## bar initially, and builds the orb meter UI.
 func _ready() -> void:
+	layer = 3
+	_build_wave_progress()
 	_apply_mockup_style()
+	_arrange_cabinet_hud()
 	SignalBus.score_changed.connect(_on_score_changed)
 	SignalBus.combo_changed.connect(_on_combo_changed)
 	SignalBus.lives_changed.connect(_on_lives_changed)
@@ -56,6 +62,19 @@ func _ready() -> void:
 	SignalBus.power_up_collected.connect(_on_power_up_collected)
 	SignalBus.boss_spawned.connect(_on_boss_spawned)
 	SignalBus.boss_health_changed.connect(_on_boss_health_changed)
+	SignalBus.boss_phase_presented.connect(_on_boss_phase_presented)
+	# Fixed thirds match the native boss phase thresholds and survive UI resizing.
+	for fraction in [1.0 / 3.0, 2.0 / 3.0]:
+		var marker := ColorRect.new()
+		marker.color = Color(1.0, 1.0, 1.0, 0.8)
+		marker.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		boss_health_bar.add_child(marker)
+		marker.anchor_left = fraction
+		marker.anchor_right = fraction
+		marker.anchor_bottom = 1.0
+		marker.offset_left = -1.0
+		marker.offset_right = 1.0
+
 	SignalBus.boss_died.connect(_on_boss_died)
 	SignalBus.orb_meter_changed.connect(_on_orb_meter_changed)
 	boss_bar_container.visible = false
@@ -72,12 +91,12 @@ func _apply_mockup_style() -> void:
 	_style_progress_bar(orb_bar, NeonUI.CYAN)
 	_style_progress_bar(boss_health_bar, NeonUI.PINK)
 
-func _hud_outline(accent: Color, fill: Color, radius: int = 6) -> StyleBoxFlat:
+func _hud_outline(accent: Color, fill: Color, _radius: int = 6) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = fill
 	style.border_color = Color(accent, 0.86)
 	style.set_border_width_all(1)
-	style.set_corner_radius_all(radius)
+	style.set_corner_radius_all(1)
 	style.shadow_color = Color(0, 0, 0, 0.22)
 	style.shadow_size = 2
 	style.shadow_offset = Vector2(1, 1)
@@ -134,8 +153,8 @@ func _on_lives_changed(new_lives: int) -> void:
 	for i in range(visible_hearts):
 		var heart := Label.new()
 		heart.text = "♥"
-		heart.add_theme_color_override("font_color", NeonUI.GREEN)
-		heart.add_theme_font_size_override("font_size", 9)
+		heart.add_theme_color_override("font_color", NeonUI.PINK)
+		heart.add_theme_font_size_override("font_size", 20)
 		lives_container.add_child(heart)
 	lives_count_label.text = str(new_lives)
 	if new_lives > MAX_VISIBLE_HEARTS:
@@ -147,7 +166,7 @@ func _on_lives_changed(new_lives: int) -> void:
 
 ## Updates the persistent top-bar wave label.
 func _on_wave_started(wave_number: int) -> void:
-	wave_label.text = "WAVE " + str(wave_number)
+	wave_label.text = "WAVE %02d / 20" % wave_number if wave_number <= 20 else "ENDLESS / %02d" % wave_number
 
 func _compact_number(value: int) -> String:
 	if value >= 1000000:
@@ -183,6 +202,12 @@ func _on_boss_spawned(health: int, max_health: int, boss_name: String) -> void:
 	tween.tween_property(boss_bar_container, "modulate:a", 0.3, 0.15)
 	tween.tween_property(boss_bar_container, "modulate:a", 1.0, 0.15)
 
+## Persistent phase identity complements the short combat transition notice.
+func _on_boss_phase_presented(phase: int, phase_name: String, projectile_color: Color) -> void:
+	boss_class_label.text = "PHASE %d / 3 · %s" % [phase + 1, phase_name]
+	boss_class_label.add_theme_color_override("font_color", projectile_color)
+	_style_progress_bar(boss_health_bar, projectile_color)
+
 ## Updates the boss health bar value whenever the boss takes damage.
 func _on_boss_health_changed(health: int) -> void:
 	boss_health_bar.value = health
@@ -203,6 +228,14 @@ func _on_boss_died(_points: int) -> void:
 ## magnet) show a live countdown and a depleting bar; the shield shows a
 ## persistent "HELD" chip until it absorbs a hit.
 func _process(_delta: float) -> void:
+	if _wave_progress != null:
+		_wave_progress.max_value = maxi(GameManager.orbs_needed_this_wave, 1)
+		_wave_progress.value = GameManager.orbs_collected_this_wave
+		_wave_progress.visible = not GameManager.boss_active
+		_wave_progress_label.text = "DEFEAT THE BOSS" if GameManager.boss_active else "NEXT WAVE  %d / %d" % [GameManager.orbs_collected_this_wave, GameManager.orbs_needed_this_wave]
+	if _route_label != null:
+		var route := ExpeditionManager.get_current_node()
+		_route_label.text = "PRACTICE" if GameManager.practice_mode else str(route.display_name).to_upper() if route != null and ExpeditionManager.is_expedition_active() else "ENDLESS" if GameManager.current_wave > 20 else "EXPEDITION"
 	_sync_power_up_timers()
 
 func _sync_power_up_timers() -> void:
@@ -327,7 +360,7 @@ func _on_power_up_collected(type: int, _pos: Vector3) -> void:
 func _on_orb_meter_changed(current: int, max_orbs: int) -> void:
 	orb_bar.max_value = max_orbs
 	orb_bar.value = current
-	orb_label.text = str(current) + "/" + str(max_orbs)
+	orb_label.text = "%d / %d" % [current, max_orbs]
 
 	# Pulse on collection
 	var tween := create_tween()
@@ -338,3 +371,59 @@ func _on_orb_meter_changed(current: int, max_orbs: int) -> void:
 	else:
 		tween.tween_property(orb_bar, "scale", Vector2(1.1, 1.3), 0.06)
 		tween.tween_property(orb_bar, "scale", Vector2.ONE, 0.12)
+
+
+func _build_wave_progress() -> void:
+	var box := VBoxContainer.new()
+	wave_panel.remove_child(wave_label)
+	wave_panel.add_child(box)
+	box.add_child(wave_label)
+	_route_label = Label.new()
+	_route_label.add_theme_font_size_override("font_size", 10)
+	_route_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	box.add_child(_route_label)
+	_wave_progress_label = Label.new()
+	_wave_progress_label.add_theme_font_size_override("font_size", 12)
+	box.add_child(_wave_progress_label)
+	_wave_progress = ProgressBar.new()
+	_wave_progress.show_percentage = false
+	_wave_progress.custom_minimum_size = Vector2(0, 7)
+	box.add_child(_wave_progress)
+	_style_progress_bar(_wave_progress, NeonUI.CYAN)
+
+
+func _arrange_cabinet_hud() -> void:
+	var orb_title := orb_panel.get_node("OrbRow/OrbTitle") as Label
+	orb_title.text = "LIFE RESTORE"
+	orb_title.add_theme_font_size_override("font_size", 12)
+	left_dock.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+	left_dock.position = Vector2(20, 20)
+	left_dock.size = Vector2(190, 88)
+	score_label.add_theme_font_size_override("font_size", 22)
+	score_label.add_theme_font_override("font", NeonUI.HEADING_FONT)
+	wave_panel.reparent(self)
+	wave_panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
+	wave_panel.offset_left = -145
+	wave_panel.offset_right = 145
+	wave_panel.offset_top = 16
+	wave_panel.offset_bottom = 96
+	wave_label.add_theme_font_override("font", NeonUI.HEADING_FONT)
+	wave_label.add_theme_font_size_override("font_size", 22)
+	boss_dock.offset_top = 112
+	boss_dock.offset_bottom = 178
+	var strip := HBoxContainer.new()
+	strip.name = "CabinetStatusStrip"
+	strip.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
+	strip.offset_left = 20
+	strip.offset_right = -20
+	strip.offset_top = -124
+	strip.offset_bottom = -68
+	strip.add_theme_constant_override("separation", 16)
+	add_child(strip)
+	for panel in [lives_panel, orb_panel, power_up_panel]:
+		panel.reparent(strip)
+		panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		panel.add_theme_stylebox_override("panel", NeonUI.plaque(NeonUI.CYAN, NeonUI.INK_DARK, 1, 1))
+	right_dock.hide()
+	for label in [lives_count_label, orb_label]:
+		label.add_theme_font_size_override("font_size", 14)

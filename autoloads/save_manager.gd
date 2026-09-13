@@ -12,26 +12,37 @@ const SAVE_BACKUP_PATH := "user://" + SAVE_BACKUP_FILE_NAME
 ## Schema version of the save file. Bump when the layout changes and add a
 ## migration path in _load_data. Version 3 adds durable campaign discovery
 ## state while keeping active-run state intentionally in memory only.
-const SAVE_VERSION := 3
+## Version 4 adds encountered boss waves; version 5 separates recovered fragments
+## from viewed story so Story Off does not prevent archive collection.
+const SAVE_VERSION := 6
 const LEGACY_SAVE_VERSION := 1
 const DEFAULT_SETTINGS: Dictionary = {
 	"master_volume": 0.8,
 	"music_volume": 0.8,
+	"ui_volume": 0.8,
 	"screen_shake": true,
 	"crt_effect": true,
 	"screen_distortion": true,
 	"alt_controls": false,
 	"fullscreen": false,
 	"reduced_flashing": false,
+	"reduced_motion": false,
+	"hold_to_confirm": false,
+	"menu_text_scale": 1.0,
+	"aim_deadzone": 0.4,
+	"story_frequency": 0,
 }
 const DEFAULT_CAMPAIGN_STATE: Dictionary = {
 	"discovered_node_ids": [],
 	"seen_story_beat_ids": [],
+	"recovered_fragment_ids": [],
 	"expedition_clear_count": 0,
 	"last_ending_id": "",
 }
 
+var encountered_boss_waves: Array[int] = []
 var high_score: int = 0
+var control_bindings: Dictionary = {}
 var settings: Dictionary = DEFAULT_SETTINGS.duplicate(true)
 # Meta-progression state, owned by the MetaProgression autoload and
 # persisted here alongside the high score.
@@ -142,7 +153,17 @@ func _load_data() -> void:
 	var data := _select_load_data()
 	if data.is_empty():
 		return
+	var stored_bindings: Variant = data.get("control_bindings", {})
+	if stored_bindings is Dictionary:
+		for action: String in stored_bindings:
+			if stored_bindings[action] is Dictionary:
+				control_bindings[action] = stored_bindings[action].duplicate(true)
 	high_score = maxi(int(data.get("high_score", 0)), 0)
+	var stored_bosses: Variant = data.get("encountered_boss_waves", [])
+	if stored_bosses is Array:
+		for entry: Variant in stored_bosses:
+			if (entry is int or entry is float) and int(entry) in [5, 10, 15, 20, 25] and not encountered_boss_waves.has(int(entry)):
+				encountered_boss_waves.append(int(entry))
 	# Meta-progression keys are additive to the v1 schema: absent keys keep
 	# the in-memory defaults, and mistyped values are rejected the same way
 	# settings are.
@@ -207,7 +228,9 @@ func _load_data() -> void:
 				# "screen_shake": "false" would otherwise coerce the non-empty
 				# string to true, silently inverting the user's intent.
 				var value: Variant = stored_settings[key]
-				if typeof(value) == typeof(DEFAULT_SETTINGS[key]):
+				if key == "story_frequency" and (value is int or value is float):
+					settings[key] = clampi(int(value), 0, 2)
+				elif typeof(value) == typeof(DEFAULT_SETTINGS[key]):
 					settings[key] = value
 
 
@@ -216,6 +239,7 @@ func _normalize_campaign_state(raw_state: Dictionary) -> Dictionary:
 	return {
 		"discovered_node_ids": _unique_string_entries(raw_state.get("discovered_node_ids", [])),
 		"seen_story_beat_ids": _unique_string_entries(raw_state.get("seen_story_beat_ids", [])),
+		"recovered_fragment_ids": _unique_string_entries(raw_state.get("recovered_fragment_ids", raw_state.get("seen_story_beat_ids", []))),
 		"expedition_clear_count": _non_negative_integer(
 			raw_state.get("expedition_clear_count", 0)
 		),
@@ -289,6 +313,7 @@ func _save_data() -> void:
 		return
 	var payload := {
 		"version": SAVE_VERSION,
+		"encountered_boss_waves": encountered_boss_waves,
 		"high_score": high_score,
 		"salvage": salvage,
 		"unlock_levels": unlock_levels,
@@ -303,6 +328,7 @@ func _save_data() -> void:
 		"has_seen_flight_school": has_seen_flight_school,
 		"campaign": campaign_state,
 		"settings": settings,
+		"control_bindings": control_bindings,
 	}
 	var file := FileAccess.open(SAVE_TEMP_PATH, FileAccess.WRITE)
 	if file == null:
@@ -320,13 +346,22 @@ func _save_data() -> void:
 	# Rotate the known-good live copy before promoting the complete temporary
 	# file. A failed rename never leaves a half-written primary save.
 	if FileAccess.file_exists(SAVE_PATH):
-		if FileAccess.file_exists(SAVE_BACKUP_PATH):
-			directory.remove(SAVE_BACKUP_FILE_NAME)
-		var backup_error := directory.rename(SAVE_FILE_NAME, SAVE_BACKUP_FILE_NAME)
-		if backup_error != OK:
-			push_warning("Unable to rotate the previous player save.")
-			directory.remove(SAVE_TEMP_FILE_NAME)
-			return
+		var previous: Variant = _read_save_data(SAVE_PATH)
+		if previous is Dictionary and _is_supported_save_version(previous):
+			if FileAccess.file_exists(SAVE_BACKUP_PATH):
+				directory.remove(SAVE_BACKUP_FILE_NAME)
+			var backup_error := directory.rename(SAVE_FILE_NAME, SAVE_BACKUP_FILE_NAME)
+			if backup_error != OK:
+				push_warning("Unable to rotate the previous player save.")
+				directory.remove(SAVE_TEMP_FILE_NAME)
+				return
+		else:
+			# Recovery loaded the backup. Do not replace it with the broken
+			# primary when writing the recovered state back to disk.
+			if directory.remove(SAVE_FILE_NAME) != OK:
+				push_warning("Unable to replace the invalid player save.")
+				directory.remove(SAVE_TEMP_FILE_NAME)
+				return
 
 	var promote_error := directory.rename(SAVE_TEMP_FILE_NAME, SAVE_FILE_NAME)
 	if promote_error != OK:
@@ -342,6 +377,7 @@ func _save_data() -> void:
 func _apply_audio_settings() -> void:
 	_apply_bus_volume("Master", float(settings.get("master_volume", 0.8)))
 	_apply_bus_volume("Music", float(settings.get("music_volume", 0.8)))
+	_apply_bus_volume("UI", float(settings.get("ui_volume", 0.8)))
 
 func _apply_bus_volume(bus_name: String, raw_volume: float) -> void:
 	var bus_index := AudioServer.get_bus_index(bus_name)
@@ -365,6 +401,10 @@ func _apply_display_settings() -> void:
 ## Default: Space shoots, Shift boosts. Alt: left mouse button shoots,
 ## Space boosts. The swap is strict — Space never does both at once.
 func _apply_control_scheme() -> void:
+	var bindings := get_node_or_null("/root/InputBindings")
+	if bindings != null and bindings.is_node_ready():
+		bindings.apply_bindings()
+		return
 	var alt := bool(settings.get("alt_controls", false))
 	_set_key_binding(&"shoot", KEY_SPACE, not alt)
 	_set_mouse_binding(&"shoot", MOUSE_BUTTON_LEFT, alt)
@@ -392,3 +432,15 @@ func _set_mouse_binding(action: StringName, button: MouseButton, enabled: bool) 
 		var event := InputEventMouseButton.new()
 		event.button_index = button
 		InputMap.action_add_event(action, event)
+
+
+func record_boss_encounter(wave: int) -> void:
+	if wave not in [5, 10, 15, 20, 25] or encountered_boss_waves.has(wave):
+		return
+	encountered_boss_waves.append(wave)
+	_save_data()
+
+
+func save_control_bindings(bindings: Dictionary) -> void:
+	control_bindings = bindings.duplicate(true)
+	_save_data()

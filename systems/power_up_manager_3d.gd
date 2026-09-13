@@ -159,4 +159,6 @@ func _untrack_checkout(power_up: PowerUp3D) -> void:
 func _refresh_bounds() -> void:
 	if _flight_space == null or _flight_space.configuration == null:
 		return
+	if not _flight_space.bounds_changed.is_connected(_refresh_bounds):
+		_flight_space.bounds_changed.connect(_refresh_bounds)
 	_combat_bounds = _flight_space.get_combat_bounds(_flight_space.configuration.despawn_margin_pixels)

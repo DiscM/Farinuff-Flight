@@ -27,7 +27,7 @@ grow_vertical = 2
 mouse_filter = 2
 
 [node name="ScreenDistortion" type="CanvasLayer" parent="."]
-layer = 100
+layer = 2
 
 [node name="FullscreenPass" type="ColorRect" parent="ScreenDistortion"]
 material = SubResource("ShaderMaterial_distortion")

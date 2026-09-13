@@ -28,6 +28,8 @@ var confirm_btn: Button
 ## Builds the allocation UI and plays the entrance animation.
 ## Runs in PROCESS_MODE_ALWAYS so it works while the game is paused.
 func _ready() -> void:
+	add_to_group("scalable_ui")
+	theme = preload("res://ui/themes/farinuff_frontend_theme.tres")
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_build_ui()
 	_animate_in()
@@ -38,6 +40,11 @@ func set_points(p: int) -> void:
 	points_remaining = p
 	if points_label:
 		_refresh_ui()
+		if not panel_only:
+			if points_remaining > 0:
+				fire_rate_btn.grab_focus()
+			else:
+				confirm_btn.grab_focus()
 
 # ── UI Construction ──────────────────────────────────────────────
 
@@ -106,8 +113,9 @@ func _build_ui() -> void:
 	confirm_btn.text = "CONFIRM"
 	confirm_btn.custom_minimum_size = Vector2(180 if compact_layout else 200, 46 if compact_layout else 50)
 	confirm_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	NeonUI.style_primary(confirm_btn)
 	confirm_btn.add_theme_font_size_override("font_size", 18 if compact_layout else 20)
-	confirm_btn.add_theme_color_override("font_color", Color(0.3, 1.0, 0.5))
+	confirm_btn.add_theme_color_override("font_color", NeonUI.INK_DARK)
 	confirm_btn.disabled = true
 	confirm_btn.pressed.connect(_on_confirm)
 	vbox.add_child(confirm_btn)
@@ -177,6 +185,8 @@ func _on_plus_pressed(stat_id: String) -> void:
 		"speed":
 			alloc_speed += 1
 	_refresh_ui()
+	if points_remaining == 0:
+		confirm_btn.grab_focus()
 
 ## Called when the "CONFIRM" button is pressed. Applies all temporarily
 ## allocated points to GameManager's stat system, emits allocation_done,
@@ -237,6 +247,8 @@ func _refresh_ui() -> void:
 
 ## Plays a fade-in entrance animation.
 func _animate_in() -> void:
+	if bool(SaveManager.get_setting("reduced_motion", false)):
+		return
 	modulate.a = 0.0
 	var tween := create_tween()
 	tween.tween_property(self, "modulate:a", 1.0, 0.3).set_ease(Tween.EASE_OUT)

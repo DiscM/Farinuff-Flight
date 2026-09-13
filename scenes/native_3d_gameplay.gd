@@ -54,6 +54,7 @@ const MONITOR_POOL_PRESSURE := &"native_3d/pool_pressure"
 
 ## Review scenes can leave this disabled to preserve their earlier no-reward
 ## contract. Native production gameplay will enable it when its spawner lands.
+@export var practice_session := false
 @export var rewards_enabled := false
 @export var consume_field_supplies := false
 @export var presentation_settings: PresentationSettings
@@ -130,6 +131,7 @@ func _ready() -> void:
 	player.fire_requested.connect(projectile_manager.fire_player_projectile)
 	player.muzzle_feedback_requested.connect(_on_player_fired)
 	player.deflection_requested.connect(projectile_manager.deflect_enemy_projectiles)
+	projectile_manager.deflected_projectile_hit.connect(_on_reflected_projectile_hit)
 	player.boost_started.connect(_on_player_boost_started)
 	player.damage_taken.connect(_on_player_damage_taken)
 	player.shield_absorbed.connect(_on_shield_absorbed)
@@ -145,11 +147,18 @@ func _ready() -> void:
 	hazard_manager.mine_detonated.connect(_on_mine_detonated)
 	# The review controller never consumes Hangar supplies. Its reward policy is
 	# explicit per scene, so projectile and Phase 4 reviews remain no-reward.
-	GameManager.start_game(consume_field_supplies)
+	GameManager.start_game(consume_field_supplies, practice_session)
 	player.configure_flight_space(flight_space)
 	transition_overlay.hide()
 	if hud.has_method("update_all"):
 		hud.update_all()
+	var comms_ticker := preload("res://ui/combat_notice.gd").new()
+	comms_ticker.name = "CommsTicker"
+	hud.add_child(comms_ticker)
+	var boost_meter := preload("res://ui/boost_meter.gd").new()
+	boost_meter.player = player
+	boost_meter.status = boost_status
+	hud.add_child(boost_meter)
 	gameplay_ready.emit()
 
 
@@ -159,6 +168,13 @@ func _on_player_projectile_hit(target: Area3D, _combat_position: Vector3) -> voi
 	effect_manager.play_effect(NativeEffect.EffectKind.IMPACT, combat_position)
 	if target != null and target.has_method("take_damage"):
 		target.take_damage(WeaponTuning.BASE_DAMAGE + GameManager.bonus_damage)
+
+
+func _on_reflected_projectile_hit(target: Area3D, combat_position: Vector3) -> void:
+	effect_manager.play_effect(NativeEffect.EffectKind.IMPACT, combat_position)
+	# Enemy fire is a defensive counterattack, independent of weapon upgrades.
+	if target != null and target.has_method("take_damage"):
+		target.take_damage(1)
 
 
 func _on_enemy_projectile_hit(target: Area3D, combat_position: Vector3) -> void:
@@ -405,6 +421,8 @@ func route_enemy_finish(
 		0.86 + float(clampi(generation, 1, 4)) * 0.14,
 		true
 	)
+	if enemy.get("field_objective") == true:
+		return
 	if not rewards_enabled or not enemy.has_method("get_reward_points"):
 		return
 	var points := int(enemy.get_reward_points())
@@ -449,18 +467,6 @@ func _process(delta: float) -> void:
 	aim_reticle.visible = player.is_using_free_aim and GameManager.is_game_active
 	if aim_reticle.visible:
 		aim_reticle.position = flight_space.combat_to_screen(player.get_aim_reticle_combat_position())
-	if player.boost_reflected_projectiles >= FlightTuning.BOOST_CHAIN_REFLECT_THRESHOLD:
-		boost_status.text = "CHAIN READY  •  BOOST AGAIN  •  REFLECTIONS %d / %d" % [
-			player.boost_reflected_projectiles, FlightTuning.BOOST_CHAIN_REFLECT_THRESHOLD,
-		]
-	elif player.is_boosting:
-		boost_status.text = "BOOSTING  •  REFLECTIONS %d / %d" % [
-			player.boost_reflected_projectiles, FlightTuning.BOOST_CHAIN_REFLECT_THRESHOLD,
-		]
-	elif player.boost_cooldown_timer > 0.0:
-		boost_status.text = "BOOST RECHARGING"
-	else:
-		boost_status.text = "BOOST READY"
 	_metrics_timer -= delta
 	if _metrics_timer <= 0.0 and projectile_manager.is_ready:
 		_metrics_timer = _metrics_interval
@@ -651,7 +657,7 @@ func _get_presentation_pool_pressure() -> float:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not (event is InputEventKey) or not event.pressed or event.echo or event.keycode != KEY_ESCAPE:
+	if not InputBindings.is_pause_event(event) or event.is_echo():
 		return
 	if not GameManager.is_game_active or is_instance_valid(_pause_overlay):
 		return
