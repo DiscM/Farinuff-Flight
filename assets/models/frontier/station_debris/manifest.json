@@ -1,0 +1,131 @@
+{
+  "authoring": "Original Blender geometry for Farinuff Flight",
+  "blender_version": "5.2.1 LTS",
+  "source": "assets/models/frontier/sources/station_debris.blend",
+  "rebuild": "tools/build_station_debris_blender.py",
+  "units": "meters",
+  "export_up_axis": "Y",
+  "style_sources": [
+    "design/pixel-enemies/README.md",
+    "design/void-frontier/README.md"
+  ],
+  "style_profile": {
+    "id": "pixel-forged-station",
+    "name": "Pixel-forged station wreckage",
+    "source": "written",
+    "brief": "Faceted slate station wreckage with the fleet's three-band PixelPlanets shading.",
+    "application": "Apply the shared spatial shader to every exported material role in Godot.",
+    "must_preserve": [
+      "Clipped armor, exposed ribs and attached broken conduits",
+      "Subdued scenery exposure"
+    ],
+    "reference_images": []
+  },
+  "style_lock": {
+    "medium": "Original flat-shaded Blender geometry with a Godot spatial shader",
+    "rendering": "Three palette bands, quantized terrain, narrow checker dithering",
+    "palette": [
+      "Slate armor",
+      "Pale cut edges",
+      "Violet recesses",
+      "Faded cyan inlays",
+      "Weathered brass"
+    ],
+    "must_not_change": [
+      "No specular glare or emissive cores",
+      "No detached attached components",
+      "No collision or shadows",
+      "Grid moves with the mesh"
+    ]
+  },
+  "palette": [
+    {
+      "role": "Station | slate armor",
+      "srgb": "#687b96"
+    },
+    {
+      "role": "Station | pale cut edges",
+      "srgb": "#9cacc0"
+    },
+    {
+      "role": "Station | violet recess",
+      "srgb": "#30344e"
+    },
+    {
+      "role": "Station | faded cyan inlay",
+      "srgb": "#639eab"
+    },
+    {
+      "role": "Station | weathered brass",
+      "srgb": "#a48a68"
+    }
+  ],
+  "assets": [
+    {
+      "asset": "shattered_orbital_relay.glb",
+      "triangles": 4180,
+      "sha256": "14e1ba279f148980dd5dd7769cb041e28392494326c16c018d7082a90ee0abb8",
+      "dimensions_blender": [
+        14.135,
+        14.356,
+        0.965
+      ],
+      "materials": 5
+    },
+    {
+      "asset": "station_ring_section.glb",
+      "triangles": 288,
+      "sha256": "1fc15b94fa1f84e3b7ae79785d4c795b7af2975a631d00243cebe5dbc970cf98",
+      "dimensions_blender": [
+        4.672,
+        2.793,
+        0.68
+      ],
+      "materials": 4
+    },
+    {
+      "asset": "station_habitat_wreck.glb",
+      "triangles": 602,
+      "sha256": "39046f0a397ad61c7d1ef84176bbe6b6419879fb3cf51a1b57dcfa91a4e3d0ba",
+      "dimensions_blender": [
+        3.924,
+        1.61,
+        0.94
+      ],
+      "materials": 5
+    },
+    {
+      "asset": "station_solar_wing.glb",
+      "triangles": 570,
+      "sha256": "4b4ec0650efd8d003d3fdea3b11af425f40c5326b7b620035afa216e4000f932",
+      "dimensions_blender": [
+        4.38,
+        2.25,
+        0.37
+      ],
+      "materials": 5
+    },
+    {
+      "asset": "station_truss.glb",
+      "triangles": 220,
+      "sha256": "f935566e5f6c9ba7a2f5e6e5ad5dfede83bd812133eadfbc54a7913559621c25",
+      "dimensions_blender": [
+        4.493,
+        1.876,
+        0.576
+      ],
+      "materials": 4
+    },
+    {
+      "asset": "station_armor_plate.glb",
+      "triangles": 176,
+      "sha256": "85ce37c53cdec7a477e352cb05cf43b4905d3a11d0dd9192c5acb7ddf7855ea6",
+      "dimensions_blender": [
+        2.95,
+        2.217,
+        0.45
+      ],
+      "materials": 5
+    }
+  ]
+}

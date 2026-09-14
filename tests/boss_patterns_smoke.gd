@@ -23,8 +23,10 @@ func _run() -> void:
 		boss.dev_variant_override = variant
 		GameManager.current_wave = 5 * (variant + 1)
 		_expect(boss.activate_generation(flight_space, Vector3.ZERO, Vector3.BACK, 1), "Boss activates")
+		_expect(is_zero_approx(boss._ram_cooldown), "A new boss encounter starts with its charge available")
 		boss.set_physics_process(false)
 		boss._arena_patterns.set_physics_process(false)
+		_check_pursuit(boss)
 		for phase in 3:
 			boss.phase = phase
 			for section in boss._sections:
@@ -53,6 +55,8 @@ func _run() -> void:
 			await _check_arena(boss, label)
 			await _check_transition(boss, label)
 		_check_rotation(boss)
+		if variant == 0:
+			await _check_ram_cooldown(boss)
 		boss._before_finish(BasicEnemy.FinishReason.ESCAPED, boss.global_position)
 		boss.queue_free()
 		await _clear_field()
@@ -63,6 +67,108 @@ func _run() -> void:
 		push_error(failure)
 	print("BOSS_PATTERNS_SMOKE_PASS" if _failures.is_empty() else "BOSS_PATTERNS_SMOKE_FAIL")
 	get_tree().quit(0 if _failures.is_empty() else 1)
+
+func _check_pursuit(boss: Boss) -> void:
+	var label: String = Boss.TITLES[boss.variant]
+	boss._phase_transition = 0.0
+	boss._volley_timer = 120.0
+	player.velocity = Vector3.ZERO
+	for direction in [Vector2.UP, Vector2.RIGHT, Vector2.DOWN, Vector2.LEFT]:
+		boss.global_position = Vector3.ZERO
+		boss.velocity = Vector3.ZERO
+		player.global_position = flight_space.screen_motion_to_combat(direction * 650.0)
+		for step in 60:
+			boss._advance_movement(1.0 / 60.0)
+		var distance := flight_space.combat_motion_to_screen(player.global_position - boss.global_position).length()
+		_expect(distance < 550.0, label + " approaches the player from every direction")
+		# Reverse the target while already flying: stale waypoints must not win.
+		player.global_position = -player.global_position
+		var before := flight_space.combat_motion_to_screen(player.global_position - boss.global_position).length()
+		for step in 60:
+			boss._advance_movement(1.0 / 60.0)
+		distance = flight_space.combat_motion_to_screen(player.global_position - boss.global_position).length()
+		_expect(distance < before - 60.0, label + " turns back when the player changes sides")
+	# Compare the same approach with and without lateral player motion.
+	boss.global_position = Vector3.ZERO
+	boss.velocity = Vector3.ZERO
+	player.global_position = flight_space.screen_motion_to_combat(Vector2(0, 650))
+	boss._advance_movement(0.1)
+	var stationary_step := flight_space.combat_motion_to_screen(boss.global_position)
+	boss.global_position = Vector3.ZERO
+	boss.velocity = Vector3.ZERO
+	player.velocity = flight_space.screen_motion_to_combat(Vector2(280, 0))
+	boss._advance_movement(0.1)
+	_expect(flight_space.combat_motion_to_screen(boss.global_position).x > stationary_step.x, label + " leads a moving player")
+	player.velocity = Vector3.ZERO
+	boss.global_position = Vector3.ZERO
+	boss.velocity = Vector3.ZERO
+	player.global_position = flight_space.screen_motion_to_combat(Vector2(0, 340))
+	for step in 180:
+		boss._advance_movement(1.0 / 60.0)
+	var orbit_step := flight_space.combat_motion_to_screen(boss.global_position)
+	_expect(absf(orbit_step.x) > 60.0, label + " keeps flying around a nearby player")
+	_expect(flight_space.combat_motion_to_screen(player.global_position - boss.global_position).length() > 200.0, label + " leaves room to dodge while circling")
+	var bounds := flight_space.get_combat_bounds()
+	for corner in [bounds.position, Vector2(bounds.end.x, bounds.position.y), bounds.end, Vector2(bounds.position.x, bounds.end.y)]:
+		boss.global_position = Vector3(corner.x, 0, corner.y)
+		boss.velocity = Vector3.ZERO
+		player.global_position = Vector3.ZERO
+		var start := boss.global_position
+		boss._advance_movement(1.0 / 60.0)
+		_expect(flight_space.combat_motion_to_screen(boss.global_position - start).length() <= 4.01, label + " flies smoothly back from the arena edge")
+		for step in 120:
+			boss._advance_movement(1.0 / 60.0)
+		_expect(bounds.has_point(Vector2(boss.global_position.x, boss.global_position.z)), label + " stays inside the arena")
+		_expect(flight_space.combat_motion_to_screen(boss.global_position - start).length() > 150.0, label + " leaves corners to pursue the player")
+	var position := boss.global_position
+	player.remove_from_group(&"player_craft")
+	boss._advance_movement(0.1)
+	_expect(boss.global_position.is_equal_approx(position) and boss.velocity.is_zero_approx(), label + " waits safely when the player is absent")
+	player.add_to_group(&"player_craft")
+
+func _check_ram_cooldown(boss: Boss) -> void:
+	await _clear_field()
+	boss._begin_phase_transition()
+	boss.phase = 0
+	boss._phase_transition = 0.0
+	boss._volley_timer = 0.0
+	boss._ram_cooldown = 0.0
+	boss.global_position = Vector3.ZERO
+	player.global_position = flight_space.screen_motion_to_combat(Vector2(0, 500))
+	var charge_starts: Array[float] = []
+	var elapsed := 0.0
+	var volleys_during_cooldown := 0
+	var resumed_flight := false
+	for step in 4200:
+		var was_primed := boss._ram_primed
+		var previous_pattern := boss._pattern_index
+		var previous_position := boss.global_position
+		boss._advance_movement(1.0 / 60.0)
+		elapsed += 1.0 / 60.0
+		if boss._ram_primed and not was_primed:
+			charge_starts.append(elapsed)
+			_expect(is_equal_approx(boss._ram_cooldown, 25.0), "Commander starts a 25-second cooldown with each charge warning")
+			var held_cooldown := boss._ram_cooldown
+			GameManager.is_game_active = false
+			boss._physics_process(10.0)
+			_expect(is_equal_approx(boss._ram_cooldown, held_cooldown), "Charge cooldown freezes outside active gameplay")
+			GameManager.is_game_active = true
+		if boss._pattern_index > previous_pattern and boss._ram_cooldown > 0.0:
+			volleys_during_cooldown += 1
+		if boss._ram_cooldown > 0.0 and boss._ram_time <= 0.0 and boss._ram_recovery <= 0.0 and not boss._ram_primed:
+			resumed_flight = resumed_flight or not boss.global_position.is_equal_approx(previous_position)
+		if step == 30:
+			_expect(boss._ram_primed, "First Commander charge has its full windup")
+			var held_cooldown := boss._ram_cooldown
+			boss._begin_phase_transition()
+			_expect(not boss._ram_primed and is_equal_approx(boss._ram_cooldown, held_cooldown), "A health phase cancels the ram without refunding its cooldown")
+		if step % 60 == 0:
+			await _clear_field()
+	_expect(charge_starts.size() >= 3, "Commander charges again after cooldown expires")
+	for index in range(1, charge_starts.size()):
+		_expect(charge_starts[index] - charge_starts[index - 1] >= 25.0, "Commander never charges twice within 25 seconds")
+	_expect(volleys_during_cooldown >= 3 and resumed_flight, "Commander flies and fires regular volleys while charge cools down")
+	await _clear_field()
 
 func _check_projectile_speeds() -> void:
 	player.global_position = flight_space.screen_motion_to_combat(Vector2(0, 500))
@@ -117,6 +223,8 @@ func _exercise_attack(boss: Boss, mixup: bool) -> String:
 	_expect(boss._warning_timer >= 0.9 and _shots.is_empty(), "Pattern windup precedes damage")
 	_expect(boss._attack_mixup == mixup, "Scheduler selects the requested attack family")
 	var locked_aim := boss._locked_aim
+	var locked_origin := boss.global_position
+	var flight_time: float = boss._flight_ai.get_debug_state().flight_time
 	player.global_position += flight_space.screen_motion_to_combat(Vector2(250, 0))
 	boss._advance_movement(boss._warning_timer + 0.01)
 	_release_echoes(boss)
@@ -124,6 +232,8 @@ func _exercise_attack(boss: Boss, mixup: bool) -> String:
 		boss._advance_movement(boss._burst_delay() + 0.01)
 		_release_echoes(boss)
 	_expect(boss._burst_remaining == 0 and boss._locked_aim.is_equal_approx(locked_aim), "Whole sequence finishes without retargeting after its warning")
+	_expect(boss.global_position.is_equal_approx(locked_origin), "Pursuit holds the advertised origin throughout the warning and volley")
+	_expect(boss._flight_ai.get_debug_state().held and is_equal_approx(float(boss._flight_ai.get_debug_state().flight_time), flight_time), "Attack sequence suspends the flight orchestrator without skipping its maneuver")
 	if boss.variant == 0:
 		for shot in _shots:
 			var direction := flight_space.combat_motion_to_screen(shot.direction).normalized()

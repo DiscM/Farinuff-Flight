@@ -1,0 +1,94 @@
+{
+  "authoring": "Original Blender geometry for Farinuff Flight",
+  "blender_version": "5.2.1 LTS",
+  "source": "assets/models/frontier/sources/space_debris.blend",
+  "rebuild": "tools/build_space_debris_blender.py",
+  "style_reference": "design/station-debris/STYLE_REFERENCE.md",
+  "shader": "effects/shaders/models/pixel_planet_enemy_3d.gdshader",
+  "units": "meters",
+  "export_up_axis": "Y",
+  "palette": [
+    {
+      "role": "Station | slate armor",
+      "srgb": "#687b96"
+    },
+    {
+      "role": "Station | pale cut edges",
+      "srgb": "#9cacc0"
+    },
+    {
+      "role": "Station | violet recess",
+      "srgb": "#30344e"
+    },
+    {
+      "role": "Station | faded cyan inlay",
+      "srgb": "#639eab"
+    },
+    {
+      "role": "Station | weathered brass",
+      "srgb": "#a48a68"
+    }
+  ],
+  "assets": [
+    {
+      "asset": "derelict_satellite.glb",
+      "triangles": 814,
+      "sha256": "fe6fa21561c3ff1ca850cb0660f756ef061fa8bae098073b265955e6151d60d8",
+      "dimensions_blender": [
+        5.78,
+        2.64,
+        1.0
+      ]
+    },
+    {
+      "asset": "ruptured_cargo_pod.glb",
+      "triangles": 370,
+      "sha256": "048040b84e0e61012a3141bfe34d439b1210622a60d1705fe233c1dc4f4df531",
+      "dimensions_blender": [
+        3.387,
+        2.26,
+        1.23
+      ]
+    },
+    {
+      "asset": "spent_fuel_tank.glb",
+      "triangles": 584,
+      "sha256": "f86b20cfdff0b72edfce2466c4ff17f6cfe223ed97336102b1466786b65f8566",
+      "dimensions_blender": [
+        1.88,
+        4.091,
+        1.788
+      ]
+    },
+    {
+      "asset": "discarded_engine_bell.glb",
+      "triangles": 312,
+      "sha256": "dee17cb2c21ce2b8cdf5662992ff083976b91b0a7dfd5167b7ac353cc37a724f",
+      "dimensions_blender": [
+        2.96,
+        2.759,
+        1.58
+      ]
+    },
+    {
+      "asset": "broken_survey_dish.glb",
+      "triangles": 300,
+      "sha256": "b286a0fe522552528551ff953cf8e6c0f00290d8d466e64dcce14aa7d8cb050a",
+      "dimensions_blender": [
+        3.559,
+        3.905,
+        1.73
+      ]
+    },
+    {
+      "asset": "faceted_asteroid.glb",
+      "triangles": 80,
+      "sha256": "136c12e51ef941b33fad1a3a43a0da02542bf58933d6337bcbc9c0ed682d2e9e",
+      "dimensions_blender": [
+        3.782,
+        2.525,
+        1.945
+      ]
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="BossFlightProfile" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://systems/boss_flight_profile.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+display_name = &"Void Harbinger"
+cruise_speed = 220.0
+preferred_distance = 350.0
+lead_seconds = 0.65
+maximum_lead = 130.0
+steering_response = 5.5
+maneuver_seconds = 2.6
+pattern_amplitude = 130.0
+sequence = Array[int]([1, 3, 5, 4])

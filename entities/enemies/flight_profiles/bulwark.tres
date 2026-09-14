@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="BossFlightProfile" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://systems/boss_flight_profile.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+display_name = &"Iron Bulwark"
+cruise_speed = 170.0
+preferred_distance = 390.0
+lead_seconds = 0.35
+steering_response = 4.0
+maneuver_seconds = 3.8
+pattern_amplitude = 110.0
+sequence = Array[int]([3, 5, 1, 2])

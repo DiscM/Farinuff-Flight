@@ -32,7 +32,12 @@ func _ready() -> void:
 	_spawn_planet()
 
 func _process(delta: float) -> void:
-	if not is_instance_valid(current_planet) or drift_velocity.is_zero_approx():
+	if not is_instance_valid(current_planet):
+		return
+	# Freeze the vendored planet's surface clock as well as its travel. Its
+	# own time resumes where it stopped, without a catch-up jump after the boss.
+	current_planet.set_process(not GameManager.boss_active)
+	if GameManager.boss_active or drift_velocity.is_zero_approx():
 		return
 	global_position += drift_velocity * delta
 	var viewport_rect := get_viewport().get_visible_rect().grow(wrap_padding)
@@ -69,6 +74,7 @@ func _spawn_planet() -> void:
 		
 	current_planet = scene.instantiate()
 	add_child(current_planet)
+	current_planet.set_process(not GameManager.boss_active)
 	_make_materials_local(current_planet)
 	_planet_layers.assign(current_planet.find_children("*", "Control", true, false))
 	
