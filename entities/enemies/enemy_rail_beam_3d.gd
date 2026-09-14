@@ -54,7 +54,10 @@ func pool_activate(flight_space: FlightSpace, origin: Vector3, direction: Vector
 	var arena := flight_space.get_combat_bounds()
 	var lane_length := maxf(1600.0, flight_space.combat_motion_to_screen(Vector3(arena.size.x, 0.0, arena.size.y)).length())
 	var lane_basis := Basis(across, Vector3.UP, along)
-	warning.transform = Transform3D(lane_basis.scaled_local(Vector3(3.0, 1.0, lane_length)), along * lane_length * 0.5 + Vector3.UP * 0.04)
+	# Feather outside the actual 18-pixel damage lane; the crisp rails show its edges.
+	warning.transform = Transform3D(lane_basis.scaled_local(Vector3(30.0, 1.0, lane_length)), along * lane_length * 0.5 + Vector3.UP * 0.04)
+	warning.set_instance_shader_parameter(&"lane_size", Vector2(18.0, lane_length))
+	warning.set_instance_shader_parameter(&"charge_progress", 0.0)
 	beam.transform = Transform3D(lane_basis.scaled_local(Vector3(18.0, 1.0, lane_length)), along * lane_length * 0.5 + Vector3.UP * 0.04)
 	# Convex primitive vertices preserve the affine camera projection without
 	# unsupported shearing/scaling of a physics shape transform.
@@ -91,7 +94,7 @@ func _physics_process(delta: float) -> void:
 		return
 	remaining_time -= delta
 	if not fired:
-		warning.transparency = 0.65 * (1.0 - absf(sin(remaining_time * 22.0)))
+		warning.set_instance_shader_parameter(&"charge_progress", clampf(1.0 - remaining_time / 0.9, 0.0, 1.0))
 		if remaining_time <= 0.0:
 			fired = true
 			if _source.has_method("play_motion"):

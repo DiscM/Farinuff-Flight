@@ -5,6 +5,7 @@ class_name SniperEnemy3D
 signal aimed_shot_fired(speed_pixels: float)
 
 const ProjectileManager := preload("res://systems/projectile_manager_3d.gd")
+const ShotTuning := preload("res://entities/projectiles/enemy_projectile_tuning.gd")
 
 const ENTRY_DISTANCE_PIXELS := 115.0
 const HOLD_AMPLITUDE_PIXELS := 54.0
@@ -132,7 +133,7 @@ func _update_aim_and_fire(delta: float) -> void:
 		_update_warning(muzzle)
 		_aim_timer -= delta
 		if _aim_timer <= 0.0:
-			_fire_locked_shot(muzzle)
+			_fire_locked_shot(muzzle, true)
 		return
 	_shoot_timer -= delta
 	if _shoot_timer > 0.0:
@@ -184,15 +185,20 @@ func _update_warning(muzzle: Marker3D) -> void:
 func _position_warning(warning: MeshInstance3D, muzzle: Marker3D, screen_direction: Vector2) -> void:
 	var along := _flight_space.screen_motion_to_combat(screen_direction)
 	var across := _flight_space.screen_motion_to_combat(Vector2(-screen_direction.y, screen_direction.x))
-	warning.global_transform = Transform3D(Basis(across * (2.0 if generation == 2 else 3.0), Vector3.UP, along * 900.0), Vector3(muzzle.global_position.x, 0.04, muzzle.global_position.z) + along * 450.0)
+	var width := 2.8 if generation == 2 else 4.2
+	warning.global_transform = Transform3D(Basis(across * (width + 12.0), Vector3.UP, along * 900.0), Vector3(muzzle.global_position.x, 0.04, muzzle.global_position.z) + along * 450.0)
+	warning.set_instance_shader_parameter(&"lane_size", Vector2(width, 900.0))
+	warning.set_instance_shader_parameter(&"charge_progress", clampf(1.0 - _aim_timer / 0.5, 0.0, 1.0))
 
 
-func _fire_locked_shot(muzzle: Marker3D) -> void:
+func _fire_locked_shot(muzzle: Marker3D, telegraphed: bool = false) -> void:
 	_hide_aim_warning()
 	var manager := get_tree().get_first_node_in_group(&"native_3d_projectile_manager") as ProjectileManager
 	if manager == null or not manager.is_ready or _locked_direction.is_zero_approx():
 		return
 	var speed := randf_range(SHOT_SPEED_MIN_PIXELS, SHOT_SPEED_MAX_PIXELS) if generation == 1 else 550.0
+	if telegraphed:
+		speed *= ShotTuning.TELEGRAPH_SPEED_MULTIPLIER
 	play_motion(&"attack")
 	manager.fire_enemy_projectile(muzzle.global_position, _locked_direction, speed)
 	if _bracket_shot:

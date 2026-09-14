@@ -2,6 +2,7 @@ extends Node2D
 ## Independent arena pressure: telegraph, staggered release, then breathing room.
 ## World-space warning geometry stays aligned while the player camera moves.
 const Shot := preload("res://entities/projectiles/projectile_3d.gd")
+const TelegraphLines := preload("res://effects/telegraph_lines_2d.gd")
 const PROJECTILE_SPEED := 260.0
 const AXIS_SPREAD_SPEED := PROJECTILE_SPEED * 1.25
 var boss: Node3D
@@ -26,6 +27,7 @@ func configure(owner_boss: Node3D, flight_space: FlightSpace3D) -> void:
 func reset_patterns() -> void:
 	pending.clear()
 	safe_routes.clear()
+	sequence = 0
 	cooldown = 4.0
 	for mine in mines.duplicate():
 		if is_instance_valid(mine) and mine.is_active:
@@ -61,13 +63,18 @@ func _physics_process(delta: float) -> void:
 		sequence += 1
 		cooldown = 9.0 - float(boss.get("phase")) * 0.75
 
-func _queue_shot(origin: Vector3, direction: Vector2, delay: float, slot: int, motion: int = Shot.Motion.STRAIGHT) -> void:
+func _queue_shot(origin: Vector3, direction: Vector2, delay: float, slot: int, motion: int = Shot.Motion.STRAIGHT, speed_scale: float = 1.0) -> void:
 	var breaker := slot % 7 == 3
-	pending.append({"origin": origin, "direction": direction, "time": delay,
-		"motion": Shot.Motion.BOOST_BREAKER if breaker else motion, "trap": false})
+	pending.append({"origin": origin, "direction": direction, "time": delay, "duration": delay,
+		"motion": Shot.Motion.BOOST_BREAKER if breaker else motion, "trap": false, "speed_scale": speed_scale})
+
+func _layer_speed(beat: int) -> float:
+	# Slow area denial followed by a quicker layer; retain the authored gaps.
+	var phase: int = boss.get("phase")
+	return (0.7 if beat % 2 == 0 else 1.3) + phase * 0.05
 
 func _queue_trap(origin: Vector3, delay: float) -> void:
-	pending.append({"origin": origin, "time": delay, "trap": true})
+	pending.append({"origin": origin, "time": delay, "duration": delay, "trap": true})
 
 func _plan_pattern() -> void:
 	var bounds := space.get_combat_bounds(-45.0)
@@ -91,7 +98,12 @@ func _plan_pattern() -> void:
 				if absf(z - target.z) < gap:
 					continue
 				for beat in 2:
-					_queue_shot(Vector3(origin_x, 0.0, z), direction, 1.8 + beat * 0.8, row + beat)
+					var shot_x := origin_x
+					var shot_direction := direction
+					if phase == 2 and beat == 1:
+						shot_x = bounds.end.x if from_left else bounds.position.x
+						shot_direction = -direction
+					_queue_shot(Vector3(shot_x, 0.0, z), shot_direction, 1.8 + beat * 0.8, row + beat, Shot.Motion.STRAIGHT, _layer_speed(beat))
 			_route(Vector3(bounds.position.x, 0.0, target.z), Vector3(bounds.end.x, 0.0, target.z))
 			SignalBus.combat_notice.emit("CROSSWIND · FIND THE OPEN BAND; WATCH THE CHARGE")
 		1:
@@ -100,12 +112,12 @@ func _plan_pattern() -> void:
 			var gap_x := bounds.get_center().x + bounds.size.x * (0.18 if sequence % 2 == 0 else -0.18)
 			var step := absf(space.screen_motion_to_combat(Vector2(95.0, 0.0)).x)
 			var gap := absf(space.screen_motion_to_combat(Vector2(150.0, 0.0)).x)
-			for row in 2:
+			for row in (3 if phase == 2 else 2):
 				for slot in range(int(bounds.size.x / step) + 1):
 					var x := bounds.position.x + slot * step
 					if absf(x - gap_x) < gap:
 						continue
-					_queue_shot(Vector3(x, 0.0, bounds.position.y if row == 0 else bounds.end.y), Vector2.DOWN if row == 0 else Vector2.UP, 2.0 + row * 1.2, slot)
+					_queue_shot(Vector3(x, 0.0, bounds.position.y if row % 2 == 0 else bounds.end.y), Vector2.DOWN if row % 2 == 0 else Vector2.UP, 2.0 + row * 1.2, slot, Shot.Motion.STRAIGHT, _layer_speed(row))
 			_route(Vector3(gap_x, 0.0, bounds.position.y), Vector3(gap_x, 0.0, bounds.end.y))
 			for side in [-1.0, 1.0]:
 				_queue_trap(Vector3(clampf(gap_x + side * gap * 2.0, bounds.position.x, bounds.end.x), 0.0, target.z), 2.0)
@@ -119,7 +131,7 @@ func _plan_pattern() -> void:
 					for slot in 7:
 						var angle := (slot - 3) * 0.14 + (0.35 if front == 0 else -0.35)
 						var direction := (Vector2.DOWN if sequence % 2 == 0 else Vector2.UP).rotated(angle)
-						_queue_shot(center, direction, 1.8 + front * 1.1 + beat * 0.7, slot + beat)
+						_queue_shot(center, direction, 1.8 + front * 1.1 + beat * 0.7, slot + beat, Shot.Motion.STRAIGHT, _layer_speed(beat + front))
 			SignalBus.combat_notice.emit("STORM FRONTS · WEAVE BETWEEN THE TWO RIBBONS")
 		3:
 			# A closing box pauses before entering the middle; one entire face
@@ -135,7 +147,7 @@ func _plan_pattern() -> void:
 					if side >= 2:
 						origin = Vector3(bounds.position.x if side == 2 else bounds.end.x, 0.0, lerpf(bounds.position.y, bounds.end.y, fraction))
 						direction = Vector2.RIGHT if side == 2 else Vector2.LEFT
-					_queue_shot(origin, direction, 2.1, slot, Shot.Motion.STOP_RELEASE)
+					_queue_shot(origin, direction, 2.1 + (side * 0.25 if phase > 0 else 0.0), slot, Shot.Motion.STOP_RELEASE, _layer_speed(side))
 			var exits: Array[String] = ["NORTH", "SOUTH", "WEST", "EAST"]
 			SignalBus.combat_notice.emit("CLOSING ECHO BOX · %s SIDE OPEN" % exits[exit_side])
 		4:
@@ -147,7 +159,7 @@ func _plan_pattern() -> void:
 						continue
 					var center := Vector3(bounds.position.x + bounds.size.x * (x + 0.5) / 4.0, 0.0, bounds.position.y + bounds.size.y * (z + 0.5) / 3.0)
 					for slot in 6:
-						_queue_shot(center, Vector2.from_angle(slot * TAU / 6.0 + sequence * 0.25), 2.2 + z * 0.4, slot, Shot.Motion.BRAKING)
+						_queue_shot(center, Vector2.from_angle(slot * TAU / 6.0 + sequence * 0.25), 2.2 + z * 0.4, slot, Shot.Motion.BRAKING, _layer_speed(slot))
 					if x == sequence % 4:
 						_queue_trap(center, 2.0)
 			SignalBus.combat_notice.emit("REACTOR CELLS · MOVE TO AN UNMARKED CELL")
@@ -177,7 +189,7 @@ func _release(event: Dictionary) -> void:
 		var colors: Array[Color] = [Color.CORAL, Color.GOLD, Color.MEDIUM_PURPLE, Color.HOT_PINK, Color.IVORY]
 		# Crosswind, siege gates, and closing-box volleys cross the arena axes.
 		var speed := AXIS_SPREAD_SPEED if variant in [0, 1, 3] else PROJECTILE_SPEED
-		manager.fire_enemy_projectile(origin, space.input_to_combat_direction(event.direction), speed, int(event.motion), colors[variant], variant)
+		manager.fire_telegraphed_enemy_projectile(origin, space.input_to_combat_direction(event.direction), speed * float(event.speed_scale), int(event.motion), colors[variant], variant)
 
 func _mine_returned(mine: EnemyMine3D) -> void:
 	mines.erase(mine)
@@ -190,26 +202,38 @@ func _draw() -> void:
 	var grid_step := space.screen_motion_to_combat(Vector2(240.0, 240.0))
 	for x in range(int(bounds.size.x / grid_step.x) + 1):
 		var world_x := bounds.position.x + x * grid_step.x
-		draw_line(space.combat_to_screen(Vector3(world_x, 0.0, bounds.position.y)), space.combat_to_screen(Vector3(world_x, 0.0, bounds.end.y)), Color(0.25, 0.65, 0.8, 0.09), 1.0)
+		draw_line(space.combat_to_screen(Vector3(world_x, 0.0, bounds.position.y)), space.combat_to_screen(Vector3(world_x, 0.0, bounds.end.y)), Color(0.25, 0.65, 0.8, 0.045), 1.0, true)
 	for z in range(int(bounds.size.y / grid_step.z) + 1):
 		var world_z := bounds.position.y + z * grid_step.z
-		draw_line(space.combat_to_screen(Vector3(bounds.position.x, 0.0, world_z)), space.combat_to_screen(Vector3(bounds.end.x, 0.0, world_z)), Color(0.25, 0.65, 0.8, 0.09), 1.0)
+		draw_line(space.combat_to_screen(Vector3(bounds.position.x, 0.0, world_z)), space.combat_to_screen(Vector3(bounds.end.x, 0.0, world_z)), Color(0.25, 0.65, 0.8, 0.045), 1.0, true)
 	var corners := PackedVector2Array()
 	for point in [bounds.position, Vector2(bounds.end.x, bounds.position.y), bounds.end, Vector2(bounds.position.x, bounds.end.y), bounds.position]:
 		corners.append(space.combat_to_screen(Vector3(point.x, 0.0, point.y)))
 	draw_polyline(corners, Color(0.3, 0.8, 1.0, 0.5), 3.0, true)
+	var pixel_scale := get_viewport_rect().size.y / 720.0
+	var paths: Dictionary = {}
 	for event in pending:
 		var origin: Vector3 = event.origin
-		var start := space.combat_to_screen(origin)
 		if bool(event.trap):
-			draw_arc(start, 34.0, 0.0, TAU, 24, Color(1.0, 0.4, 0.15, 0.8), 2.0, true)
-			draw_line(start - Vector2(12.0, 0.0), start + Vector2(12.0, 0.0), Color.CORAL, 2.0)
+			var start := space.combat_to_screen(origin)
+			var progress := clampf(1.0 - float(event.time) / maxf(float(event.duration), 0.001), 0.0, 1.0)
+			TelegraphLines.draw_marker(self, start, progress, pixel_scale)
 		else:
-			var finish := space.combat_to_screen(origin + space.screen_motion_to_combat(Vector2(event.direction) * 3400.0))
-			var tint := Color(0.1, 1.0, 1.0, 0.3) if int(event.motion) == Shot.Motion.BOOST_BREAKER else Color(1.0, 0.7, 0.3, 0.18)
-			draw_line(start, finish, tint, 1.0, true)
+			# Staggered shots share a path. Show the next release once instead of
+			# stacking transparent strokes until they look like an active beam.
+			var key := "%s/%s" % [origin, event.direction]
+			if not paths.has(key) or float(event.time) < float(paths[key].time):
+				paths[key] = event
+	for event: Dictionary in paths.values():
+		var origin: Vector3 = event.origin
+		var start := space.combat_to_screen(origin)
+		var finish := space.combat_to_screen(origin + space.screen_motion_to_combat(Vector2(event.direction) * 3400.0))
+		var elapsed := maxf(0.0, float(event.duration) - float(event.time))
+		var progress := clampf(elapsed / maxf(float(event.duration), 0.001), 0.0, 1.0)
+		var tint := TelegraphLines.BREAKER if int(event.motion) == Shot.Motion.BOOST_BREAKER else TelegraphLines.DANGER
+		TelegraphLines.draw_path(self, start, finish, tint, progress, elapsed, float(event.speed_scale) >= 1.2, pixel_scale)
 	for route in safe_routes:
-		draw_line(space.combat_to_screen(route.start), space.combat_to_screen(route.end), Color(0.3, 1.0, 0.6, 0.3), 4.0, true)
+		TelegraphLines.draw_route(self, space.combat_to_screen(route.start), space.combat_to_screen(route.end), pixel_scale)
 	_draw_navigation(bounds)
 
 func _draw_navigation(bounds: Rect2) -> void:
