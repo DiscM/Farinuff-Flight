@@ -1,0 +1,21 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scenes/station_debris_review.gd" id="1_review"]
+[ext_resource type="PackedScene" path="res://effects/combat_backdrop_2d.tscn" id="2_backdrop"]
+[ext_resource type="PackedScene" path="res://effects/native_3d_camera_rig.tscn" id="3_camera"]
+[ext_resource type="Environment" path="res://effects/native_3d_combat_environment.tres" id="4_environment"]
+
+[node name="StationDebrisReview" type="Node"]
+script = ExtResource("1_review")
+
+[node name="Backdrop" parent="." instance=ExtResource("2_backdrop")]
+
+[node name="World3D" type="Node3D" parent="."]
+
+[node name="Environment" type="WorldEnvironment" parent="World3D"]
+environment = ExtResource("4_environment")
+
+[node name="CameraRig3D" parent="World3D" instance=ExtResource("3_camera")]
+
+[node name="Labels" type="CanvasLayer" parent="."]
+layer = 10

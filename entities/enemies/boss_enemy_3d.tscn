@@ -1,4 +1,4 @@
-[gd_scene load_steps=14 format=3]
+[gd_scene load_steps=15 format=3]
 
 [ext_resource type="Script" path="res://entities/enemies/boss_enemy_3d.gd" id="1"]
 [ext_resource type="Script" path="res://entities/enemies/boss_section_3d.gd" id="2"]
@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" path="res://assets/models/animated/boss_void_harbinger.glb" id="model3"]
 [ext_resource type="PackedScene" path="res://assets/models/animated/boss_tempest_core.glb" id="model4"]
 [ext_resource type="Shader" path="res://effects/shaders/native_telegraph_3d.gdshader" id="4_telegraph"]
+[ext_resource type="Script" path="res://systems/boss_flight_orchestrator.gd" id="flight_ai"]
 
 [sub_resource type="BoxShape3D" id="Hull"]
 size = Vector3(6.8, 1.0, 6.2)
@@ -34,6 +35,8 @@ script = ExtResource("1")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("Hull")
 disabled = true
+[node name="FlightAI" type="Node" parent="."]
+script = ExtResource("flight_ai")
 [node name="Visuals" type="Node3D" parent="."]
 [node name="assault" parent="Visuals" instance=ExtResource("model0")]
 [node name="bulwark" parent="Visuals" instance=ExtResource("model1")]

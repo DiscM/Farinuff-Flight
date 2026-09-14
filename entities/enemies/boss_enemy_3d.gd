@@ -6,11 +6,12 @@ const ProjectileManager := preload("res://systems/projectile_manager_3d.gd")
 const Shot := preload("res://entities/projectiles/projectile_3d.gd")
 const ShotTuning := preload("res://entities/projectiles/enemy_projectile_tuning.gd")
 const RAM_DURATION := 1.0
+const RAM_COOLDOWN := 25.0
 const HEALTH_MULTIPLIER := 1.25
 const ArenaPatterns := preload("res://systems/boss_arena_patterns.gd")
+const FlightOrchestrator := preload("res://systems/boss_flight_orchestrator.gd")
+@onready var _flight_ai: FlightOrchestrator = $FlightAI
 var _arena_patterns: ArenaPatterns
-var _roam_target := Vector3.ZERO
-var _relocate_time := 0.0
 const TITLES := ["ASSAULT COMMANDER", "IRON BULWARK", "TEMPEST", "VOID HARBINGER", "TEMPEST CORE"]
 ## Authored Expedition milestones are stable content IDs. Keep this mapping
 ## explicit so the Wave-20 finale cannot change when the title catalog grows.
@@ -25,7 +26,6 @@ var max_health := 60
 var variant := 0
 var phase := 0
 var _boss_time := 0.0
-var _anchor := Vector3.ZERO
 var _volley_timer := 1.8
 var _warning_timer := 0.0
 var _volley_index := 0
@@ -50,6 +50,7 @@ var _ram_warning: MeshInstance3D
 var _ram_primed := false
 var _ram_time := 0.0
 var _ram_recovery := 0.0
+var _ram_cooldown := 0.0
 var _ram_start := Vector3.ZERO
 var _ram_target := Vector3.ZERO
 const PHASE_NAMES := [
@@ -98,7 +99,6 @@ func _is_basic_lineage() -> bool:
 	return false
 
 func _configure_movement() -> void:
-	_anchor = global_position
 	velocity = Vector3.ZERO
 	_boss_time = 0.0
 
@@ -115,6 +115,7 @@ func activate_generation(space: FlightSpace, origin: Vector3, direction: Vector3
 	phase = 0
 	_phase_transition = 0.0
 	_cancel_ram()
+	_ram_cooldown = 0.0
 	_core_charging = false
 	_core_charge_damage = 0
 	_volley_index = 0
@@ -134,8 +135,7 @@ func activate_generation(space: FlightSpace, origin: Vector3, direction: Vector3
 			section.activate(maxi(8, floori((45.0 + GameManager.current_wave * 3.0) * GameManager.get_enemy_health_multiplier() / 6.0)))
 		else:
 			section.deactivate()
-	_roam_target = global_position
-	_relocate_time = 0.0
+	_flight_ai.configure(space, variant)
 	if _arena_patterns == null:
 		var arena_layer := CanvasLayer.new()
 		arena_layer.layer = 1
@@ -153,9 +153,13 @@ func activate_generation(space: FlightSpace, origin: Vector3, direction: Vector3
 
 func _advance_movement(delta: float) -> void:
 	_boss_time += delta
+	# Encounter time, including attacks and phase changes, advances the cooldown.
+	_ram_cooldown = maxf(0.0, _ram_cooldown - delta)
 	_update_attack_facing(delta)
 	_update_echo_marks(delta)
 	if _phase_transition > 0.0:
+		_flight_ai.hold(&"phase")
+		velocity = Vector3.ZERO
 		_phase_transition = maxf(0.0, _phase_transition - delta)
 		$Attachments/Warning.scale = Vector3.ONE * (1.2 + 0.15 * sin(_boss_time * 8.0))
 		if _phase_transition <= 0.0:
@@ -163,18 +167,26 @@ func _advance_movement(delta: float) -> void:
 			$Attachments/Warning.scale = Vector3.ONE
 		return
 	if _ram_time > 0.0:
+		_flight_ai.hold(&"charge")
+		velocity = (_ram_target - _ram_start) / RAM_DURATION
 		_ram_time = maxf(0.0, _ram_time - delta)
 		global_position = _ram_start.lerp(_ram_target, 1.0 - _ram_time / RAM_DURATION)
 		if _ram_time <= 0.0:
+			velocity = Vector3.ZERO
 			_ram_recovery = 1.8
 			SignalBus.combat_notice.emit("COMMANDER OVEREXTENDED · ATTACK NOW")
 		return
 	if _ram_recovery > 0.0:
+		_flight_ai.hold(&"recovery")
+		velocity = Vector3.ZERO
 		_ram_recovery = maxf(0.0, _ram_recovery - delta)
 		return
-	# Relocate between attacks, keeping telegraphed origins still during volleys.
+	# Pursue between attacks, keeping telegraphed origins still during volleys.
 	if _warning_timer <= 0.0 and _burst_remaining == 0:
-		_roam_arena(delta)
+		_advance_flight(delta)
+	else:
+		_flight_ai.hold(&"attack")
+		velocity = Vector3.ZERO
 	if _burst_remaining > 0:
 		_burst_timer -= delta
 		if _burst_timer <= 0.0:
@@ -234,16 +246,19 @@ func _advance_movement(delta: float) -> void:
 		if _attack_mixup:
 			warning = MIXUP_WARNINGS[variant][_attack_phase]
 			_warning_timer = 1.15
-		if variant == 0 and _volley_index % 2 == 0:
+		if variant == 0 and _volley_index % 2 == 0 and _ram_cooldown <= 0.0:
 			_prime_ram()
-			_warning_timer = 1.1
-			warning = "COMMANDER CHARGE · LEAVE ORANGE LANE"
+			if _ram_primed:
+				_warning_timer = 1.1
+				warning = "COMMANDER CHARGE · LEAVE ORANGE LANE"
 		if variant == 4 and (_volley_index % 2 == 0):
 			_core_charging = true
 			_core_charge_damage = 0
 			_core_charge_target = 8 + phase * 4
 			_warning_timer = 2.0
 			warning = "CORE CHARGING · HIT CORE TO INTERRUPT"
+		velocity = Vector3.ZERO
+		_flight_ai.hold(&"attack")
 		play_motion(&"windup", _warning_timer, true)
 		SignalBus.combat_notice.emit(warning)
 		$Attachments/Warning.show()
@@ -629,23 +644,14 @@ func _clear_siege_mines(section: Section = null) -> void:
 				mine.despawn()
 			_siege_mines.erase(mine)
 
-func _roam_arena(delta: float) -> void:
-	_relocate_time -= delta
-	if _relocate_time <= 0.0:
-		var player := get_tree().get_first_node_in_group(&"player_craft") as Node3D
-		var center := player.global_position if player != null else _anchor
-		var heading := Vector2.from_angle(_volley_index * 1.7 + variant * 0.9 + phase * 0.5)
-		var radius := 420.0 if variant in [0, 2] else 560.0
-		_roam_target = center + _flight_space.screen_motion_to_combat(heading * radius)
-		var bounds := _flight_space.get_combat_bounds(-100.0)
-		_roam_target.x = clampf(_roam_target.x, bounds.position.x, bounds.end.x)
-		_roam_target.z = clampf(_roam_target.z, bounds.position.y, bounds.end.y)
-		_relocate_time = 2.5
-	var displacement := _flight_space.combat_motion_to_screen(_roam_target - global_position)
-	var speed := 180.0 if variant in [0, 2] else 120.0
-	global_position += _flight_space.screen_motion_to_combat(displacement.limit_length(speed * delta))
+func _advance_flight(delta: float) -> void:
+	var player := get_tree().get_first_node_in_group(&"player_craft") as Node3D
+	velocity = _flight_ai.steer(delta, global_position, velocity, player, phase)
+	global_position += velocity * delta
 
 func _prime_ram() -> void:
+	if _ram_cooldown > 0.0:
+		return
 	_ram_primed = true
 	_ram_start = global_position
 	# Follow the locked aim all the way to the screen edge. Ray intersection
@@ -673,6 +679,8 @@ func _prime_ram() -> void:
 	_ram_warning.set_instance_shader_parameter(&"lane_size", Vector2(120.0, _flight_space.combat_motion_to_screen(along).length()))
 	_ram_warning.set_instance_shader_parameter(&"charge_progress", 0.0)
 	_ram_warning.show()
+	# Starting the tell spends the charge, even if a health phase interrupts it.
+	_ram_cooldown = RAM_COOLDOWN
 
 func _cancel_ram() -> void:
 	_ram_primed = false
@@ -708,6 +716,8 @@ func _present_phase() -> void:
 
 func _begin_phase_transition() -> void:
 	play_motion(&"cruise")
+	_flight_ai.begin_phase(phase)
+	velocity = Vector3.ZERO
 	if _arena_patterns != null:
 		_arena_patterns.reset_patterns()
 	_clear_echo_marks()
@@ -737,6 +747,8 @@ func should_drop_xp_orb() -> bool:
 	return false
 
 func _before_finish(reason: FinishReason, _position: Vector3) -> void:
+	_flight_ai.shutdown()
+	velocity = Vector3.ZERO
 	if _arena_patterns != null:
 		_arena_patterns.shutdown()
 	_clear_echo_marks()

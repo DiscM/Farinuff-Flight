@@ -1,5 +1,11 @@
 # Original Void Frontier models
 
+The active station scenery now uses the cohesive six-model set in
+`station_debris/README.md`, with editable source `sources/station_debris.blend`.
+Six companion props live in `space_debris/README.md`, with editable source
+`sources/space_debris.blend`. The whole field drifts and stops during boss fights.
+The original relay below is retained; the small fragments remain in use by VFX.
+
 Authored in Blender 5.2.1 for Farinuff Flight. No external models or textures.
 
 | Asset | Triangles | Use |

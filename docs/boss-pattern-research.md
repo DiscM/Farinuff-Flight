@@ -45,3 +45,29 @@ Enemy launch speeds now receive a single **1.30×** multiplier in `ProjectileMan
 Arena telegraphs use smooth layered strokes, tapered ends, and moving direction chevrons; fast layers use double chevrons. Repeated volleys on one path display the next release once, and trap rings fill toward detonation. Charge, sniper, and rail warnings share a feathered lane shader whose edges mark the advertised width. Animation follows attack timers so warnings hold when gameplay pauses. Warning timing, shot directions, and damage windows are unchanged by this presentation pass.
 
 Telegraphed boss volleys, arena lanes, and warned sniper shots receive a further **2.25×** launch-speed multiplier after their warning completes. Boss slow/fast mixups now launch at 526.5/1111.5 baseline pixels/second, and arena lanes range from about 532 to 1331 across phases and speed layers. Warning duration, slow/fast ratios, and motion timing are preserved. Sniper shots that bypass the warning keep their ordinary speed.
+
+## Player pursuit and Commander charge
+
+All five hulls use the `FlightAI` child in `entities/enemies/boss_enemy_3d.tscn`. Its `BossFlightOrchestrator` script in `systems/boss_flight_orchestrator.gd` owns flight decisions and steering; the boss owns its transform, attack schedule, physical ram, and charge cooldown. Steering updates the player's position and capped velocity lead on every flight frame.
+
+The planner prioritizes returning from an arena edge, withdrawing from contact range, and intercepting a distant player. Separate entry and exit distances prevent rapid switching at a threshold. Inside engagement range it advances the hull's authored maneuver sequence. Flight patterns include flanking arcs, breathing orbits, lateral weaves, figure-eight approaches, and arcing withdrawals. These paths follow the live player, with a stable approach axis for each maneuver. Steering eases through turns and anticipates arena edges; returning from an outer-edge ram never snaps the hull inward.
+
+Profiles are editable Godot resources under `entities/enemies/flight_profiles/`, using `systems/boss_flight_profile.gd`:
+
+| Hull | Profile | Base speed (pixels/s) | Preferred range (pixels) | Maneuver sequence |
+| --- | --- | --- | --- | --- |
+| Assault Commander | `commander.tres` | 240 | 300 | Flank, weave, orbit, withdraw |
+| Iron Bulwark | `bulwark.tres` | 170 | 390 | Weave, withdraw, flank, orbit |
+| Tempest | `tempest.tres` | 260 | 310 | Orbit, figure eight, weave, orbit, withdraw |
+| Void Harbinger | `harbinger.tres` | 220 | 350 | Flank, weave, withdraw, figure eight |
+| Tempest Core | `core.tres` | 190 | 380 | Figure eight, orbit, flank, weave, withdraw |
+
+Later health phases increase speed by 8% per phase, reduce preferred range by 20 pixels per phase, shorten maneuvers, and widen weaving. Completed sequence cycles reverse their direction. Profiles also expose velocity lead, its distance cap, steering response, maneuver duration, and pattern amplitude. Assign `profile_override` on the `FlightAI` node to try a custom profile; shared resources contain tuning only, and each controller owns its encounter state.
+
+The boss explicitly steps the orchestrator during free flight. Warnings, volleys, phase transitions, rams, and ram recovery suspend it, keeping advertised attack origins fixed. Maneuver clocks count flight time, so an attack resumes the current maneuver instead of skipping ahead. Phase transitions reset the planner, missing players suspend it, and finishing an encounter shuts it down. `get_debug_state()` exposes the current maneuver, priority reason, held state, phase, flight clock, target prediction, waypoint, and speed. `maneuver_changed` is available for debugging or presentation hooks.
+
+The Commander's physical charge has a **25-second cooldown**, measured from the start of its warning. Regular volleys and pursuit continue during cooldown. Health phase changes can cancel a charge but do not refund its cooldown; pausing gameplay freezes it. A new encounter starts with the charge available. The boss smoke scene covers pursuit, retargeting, moving-player lead, circling, edge recovery, absent-player handling, fixed attack origins, and repeated charge timing across a phase interruption.
+
+`tests/boss_flight_smoke.tscn` exercises the production movement entry point across all 15 hull/phase combinations: distinct paths, maneuver progression, speed limits, tracking a moving player, capped boost prediction, corner recovery, player clearance, pause/phase/lifecycle handling, independent controller state, and custom weave/figure-eight profiles. `tests/boss_patterns_smoke.tscn` additionally verifies that complete attack sequences hold the flight clock and that the Commander continues flying and firing between charges. Both scenes run in practice mode without banking rewards and are included in CI.
+
+Validated on Godot 4.6.3: flight, boss-pattern, and native-completion smoke scenes pass. A live Tempest check in `scenes/flight_practice.tscn` followed a repositioned player from 903 pixels away back to a 299-pixel orbit, with no new runtime errors. Headless shutdown reports renderer/audio resource cleanup diagnostics; verbose output identifies the audio resource as the existing explosion sample.

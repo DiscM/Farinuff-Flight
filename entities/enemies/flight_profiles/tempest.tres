@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="BossFlightProfile" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://systems/boss_flight_profile.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+display_name = &"Tempest"
+cruise_speed = 260.0
+preferred_distance = 310.0
+lead_seconds = 0.5
+steering_response = 6.5
+maneuver_seconds = 3.2
+pattern_amplitude = 110.0
+sequence = Array[int]([2, 4, 3, 2, 5])

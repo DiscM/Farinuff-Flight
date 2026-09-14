@@ -36,6 +36,7 @@ jobs:
             in_house_vfx_smoke \
             native_completion_smoke \
             boss_patterns_smoke \
+            boss_flight_smoke \
             frontier_visual_smoke \
             pixel_enemy_material_smoke \
             combat_motion_smoke \
