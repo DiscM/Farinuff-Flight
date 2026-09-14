@@ -23,6 +23,7 @@ func _ready() -> void:
 	player.set_physics_process(false)
 	$World3D/FrontierLandmarks.hide()
 	# The real pixel planet remains visible alongside the new surface treatment.
+	$Backdrop/Celestial.drift_velocity = Vector2.ZERO
 	var planet: Control = $Backdrop/Celestial.current_planet
 	planet.override_time = true
 	planet.update_time(1000.0)

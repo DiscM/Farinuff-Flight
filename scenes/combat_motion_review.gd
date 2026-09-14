@@ -25,6 +25,7 @@ func _ready() -> void:
 	player.hide()
 	player.set_physics_process(false)
 	$World3D/FrontierLandmarks.hide()
+	$Backdrop/Celestial.drift_velocity = Vector2.ZERO
 	for index in ENEMIES.size():
 		var enemy := ENEMIES[index].instantiate() as BasicEnemy3D
 		actors_root.add_child(enemy)

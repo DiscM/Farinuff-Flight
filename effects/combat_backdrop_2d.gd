@@ -8,6 +8,7 @@ const GalaxyStyle := preload("res://effects/rendering/galaxy_visual_style.gd")
 @onready var celestial: Node2D = $Celestial
 var _void_depth := 0.0
 var _target_depth := 0.0
+var _previous_viewport_rect := Rect2()
 
 
 func _ready() -> void:
@@ -40,4 +41,9 @@ func _process(delta: float) -> void:
 
 func _position_celestial() -> void:
 	var viewport_rect := get_viewport().get_visible_rect()
-	celestial.position = viewport_rect.position + viewport_rect.size * Vector2(0.82, 0.18)
+	var screen_fraction := Vector2(0.82, 0.18)
+	if _previous_viewport_rect.has_area():
+		# Resizing preserves travel progress instead of resetting the starting anchor.
+		screen_fraction = (celestial.position - _previous_viewport_rect.position) / _previous_viewport_rect.size
+	celestial.position = viewport_rect.position + viewport_rect.size * screen_fraction
+	_previous_viewport_rect = viewport_rect
