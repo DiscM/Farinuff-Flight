@@ -109,6 +109,8 @@ func _advance_movement(delta: float) -> void:
 	global_position = next_position
 	global_position.y = 0.0
 	if _is_inside_combat_view():
+		if _drop_timer > 0.4 and _drop_timer - delta <= 0.4:
+			play_motion(&"windup", 0.4, true)
 		_drop_timer -= delta
 		if _drop_timer <= 0.0:
 			_drop_timer = bomb_interval
@@ -152,6 +154,7 @@ func _drop_bomb() -> void:
 	if marker == null:
 		return
 	_drop_left = not _drop_left
+	play_motion(&"attack")
 	manager.fire_enemy_projectile(
 		marker.global_position,
 		_heading,
@@ -174,5 +177,6 @@ func _try_drop_mine() -> void:
 		marker.global_position, cluster, leaves_plasma
 	)
 	if mine != null:
+		play_motion(&"attack")
 		_mine_count += 1
 		mine_dropped.emit(cluster, leaves_plasma)

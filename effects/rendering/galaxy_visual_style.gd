@@ -13,3 +13,4 @@ static func apply_to(shader_material: ShaderMaterial) -> void:
 		if VisualStyle.voxel_style_enabled()
 		else PIXEL_BACKGROUND_SHADER
 	)
+	preload("res://effects/rendering/frontier_palette.gd").apply_galaxy(shader_material)

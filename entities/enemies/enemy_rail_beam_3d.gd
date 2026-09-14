@@ -94,6 +94,8 @@ func _physics_process(delta: float) -> void:
 		warning.transparency = 0.65 * (1.0 - absf(sin(remaining_time * 22.0)))
 		if remaining_time <= 0.0:
 			fired = true
+			if _source.has_method("play_motion"):
+				_source.play_motion(&"attack")
 			remaining_time = 0.15
 			warning.hide()
 			beam.show()
@@ -112,6 +114,8 @@ func _on_area_entered(area: Area3D) -> void:
 func despawn() -> void:
 	if _return_pending or get_parent() == _idle_parent:
 		return
+	if not fired and is_instance_valid(_source) and _source.has_method("play_motion"):
+		_source.play_motion(&"cruise")
 	is_active = false
 	_return_pending = true
 	_release_major()

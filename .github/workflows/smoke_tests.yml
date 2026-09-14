@@ -35,6 +35,9 @@ jobs:
             dev_commands_smoke \
             in_house_vfx_smoke \
             native_completion_smoke \
+            frontier_visual_smoke \
+            pixel_enemy_material_smoke \
+            combat_motion_smoke \
             pooling_smoke \
             resource_cache_smoke \
             run_warmup_benchmark \

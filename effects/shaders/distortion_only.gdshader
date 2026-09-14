@@ -2,7 +2,7 @@ shader_type canvas_item;
 // Only applies barrel distortion to the entire screen.
 // Purpose: A final post-processing pass to curve the Game and UI together.
 
-uniform sampler2D screen_texture : hint_screen_texture, filter_linear_mipmap;
+uniform sampler2D screen_texture : hint_screen_texture, filter_linear;
 uniform float barrel_distortion : hint_range(0.0, 0.5) = 0.15;
 
 // Applies a barrel distortion effect to the given UV coordinates to simulate a curved screen.
@@ -10,7 +10,7 @@ vec2 barrel(vec2 uv) {
 	vec2 cc = uv - 0.5;
 	float dist = dot(cc, cc);
 	// Spherical warp
-	return uv + cc * dist * (barrel_distortion + dist * 0.2);
+	return uv + cc * dist * barrel_distortion * (1.0 + dist * 0.2);
 }
 
 // Samples the screen texture using the distorted UV coordinates to apply the barrel effect.

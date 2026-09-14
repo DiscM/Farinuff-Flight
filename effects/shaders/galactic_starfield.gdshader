@@ -106,6 +106,8 @@ void fragment() {
 	float filaments = 1.0 - abs(fbm(nebula_uv * 3.4 + warp) * 2.0 - 1.0);
 
 	float cloud_mask = smoothstep(0.26, 0.72, broad_cloud * 0.72 + fine_cloud * 0.28);
+	// A quiet central flight corridor; gas collects toward the edges.
+	cloud_mask *= mix(0.28, 1.0, smoothstep(0.15, 0.75, length(uv * vec2(0.75, 1.0))));
 	float filament_mask = smoothstep(0.36, 0.84, filaments) * cloud_mask;
 	float dust_lane = smoothstep(0.38, 0.67, fbm(nebula_uv * 1.7 - warp * 1.4));
 

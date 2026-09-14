@@ -1,10 +1,10 @@
 [gd_scene load_steps=17 format=3]
 
 [ext_resource type="Script" path="res://entities/player/player_3d.gd" id="1_player"]
-[ext_resource type="PackedScene" path="res://assets/models/redesign/player_butterfly.glb" id="2_model"]
+[ext_resource type="PackedScene" path="res://assets/models/animated/player_butterfly.glb" id="2_model"]
 
-[ext_resource type="PackedScene" path="res://assets/models/redesign/player_butterfly_morpho.glb" id="3_morpho"]
-[ext_resource type="PackedScene" path="res://assets/models/redesign/player_butterfly_monarch.glb" id="4_monarch"]
+[ext_resource type="PackedScene" path="res://assets/models/animated/player_butterfly_morpho.glb" id="3_morpho"]
+[ext_resource type="PackedScene" path="res://assets/models/animated/player_butterfly_monarch.glb" id="4_monarch"]
 
 [ext_resource type="Shader" path="res://effects/shaders/native_shield_3d.gdshader" id="5_shield"]
 [ext_resource type="Shader" path="res://effects/shaders/native_core_3d.gdshader" id="6_core"]

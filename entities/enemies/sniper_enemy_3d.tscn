@@ -1,12 +1,12 @@
 [gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://entities/enemies/sniper_enemy_3d.gd" id="1_enemy"]
-[ext_resource type="PackedScene" path="res://assets/models/redesign/next_round/sniper_enemy.glb" id="2_model"]
+[ext_resource type="PackedScene" path="res://assets/models/animated/sniper_enemy.glb" id="2_model"]
 [ext_resource type="Resource" path="res://entities/enemies/sniper_enemy_generation_1.tres" id="3_stats"]
 [sub_resource type="BoxShape3D" id="BoxShape3D_hitbox"]
-size = Vector3(1.05, 0.5, 2.9091)
+size = Vector3(1.470000, 0.500000, 4.072740)
 [sub_resource type="BoxMesh" id="AimMesh"]
-size = Vector3(1, 0.025, 1)
+size = Vector3(1.400000, 0.025000, 1.400000)
 
 [sub_resource type="StandardMaterial3D" id="AimMaterial"]
 shading_mode = 0
@@ -19,7 +19,7 @@ transparency = 1
 albedo_color = Color(1, 0.48, 0.12, 0.92)
 
 [node name="SniperEnemy3D" type="Area3D"]
-editor_description = "Scene-managed Sniper Enemy Generations I-IV. Inert until activate(); Y=0 combat root. The narrow 1.05x2.91 combat envelope follows the rail-hull silhouette under the shared camera."
+editor_description = "Scene-managed Sniper Enemy Generations I-IV. Inert until activate(); Y=0 combat root. An enlarged narrow contact envelope follows the rail-hull silhouette; animated barrels retain separate muzzle anchors."
 collision_layer = 0
 collision_mask = 0
 monitoring = false
@@ -38,23 +38,23 @@ disabled = true
 position = Vector3(0, 0.08, 0)
 
 [node name="SniperHullGLB" parent="Visuals" instance=ExtResource("2_model")]
-scale = Vector3(0.33, 0.33, 0.33)
+scale = Vector3(0.511500, 0.511500, 0.511500)
 
 [node name="Attachments" type="Node3D" parent="."]
 
 [node name="Sockets" type="Node3D" parent="Attachments"]
 
 [node name="MuzzleCenter" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(0, 0.106, -1.445)
+position = Vector3(0.000000, 0.120300, -2.239750)
 
 [node name="LaserOrigin" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(0, 0.106, -1.445)
+position = Vector3(0.000000, 0.120300, -2.239750)
 
 [node name="EngineLeft" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(-0.043, 0.08, 1.373)
+position = Vector3(-0.066650, 0.080000, 2.128150)
 
 [node name="EngineRight" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(0.043, 0.08, 1.373)
+position = Vector3(0.066650, 0.080000, 2.128150)
 
 [node name="Modules" type="Node3D" parent="Attachments"]
 

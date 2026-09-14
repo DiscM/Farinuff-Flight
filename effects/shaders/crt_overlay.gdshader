@@ -2,7 +2,7 @@ shader_type canvas_item;
 // CRT monitor post-processing overlay.
 // Applies: barrel distortion, scanlines, vignette, and chromatic aberration.
 
-uniform sampler2D screen_texture : hint_screen_texture, filter_linear_mipmap;
+uniform sampler2D screen_texture : hint_screen_texture, filter_linear;
 
 uniform float aberration_strength : hint_range(0.0, 0.01) = 0.004;
 uniform float scanline_intensity : hint_range(0.0, 1.0) = 0.25;
@@ -18,7 +18,7 @@ vec2 barrel(vec2 uv) {
 	vec2 cc = uv - 0.5;
 	float dist = dot(cc, cc);
 	// More pronounced spherical warp
-	return uv + cc * dist * (barrel_distortion + dist * 0.2);
+	return uv + cc * dist * barrel_distortion * (1.0 + dist * 0.2);
 }
 
 // Computes the final color for the pixel, applying distortion, chromatic aberration, scanlines, vignette, contrast, and brightness.

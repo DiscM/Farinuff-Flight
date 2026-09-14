@@ -3,6 +3,7 @@ extends Control
 
 signal closed
 
+const WindowLayout := preload("res://systems/game_window_layout.gd")
 var volume_label: Label
 var music_label: Label
 var _controls_layer: CanvasLayer
@@ -116,6 +117,19 @@ func _build_ui() -> void:
 	display.add_child(_make_toggle("CRT scanline effect", "crt_effect"))
 	display.add_child(_make_toggle("Screen distortion", "screen_distortion"))
 	display.add_child(_make_toggle("Fullscreen", "fullscreen", false))
+	var window_size := OptionButton.new()
+	window_size.name = "WindowSize"
+	window_size.accessibility_name = "Window size"
+	for label: String in WindowLayout.PRESET_LABELS:
+		window_size.add_item("Window size: " + label)
+	window_size.select(WindowLayout.PRESET_IDS.find(WindowLayout.normalize_preset(SaveManager.get_setting("window_size"))))
+	window_size.item_selected.connect(func(index: int): SaveManager.update_setting("window_size", WindowLayout.PRESET_IDS[index]))
+	display.add_child(window_size)
+	var window_note := Label.new()
+	window_note.text = "Larger windows show more ship detail. Sizes fit your display; in fullscreen, the choice applies when you return to windowed mode."
+	window_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	window_note.add_theme_font_size_override("font_size", 14)
+	display.add_child(window_note)
 	access.add_child(_make_toggle("Reduced flashing effects", "reduced_flashing", false))
 	access.add_child(_make_toggle("Reduced menu motion", "reduced_motion", false))
 	access.add_child(_make_toggle("Hold to confirm ending a run", "hold_to_confirm", false))

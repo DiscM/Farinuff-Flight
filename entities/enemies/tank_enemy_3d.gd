@@ -106,7 +106,7 @@ func _configure_movement() -> void:
 
 func _configure_armor_plates() -> void:
 	var plates_enabled := generation >= 2
-	var radius := ARMOR_ORBIT_RADIUS_PIXELS + float(generation - 2) * ARMOR_RADIUS_STEP_PIXELS
+	var radius := (ARMOR_ORBIT_RADIUS_PIXELS + float(generation - 2) * ARMOR_RADIUS_STEP_PIXELS) * 1.3
 	for index in _armor_plates.size():
 		var plate := _armor_plates[index]
 		if not is_instance_valid(plate):
@@ -155,6 +155,8 @@ func _advance_movement(delta: float) -> void:
 			_cancel_attacks()
 		return
 	_visible_time += delta
+	if _burst_timer > 0.35 and _burst_timer - delta <= 0.35 and _overload_state == OverloadState.IDLE:
+		play_motion(&"windup", 0.35, true)
 	_burst_timer -= delta
 	if _burst_timer <= 0.0:
 		_burst_timer = burst_interval
@@ -175,6 +177,7 @@ func _fire_radial_burst(angle_offset: float = 0.0) -> void:
 	var muzzle := sockets.get_node_or_null("MuzzleCenter") as Marker3D
 	if manager == null or not manager.is_ready or muzzle == null:
 		return
+	play_motion(&"attack")
 	for index in range(bullet_count):
 		var angle := (TAU / float(bullet_count)) * float(index) + angle_offset
 		# Match the 2D reference's angle convention: angle zero travels down.
@@ -193,6 +196,7 @@ func _update_overload(delta: float) -> void:
 			if _overload_timer <= 0.0 and _visible_time >= 0.35 and is_instance_valid(_coordinator) and _coordinator.request_major(self):
 				_overload_state = OverloadState.WARNING
 				_overload_step_timer = OVERLOAD_WARNING_SECONDS
+				play_motion(&"windup", OVERLOAD_WARNING_SECONDS, true)
 				overload_warning.show()
 		OverloadState.WARNING:
 			_overload_step_timer -= delta
@@ -212,6 +216,7 @@ func _update_overload(delta: float) -> void:
 					var manager := get_tree().get_first_node_in_group(&"native_3d_projectile_manager") as ProjectileManager
 					var muzzle := get_socket(&"MuzzleCenter")
 					if manager != null and manager.is_ready and muzzle != null:
+						play_motion(&"attack")
 						manager.fire_enemy_projectile(muzzle.global_position, _flight_space.screen_motion_to_combat(Vector2.from_angle(angle)), 260.0)
 				_overload_shots += 1
 				if _overload_shots >= OVERLOAD_STEPS:

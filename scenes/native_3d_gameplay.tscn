@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3]
+[gd_scene load_steps=19 format=3]
 
 [ext_resource type="Script" path="res://scenes/native_3d_gameplay.gd" id="1_game"]
 [ext_resource type="Resource" path="res://systems/flight_space_3d_config.tres" id="2_config"]
@@ -17,6 +17,7 @@
 [ext_resource type="Script" path="res://systems/power_up_manager_3d.gd" id="15_power_ups"]
 [ext_resource type="Script" path="res://systems/special_attack_coordinator.gd" id="16_coordinator"]
 [ext_resource type="Resource" path="res://effects/rendering/native_3d_presentation_settings.tres" id="17_presentation"]
+[ext_resource type="Script" path="res://effects/frontier_landmarks_3d.gd" id="18_landmarks"]
 
 [node name="Native3DGameplay" type="Node"]
 script = ExtResource("1_game")
@@ -29,6 +30,9 @@ presentation_settings = ExtResource("17_presentation")
 [node name="Lighting" parent="World3D" instance=ExtResource("4_lighting")]
 
 [node name="CameraRig3D" parent="World3D" instance=ExtResource("5_camera")]
+
+[node name="FrontierLandmarks" type="Node3D" parent="World3D"]
+script = ExtResource("18_landmarks")
 
 [node name="Actors3D" type="Node3D" parent="World3D"]
 

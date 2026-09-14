@@ -36,6 +36,8 @@ script = ExtResource("5_clock")
 shader_host_path = NodePath("../Background")
 
 [node name="DeepStars" type="Parallax2D" parent="."]
+visible = false
+process_mode = 4
 z_index = -90
 autoscroll = Vector2(0, 15)
 repeat_size = Vector2(1280, 720)
@@ -49,6 +51,8 @@ base_color = Color(0.6, 0.7, 1, 1)
 repeat_size = Vector2(1280, 720)
 
 [node name="MidStars" type="Parallax2D" parent="."]
+visible = false
+process_mode = 4
 z_index = -89
 autoscroll = Vector2(0, 40)
 repeat_size = Vector2(1280, 720)
@@ -62,6 +66,8 @@ base_color = Color(0.8, 0.88, 1, 1)
 repeat_size = Vector2(1280, 720)
 
 [node name="NearStars" type="Parallax2D" parent="."]
+visible = false
+process_mode = 4
 z_index = -88
 autoscroll = Vector2(0, 80)
 repeat_size = Vector2(1280, 720)

@@ -177,6 +177,7 @@ func _advance_movement(delta: float) -> void:
 		_warning_timer -= delta
 		$Attachments/Warning.scale = Vector3.ONE * (1.0 + 0.12 * sin(_boss_time * 35.0))
 		if _warning_timer <= 0.0:
+			play_motion(&"attack")
 			$Attachments/Warning.hide()
 			if _ram_primed:
 				_ram_primed = false
@@ -227,6 +228,7 @@ func _advance_movement(delta: float) -> void:
 			_core_charge_target = 8 + phase * 4
 			_warning_timer = 2.0
 			warning = "CORE CHARGING · HIT CORE TO INTERRUPT"
+		play_motion(&"windup", _warning_timer, true)
 		SignalBus.combat_notice.emit(warning)
 		$Attachments/Warning.show()
 		charge_started.emit(get_combat_position(), _flight_space.input_to_combat_direction(_locked_aim))
@@ -256,6 +258,7 @@ func _burst_delay() -> float:
 	return 0.8
 
 func _fire_pattern() -> void:
+	play_motion(&"attack")
 	var manager := get_tree().get_first_node_in_group(&"native_3d_projectile_manager") as ProjectileManager
 	if manager == null:
 		return
@@ -361,6 +364,7 @@ func take_damage(amount: int) -> void:
 			_volley_index += 1
 			_volley_timer = 2.5
 			$Attachments/Warning.hide()
+			play_motion(&"cruise")
 			SignalBus.combat_notice.emit("REACTOR DISRUPTED · ATTACK NOW")
 	super.take_damage(amount)
 	phase = 2 if health <= float(max_health) / 3.0 else 1 if health <= float(max_health) * 2.0 / 3.0 else 0
@@ -560,6 +564,7 @@ func _present_phase() -> void:
 	SignalBus.boss_phase_presented.emit(phase, PHASE_NAMES[variant][phase], SHOT_COLORS[variant])
 
 func _begin_phase_transition() -> void:
+	play_motion(&"cruise")
 	if _arena_patterns != null:
 		_arena_patterns.reset_patterns()
 	_clear_echo_marks()

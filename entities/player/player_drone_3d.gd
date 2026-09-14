@@ -33,6 +33,7 @@ var _shoot_timer := 0.0
 
 
 func _ready() -> void:
+	preload("res://effects/rendering/frontier_ship_materials.gd").apply(visuals)
 	# The scene is inert until Native3DGameplay explicitly enables the upgrade.
 	set_physics_process(false)
 	area_entered.connect(_on_area_entered)

@@ -1,10 +1,10 @@
 [gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://entities/enemies/fast_enemy_3d.gd" id="1_enemy"]
-[ext_resource type="PackedScene" path="res://assets/models/redesign/next_round/fast_enemy.glb" id="2_model"]
+[ext_resource type="PackedScene" path="res://assets/models/animated/fast_enemy.glb" id="2_model"]
 [ext_resource type="Resource" path="res://entities/enemies/fast_enemy_generation_1.tres" id="3_stats"]
 [sub_resource type="BoxShape3D" id="BoxShape3D_hitbox"]
-size = Vector3(0.62, 0.5, 1.818)
+size = Vector3(0.868000, 0.500000, 2.545200)
 
 [sub_resource type="BoxMesh" id="PhaseWarningMesh"]
 size = Vector3(1, 0.025, 1)
@@ -32,20 +32,20 @@ disabled = true
 position = Vector3(0, 0.08, 0)
 
 [node name="FastHullGLB" parent="Visuals" instance=ExtResource("2_model")]
-scale = Vector3(0.22, 0.22, 0.22)
+scale = Vector3(0.363000, 0.363000, 0.363000)
 
 [node name="Attachments" type="Node3D" parent="."]
 
 [node name="Sockets" type="Node3D" parent="Attachments"]
 
 [node name="MuzzleCenter" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(0, 0.098, -0.924)
+position = Vector3(0.000000, 0.109700, -1.524600)
 
 [node name="EngineLeft" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(-0.029, 0.08, 0.854)
+position = Vector3(-0.047850, 0.080000, 1.409100)
 
 [node name="EngineRight" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(0.029, 0.08, 0.854)
+position = Vector3(0.047850, 0.080000, 1.409100)
 
 [node name="Modules" type="Node3D" parent="Attachments"]
 

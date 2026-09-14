@@ -19,6 +19,9 @@ enum DamageSource { ENEMY_CONTACT, ENEMY_PROJECTILE, HOSTILE_ORDNANCE }
 
 const UpgradeVisuals := preload("res://entities/player/native_upgrade_visuals.gd")
 const NativeUpgrades := preload("res://entities/player/native_player_upgrades.gd")
+const FrontierMaterials := preload("res://effects/rendering/frontier_ship_materials.gd")
+const EngineRibbons := preload("res://effects/engine_ribbons_3d.gd")
+const ShipMotion := preload("res://effects/ship_motion_3d.gd")
 
 const PhysicsLayers := preload("res://systems/native_3d_physics_layers.gd")
 const FlightSpace := preload("res://systems/flight_space_3d.gd")
@@ -69,6 +72,10 @@ var drift_speed_bonus := 1.0
 var is_invincible := false
 var _invincibility_visual_elapsed := 0.0
 var _ship_visual_elapsed := 0.0
+var _ribbons: EngineRibbons
+var _hull_motions: Dictionary[String, ShipMotion] = {}
+var _motion_sockets: Dictionary[String, Array] = {}
+var _overclock_was_active := false
 var _shield_visual_elapsed := 0.0
 
 # First-slice temporary power-up state. The type enum and collection signal
@@ -104,6 +111,19 @@ func _init() -> void:
 
 
 func _ready() -> void:
+	for hull_path in ["PlayerHullGLB", "InterceptorHull", "BulwarkHull"]:
+		FrontierMaterials.apply(visuals.get_node(hull_path))
+		var model := visuals.get_node(hull_path) as Node3D
+		_hull_motions[hull_path] = ShipMotion.new(model)
+		_motion_sockets[hull_path] = []
+		for marker in sockets.get_children():
+			var authored := model.find_child("Socket_" + marker.name, true, false) as Node3D
+			if marker is Marker3D and authored != null:
+				_motion_sockets[hull_path].append([marker, authored])
+	_ribbons = EngineRibbons.new()
+	_ribbons.name = "EngineRibbons"
+	add_child(_ribbons)
+	_ribbons.configure(sockets.get_node("EngineLeft"), sockets.get_node("EngineRight"))
 	_upgrade_visuals = UpgradeVisuals.new()
 	$Attachments/Modules.add_child(_upgrade_visuals)
 	_cache_socket_names()
@@ -124,7 +144,7 @@ func configure_flight_space(value: FlightSpace) -> void:
 		return
 	_upgrade_visuals.reset()
 	for id in _elite_upgrades:
-		_upgrade_visuals.set_upgrade(id, true)
+		_upgrade_visuals.set_upgrade(id, true, false)
 	var selected_hull := "ship_swallowtail" if GameManager.practice_mode else MetaProgression.selected_ship
 	$Visuals/PlayerHullGLB.visible = selected_hull == "ship_swallowtail"
 	$Visuals/InterceptorHull.visible = selected_hull == "ship_interceptor"
@@ -143,12 +163,12 @@ func configure_flight_space(value: FlightSpace) -> void:
 
 
 func _physics_process(delta: float) -> void:
-	$Attachments/Sockets/EngineLeft/Exhaust.emitting = GameManager.is_game_active
-	$Attachments/Sockets/EngineRight/Exhaust.emitting = GameManager.is_game_active
+	# Continuous ribbon propulsion owns the wake; no detached particle beads.
 	_update_visual_feedback(delta)
 	_update_invincibility_visual(delta)
 	if not GameManager.is_game_active:
 		return
+	advance_ship_motion(delta)
 	var input_direction := Vector2(
 		Input.get_axis("move_left", "move_right"),
 		Input.get_axis("move_up", "move_down")
@@ -165,26 +185,36 @@ func _physics_process(delta: float) -> void:
 func _update_visual_feedback(delta: float) -> void:
 	_ship_visual_elapsed += delta
 	var flight_power := 1.0 if GameManager.is_game_active else 0.22
-	var engine_power := flight_power * (1.35 if is_boosting else 1.0)
+	var base_speed := _flight_space.configuration.pixels_to_world(speed_pixels) if _flight_space != null else 1.0
+	var speed_fraction := velocity.length() / maxf(base_speed, 0.1)
+	var engine_power := flight_power * (2.2 if is_boosting else 0.6 + minf(speed_fraction, 1.0) * 0.7)
+	if _ribbons != null:
+		_ribbons.advance(delta, speed_fraction, is_boosting, GameManager.is_game_active)
 	var pulse := 0.86 + 0.14 * sin(_ship_visual_elapsed * 11.0)
 	var core_color := Color(1.0, 0.9, 0.15, 1.0) if dev_god_mode else Color(0.18, 0.8, 1.0, 1.0)
 	core_glow.set_instance_shader_parameter(&"instance_color", core_color)
 	core_glow.set_instance_shader_parameter(&"instance_alpha", flight_power)
 	core_glow.set_instance_shader_parameter(&"instance_intensity", pulse * (1.0 + engine_power * 0.55))
-	core_glow.set_instance_shader_parameter(&"instance_phase", 0.0)
+	core_glow.set_instance_shader_parameter(&"instance_phase", _ship_visual_elapsed * 10.0)
 	for glow in [engine_glow_left, engine_glow_right]:
 		glow.set_instance_shader_parameter(&"instance_color", Color(0.08, 0.66, 1.0, 1.0))
 		glow.set_instance_shader_parameter(&"instance_alpha", flight_power)
 		glow.set_instance_shader_parameter(&"instance_intensity", engine_power * pulse)
-		glow.set_instance_shader_parameter(&"instance_phase", 1.4 if glow == engine_glow_right else 0.0)
+		glow.set_instance_shader_parameter(&"instance_phase", _ship_visual_elapsed * 10.0 + (1.4 if glow == engine_glow_right else 0.0))
 	if shield_visual.visible:
 		_shield_visual_elapsed += delta
+		shield_visual.set_instance_shader_parameter(&"instance_time", _shield_visual_elapsed)
 		shield_visual.set_instance_shader_parameter(
 			&"instance_pulse", 0.78 + 0.22 * sin(_shield_visual_elapsed * 9.0)
 		)
 
 
 func _reset_feedback_state() -> void:
+	for motion in _hull_motions.values():
+		motion.reset()
+	_overclock_was_active = false
+	if _ribbons != null:
+		_ribbons.reset()
 	_ship_visual_elapsed = 0.0
 	_shield_visual_elapsed = 0.0
 	core_glow.visible = true
@@ -205,6 +235,7 @@ func receive_damage(combat_position: Vector3, source: DamageSource) -> bool:
 		var shield_position := combat_position
 		shield_position.y = 0.0
 		shield_absorbed.emit(shield_position)
+		_upgrade_visuals.pulse("shield_burst")
 		AudioManager.play_shield()
 		_start_invincibility(DamageTuning.SHIELD_INVULNERABILITY)
 		return false
@@ -215,6 +246,7 @@ func receive_damage(combat_position: Vector3, source: DamageSource) -> bool:
 	if survives_hit:
 		_start_invincibility(_get_invulnerability_duration(source))
 	damage_taken.emit(combat_position, source, GameManager.lives)
+	play_ship_motion(&"hit")
 	return true
 
 
@@ -286,6 +318,8 @@ func is_drone_escort_enabled() -> bool:
 func register_boost_reflection() -> void:
 	if is_boosting:
 		boost_reflected_projectiles += 1
+		if _ribbons != null:
+			_ribbons.reflect()
 
 
 func can_deflect_projectiles() -> bool:
@@ -352,6 +386,9 @@ func _update_shooting() -> void:
 	if has_elite_upgrade("overclock") and fmod(_elite_clock, 16.0) < 2.5:
 		interval /= 3.0
 	shoot_timer.start(interval)
+	var motion := get_ship_motion()
+	if motion != null:
+		motion.shot()
 	for fire_direction in _get_fire_directions():
 		_emit_muzzle_shot(muzzle, fire_direction)
 	if has_elite_upgrade("twin_cannons"):
@@ -540,6 +577,7 @@ func _update_boost(delta: float) -> void:
 		)
 		if boost_duration_timer <= 0.0 or boost_distance_remaining_pixels <= 0.0:
 			is_boosting = false
+			get_ship_motion().set_boost(false)
 			boost_distance_remaining_pixels = 0.0
 			if _has_boost_chain():
 				boost_chain_window_timer = FlightTuning.BOOST_CHAIN_WINDOW
@@ -562,6 +600,7 @@ func _begin_boost() -> void:
 	if is_chain:
 		boost_chained.emit()
 	is_boosting = true
+	get_ship_motion().set_boost(true)
 	boost_duration_timer = FlightTuning.BOOST_DURATION
 	boost_reflected_projectiles = 0
 	boost_chain_window_timer = 0.0
@@ -723,6 +762,8 @@ func set_elite_upgrade_enabled(
 		"orbitals":
 			_orbital_hit_clock = 0.0
 	_sync_upgrade_visual(upgrade_id)
+	if enabled:
+		play_ship_motion(&"upgrade")
 	return true
 
 
@@ -876,10 +917,15 @@ func _append_collision_outline(vertices: Array[Vector3]) -> void:
 
 func _update_elite_abilities(delta: float) -> void:
 	_elite_clock += delta
+	var overclock_active := has_elite_upgrade("overclock") and fmod(_elite_clock, 16.0) < 2.5
+	if overclock_active and not _overclock_was_active:
+		_upgrade_visuals.pulse("overclock")
+	_overclock_was_active = overclock_active
 	if has_elite_upgrade("shield_burst"):
 		_shield_burst_clock += delta
 		if _shield_burst_clock >= 10.0:
 			_shield_burst_clock = 0.0
+			_upgrade_visuals.pulse("shield_burst")
 			shield_burst_requested.emit(get_combat_position())
 	if not has_elite_upgrade("orbitals"):
 		return
@@ -902,6 +948,32 @@ func get_active_elite_upgrade_ids() -> Array[String]:
 	for id in _elite_upgrades:
 		ids.append(id)
 	return ids
+
+
+func get_ship_motion() -> ShipMotion:
+	for hull_name in _hull_motions:
+		if visuals.get_node(hull_name).visible:
+			return _hull_motions[hull_name]
+	return _hull_motions.get("PlayerHullGLB")
+
+
+func play_ship_motion(clip: StringName) -> void:
+	var motion := get_ship_motion()
+	if motion != null:
+		motion.play(clip)
+
+
+func advance_ship_motion(delta: float) -> void:
+	var motion := get_ship_motion()
+	if motion == null:
+		return
+	motion.advance(delta)
+	_upgrade_visuals.advance_motion(delta, motion)
+	for hull_name in _motion_sockets:
+		if not visuals.get_node(hull_name).visible:
+			continue
+		for pair in _motion_sockets[hull_name]:
+			pair[0].global_transform = ShipMotion.socket_transform(pair[1])
 
 
 func prepare_visual_warmup() -> void:

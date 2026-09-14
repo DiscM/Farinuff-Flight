@@ -12,11 +12,11 @@ const EnemyScenes := {
 	&"sniper": preload("res://entities/enemies/sniper_enemy_3d.tscn"),
 }
 const EnemyModelScales := {
-	&"basic": 0.45,
-	&"fast": 0.22,
-	&"bomber": 0.37,
-	&"tank": 0.68,
-	&"sniper": 0.33,
+	&"basic": 0.675,
+	&"fast": 0.363,
+	&"bomber": 0.5365,
+	&"tank": 0.884,
+	&"sniper": 0.5115,
 }
 const EnemySocketBindings := {
 	&"basic": {
@@ -49,6 +49,9 @@ const EnemySocketBindings := {
 }
 const EnemyModelShader: Shader = preload(
 	"res://effects/shaders/models/imported_enemy_surface_3d.gdshader"
+)
+const PixelEnemyModelShader: Shader = preload(
+	"res://effects/shaders/models/pixel_planet_enemy_3d.gdshader"
 )
 const UpgradeCatalog := preload("res://entities/player/native_player_upgrades.gd")
 const PhysicsLayers := preload("res://systems/native_3d_physics_layers.gd")
@@ -158,7 +161,9 @@ func _check_enemy_model_integrations() -> void:
 				var material := mesh_instance.get_active_material(surface_index)
 				if (
 					material is ShaderMaterial
-					and (material as ShaderMaterial).shader == EnemyModelShader
+					and (material as ShaderMaterial).shader == (
+						PixelEnemyModelShader if archetype in [&"basic", &"tank", &"bomber"] else EnemyModelShader
+					)
 				):
 					shader_surface_count += 1
 					var shader_material := material as ShaderMaterial
@@ -403,6 +408,10 @@ func _check_boss_variants() -> void:
 		actors_root.add_child(boss)
 		_expect(boss.activate_generation(flight_space, Vector3.ZERO, Vector3.BACK, 1), "Boss activates")
 		_expect(boss.variant == index, "Wave %d selects the stable boss hull variant %d" % [wave, index])
+		_expect(boss._motions.size() == 5, "Every boss variant imports its Blender motion rig")
+		if boss._motions.size() == 5:
+			var motion = boss._motions[index]
+			_expect(motion.skeleton.get_bone_count() == 4 and motion.animation_player.has_animation(&"windup") and motion.animation_player.has_animation(&"attack"), "Selected boss has articulated anticipation and release clips")
 		var visible_hulls := 0
 		for hull in boss.get_node("Visuals").get_children():
 			if hull is Node3D and hull.visible:

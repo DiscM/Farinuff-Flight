@@ -108,6 +108,7 @@ func _advance_movement(delta: float) -> void:
 		_has_withdrawn = true
 		_aim_timer = 0.0
 		_hide_aim_warning()
+		play_motion(&"cruise")
 		rotation.y = atan2(-_heading.x, -_heading.z)
 		collision_shape.global_rotation = Vector3.ZERO
 
@@ -147,6 +148,7 @@ func _begin_aimed_shot(player: Node3D, muzzle: Marker3D) -> void:
 		var hazards := get_tree().get_first_node_in_group(&"native_3d_hazard_manager") as NativeHazardManager
 		if hazards != null and hazards.spawn_rail_beam(muzzle.global_position, player.global_position - muzzle.global_position, self) != null:
 			_rail_used = true
+			play_motion(&"windup", 0.9, true)
 			return
 	var target := player.global_position
 	if generation >= 2 and _ordinary_shots % 3 != 0:
@@ -158,6 +160,7 @@ func _begin_aimed_shot(player: Node3D, muzzle: Marker3D) -> void:
 	_locked_direction = _locked_direction.normalized()
 	if generation >= 2 and can_special:
 		_aim_timer = 0.5
+		play_motion(&"windup", _aim_timer, true)
 		aim_warning.show()
 		_update_warning(muzzle)
 	else:
@@ -190,6 +193,7 @@ func _fire_locked_shot(muzzle: Marker3D) -> void:
 	if manager == null or not manager.is_ready or _locked_direction.is_zero_approx():
 		return
 	var speed := randf_range(SHOT_SPEED_MIN_PIXELS, SHOT_SPEED_MAX_PIXELS) if generation == 1 else 550.0
+	play_motion(&"attack")
 	manager.fire_enemy_projectile(muzzle.global_position, _locked_direction, speed)
 	if _bracket_shot:
 		# A bracket covers lateral escape without changing the telegraphed center.

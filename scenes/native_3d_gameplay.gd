@@ -185,7 +185,7 @@ func _on_enemy_projectile_hit(target: Area3D, combat_position: Vector3) -> void:
 
 
 func _on_enemy_projectile_deflected(_projectile: Area3D, combat_position: Vector3) -> void:
-	effect_manager.play_effect(NativeEffect.EffectKind.BOOST, combat_position, player.boost_direction, 0.45)
+	effect_manager.play_effect(NativeEffect.EffectKind.REFLECT, combat_position, player.boost_direction, 0.85)
 
 
 func _on_power_up_collected(_power_up_type: int, combat_position: Vector3) -> void:
@@ -307,7 +307,7 @@ func _on_enemy_charge_started(combat_position: Vector3, direction: Vector3) -> v
 
 
 func _on_enemy_charge_released(combat_position: Vector3, direction: Vector3) -> void:
-	effect_manager.play_effect(NativeEffect.EffectKind.MUZZLE, combat_position, direction, 0.9, true)
+	effect_manager.play_effect(NativeEffect.EffectKind.HOSTILE_MUZZLE, combat_position, direction, 0.9, true)
 
 
 func set_drone_escort_enabled(enabled: bool) -> void:
@@ -414,8 +414,13 @@ func route_enemy_finish(
 	var death_position: Vector3 = combat_position
 	if death_socket != null:
 		death_position = death_socket.global_position
+	var death_kind := NativeEffect.EffectKind.DEATH
+	if generation >= 3 or (enemy.is_in_group(&"native_3d_bosses") and enemy.get("variant") == 3):
+		death_kind = NativeEffect.EffectKind.VOID_COLLAPSE
+	elif enemy.get("archetype_id") == &"tank" or enemy.is_in_group(&"native_3d_bosses"):
+		death_kind = NativeEffect.EffectKind.ARMOR_BREAK
 	effect_manager.play_effect(
-		NativeEffect.EffectKind.DEATH,
+		death_kind,
 		death_position,
 		drift_direction,
 		0.86 + float(clampi(generation, 1, 4)) * 0.14,

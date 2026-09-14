@@ -3,6 +3,7 @@ extends Node
 
 signal settings_changed
 
+const WindowLayout := preload("res://systems/game_window_layout.gd")
 const SAVE_FILE_NAME := "save_data.json"
 const SAVE_TEMP_FILE_NAME := "save_data.json.tmp"
 const SAVE_BACKUP_FILE_NAME := "save_data.json.bak"
@@ -25,6 +26,7 @@ const DEFAULT_SETTINGS: Dictionary = {
 	"screen_distortion": true,
 	"alt_controls": false,
 	"fullscreen": false,
+	"window_size": WindowLayout.DEFAULT_PRESET,
 	"reduced_flashing": false,
 	"reduced_motion": false,
 	"hold_to_confirm": false,
@@ -69,6 +71,7 @@ var campaign_state: Dictionary = DEFAULT_CAMPAIGN_STATE.duplicate(true)
 ## A newer build's save is preserved read-only until a compatible migration
 ## exists. This prevents a settings change from replacing buyer progress.
 var _save_read_only_due_to_future_version := false
+var _window_layout := WindowLayout.new()
 
 ## Loads saved data from disk on startup and applies the persisted audio
 ## and control-scheme settings.
@@ -90,7 +93,7 @@ func get_setting(key: String, fallback: Variant = null) -> Variant:
 func update_setting(key: String, value: Variant) -> void:
 	if not DEFAULT_SETTINGS.has(key):
 		return
-	settings[key] = value
+	settings[key] = WindowLayout.normalize_preset(value) if key == "window_size" else value
 	_apply_audio_settings()
 	_apply_control_scheme()
 	_apply_display_settings()
@@ -228,7 +231,9 @@ func _load_data() -> void:
 				# "screen_shake": "false" would otherwise coerce the non-empty
 				# string to true, silently inverting the user's intent.
 				var value: Variant = stored_settings[key]
-				if key == "story_frequency" and (value is int or value is float):
+				if key == "window_size":
+					settings[key] = WindowLayout.normalize_preset(value)
+				elif key == "story_frequency" and (value is int or value is float):
 					settings[key] = clampi(int(value), 0, 2)
 				elif typeof(value) == typeof(DEFAULT_SETTINGS[key]):
 					settings[key] = value
@@ -387,15 +392,13 @@ func _apply_bus_volume(bus_name: String, raw_volume: float) -> void:
 	AudioServer.set_bus_mute(bus_index, volume <= 0.001)
 	AudioServer.set_bus_volume_db(bus_index, linear_to_db(maxf(volume, 0.001)))
 
-## Applies the fullscreen setting to the main window.
+## Applies window size/fullscreen only when those preferences actually change.
 func _apply_display_settings() -> void:
-	var fullscreen := bool(settings.get("fullscreen", false))
-	var window := get_tree().root
-	if window == null:
-		return
-	var target := Window.MODE_FULLSCREEN if fullscreen else Window.MODE_WINDOWED
-	if window.mode != target:
-		window.mode = target
+	_window_layout.apply(
+		get_tree().root,
+		bool(settings.get("fullscreen", false)),
+		settings.get("window_size", WindowLayout.DEFAULT_PRESET)
+	)
 
 ## Applies the persisted control scheme to the global InputMap.
 ## Default: Space shoots, Shift boosts. Alt: left mouse button shoots,
