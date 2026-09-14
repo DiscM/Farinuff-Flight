@@ -54,14 +54,11 @@ spread = 180.0
 initial_velocity_min = 1.5
 initial_velocity_max = 4.5
 gravity = Vector3(0, 0, 0)
-scale_min = 0.08
-scale_max = 0.2
+scale_min = 0.65
+scale_max = 1.2
 
-[sub_resource type="SphereMesh" id="SphereMesh_particle"]
-radius = 0.09
-height = 0.18
-radial_segments = 6
-rings = 3
+[sub_resource type="BoxMesh" id="SphereMesh_particle"]
+size = Vector3(0.065, 0.045, 0.28)
 material = SubResource("ShaderMaterial_core")
 
 [node name="NativeEffect3D" type="Node3D"]

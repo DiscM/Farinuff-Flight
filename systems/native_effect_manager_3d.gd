@@ -125,7 +125,9 @@ func play_effect(
 
 
 func clear_effects() -> void:
-	for effect in _checked_out:
+	# despawn emits returned_to_pool synchronously, which removes from the
+	# checkout list. Iterate a snapshot so adjacent live effects are not skipped.
+	for effect in _checked_out.duplicate():
 		if is_instance_valid(effect):
 			effect.despawn()
 	_lit_effects.clear()
@@ -181,6 +183,8 @@ func _can_claim_local_light(kind: Effect.EffectKind) -> bool:
 	if max_local_lights <= 0 or _lit_effects.size() >= max_local_lights:
 		return false
 	match kind:
+		Effect.EffectKind.REFLECT, Effect.EffectKind.ARMOR_BREAK, Effect.EffectKind.VOID_COLLAPSE:
+			return true
 		Effect.EffectKind.IMPACT, Effect.EffectKind.DEATH, Effect.EffectKind.BOOST:
 			return true
 		Effect.EffectKind.EXPLOSION, Effect.EffectKind.SHIELD:

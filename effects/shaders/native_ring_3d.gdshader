@@ -12,8 +12,8 @@ void fragment() {
 	vec2 centered = UV - vec2(0.5);
 	float tube = length(centered) * 2.0;
 	float edge = 1.0 - smoothstep(0.12, 1.0, tube);
-	float band = 0.72 + 0.28 * sin(UV.x * 34.0 - TIME * 8.0 + instance_phase);
-	float scan = 0.78 + 0.22 * sin(UV.y * 18.0 + TIME * 5.0);
+	float band = 0.72 + 0.28 * sin(UV.x * 34.0 - instance_phase);
+	float scan = 0.78 + 0.22 * sin(UV.y * 18.0 + instance_phase * 0.625);
 	vec3 color = mix(instance_color.rgb, instance_accent.rgb, clamp(band * 0.72, 0.0, 1.0));
 	float alpha = edge * band * scan * instance_alpha * instance_color.a;
 	ALBEDO = color;

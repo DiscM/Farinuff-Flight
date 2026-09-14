@@ -1,10 +1,10 @@
 [gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://entities/enemies/bomber_enemy_3d.gd" id="1_enemy"]
-[ext_resource type="PackedScene" path="res://assets/models/redesign/next_round/bomber_enemy.glb" id="2_model"]
+[ext_resource type="PackedScene" path="res://assets/models/animated/bomber_enemy.glb" id="2_model"]
 [ext_resource type="Resource" path="res://entities/enemies/bomber_enemy_generation_1.tres" id="3_stats"]
 [sub_resource type="BoxShape3D" id="BoxShape3D_hitbox"]
-size = Vector3(2.904, 0.5, 2.364)
+size = Vector3(3.775200, 0.500000, 3.073200)
 
 [node name="BomberEnemy3D" type="Area3D"]
 editor_description = "Scene-managed Bomber Enemy Gen I. Inert until activate(); Y=0 combat root. The box preserves the 34x26 baseline-pixel reference envelope under the shared camera."
@@ -15,6 +15,7 @@ monitorable = false
 input_ray_pickable = false
 script = ExtResource("1_enemy")
 gameplay_stats = ExtResource("3_stats")
+surface_style = 1
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("BoxShape3D_hitbox")
@@ -24,26 +25,26 @@ disabled = true
 position = Vector3(0, 0.08, 0)
 
 [node name="BomberHullGLB" parent="Visuals" instance=ExtResource("2_model")]
-scale = Vector3(0.37, 0.37, 0.37)
+scale = Vector3(0.536500, 0.536500, 0.536500)
 
 [node name="Attachments" type="Node3D" parent="."]
 
 [node name="Sockets" type="Node3D" parent="Attachments"]
 
 [node name="MuzzleCenter" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(0, 0.154, -1.073)
+position = Vector3(0.000000, 0.187300, -1.555850)
 
 [node name="EngineLeft" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(-0.636, 0.147, 0.71)
+position = Vector3(-0.922200, 0.177150, 1.029500)
 
 [node name="EngineRight" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(0.636, 0.147, 0.71)
+position = Vector3(0.922200, 0.177150, 1.029500)
 
 [node name="BombBayLeft" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(-0.636, 0.147, -0.599)
+position = Vector3(-0.922200, 0.177150, -0.868550)
 
 [node name="BombBayRight" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(0.636, 0.147, -0.599)
+position = Vector3(0.922200, 0.177150, -0.868550)
 
 [node name="Modules" type="Node3D" parent="Attachments"]
 

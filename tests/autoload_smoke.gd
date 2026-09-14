@@ -145,9 +145,17 @@ func _check_save_manager() -> void:
 	)
 
 	# Pre-versioning save (no version key) is treated as the legacy schema
+	SaveManager.settings["window_size"] = SaveManager.DEFAULT_SETTINGS["window_size"]
 	_write_save('{"high_score": 700, "settings": {}}')
 	SaveManager._load_data()
 	_expect(SaveManager.high_score == 700, "Save without a version key must still load")
+	_expect(SaveManager.get_setting("window_size") == "large", "Legacy saves default to the larger gameplay window")
+	SaveManager.update_setting("window_size", "medium")
+	SaveManager.settings["window_size"] = "compact"
+	SaveManager._load_data()
+	_expect(SaveManager.get_setting("window_size") == "medium", "Window size preference survives a save/load round trip")
+	SaveManager.update_setting("window_size", "unsupported")
+	_expect(SaveManager.get_setting("window_size") == "large", "Invalid window size falls back to the larger default")
 
 	# Versioned writes are atomic and keep a recoverable previous copy.
 	SaveManager.record_high_score(701)

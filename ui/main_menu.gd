@@ -3,13 +3,7 @@ extends Control
 
 const PIXEL_PLANET_SCENE_PATH := "res://effects/shaders/PixelPlanets/Planets/GasPlanetLayers/GasPlanetLayers.tscn"
 const NATIVE_RUN_PATH := "res://scenes/native_3d_run.tscn"
-const CRT_ENABLED_PROFILE := {
-	"scanline_intensity": 0.13,
-	"aberration_strength": 0.0015,
-	"vignette_strength": 0.34,
-	"contrast": 1.08,
-	"brightness": 1.02,
-}
+const CRT_ENABLED_PROFILE := preload("res://effects/rendering/frontier_palette.gd").CRT_PROFILE
 const CRT_DISABLED_PROFILE := {
 	"scanline_intensity": 0.0,
 	"aberration_strength": 0.0,
@@ -26,9 +20,16 @@ var _frontend: FrontendShell
 var _frontend_launch_layer: CanvasLayer
 var _return_to_school := false
 var _launching := false
+var _galaxy_time := 0.0
 
 
 func _ready() -> void:
+	var galaxy := ShaderMaterial.new()
+	preload("res://effects/rendering/galaxy_visual_style.gd").apply_to(galaxy)
+	$Background.material = galaxy
+	$Background.color = Color.WHITE
+	$Backdrop.hide()
+	$Backdrop.process_mode = Node.PROCESS_MODE_DISABLED
 	_return_to_school = GameManager.return_to_flight_school
 	GameManager.return_to_flight_school = false
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -40,6 +41,11 @@ func _ready() -> void:
 	SaveManager.settings_changed.connect(_apply_visual_settings)
 	# Mount before the first draw; there is no intermediate title screen.
 	_mount_command_deck()
+
+
+func _process(delta: float) -> void:
+	_galaxy_time += delta
+	($Background.material as ShaderMaterial).set_shader_parameter(&"u_time", _galaxy_time)
 
 
 func _on_resized() -> void:
@@ -113,6 +119,7 @@ func _apply_visual_settings() -> void:
 	if crt_material == null:
 		return
 	crt_material.set_shader_parameter("apply_distortion", distortion_enabled)
+	crt_material.set_shader_parameter("barrel_distortion", 0.012)
 	var profile: Dictionary = CRT_ENABLED_PROFILE if crt_enabled else CRT_DISABLED_PROFILE
 	for parameter: String in profile:
 		crt_material.set_shader_parameter(parameter, profile[parameter])

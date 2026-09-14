@@ -1,13 +1,13 @@
 [gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://entities/enemies/basic_enemy_3d.gd" id="1_enemy"]
-[ext_resource type="PackedScene" path="res://assets/models/redesign/next_round/basic_enemy.glb" id="2_model"]
+[ext_resource type="PackedScene" path="res://assets/models/animated/basic_enemy.glb" id="2_model"]
 [ext_resource type="Resource" path="res://entities/enemies/basic_enemy_generation_1.tres" id="3_stats"]
 [sub_resource type="BoxShape3D" id="BoxShape3D_hitbox"]
-size = Vector3(2.221092, 0.5, 2.363636)
+size = Vector3(2.998474, 0.500000, 3.190909)
 
 [node name="BasicEnemy3D" type="Area3D"]
-editor_description = "Scene-managed Basic Enemy Generations I–IV. Inert until activate(); Y=0 combat root. Box is a 26x26 baseline-pixel envelope for cardinal entries under the shared 70-degree camera. Generation III charge and Generation IV fragments use wrapper-owned sockets."
+editor_description = "Scene-managed Basic Enemy Generations I–IV. Inert until activate(); Y=0 combat root. Enlarged readable hull with an inset, world-aligned contact envelope under the shared 70-degree camera. Generation III charge and Generation IV fragments use wrapper-owned sockets."
 collision_layer = 0
 collision_mask = 0
 monitoring = false
@@ -15,6 +15,7 @@ monitorable = false
 input_ray_pickable = false
 script = ExtResource("1_enemy")
 gameplay_stats = ExtResource("3_stats")
+surface_style = 1
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("BoxShape3D_hitbox")
@@ -24,32 +25,32 @@ disabled = true
 position = Vector3(0, 0.08, 0)
 
 [node name="BasicHullGLB" parent="Visuals" instance=ExtResource("2_model")]
-scale = Vector3(0.45, 0.45, 0.45)
+scale = Vector3(0.675000, 0.675000, 0.675000)
 
 [node name="Attachments" type="Node3D" parent="."]
 
 [node name="Sockets" type="Node3D" parent="Attachments"]
 
 [node name="MuzzleCenter" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(0, 0.134, -1.341)
+position = Vector3(0.000000, 0.161000, -2.011500)
 
 [node name="EngineLeft" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(-0.279, 0.103, 0.828)
+position = Vector3(-0.418500, 0.114500, 1.242000)
 
 [node name="EngineRight" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(0.279, 0.103, 0.828)
+position = Vector3(0.418500, 0.114500, 1.242000)
 
 [node name="Core" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(0, 0.2, 0)
+position = Vector3(0.000000, 0.260000, 0.000000)
 
 [node name="Death" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(0, 0.2, 0)
+position = Vector3(0.000000, 0.260000, 0.000000)
 
 [node name="FragmentLeft" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(-0.22, 0.18, 0.42)
+position = Vector3(-0.330000, 0.230000, 0.630000)
 
 [node name="FragmentRight" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(0.22, 0.18, 0.42)
+position = Vector3(0.330000, 0.230000, 0.630000)
 
 [node name="Modules" type="Node3D" parent="Attachments"]
 

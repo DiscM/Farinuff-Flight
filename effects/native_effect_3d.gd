@@ -18,13 +18,21 @@ enum EffectKind {
 	EXPLOSION,
 	SHIELD,
 	TELEGRAPH,
+	REFLECT,
+	ARMOR_BREAK,
+	VOID_COLLAPSE,
+	HOSTILE_MUZZLE,
 }
+
+const Palette := preload("res://effects/rendering/frontier_palette.gd")
+const Fragments := preload("res://effects/frontier_fragments_3d.gd")
+var fragments: Fragments
 
 const SHOCK_RING := preload("res://assets/models/native/shock_ring.glb")
 const MUZZLE_FLARE := preload("res://assets/models/native/muzzle_flare.glb")
 
 const DEFAULT_DURATION := 0.24
-const MAX_EFFECT_DURATION := 0.55
+const MAX_EFFECT_DURATION := 0.85
 const MIN_INTENSITY := 0.1
 const MAX_INTENSITY := 2.5
 ## Keep the warm-up at the largest runtime particle buffer so no effect event
@@ -55,6 +63,9 @@ var _local_light_enabled := false
 
 
 func _ready() -> void:
+	fragments = Fragments.new()
+	fragments.name = "Fragments"
+	add_child(fragments)
 	_impact_mesh = burst_mesh.mesh
 	_streak_mesh = streak_mesh.mesh
 	_flare = _extract_mesh(MUZZLE_FLARE)
@@ -82,6 +93,8 @@ func configure_pool(idle_parent: Node3D) -> void:
 ## Render every mesh/material and the particle pipeline under the transition
 ## cover without arming gameplay, starting a live effect, or claiming a light.
 func prepare_visual_warmup() -> void:
+	fragments.configure(false)
+	fragments.advance(0.2, 1.0, 0.0)
 	is_active = false
 	transform = Transform3D.IDENTITY
 	_kind = EffectKind.IMPACT
@@ -135,13 +148,17 @@ func play(
 	process_mode = Node.PROCESS_MODE_INHERIT
 	set_process(true)
 	var color := _get_color(kind)
-	burst_mesh.mesh = _flare if kind == EffectKind.MUZZLE else _impact_mesh
+	burst_mesh.mesh = _flare if kind in [EffectKind.MUZZLE, EffectKind.HOSTILE_MUZZLE, EffectKind.REFLECT] else _impact_mesh
 	streak_mesh.mesh = _streak_mesh
 	core_mesh.visible = kind != EffectKind.TELEGRAPH
 	burst_mesh.visible = kind != EffectKind.TELEGRAPH
 	pulse_mesh.visible = _uses_pulse_mesh(kind)
 	secondary_ring.visible = _uses_secondary_ring(kind)
 	streak_mesh.visible = _uses_streak_mesh(kind)
+	fragments.visible = kind in [EffectKind.DEATH, EffectKind.ARMOR_BREAK, EffectKind.VOID_COLLAPSE]
+	if fragments.visible:
+		fragments.configure(kind == EffectKind.VOID_COLLAPSE)
+		fragments.advance(0.0, _intensity, _phase_offset)
 	particles.amount = _get_particle_amount(kind)
 	particles.lifetime = _get_particle_lifetime(kind)
 	particles.restart()
@@ -160,6 +177,8 @@ func _process(delta: float) -> void:
 	_elapsed += delta
 	var progress := clampf(_elapsed / _duration, 0.0, 1.0)
 	var fade := 1.0 - progress
+	if fragments.visible:
+		fragments.advance(progress, _intensity, _phase_offset)
 	var expansion := 1.0 - pow(1.0 - progress, 3.0)
 	var pulse := 0.78 + 0.22 * sin(_elapsed * 18.0 + _phase_offset)
 	var mesh_scale := 0.25
@@ -167,7 +186,7 @@ func _process(delta: float) -> void:
 	var streak_width := 0.5
 	var streak_length := 1.0
 	match _kind:
-		EffectKind.MUZZLE:
+		EffectKind.MUZZLE, EffectKind.HOSTILE_MUZZLE:
 			mesh_scale = lerpf(0.45, 1.45, expansion)
 			ring_scale = lerpf(0.45, 1.1, expansion)
 			streak_width = lerpf(0.7, 0.35, progress)
@@ -198,6 +217,21 @@ func _process(delta: float) -> void:
 		EffectKind.PICKUP:
 			mesh_scale = lerpf(0.18, 0.72, expansion)
 			ring_scale = lerpf(0.3, 1.55, expansion)
+		EffectKind.REFLECT:
+			mesh_scale = lerpf(1.2, 0.15, progress)
+			ring_scale = lerpf(0.45, 2.2, expansion)
+			streak_width = lerpf(1.4, 0.12, progress)
+			streak_length = lerpf(1.0, 5.2, expansion)
+		EffectKind.ARMOR_BREAK:
+			mesh_scale = lerpf(1.4, 0.12, expansion)
+			ring_scale = lerpf(0.5, 3.4, expansion)
+		EffectKind.VOID_COLLAPSE:
+			mesh_scale = lerpf(1.5, 0.08, minf(progress / 0.42, 1.0)) if progress < 0.42 else lerpf(1.8, 0.0, (progress - 0.42) / 0.58)
+			ring_scale = lerpf(3.2, 0.12, minf(progress / 0.42, 1.0))
+	if _kind == EffectKind.IMPACT:
+		mesh_scale = lerpf(0.95, 0.05, expansion)
+		streak_width = lerpf(0.7, 0.05, progress)
+		streak_length = lerpf(0.6, 1.8, expansion)
 	core_mesh.scale = Vector3.ONE * mesh_scale * _intensity
 	burst_mesh.scale = Vector3.ONE * mesh_scale * _intensity
 	pulse_mesh.scale = Vector3(ring_scale, 1.0, ring_scale) * _intensity * (0.92 + pulse * 0.08)
@@ -208,6 +242,10 @@ func _process(delta: float) -> void:
 		fade,
 		_get_emission(_kind) * (0.45 + fade * 0.55)
 	)
+	# The bright core ends quickly; cooling fragments carry the death's tail.
+	if _kind in [EffectKind.DEATH, EffectKind.ARMOR_BREAK]:
+		core_mesh.visible = progress < 0.24
+		burst_mesh.visible = progress < 0.28
 	if _local_light_enabled:
 		burst_light.light_energy = _get_light_energy(_kind) * _intensity * fade * fade
 	if _elapsed >= _duration:
@@ -227,6 +265,7 @@ func despawn() -> void:
 	pulse_mesh.visible = false
 	secondary_ring.visible = false
 	streak_mesh.visible = false
+	fragments.hide()
 	burst_light.visible = false
 	burst_light.light_energy = 0.0
 	_local_light_enabled = false
@@ -252,14 +291,18 @@ func despawn() -> void:
 
 func _get_duration(kind: EffectKind) -> float:
 	match kind:
-		EffectKind.MUZZLE:
+		EffectKind.MUZZLE, EffectKind.HOSTILE_MUZZLE:
 			return 0.08
 		EffectKind.PROJECTILE:
 			return 0.06
 		EffectKind.IMPACT:
 			return 0.16
 		EffectKind.DEATH:
-			return 0.42
+			return 0.68
+		EffectKind.ARMOR_BREAK, EffectKind.VOID_COLLAPSE:
+			return 0.82
+		EffectKind.REFLECT:
+			return 0.22
 		EffectKind.BOOST:
 			return 0.28
 		EffectKind.PICKUP:
@@ -275,6 +318,10 @@ func _get_duration(kind: EffectKind) -> float:
 
 func _get_particle_amount(kind: EffectKind) -> int:
 	match kind:
+		EffectKind.REFLECT, EffectKind.ARMOR_BREAK:
+			return 10
+		EffectKind.VOID_COLLAPSE:
+			return 4
 		EffectKind.MUZZLE:
 			return 6
 		EffectKind.PROJECTILE:
@@ -298,6 +345,8 @@ func _get_particle_amount(kind: EffectKind) -> int:
 
 func _get_particle_lifetime(kind: EffectKind) -> float:
 	match kind:
+		EffectKind.REFLECT, EffectKind.HOSTILE_MUZZLE:
+			return 0.08
 		EffectKind.MUZZLE:
 			return 0.08
 		EffectKind.PROJECTILE:
@@ -320,12 +369,12 @@ func _get_particle_lifetime(kind: EffectKind) -> float:
 
 
 func _uses_pulse_mesh(kind: EffectKind) -> bool:
-	return kind != EffectKind.MUZZLE and kind != EffectKind.PROJECTILE
+	return kind in [EffectKind.EXPLOSION, EffectKind.SHIELD, EffectKind.TELEGRAPH, EffectKind.VOID_COLLAPSE]
 
 
 func _uses_secondary_ring(kind: EffectKind) -> bool:
 	match kind:
-		EffectKind.IMPACT, EffectKind.DEATH, EffectKind.BOOST, EffectKind.PICKUP:
+		EffectKind.REFLECT, EffectKind.PICKUP, EffectKind.ARMOR_BREAK:
 			return true
 		EffectKind.EXPLOSION, EffectKind.SHIELD, EffectKind.TELEGRAPH:
 			return true
@@ -334,25 +383,25 @@ func _uses_secondary_ring(kind: EffectKind) -> bool:
 
 func _uses_streak_mesh(kind: EffectKind) -> bool:
 	match kind:
-		EffectKind.MUZZLE, EffectKind.PROJECTILE, EffectKind.BOOST, EffectKind.TELEGRAPH:
+		EffectKind.MUZZLE, EffectKind.HOSTILE_MUZZLE, EffectKind.PROJECTILE, EffectKind.BOOST, EffectKind.TELEGRAPH, EffectKind.REFLECT, EffectKind.IMPACT:
 			return true
 	return false
 
 
 func _get_color(kind: EffectKind) -> Color:
 	match kind:
-		EffectKind.MUZZLE, EffectKind.PROJECTILE:
-			return Color(0.18, 0.8, 1.0, 1.0)
-		EffectKind.IMPACT:
-			return Color(1.0, 0.45, 0.08, 1.0)
-		EffectKind.DEATH, EffectKind.EXPLOSION:
-			return Color(1.0, 0.1, 0.42, 1.0)
-		EffectKind.BOOST:
-			return Color(0.2, 1.0, 0.56, 1.0)
+		EffectKind.MUZZLE, EffectKind.PROJECTILE, EffectKind.BOOST, EffectKind.SHIELD:
+			return Palette.CYAN
+		EffectKind.IMPACT, EffectKind.DEATH, EffectKind.ARMOR_BREAK, EffectKind.EXPLOSION:
+			return Palette.SPARK
+		EffectKind.VOID_COLLAPSE:
+			return Palette.VIOLET
+		EffectKind.REFLECT:
+			return Palette.ICE
+		EffectKind.HOSTILE_MUZZLE:
+			return Palette.HOSTILE
 		EffectKind.PICKUP:
-			return Color(1.0, 0.78, 0.18, 1.0)
-		EffectKind.SHIELD:
-			return Color(0.16, 0.74, 1.0, 1.0)
+			return Palette.GOLD
 		EffectKind.TELEGRAPH:
 			return Color(1.0, 0.16, 0.04, 1.0)
 	return Color.WHITE
@@ -360,14 +409,18 @@ func _get_color(kind: EffectKind) -> Color:
 
 func _get_accent(kind: EffectKind) -> Color:
 	match kind:
-		EffectKind.MUZZLE, EffectKind.PROJECTILE, EffectKind.SHIELD:
+		EffectKind.VOID_COLLAPSE:
+			return Color(0.86, 0.68, 1.0)
+		EffectKind.DEATH, EffectKind.ARMOR_BREAK:
+			return Palette.GOLD
+		EffectKind.MUZZLE, EffectKind.PROJECTILE, EffectKind.SHIELD, EffectKind.REFLECT:
 			return Color(0.88, 1.0, 1.0, 1.0)
 		EffectKind.BOOST:
-			return Color(0.8, 1.0, 0.9, 1.0)
+			return Palette.ICE
+		EffectKind.HOSTILE_MUZZLE:
+			return Color(1.0, 0.75, 0.95)
 		EffectKind.TELEGRAPH, EffectKind.EXPLOSION:
 			return Color(1.0, 0.82, 0.24, 1.0)
-		EffectKind.DEATH:
-			return Color(1.0, 0.72, 0.86, 1.0)
 	return Color(1.0, 0.96, 0.72, 1.0)
 
 
@@ -384,6 +437,10 @@ func _get_emission(kind: EffectKind) -> float:
 
 func _get_light_energy(kind: EffectKind) -> float:
 	match kind:
+		EffectKind.ARMOR_BREAK, EffectKind.VOID_COLLAPSE:
+			return 2.0
+		EffectKind.REFLECT:
+			return 1.1
 		EffectKind.EXPLOSION:
 			return 3.8
 		EffectKind.SHIELD:
@@ -409,7 +466,11 @@ func _set_shader_state(color: Color, alpha: float, emission: float) -> void:
 	core_mesh.set_instance_shader_parameter(&"instance_color", color)
 	core_mesh.set_instance_shader_parameter(&"instance_alpha", alpha)
 	core_mesh.set_instance_shader_parameter(&"instance_intensity", emission)
-	core_mesh.set_instance_shader_parameter(&"instance_phase", _phase_offset)
+	core_mesh.set_instance_shader_parameter(&"instance_phase", _phase_offset + _elapsed * 10.0)
+	particles.set_instance_shader_parameter(&"instance_color", color)
+	particles.set_instance_shader_parameter(&"instance_alpha", alpha)
+	particles.set_instance_shader_parameter(&"instance_intensity", emission * 0.65)
+	particles.set_instance_shader_parameter(&"instance_phase", _phase_offset + _elapsed * 10.0)
 
 
 func _set_effect_shader_state(
@@ -423,7 +484,7 @@ func _set_effect_shader_state(
 	mesh.set_instance_shader_parameter(&"instance_accent", accent)
 	mesh.set_instance_shader_parameter(&"instance_alpha", alpha)
 	mesh.set_instance_shader_parameter(&"instance_emission", emission)
-	mesh.set_instance_shader_parameter(&"instance_phase", _phase_offset)
+	mesh.set_instance_shader_parameter(&"instance_phase", _phase_offset + _elapsed * 8.0)
 
 
 func _extract_mesh(scene: PackedScene) -> Mesh:

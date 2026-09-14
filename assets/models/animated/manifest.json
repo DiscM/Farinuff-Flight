@@ -1,0 +1,522 @@
+{
+  "authoring": "Blender rigid four-bone rigs",
+  "fps": 30,
+  "assets": [
+    {
+      "asset": "basic_enemy",
+      "source": "redesign/next_round/basic_enemy.glb",
+      "role": "basic",
+      "bones": {
+        "Body": 2238,
+        "Port": 800,
+        "Starboard": 800,
+        "Weapon": 0
+      },
+      "meshes": 7,
+      "clips": [
+        "cruise",
+        "hit",
+        "windup",
+        "attack"
+      ]
+    },
+    {
+      "asset": "fast_enemy",
+      "source": "redesign/next_round/fast_enemy.glb",
+      "role": "fast",
+      "bones": {
+        "Body": 992,
+        "Port": 292,
+        "Starboard": 292,
+        "Weapon": 0
+      },
+      "meshes": 5,
+      "clips": [
+        "cruise",
+        "hit",
+        "windup",
+        "attack"
+      ]
+    },
+    {
+      "asset": "bomber_enemy",
+      "source": "redesign/next_round/bomber_enemy.glb",
+      "role": "bomber",
+      "bones": {
+        "Body": 2056,
+        "Port": 1342,
+        "Starboard": 1342,
+        "Weapon": 0
+      },
+      "meshes": 7,
+      "clips": [
+        "cruise",
+        "hit",
+        "windup",
+        "attack"
+      ]
+    },
+    {
+      "asset": "tank_enemy",
+      "source": "redesign/next_round/tank_enemy.glb",
+      "role": "tank",
+      "bones": {
+        "Body": 2986,
+        "Port": 1142,
+        "Starboard": 1142,
+        "Weapon": 0
+      },
+      "meshes": 8,
+      "clips": [
+        "cruise",
+        "hit",
+        "windup",
+        "attack"
+      ]
+    },
+    {
+      "asset": "sniper_enemy",
+      "source": "redesign/next_round/sniper_enemy.glb",
+      "role": "sniper",
+      "bones": {
+        "Body": 2064,
+        "Port": 590,
+        "Starboard": 590,
+        "Weapon": 336
+      },
+      "meshes": 7,
+      "clips": [
+        "cruise",
+        "hit",
+        "windup",
+        "attack"
+      ]
+    },
+    {
+      "asset": "player_butterfly",
+      "source": "redesign/player_butterfly.glb",
+      "role": "player",
+      "bones": {
+        "Body": 218,
+        "Port": 385,
+        "Starboard": 385,
+        "Weapon": 290
+      },
+      "meshes": 1,
+      "clips": [
+        "cruise",
+        "hit",
+        "attack",
+        "boost",
+        "boost_attack",
+        "upgrade",
+        "deploy"
+      ]
+    },
+    {
+      "asset": "player_butterfly_morpho",
+      "source": "redesign/player_butterfly_morpho.glb",
+      "role": "player",
+      "bones": {
+        "Body": 218,
+        "Port": 385,
+        "Starboard": 385,
+        "Weapon": 290
+      },
+      "meshes": 1,
+      "clips": [
+        "cruise",
+        "hit",
+        "attack",
+        "boost",
+        "boost_attack",
+        "upgrade",
+        "deploy"
+      ]
+    },
+    {
+      "asset": "player_butterfly_monarch",
+      "source": "redesign/player_butterfly_monarch.glb",
+      "role": "player",
+      "bones": {
+        "Body": 218,
+        "Port": 385,
+        "Starboard": 385,
+        "Weapon": 290
+      },
+      "meshes": 1,
+      "clips": [
+        "cruise",
+        "hit",
+        "attack",
+        "boost",
+        "boost_attack",
+        "upgrade",
+        "deploy"
+      ]
+    },
+    {
+      "asset": "bf_elite_twin_cannons",
+      "source": "redesign/butterfly_elites/bf_elite_twin_cannons.glb",
+      "role": "module",
+      "bones": {
+        "Body": 0,
+        "Port": 0,
+        "Starboard": 0,
+        "Weapon": 256
+      },
+      "meshes": 1,
+      "clips": [
+        "cruise",
+        "hit",
+        "attack",
+        "boost",
+        "boost_attack",
+        "upgrade",
+        "deploy"
+      ]
+    },
+    {
+      "asset": "bf_elite_auto_aim",
+      "source": "redesign/butterfly_elites/bf_elite_auto_aim.glb",
+      "role": "module",
+      "bones": {
+        "Body": 0,
+        "Port": 0,
+        "Starboard": 0,
+        "Weapon": 172
+      },
+      "meshes": 1,
+      "clips": [
+        "cruise",
+        "hit",
+        "attack",
+        "boost",
+        "boost_attack",
+        "upgrade",
+        "deploy"
+      ]
+    },
+    {
+      "asset": "bf_elite_drone_escort",
+      "source": "redesign/butterfly_elites/bf_elite_drone_escort.glb",
+      "role": "module",
+      "bones": {
+        "Body": 998,
+        "Port": 140,
+        "Starboard": 140,
+        "Weapon": 0
+      },
+      "meshes": 1,
+      "clips": [
+        "cruise",
+        "hit",
+        "attack",
+        "boost",
+        "boost_attack",
+        "upgrade",
+        "deploy"
+      ]
+    },
+    {
+      "asset": "bf_elite_hull_plating",
+      "source": "redesign/butterfly_elites/bf_elite_hull_plating.glb",
+      "role": "module",
+      "bones": {
+        "Body": 0,
+        "Port": 280,
+        "Starboard": 280,
+        "Weapon": 0
+      },
+      "meshes": 1,
+      "clips": [
+        "cruise",
+        "hit",
+        "attack",
+        "boost",
+        "boost_attack",
+        "upgrade",
+        "deploy"
+      ]
+    },
+    {
+      "asset": "bf_elite_afterburner",
+      "source": "redesign/butterfly_elites/bf_elite_afterburner.glb",
+      "role": "module",
+      "bones": {
+        "Body": 0,
+        "Port": 70,
+        "Starboard": 70,
+        "Weapon": 0
+      },
+      "meshes": 1,
+      "clips": [
+        "cruise",
+        "hit",
+        "attack",
+        "boost",
+        "boost_attack",
+        "upgrade",
+        "deploy"
+      ]
+    },
+    {
+      "asset": "bf_elite_spread_shot",
+      "source": "redesign/butterfly_elites/bf_elite_spread_shot.glb",
+      "role": "module",
+      "bones": {
+        "Body": 0,
+        "Port": 198,
+        "Starboard": 198,
+        "Weapon": 0
+      },
+      "meshes": 1,
+      "clips": [
+        "cruise",
+        "hit",
+        "attack",
+        "boost",
+        "boost_attack",
+        "upgrade",
+        "deploy"
+      ]
+    },
+    {
+      "asset": "bf_elite_shield_burst",
+      "source": "redesign/butterfly_elites/bf_elite_shield_burst.glb",
+      "role": "module",
+      "bones": {
+        "Body": 0,
+        "Port": 102,
+        "Starboard": 102,
+        "Weapon": 0
+      },
+      "meshes": 1,
+      "clips": [
+        "cruise",
+        "hit",
+        "attack",
+        "boost",
+        "boost_attack",
+        "upgrade",
+        "deploy"
+      ]
+    },
+    {
+      "asset": "bf_elite_magnet_field",
+      "source": "redesign/butterfly_elites/bf_elite_magnet_field.glb",
+      "role": "module",
+      "bones": {
+        "Body": 0,
+        "Port": 0,
+        "Starboard": 0,
+        "Weapon": 320
+      },
+      "meshes": 1,
+      "clips": [
+        "cruise",
+        "hit",
+        "attack",
+        "boost",
+        "boost_attack",
+        "upgrade",
+        "deploy"
+      ]
+    },
+    {
+      "asset": "bf_elite_overclock",
+      "source": "redesign/butterfly_elites/bf_elite_overclock.glb",
+      "role": "module",
+      "bones": {
+        "Body": 160,
+        "Port": 0,
+        "Starboard": 0,
+        "Weapon": 0
+      },
+      "meshes": 1,
+      "clips": [
+        "cruise",
+        "hit",
+        "attack",
+        "boost",
+        "boost_attack",
+        "upgrade",
+        "deploy"
+      ]
+    },
+    {
+      "asset": "bf_elite_rear_gunner",
+      "source": "redesign/butterfly_elites/bf_elite_rear_gunner.glb",
+      "role": "module",
+      "bones": {
+        "Body": 76,
+        "Port": 0,
+        "Starboard": 0,
+        "Weapon": 0
+      },
+      "meshes": 1,
+      "clips": [
+        "cruise",
+        "hit",
+        "attack",
+        "boost",
+        "boost_attack",
+        "upgrade",
+        "deploy"
+      ]
+    },
+    {
+      "asset": "upgrade_orbitals",
+      "source": "native/upgrade_orbitals.glb",
+      "role": "module",
+      "bones": {
+        "Body": 192,
+        "Port": 0,
+        "Starboard": 0,
+        "Weapon": 0
+      },
+      "meshes": 1,
+      "clips": [
+        "cruise",
+        "hit",
+        "attack",
+        "boost",
+        "boost_attack",
+        "upgrade",
+        "deploy"
+      ]
+    },
+    {
+      "asset": "upgrade_piercing",
+      "source": "native/upgrade_piercing.glb",
+      "role": "module",
+      "bones": {
+        "Body": 0,
+        "Port": 48,
+        "Starboard": 48,
+        "Weapon": 0
+      },
+      "meshes": 1,
+      "clips": [
+        "cruise",
+        "hit",
+        "attack",
+        "boost",
+        "boost_attack",
+        "upgrade",
+        "deploy"
+      ]
+    },
+    {
+      "asset": "upgrade_explosive",
+      "source": "native/upgrade_explosive.glb",
+      "role": "module",
+      "bones": {
+        "Body": 0,
+        "Port": 96,
+        "Starboard": 96,
+        "Weapon": 0
+      },
+      "meshes": 1,
+      "clips": [
+        "cruise",
+        "hit",
+        "attack",
+        "boost",
+        "boost_attack",
+        "upgrade",
+        "deploy"
+      ]
+    },
+    {
+      "asset": "boss_assault",
+      "source": "mockups/boss_assault_mockup.glb",
+      "role": "boss",
+      "bones": {
+        "Body": 182,
+        "Port": 120,
+        "Starboard": 120,
+        "Weapon": 0
+      },
+      "meshes": 1,
+      "clips": [
+        "cruise",
+        "hit",
+        "windup",
+        "attack"
+      ]
+    },
+    {
+      "asset": "boss_bulwark",
+      "source": "mockups/boss_bulwark_mockup.glb",
+      "role": "boss",
+      "bones": {
+        "Body": 320,
+        "Port": 130,
+        "Starboard": 130,
+        "Weapon": 0
+      },
+      "meshes": 1,
+      "clips": [
+        "cruise",
+        "hit",
+        "windup",
+        "attack"
+      ]
+    },
+    {
+      "asset": "boss_tempest",
+      "source": "mockups/boss_tempest_mockup.glb",
+      "role": "boss",
+      "bones": {
+        "Body": 154,
+        "Port": 180,
+        "Starboard": 180,
+        "Weapon": 0
+      },
+      "meshes": 1,
+      "clips": [
+        "cruise",
+        "hit",
+        "windup",
+        "attack"
+      ]
+    },
+    {
+      "asset": "boss_void_harbinger",
+      "source": "mockups/boss_void_harbinger_mockup.glb",
+      "role": "boss",
+      "bones": {
+        "Body": 372,
+        "Port": 90,
+        "Starboard": 90,
+        "Weapon": 0
+      },
+      "meshes": 1,
+      "clips": [
+        "cruise",
+        "hit",
+        "windup",
+        "attack"
+      ]
+    },
+    {
+      "asset": "boss_tempest_core",
+      "source": "mockups/boss_tempest_core_mockup.glb",
+      "role": "boss",
+      "bones": {
+        "Body": 380,
+        "Port": 130,
+        "Starboard": 130,
+        "Weapon": 0
+      },
+      "meshes": 1,
+      "clips": [
+        "cruise",
+        "hit",
+        "windup",
+        "attack"
+      ]
+    }
+  ]
+}

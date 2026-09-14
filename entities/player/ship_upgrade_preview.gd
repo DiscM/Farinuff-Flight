@@ -84,6 +84,7 @@ func _build_3d_preview() -> void:
 	key_light.light_energy = 2.35
 	key_light.shadow_enabled = false
 	_preview_world.add_child(key_light)
+	key_light.force_update_transform()
 
 	var rim_light := DirectionalLight3D.new()
 	rim_light.name = "RimLight"
@@ -92,6 +93,7 @@ func _build_3d_preview() -> void:
 	rim_light.light_energy = 1.35
 	rim_light.shadow_enabled = false
 	_preview_world.add_child(rim_light)
+	rim_light.force_update_transform()
 
 	var camera := Camera3D.new()
 	camera.name = "Camera3D"
@@ -101,6 +103,9 @@ func _build_3d_preview() -> void:
 	camera.current = true
 	_preview_world.add_child(camera)
 	camera.look_at(Vector3.ZERO, Vector3.UP)
+	# UPDATE_ONCE can render before the queued transform notification when
+	# returning from a run. Submit the final camera pose before that one frame.
+	camera.force_update_transform()
 
 	_create_assembly()
 

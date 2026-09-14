@@ -141,6 +141,7 @@ func _try_reactive_sidestep() -> void:
 		if shift.is_zero_approx():
 			continue
 		_start_position += shift
+		play_motion(&"attack", 0.2)
 		_sidestep_cooldown = SIDESTEP_COOLDOWN_SECONDS
 		_play_feedback(0.5)
 		return
@@ -156,6 +157,7 @@ func _update_phase(delta: float, in_view: bool) -> void:
 					return
 				_phase_state = PhaseState.WARNING
 				_phase_timer = PHASE_WARNING_SECONDS
+				play_motion(&"windup", PHASE_WARNING_SECONDS, true)
 				phase_warning.show()
 		PhaseState.WARNING:
 			if not in_view:
@@ -168,6 +170,7 @@ func _update_phase(delta: float, in_view: bool) -> void:
 				_phase_displacement = _trim_shift(_phase_displacement)
 				_phase_state = PhaseState.DASHING
 				_phase_timer = PHASE_DASH_SECONDS
+				play_motion(&"attack", PHASE_DASH_SECONDS)
 				phase_warning.hide()
 				_play_feedback(0.8)
 		PhaseState.DASHING:
@@ -231,6 +234,7 @@ func _cancel_phase() -> void:
 	_phase_state = PhaseState.COMPLETE
 	_phase_timer = 0.0
 	phase_warning.hide()
+	play_motion(&"cruise")
 
 
 func _finish(reason: FinishReason) -> void:

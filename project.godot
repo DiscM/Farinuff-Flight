@@ -39,13 +39,13 @@ ResourceCache="*res://autoloads/resource_cache.gd"
 
 window/size/viewport_width=1280
 window/size/viewport_height=720
-window/size/mode=2
+window/size/mode=0
+window/size/window_width_override=1920
+window/size/window_height_override=1080
 window/stretch/mode="canvas_items"
 window/stretch/aspect="expand"
 mouse_cursor/custom_image="res://assets/ui/cursor_crosshair.png"
 mouse_cursor/custom_image_hotspot=Vector2(32, 32)
-window/size/initial_width=1280
-window/size/initial_height=720
 
 [input]
 

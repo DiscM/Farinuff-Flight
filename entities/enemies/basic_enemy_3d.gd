@@ -16,14 +16,8 @@ const PhysicsLayers := preload("res://systems/native_3d_physics_layers.gd")
 const GenerationStats := preload("res://entities/enemies/enemy_generation_stats.gd")
 const SpawnTuning := preload("res://entities/enemies/enemy_spawn_tuning.gd")
 const NativeHazardManager := preload("res://systems/native_hazard_manager_3d.gd")
-const ENEMY_MODEL_SHADER: Shader = preload(
-	"res://effects/shaders/models/imported_enemy_surface_3d.gdshader"
-)
-## One immutable conversion per authored material, rather than per spawn.
-## Resource keys retain the source as well as its conversion, avoiding ID
-## reuse and material teardown while Forward+ still processes removed meshes.
-## Generation, animation, and damage feedback remain instance uniforms.
-static var _adapted_model_materials: Dictionary = {}
+const SurfaceMaterials := preload("res://effects/rendering/enemy_surface_materials.gd")
+const ShipMotion := preload("res://effects/ship_motion_3d.gd")
 const GENERATION_STATS := [
 	preload("res://entities/enemies/basic_enemy_generation_1.tres"),
 	preload("res://entities/enemies/basic_enemy_generation_2.tres"),
@@ -40,6 +34,8 @@ const CHARGE_SPEED_MULTIPLIER := 2.2
 
 @export var gameplay_stats: GenerationStats
 @export_range(1, 4, 1) var generation: int = 1
+@export var surface_style: SurfaceMaterials.Style = SurfaceMaterials.Style.AUTHORED_ALLOY
+@export_range(2.0, 16.0, 0.5) var surface_pixel_density: float = 8.0
 
 @onready var collision_shape: CollisionShape3D = $CollisionShape3D
 @onready var visuals: Node3D = $Visuals
@@ -59,7 +55,8 @@ var _meshes: Array[MeshInstance3D] = []
 var _socket_markers: Array[Marker3D] = []
 var _animation_time := 0.0
 var _flash_time_left := 0.0
-var _breathing: Tween
+var _motions: Array[ShipMotion] = []
+var _animated_sockets: Array = []
 var _time_alive := 0.0
 var _charge_used := false
 var _charge_state := 0
@@ -71,7 +68,12 @@ func _ready() -> void:
 	# Inert but visible before activation: the transition can warm the actual
 	# first enemy without collision, gameplay groups, timers, or reward effects.
 	set_physics_process(false)
-	_adapt_imported_model_materials()
+	for model in visuals.get_children():
+		if model is Node3D and model.find_child("AnimationPlayer", true, false) != null:
+			_motions.append(ShipMotion.new(model))
+			_bind_motion_sockets(model)
+	_sync_motion_sockets()
+	SurfaceMaterials.apply_to(visuals, surface_style, surface_pixel_density)
 	for node in visuals.find_children("*", "MeshInstance3D", true, false):
 		_meshes.append(node as MeshInstance3D)
 	for child in sockets.get_children():
@@ -80,51 +82,6 @@ func _ready() -> void:
 	area_entered.connect(_on_area_entered)
 	_set_instance_parameter(&"instance_animation_time", 0.0)
 	_set_instance_parameter(&"instance_flash", 0.0)
-
-
-func _adapt_imported_model_materials() -> void:
-	# Preserve the Blender-authored PBR palette while restoring the shared
-	# generation, hit-flash, and pause-aware instance-uniform contract.
-	for node in visuals.find_children("*", "MeshInstance3D", true, false):
-		var mesh_instance := node as MeshInstance3D
-		if mesh_instance.mesh == null:
-			continue
-		for surface_index in range(mesh_instance.mesh.get_surface_count()):
-			var source := mesh_instance.get_active_material(surface_index)
-			if source is ShaderMaterial and (source as ShaderMaterial).shader == ENEMY_MODEL_SHADER:
-				continue
-			if _adapted_model_materials.has(source):
-				mesh_instance.set_surface_override_material(
-					surface_index, _adapted_model_materials[source]
-				)
-				continue
-			var material := ShaderMaterial.new()
-			material.shader = ENEMY_MODEL_SHADER
-			var base_color := Color(0.18, 0.24, 0.34, 1.0)
-			var emission_color := Color(0.0, 0.0, 0.0, 0.0)
-			var emission_strength := 0.0
-			var metallic := 0.55
-			var roughness := 0.30
-			if source is BaseMaterial3D:
-				var source_3d := source as BaseMaterial3D
-				base_color = source_3d.albedo_color
-				metallic = source_3d.metallic
-				roughness = source_3d.roughness
-				if source_3d.emission_enabled:
-					emission_color = Color(
-						source_3d.emission.r,
-						source_3d.emission.g,
-						source_3d.emission.b,
-						1.0
-					)
-					emission_strength = source_3d.emission_energy_multiplier
-			material.set_shader_parameter(&"base_color", base_color)
-			material.set_shader_parameter(&"emission_color", emission_color)
-			material.set_shader_parameter(&"emission_strength", emission_strength)
-			material.set_shader_parameter(&"metallic", metallic)
-			material.set_shader_parameter(&"roughness", roughness)
-			_adapted_model_materials[source] = material
-			mesh_instance.set_surface_override_material(surface_index, material)
 
 
 func activate(flight_space: FlightSpace, combat_position: Vector3, direction: Vector3) -> bool:
@@ -155,9 +112,8 @@ func activate_generation(
 	combat_position.y = 0.0
 	global_position = combat_position
 	rotation = Vector3(0.0, atan2(-_heading.x, -_heading.z), 0.0)
-	# Gen I enters from four cardinal edges. The reference's square stays
-	# 26x26 screen pixels at each heading; compensate camera foreshortening
-	# with the authored box, independently of visual/socket yaw.
+	# The enlarged, inset contact envelope stays independent of visual yaw and
+	# articulated panels; attack animations never expand collision geometry.
 	collision_shape.global_rotation = Vector3.ZERO
 	_speed_pixels = _active_stats.move_speed * GameManager.get_late_game_speed_multiplier()
 	_configure_movement()
@@ -188,15 +144,16 @@ func activate_generation(
 	force_update_transform()
 	set_physics_process(true)
 	show()
-	_breathing = create_tween().set_loops().set_process_mode(Tween.TWEEN_PROCESS_PHYSICS)
-	_breathing.tween_property(visuals, "scale", Vector3(1.05, 1.0, 0.95), 0.6).set_trans(Tween.TRANS_SINE)
-	_breathing.tween_property(visuals, "scale", Vector3(0.95, 1.0, 1.05), 0.6).set_trans(Tween.TRANS_SINE)
+	for motion in _motions:
+		motion.reset()
+	_sync_motion_sockets()
 	return true
 
 
 func _physics_process(delta: float) -> void:
 	if not is_active or not GameManager.is_game_active:
 		return
+	advance_motion(delta)
 	_time_alive += delta
 	_advance_movement(delta)
 	global_position.y = 0.0
@@ -231,6 +188,7 @@ func _advance_movement(delta: float) -> void:
 		if _charge_timer <= 0.0:
 			_charge_state = 2
 			_charge_timer = CHARGE_DURATION_SECONDS
+			play_motion(&"attack", CHARGE_DURATION_SECONDS)
 			charge_released.emit(get_combat_position(), _flight_space.screen_motion_to_combat(_charge_screen_direction))
 		return
 	if _charge_state == 2:
@@ -298,6 +256,7 @@ func _try_begin_charge() -> void:
 	_charge_timer = CHARGE_TELEGRAPH_SECONDS
 	_charge_screen_direction = to_player.normalized()
 	velocity = Vector3.ZERO
+	play_motion(&"windup", CHARGE_TELEGRAPH_SECONDS, true)
 	charge_started.emit(get_combat_position(), _flight_space.screen_motion_to_combat(_charge_screen_direction))
 
 
@@ -309,6 +268,7 @@ func take_damage(amount: int) -> void:
 		_finish(FinishReason.DESTROYED)
 	else:
 		_flash_time_left = 0.15
+		play_motion(&"hit")
 
 
 func get_socket_markers() -> Array[Marker3D]:
@@ -358,8 +318,6 @@ func _finish(reason: FinishReason) -> void:
 	remove_from_group(&"native_3d_enemies")
 	remove_from_group(&"native_3d_regular_enemies")
 	hide()
-	if _breathing != null:
-		_breathing.kill()
 	# Contacts may arrive during a physics flush. Deactivate logically now and
 	# defer physics mutations; repeated damage/contact callbacks cannot finish twice.
 	set_deferred("collision_layer", 0)
@@ -460,3 +418,33 @@ func _update_facing(direction: Vector3) -> void:
 	if direction.is_zero_approx():
 		return
 	rotation.y = atan2(-direction.x, -direction.z)
+
+
+func play_motion(clip: StringName, seconds: float = 0.0, hold: bool = false) -> void:
+	for motion in _motions:
+		if motion.model_root.visible:
+			motion.play(clip, seconds, hold)
+	_sync_motion_sockets()
+
+
+func advance_motion(delta: float) -> void:
+	for motion in _motions:
+		if motion.model_root.visible:
+			motion.advance(delta)
+	_sync_motion_sockets()
+
+
+func _bind_motion_sockets(model: Node3D) -> void:
+	var aliases := {"MuzzleCenter": "Socket_Muzzle", "LaserOrigin": "Socket_Muzzle",
+		"EngineLeft": "Socket_EngineLeft", "EngineRight": "Socket_EngineRight",
+		"BombBayLeft": "Socket_PayloadLeft", "BombBayRight": "Socket_PayloadRight"}
+	for wrapper_name in aliases:
+		var wrapper := sockets.get_node_or_null(NodePath(wrapper_name)) as Node3D
+		var authored := model.find_child(aliases[wrapper_name], true, false) as Node3D
+		if wrapper != null and authored != null:
+			_animated_sockets.append([wrapper, authored])
+
+
+func _sync_motion_sockets() -> void:
+	for pair in _animated_sockets:
+		pair[0].global_transform = ShipMotion.socket_transform(pair[1])

@@ -1,12 +1,12 @@
 [gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://entities/enemies/tank_enemy_3d.gd" id="1_enemy"]
-[ext_resource type="PackedScene" path="res://assets/models/redesign/next_round/tank_enemy.glb" id="2_model"]
+[ext_resource type="PackedScene" path="res://assets/models/animated/tank_enemy.glb" id="2_model"]
 [ext_resource type="Resource" path="res://entities/enemies/tank_enemy_generation_1.tres" id="3_stats"]
 [ext_resource type="PackedScene" path="res://entities/enemies/tank_plate_3d.tscn" id="5_plate"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_hitbox"]
-size = Vector3(4.10048, 0.5, 4.363636)
+size = Vector3(5.002586, 0.500000, 5.323636)
 
 [sub_resource type="StandardMaterial3D" id="Material_overload"]
 shading_mode = 0
@@ -32,6 +32,7 @@ monitorable = false
 input_ray_pickable = false
 script = ExtResource("1_enemy")
 gameplay_stats = ExtResource("3_stats")
+surface_style = 1
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("BoxShape3D_hitbox")
@@ -41,32 +42,32 @@ disabled = true
 position = Vector3(0, 0.08, 0)
 
 [node name="TankHullGLB" parent="Visuals" instance=ExtResource("2_model")]
-scale = Vector3(0.68, 0.68, 0.68)
+scale = Vector3(0.884000, 0.884000, 0.884000)
 
 [node name="Attachments" type="Node3D" parent="."]
 
 [node name="Sockets" type="Node3D" parent="Attachments"]
 
 [node name="MuzzleCenter" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(0, 0.352, -1.999)
+position = Vector3(0.000000, 0.433600, -2.598700)
 
 [node name="EngineLeft" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(-1.55, 0.094, 1.863)
+position = Vector3(-2.015000, 0.098200, 2.421900)
 
 [node name="EngineRight" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(1.55, 0.094, 1.863)
+position = Vector3(2.015000, 0.098200, 2.421900)
 
 [node name="ArmorLeft" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(-1.75, 0.15, 0.22)
+position = Vector3(-2.275000, 0.171000, 0.286000)
 
 [node name="ArmorRight" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(1.75, 0.15, 0.22)
+position = Vector3(2.275000, 0.171000, 0.286000)
 
 [node name="Core" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(0, 0.52, 0)
+position = Vector3(0.000000, 0.652000, 0.000000)
 
 [node name="Death" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(0, 0.35, 0)
+position = Vector3(0.000000, 0.431000, 0.000000)
 
 [node name="Modules" type="Node3D" parent="Attachments"]
 
