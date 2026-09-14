@@ -146,7 +146,12 @@ func fire_drone_projectile(combat_position: Vector3, direction: Vector3) -> void
 
 
 func fire_enemy_projectile(combat_position: Vector3, direction: Vector3, speed_pixels: float = EnemyTuning.DEFAULT_SPEED, motion: Projectile.Motion = Projectile.Motion.STRAIGHT, tint: Color = Color.TRANSPARENT, boss_style: int = -1) -> void:
-	_fire(Projectile.Kind.ENEMY, combat_position, direction, speed_pixels, 1.0, motion, tint, boss_style)
+	_fire(Projectile.Kind.ENEMY, combat_position, direction, speed_pixels * EnemyTuning.SPEED_MULTIPLIER, 1.0, motion, tint, boss_style)
+
+
+## Warned releases travel faster while retaining each pattern's speed mix.
+func fire_telegraphed_enemy_projectile(combat_position: Vector3, direction: Vector3, speed_pixels: float = EnemyTuning.DEFAULT_SPEED, motion: Projectile.Motion = Projectile.Motion.STRAIGHT, tint: Color = Color.TRANSPARENT, boss_style: int = -1) -> void:
+	fire_enemy_projectile(combat_position, direction, speed_pixels * EnemyTuning.TELEGRAPH_SPEED_MULTIPLIER, motion, tint, boss_style)
 
 
 ## Clears both native projectile families for review reset and scene teardown.

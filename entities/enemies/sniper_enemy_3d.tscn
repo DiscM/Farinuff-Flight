@@ -1,22 +1,21 @@
-[gd_scene load_steps=8 format=3]
+[gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://entities/enemies/sniper_enemy_3d.gd" id="1_enemy"]
 [ext_resource type="PackedScene" path="res://assets/models/animated/sniper_enemy.glb" id="2_model"]
 [ext_resource type="Resource" path="res://entities/enemies/sniper_enemy_generation_1.tres" id="3_stats"]
+[ext_resource type="Shader" path="res://effects/shaders/lane_telegraph_3d.gdshader" id="4_warning"]
 [sub_resource type="BoxShape3D" id="BoxShape3D_hitbox"]
 size = Vector3(1.470000, 0.500000, 4.072740)
-[sub_resource type="BoxMesh" id="AimMesh"]
-size = Vector3(1.400000, 0.025000, 1.400000)
+[sub_resource type="PlaneMesh" id="AimMesh"]
+size = Vector2(1, 1)
 
-[sub_resource type="StandardMaterial3D" id="AimMaterial"]
-shading_mode = 0
-transparency = 1
-albedo_color = Color(1, 0.12, 0.25, 0.92)
+[sub_resource type="ShaderMaterial" id="AimMaterial"]
+shader = ExtResource("4_warning")
+shader_parameter/warning_color = Color(1, 0.22, 0.38, 1)
 
-[sub_resource type="StandardMaterial3D" id="AimMaterialGen2"]
-shading_mode = 0
-transparency = 1
-albedo_color = Color(1, 0.48, 0.12, 0.92)
+[sub_resource type="ShaderMaterial" id="AimMaterialGen2"]
+shader = ExtResource("4_warning")
+shader_parameter/warning_color = Color(1, 0.61, 0.24, 1)
 
 [node name="SniperEnemy3D" type="Area3D"]
 editor_description = "Scene-managed Sniper Enemy Generations I-IV. Inert until activate(); Y=0 combat root. An enlarged narrow contact envelope follows the rail-hull silhouette; animated barrels retain separate muzzle anchors."

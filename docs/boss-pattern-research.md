@@ -28,12 +28,20 @@ Inspect the new silhouettes in the game before calling the art finished. Confirm
 
 The boss dispatcher now assigns each formation to exactly one hull. The obsolete shared ring generator is removed; Commander-only lance helpers are named accordingly. Shared projectile pooling, collision and cyan safety coding are infrastructure, not additional attack formations.
 
-| Boss | Exclusive attack | Phase progression |
-| --- | --- | --- |
-| Commander | Accelerating lances plus physical charge | Spearhead, split flanks, breakthrough; longer charge path |
-| Bulwark | Parallel siege walls plus pod-owned mines | Fixed doorway, alternating doorway, cluster deployment |
-| Tempest | Persistent orbit with moving openings | Forward orbit, reverse orbit, alternating direction |
-| Harbinger | Marked origin with outbound/pause/return shots | Even return fan, offset echoes, wider barbed return fan |
-| Core | Park-and-release paired axes plus interruptible reactor lance | Cardinal axes, diagonal axes, alternating axes |
+| Boss | Existing attack | New phase 1 mixup | New phase 2 mixup | New phase 3 mixup |
+| --- | --- | --- | --- | --- |
+| Commander | Accelerating lances and physical charge | Braking fan followed by fast aimed lances | Slow wide pincers followed by fast inner flanks | Alternating slow/fast scissor sweeps |
+| Bulwark | Siege walls and pod-owned mines | Slow gate followed by a fast gate with the same doorway | Oblique gates hinge to alternate sides | Rotating parked walls interleave with fast gates |
+| Tempest | Orbiting crescents with moving openings | Radial comet spokes alternate slow and fast lanes | Opposed curved ribbons reverse between beats | Rotating spokes mix fast crescents with braking and parked blades |
+| Harbinger | Marked outbound/pause/return fans | Mixed-speed returning fans | Staggered twin marks from surviving pods | Perpendicular echoes overlap returns with fast delayed releases |
+| Core | Park-and-release axes and interruptible reactor lance | Slow cardinal pulses followed by fast diagonals | Angled arms alternate braking and fast layers | Six rotating petals alternate parked and fast layers |
 
-This supersedes the earlier generic phase descriptions. Runtime uniqueness/readability and custom-mesh rendering still need observation; no runtime validation was performed.
+Projectile sequences alternate between the existing attack and the phase's new mixup. A separate sequence counter prevents Commander rams and Core charges from starving either projectile family. New mixups receive a 1.15-second windup and lock aim before release. Existing interrupt windows and phase-transition field clears remain in place. Destroyed pods remove siege wings, storm spokes, echo rays/marks, and reactor wings while leaving a core attack active.
+
+Enemy launch speeds now receive a single **1.30×** multiplier in `ProjectileManager3D.fire_enemy_projectile`, including explicit boss, regular enemy, and mine-payload speeds. The default rises from 400 to 520 baseline pixels/second; unwarned slow/fast layers launch at 234/494. Motion profiles retain their acceleration, braking, pause, and return timing. Enemy arena layers additionally alternate authored 0.70×/1.30× speeds, gaining 0.05 per health phase. These are deliberate slow/fast timing choices rather than a minimum-speed clamp. Player weapon speed is unchanged.
+
+`tests/boss_patterns_smoke.tscn` covers all 15 boss/phase combinations through real pooled projectiles, attack alternation across special attacks, slow/fast speeds, motion pause/return behavior, reflection, pod reductions, Commander escape corridors, arena telegraphs, phase cleanup, and pool capacity. It runs in practice mode without banking rewards and is included in the smoke-test workflow. These checks establish behavior; difficulty balance still benefits from player feedback.
+
+Arena telegraphs use smooth layered strokes, tapered ends, and moving direction chevrons; fast layers use double chevrons. Repeated volleys on one path display the next release once, and trap rings fill toward detonation. Charge, sniper, and rail warnings share a feathered lane shader whose edges mark the advertised width. Animation follows attack timers so warnings hold when gameplay pauses. Warning timing, shot directions, and damage windows are unchanged by this presentation pass.
+
+Telegraphed boss volleys, arena lanes, and warned sniper shots receive a further **2.25×** launch-speed multiplier after their warning completes. Boss slow/fast mixups now launch at 526.5/1111.5 baseline pixels/second, and arena lanes range from about 532 to 1331 across phases and speed layers. Warning duration, slow/fast ratios, and motion timing are preserved. Sniper shots that bypass the warning keep their ordinary speed.
