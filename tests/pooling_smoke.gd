@@ -14,7 +14,10 @@ func _ready() -> void:
 
 func _run() -> void:
 	await _check_scene_teardown_reuse()
+	# Let the boot-time threaded load finish before quitting the engine.
+	_expect(await ResourceCache.wait_for_scene(ResourceCache.NATIVE_RUN_PATH) != null, "Boot scene load completes before teardown")
 	if _failures.is_empty():
+		print("POOLING_SMOKE_PASS")
 		print("PASS: pooling smoke tests")
 		get_tree().quit(0)
 		return

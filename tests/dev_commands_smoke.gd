@@ -9,6 +9,10 @@ var _failures: Array[String] = []
 
 func _ready() -> void:
 	await super._ready()
+	# Debug commands own the test's overlays and spawns; discard the opening
+	# story before the production run's deferred presentation callback fires.
+	_interludes.clear()
+	encounters.set_physics_process(false)
 	_run_checks.call_deferred()
 
 
@@ -108,14 +112,22 @@ func _check_reward_commands() -> void:
 	await get_tree().process_frame
 	_expect(is_instance_valid(_run_overlay), "Point Allocation command opens the native reward overlay")
 	if is_instance_valid(_run_overlay):
-		_finish_reward()
+		var popup := _run_overlay.get_child(0)
+		_expect(popup.has_signal(&"allocation_done"), "Point Allocation opens the allocation popup")
+		if popup.has_signal(&"allocation_done"):
+			popup.emit_signal(&"allocation_done")
 		await get_tree().process_frame
+		_expect(not is_instance_valid(_run_overlay), "Allocation completion closes its reward overlay")
 	dev_trigger_elite_reward()
 	await get_tree().process_frame
 	_expect(is_instance_valid(_run_overlay), "Elite Upgrade command opens the native reward overlay")
 	if is_instance_valid(_run_overlay):
-		_finish_reward()
+		var popup := _run_overlay.get_child(0)
+		_expect(popup.has_signal(&"upgrade_chosen"), "Elite Upgrade opens the upgrade popup")
+		if popup.has_signal(&"upgrade_chosen"):
+			popup.emit_signal(&"upgrade_chosen")
 		await get_tree().process_frame
+		_expect(not is_instance_valid(_run_overlay), "Upgrade completion closes its reward overlay")
 
 
 func _check_boss_command() -> void:

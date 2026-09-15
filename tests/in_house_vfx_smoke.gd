@@ -66,7 +66,10 @@ func _run() -> void:
 	await get_tree().process_frame
 	await get_tree().process_frame
 
+	# Let the boot-time threaded load finish before quitting the engine.
+	_expect(await ResourceCache.wait_for_scene(ResourceCache.NATIVE_RUN_PATH) != null, "Boot scene load completes before teardown")
 	if _failures.is_empty():
+		print("IN_HOUSE_VFX_SMOKE_PASS")
 		print("PASS: in-house procedural combat VFX smoke tests")
 		get_tree().quit(0)
 	else:

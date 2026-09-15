@@ -26,6 +26,7 @@ func _run() -> void:
 	await ResourceCache.wait_for_scene(ResourceCache.NATIVE_RUN_PATH)
 
 	if _failures.is_empty():
+		print("AUTOLOAD_SMOKE_PASS")
 		print("PASS: autoload smoke tests")
 		get_tree().quit(0)
 	else:
@@ -165,7 +166,7 @@ func _check_save_manager() -> void:
 	SaveManager._load_data()
 	_expect(SaveManager.high_score == 700, "Malformed primary save must recover from its backup")
 
-	# A v2 save remains compatible and receives default v3 campaign state.
+	# A v2 save remains compatible and receives the current campaign defaults.
 	_write_save('{"version": 2, "high_score": 800, "has_seen_flight_school": true, "settings": {}}')
 	SaveManager.campaign_state = {
 		"discovered_node_ids": ["stale_node"],
@@ -177,19 +178,20 @@ func _check_save_manager() -> void:
 	SaveManager._load_data()
 	_expect(SaveManager.high_score == 800, "A v2 save must load existing progress normally")
 	_expect(SaveManager.has_seen_flight_school, "A v2 save must retain onboarding state")
-	_expect(SaveManager.SAVE_VERSION == 3, "Campaign persistence must use save schema v3")
+	_expect(SaveManager.SAVE_VERSION >= 3, "Campaign persistence requires schema v3 or newer")
 	_expect(
 		SaveManager.get_campaign_state() == SaveManager.DEFAULT_CAMPAIGN_STATE,
 		"A v2 save must migrate to default durable campaign state"
 	)
 
-	# The v3 campaign object retains only durable, typed campaign fields.
+	# Legacy viewed stories also become recovered fragments during migration.
 	_write_save('{"version": 3, "campaign": {"discovered_node_ids": ["far_reach", "far_reach", 5], "seen_story_beat_ids": ["launch_briefing", false], "expedition_clear_count": 2, "last_ending_id": "return_home", "active_node_id": "must_not_persist"}, "settings": {}}')
 	SaveManager._load_data()
 	_expect(
 		SaveManager.get_campaign_state() == {
 			"discovered_node_ids": ["far_reach"],
 			"seen_story_beat_ids": ["launch_briefing"],
+			"recovered_fragment_ids": ["launch_briefing"],
 			"expedition_clear_count": 2,
 			"last_ending_id": "return_home",
 		},
@@ -198,6 +200,7 @@ func _check_save_manager() -> void:
 	SaveManager.save_campaign({
 		"discovered_node_ids": ["far_reach", "ghost_lanes"],
 		"seen_story_beat_ids": ["launch_briefing"],
+		"recovered_fragment_ids": ["launch_briefing", "iron_wake_fragment"],
 		"expedition_clear_count": 3,
 		"last_ending_id": "follow_signal",
 		"current_route": ["must_not_persist"],
@@ -205,7 +208,7 @@ func _check_save_manager() -> void:
 	var campaign_save: Variant = JSON.parse_string(FileAccess.get_file_as_string(save_path))
 	_expect(campaign_save is Dictionary, "Campaign state must write a valid JSON save")
 	if campaign_save is Dictionary:
-		_expect(int(campaign_save.get("version", 0)) == 3, "Campaign state writes schema v3")
+		_expect(int(campaign_save.get("version", 0)) == SaveManager.SAVE_VERSION, "Campaign state writes the current schema version")
 		var persisted_campaign := campaign_save.get("campaign", {}) as Dictionary
 		_expect(
 			not persisted_campaign.has("current_route"),
@@ -217,6 +220,7 @@ func _check_save_manager() -> void:
 		SaveManager.get_campaign_state() == {
 			"discovered_node_ids": ["far_reach", "ghost_lanes"],
 			"seen_story_beat_ids": ["launch_briefing"],
+			"recovered_fragment_ids": ["launch_briefing", "iron_wake_fragment"],
 			"expedition_clear_count": 3,
 			"last_ending_id": "follow_signal",
 		},
@@ -433,12 +437,17 @@ func _check_meta_progression() -> void:
 	GameManager.run_salvage_multiplier = 1.0
 	GameManager.chosen_upgrade_ids = []
 	GameManager.current_wave = 5
+	GameManager.is_game_active = true
+	GameManager.boss_active = true
 	GameManager._on_boss_died(0)
 	_expect(
 		GameManager.run_salvage_boss == MetaProgression.SALVAGE_PER_BOSS,
 		"Regular boss must bank its salvage reward"
 	)
+	GameManager._on_boss_died(0)
+	_expect(GameManager.run_salvage_boss == MetaProgression.SALVAGE_PER_BOSS, "Duplicate boss deaths must not award salvage twice")
 	GameManager.current_wave = 10
+	GameManager.boss_active = true
 	GameManager._on_boss_died(0)
 	_expect(
 		GameManager.run_salvage_boss == MetaProgression.SALVAGE_PER_BOSS + MetaProgression.SALVAGE_PER_ELITE_BOSS,

@@ -21,6 +21,7 @@ func _run() -> void:
 	_expect(await ResourceCache.wait_for_scene("res://tests/autoload_smoke.tscn") == null, "Unsupported waits return immediately")
 	var run_path: String = ResourceCache.NATIVE_RUN_PATH
 	var menu_path: String = ResourceCache.MAIN_MENU_PATH
+	var practice_path: String = ResourceCache.PRACTICE_PATH
 	get_tree().paused = true
 	_expect(ResourceCache.prime_scene(run_path), "Boot request remains reusable")
 	_expect(ResourceCache.prime_scene(run_path), "Duplicate request is accepted without another load")
@@ -28,9 +29,13 @@ func _run() -> void:
 	_expect(ResourceCache.prime_scene(menu_path), "Menu background load starts")
 	var run_scene: PackedScene = await ResourceCache.wait_for_scene(run_path)
 	var menu_scene: PackedScene = await ResourceCache.wait_for_scene(menu_path)
-	_expect(run_scene != null and menu_scene != null, "Both resources load while gameplay is paused")
+	# Practice shares the native run's script base. Let the boot request finish
+	# before asking Godot to parse the second derived scene on another thread.
+	_expect(ResourceCache.prime_scene(practice_path), "Practice background load starts")
+	var practice_scene: PackedScene = await ResourceCache.wait_for_scene(practice_path)
+	_expect(run_scene != null and menu_scene != null and practice_scene != null, "All three root resources load while gameplay is paused")
 	_expect(get_tree().paused, "Cache does not unpause gameplay")
-	_expect(ResourceCache.get_cached_scene_count() == 2, "Exactly two root resources are retained")
+	_expect(ResourceCache.get_cached_scene_count() == 3, "Exactly the menu, run, and practice resources are retained")
 	_expect(ResourceCache.get_pending_scene_count() == 0, "Completed requests are drained")
 	_expect(ResourceCache.get_scene(run_path) == run_scene, "Retry uses the same PackedScene resource")
 	if run_scene != null:

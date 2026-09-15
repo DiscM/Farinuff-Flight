@@ -106,6 +106,8 @@ def check_native_entry_and_transitions() -> None:
         [
             ("native run path", f'const NATIVE_RUN_PATH := "{NATIVE_RUN}"'),
             ("shared frontend entry", "func _mount_command_deck()"),
+            ("frontend scene", 'preload("res://ui/frontend/frontend_shell.tscn")'),
+            ("frontend launch signal", "_frontend.expedition_requested.connect(_launch_from_frontend)"),
             ("frontend launch handler", "func _launch_from_frontend()"),
             ("cache-backed native wait", "await ResourceCache.wait_for_scene(path)"),
             ("native packed-scene transition", "get_tree().change_scene_to_packed(scene)"),
@@ -120,7 +122,8 @@ def check_native_entry_and_transitions() -> None:
         resource_cache,
         [
             ("root-scene allowlist", "const CACHEABLE_SCENES: PackedStringArray"),
-            ("bounded scene budget", "const MAX_CACHED_SCENES := 2"),
+            ("bounded menu/run/practice budget", "const MAX_CACHED_SCENES := 3"),
+            ("practice scene", 'const PRACTICE_PATH := "res://scenes/flight_practice.tscn"'),
             ("threaded scene request", 'ResourceLoader.load_threaded_request(path, \"PackedScene\", true)'),
             ("asynchronous wait", "func wait_for_scene(path: String) -> PackedScene"),
         ],
@@ -136,7 +139,8 @@ def check_native_entry_and_transitions() -> None:
         ],
     )
     require(exists("ui/main_menu.tscn"), "native menu scene must exist")
-    require('name="PlayButton" type="Button"' in read("ui/main_menu.tscn"), "menu must expose a Play button")
+    require('name="LaunchButton" type="Button"' in read("ui/frontend/command_deck.tscn"), "command deck must expose the Expedition launch button")
+    require("launch_button.pressed.connect(_on_launch_pressed)" in read("ui/frontend/command_deck.gd"), "command deck must wire its launch button")
     require('name="RetryButton" type="Button"' in read("ui/game_over.tscn"), "game over must expose retry")
     require(not (ROOT / "scenes/game.tscn").exists(), "retired 2D gameplay entry must stay absent")
 
@@ -152,14 +156,18 @@ def check_native_entry_and_transitions() -> None:
             ("game-over signal route", "SignalBus.game_over.connect(_end_run)"),
             ("allocation signal route", "SignalBus.allocation_triggered.connect(_queue_allocation)"),
             ("elite signal route", "SignalBus.elite_upgrade_triggered.connect(_queue_elite_reward)"),
-            ("victory signal route", "SignalBus.expedition_completed.connect(_show_victory)"),
+            ("victory signal route", "SignalBus.expedition_completed.connect(_queue_victory)"),
             ("stock branch", "if GameManager.try_again_stocks > 0:"),
             ("try-again accept route", "popup.try_again_accepted.connect(_revive)"),
             ("try-again decline route", "popup.try_again_declined.connect(_show_game_over.bind(score), CONNECT_DEFERRED)"),
             ("finalize on game over", "GameManager.finalize_run()"),
-            ("allocation queue", "_allocation_queue.append(points)"),
+            ("interlude coordinator", 'preload("res://systems/run_interlude_coordinator.gd").new()'),
+            ("allocation queue", '_interludes.enqueue({"kind": "allocation", "points": points})'),
+            ("victory queue", '_interludes.enqueue({"kind": "victory", "wave": wave})'),
             ("available native upgrades", "var choices := NativeUpgrades.available()"),
-            ("allocation dequeue", "_allocation_queue.pop_front()"),
+            ("interlude dequeue", "_interludes.take_next()"),
+            ("allocation presentation", "popup.set_points(int(step.points))"),
+            ("victory presentation", "_show_victory(int(step.wave))"),
             ("reward completion", "_show_next_reward.call_deferred()"),
             ("victory result", "screen.show_result(wave)"),
             ("endless route", "screen.continue_endless.connect(_continue_endless)"),
@@ -385,6 +393,7 @@ def check_bosses_and_generations() -> None:
     boss_script = read("entities/enemies/boss_enemy_3d.gd")
     boss_scene = read("entities/enemies/boss_enemy_3d.tscn")
     basic_script = read("entities/enemies/basic_enemy_3d.gd")
+    surface_materials = read("effects/rendering/enemy_surface_materials.gd")
     imported_surface_shader = read("effects/shaders/models/imported_enemy_surface_3d.gdshader")
     smoke = read("tests/native_completion_smoke.gd")
 
@@ -425,8 +434,14 @@ def check_bosses_and_generations() -> None:
     require(len(re.findall(r'preload\("res://entities/enemies/basic_enemy_generation_[1-4]\.tres"\)', basic_script)) == 4, "basic native lineage must preload four basic generation resources")
     require("func _get_generation_stats()" in basic_script, "native enemies must resolve generation resources through one seam")
     require(
-        'res://effects/shaders/models/imported_enemy_surface_3d.gdshader' in basic_script,
-        "redesigned enemies must use the authored-material runtime shader",
+        'preload("res://effects/rendering/enemy_surface_materials.gd")' in basic_script
+        and "SurfaceMaterials.apply_to(visuals, surface_style, surface_pixel_density)" in basic_script,
+        "enemies must apply the shared surface-material library",
+    )
+    require(
+        'res://effects/shaders/models/imported_enemy_surface_3d.gdshader' in surface_materials
+        and 'res://effects/shaders/models/pixel_planet_enemy_3d.gdshader' in surface_materials,
+        "enemy material library must support authored alloy and pixel armor",
     )
     require(
         "ALBEDO = mix(authored_body" in imported_surface_shader,
@@ -435,9 +450,9 @@ def check_bosses_and_generations() -> None:
     for archetype in ARCHETYPES:
         actor_path = f"entities/enemies/{archetype}_enemy_3d.tscn"
         actor = read(actor_path)
-        model_path = f"assets/models/redesign/next_round/{archetype}_enemy.glb"
-        require((ROOT / model_path).exists(), f"{model_path}: redesigned runtime model missing")
-        require(f'res://{model_path}' in actor, f"{actor_path}: redesigned runtime model not wired")
+        model_path = f"assets/models/animated/{archetype}_enemy.glb"
+        require((ROOT / model_path).exists(), f"{model_path}: animated runtime model missing")
+        require(f'res://{model_path}' in actor, f"{actor_path}: animated runtime model not wired")
         require(f"res://entities/enemies/{archetype}_enemy_generation_1.tres" in actor, f"{actor_path}: generation I resource not wired")
         require("gameplay_stats = ExtResource(\"3_stats\")" in actor, f"{actor_path}: gameplay_stats must be resource-backed")
         for generation in GENERATION_NUMBERS:
