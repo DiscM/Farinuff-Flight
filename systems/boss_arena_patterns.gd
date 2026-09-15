@@ -1,5 +1,5 @@
 extends Node2D
-## Independent arena pressure: telegraph, staggered release, then breathing room.
+## Arena pressure admitted by BossAI: telegraph, staggered release, breathing room.
 ## World-space warning geometry stays aligned while the player camera moves.
 const Shot := preload("res://entities/projectiles/projectile_3d.gd")
 const TelegraphLines := preload("res://effects/telegraph_lines_2d.gd")
@@ -15,10 +15,12 @@ var cooldown := 4.0
 var sequence := 0
 var enabled := false
 var safe_routes: Array[Dictionary] = []
+var _ai: BossAI
 
 func configure(owner_boss: Node3D, flight_space: FlightSpace3D) -> void:
 	boss = owner_boss
 	space = flight_space
+	_ai = boss.get_node_or_null("BossAI") as BossAI
 	manager = get_tree().get_first_node_in_group(&"native_3d_projectile_manager") as ProjectileManager3D
 	hazards = get_tree().get_first_node_in_group(&"native_3d_hazard_manager") as NativeHazardManager3D
 	enabled = true
@@ -59,6 +61,8 @@ func _physics_process(delta: float) -> void:
 			safe_routes.remove_at(index)
 	cooldown -= delta
 	if cooldown <= 0.0 and pending.is_empty():
+		if is_instance_valid(_ai) and not _ai.can_start_arena_pressure():
+			return
 		_plan_pattern()
 		sequence += 1
 		cooldown = 9.0 - float(boss.get("phase")) * 0.75

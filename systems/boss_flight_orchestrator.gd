@@ -1,7 +1,7 @@
 extends Node
 class_name BossFlightOrchestrator
-## Explicitly stepped by the boss: attacks own movement locks and physical rams.
-## This node owns maneuver selection, predictive steering and arena recovery.
+## Explicitly stepped by BossAI. Executes flight intent, curves and arena safety.
+## Perception, prediction and combat decisions belong to the overarching AI.
 ## Pattern clocks count flight time, so a volley cannot skip a flight maneuver.
 
 const Profile := preload("res://systems/boss_flight_profile.gd")
@@ -14,7 +14,6 @@ const PROFILES: Array[Profile] = [
 	preload("res://entities/enemies/flight_profiles/core.tres"),
 ]
 const ARENA_INSET := 100.0
-const MINIMUM_SEPARATION := 170.0
 
 signal maneuver_changed(maneuver: Profile.Maneuver)
 
@@ -37,6 +36,12 @@ var _reason: StringName = &"inactive"
 var _predicted_target := Vector3.ZERO
 var _waypoint := Vector3.ZERO
 var _last_speed := 0.0
+var _requested := -1
+var _requested_side := 0.0
+var _range_scale := 1.0
+var _intent_reason: StringName = &"pattern"
+var _intent_dirty := false
+var _combat_distance := -1.0
 
 
 func configure(space: FlightSpace3D, variant: int) -> void:
@@ -46,7 +51,13 @@ func configure(space: FlightSpace3D, variant: int) -> void:
 	_enabled = true
 	_predicted_target = Vector3.ZERO
 	_waypoint = Vector3.ZERO
+	set_intent()
+	_combat_distance = -1.0
 	begin_phase(0)
+
+
+func set_combat_distance(distance: float = -1.0) -> void:
+	_combat_distance = distance
 
 
 func begin_phase(health_phase: int) -> void:
@@ -61,6 +72,17 @@ func begin_phase(health_phase: int) -> void:
 	hold(&"phase")
 
 
+## Optional tactical intent. Authored profiles fill the gaps between decisions;
+## contact clearance and arena reentry always take priority over this request.
+func set_intent(requested: int = -1, side: float = 0.0, range_scale: float = 1.0, reason: StringName = &"pattern") -> void:
+	if _requested != requested or _intent_reason != reason:
+		_intent_dirty = true
+	_requested = requested
+	_requested_side = signf(side)
+	_range_scale = clampf(range_scale, 0.85, 1.15)
+	_intent_reason = reason
+
+
 func hold(reason: StringName = &"attack") -> void:
 	_held = true
 	_reason = reason
@@ -71,29 +93,25 @@ func shutdown() -> void:
 	_enabled = false
 	_maneuver_time = 0.0
 	_sequence_index = -1
+	set_intent()
 	hold(&"inactive")
 
 
 ## Returns a world velocity; the caller remains the sole writer of its transform.
-func steer(delta: float, origin: Vector3, current_velocity: Vector3, target: Node3D, health_phase: int) -> Vector3:
+func steer(delta: float, origin: Vector3, current_velocity: Vector3, target_position: Vector3, predicted_target: Vector3, health_phase: int) -> Vector3:
 	if not _enabled or not is_instance_valid(_space) or delta <= 0.0:
-		return Vector3.ZERO
-	if not is_instance_valid(target):
-		hold(&"no_player")
 		return Vector3.ZERO
 	if _phase != clampi(health_phase, 0, 2):
 		begin_phase(health_phase)
 	_held = false
-	var displacement := _space.combat_motion_to_screen(target.global_position - origin)
+	var displacement := _space.combat_motion_to_screen(target_position - origin)
 	var distance := displacement.length()
 	var toward := displacement.normalized() if distance > 0.01 else Vector2.DOWN
-	var target_velocity: Vector3 = target.get("velocity")
-	var lead := (_space.combat_motion_to_screen(target_velocity) * profile.lead_seconds).limit_length(profile.maximum_lead)
-	var radius := maxf(230.0, profile.preferred_distance - _phase * 20.0)
+	var desired_range := _combat_distance if _combat_distance > 0.0 else (profile.preferred_distance - _phase * 20.0) * _range_scale
+	var radius := maxf(profile.minimum_separation + 10.0, desired_range)
 	var speed := profile.cruise_speed * (1.0 + _phase * 0.08)
-	# Predict aggressively when closing, gently when already alongside the player.
-	lead *= clampf((distance - MINIMUM_SEPARATION) / radius, 0.0, 1.0)
-	_predicted_target = target.global_position + _space.screen_motion_to_combat(lead)
+	# Reduce the supplied lead near contact range, without inferring a new target.
+	_predicted_target = target_position.lerp(predicted_target, clampf((distance - profile.minimum_separation) / radius, 0.0, 1.0))
 	var bounds := _space.get_combat_bounds(-ARENA_INSET)
 	_select_maneuver(origin, toward, distance, radius, bounds)
 	_maneuver_time = minf(_maneuver_time + delta, _maneuver_duration)
@@ -120,7 +138,7 @@ func _select_maneuver(origin: Vector3, toward: Vector2, distance: float, radius:
 	var priority := -1
 	if not bounds.has_point(point) or (_tactical and maneuver == Maneuver.REENTER and not recovery_bounds.has_point(point)):
 		priority = Maneuver.REENTER
-	elif distance < MINIMUM_SEPARATION or (_tactical and maneuver == Maneuver.WITHDRAW and distance < radius * 0.85):
+	elif distance < profile.minimum_separation or (_tactical and maneuver == Maneuver.WITHDRAW and distance < radius * 0.85):
 		priority = Maneuver.WITHDRAW
 	elif distance > radius + 240.0 or (_tactical and maneuver == Maneuver.INTERCEPT and distance > radius + 100.0):
 		priority = Maneuver.INTERCEPT
@@ -130,7 +148,14 @@ func _select_maneuver(origin: Vector3, toward: Vector2, distance: float, radius:
 		_tactical = true
 		_reason = &"arena_edge" if priority == Maneuver.REENTER else &"separation" if priority == Maneuver.WITHDRAW else &"close_gap"
 		return
-	if _tactical or _sequence_index < 0 or _maneuver_time >= _maneuver_duration:
+	if _requested >= 0:
+		if _tactical or _intent_dirty or maneuver != _requested or _maneuver_time >= _maneuver_duration:
+			_enter_maneuver(_requested as Profile.Maneuver, -toward)
+		_tactical = false
+		_intent_dirty = false
+		_reason = _intent_reason
+		return
+	if _tactical or _intent_dirty or _sequence_index < 0 or _maneuver_time >= _maneuver_duration:
 		_sequence_index += 1
 		if _sequence_index >= profile.sequence.size():
 			_sequence_index = 0
@@ -138,6 +163,7 @@ func _select_maneuver(origin: Vector3, toward: Vector2, distance: float, radius:
 		var next: Profile.Maneuver = profile.sequence[_sequence_index] if not profile.sequence.is_empty() else Maneuver.ORBIT
 		_enter_maneuver(next, -toward)
 	_tactical = false
+	_intent_dirty = false
 	_reason = &"pattern"
 
 
@@ -150,6 +176,8 @@ func _enter_maneuver(next: Profile.Maneuver, away: Vector2) -> void:
 	elif maneuver == Maneuver.ORBIT:
 		_maneuver_duration *= 1.4
 	_axis = away
+	if _requested >= 0 and not is_zero_approx(_requested_side):
+		_side = _requested_side
 	maneuver_changed.emit(maneuver)
 
 

@@ -46,6 +46,9 @@ var _player: Node = null
 var _wave_progress: ProgressBar
 var _wave_progress_label: Label
 var _route_label: Label
+var _boss_phase_text := ""
+var _boss_phase_color := Color.WHITE
+var _boss_phase_markers: Array[ColorRect] = []
 
 ## Connects all HUD-relevant signals from the SignalBus, hides the boss
 ## bar initially, and builds the orb meter UI.
@@ -63,12 +66,15 @@ func _ready() -> void:
 	SignalBus.boss_spawned.connect(_on_boss_spawned)
 	SignalBus.boss_health_changed.connect(_on_boss_health_changed)
 	SignalBus.boss_phase_presented.connect(_on_boss_phase_presented)
-	# Fixed thirds match the native boss phase thresholds and survive UI resizing.
-	for fraction in [1.0 / 3.0, 2.0 / 3.0]:
+	SignalBus.boss_phase_thresholds_changed.connect(_on_boss_phase_thresholds_changed)
+	SignalBus.boss_attack_cue_changed.connect(_on_boss_attack_cue_changed)
+	# Anchors preserve the configured HP thresholds when the HUD resizes.
+	for fraction in [0.3, 0.6]:
 		var marker := ColorRect.new()
 		marker.color = Color(1.0, 1.0, 1.0, 0.8)
 		marker.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		boss_health_bar.add_child(marker)
+		_boss_phase_markers.append(marker)
 		marker.anchor_left = fraction
 		marker.anchor_right = fraction
 		marker.anchor_bottom = 1.0
@@ -192,6 +198,7 @@ func _on_boss_spawned(health: int, max_health: int, boss_name: String) -> void:
 	var is_elite := GameManager.current_wave % 10 == 0
 	boss_name_label.text = boss_name
 	boss_class_label.text = "ELITE BOSS" if is_elite else "BOSS"
+	_boss_phase_text = boss_class_label.text
 	boss_name_label.add_theme_color_override("font_color",
 		NeonUI.WHITE if is_elite else Color(1.0, 0.82, 0.88))
 	boss_bar_container.visible = true
@@ -204,11 +211,24 @@ func _on_boss_spawned(health: int, max_health: int, boss_name: String) -> void:
 
 ## Persistent phase identity complements the short combat transition notice.
 func _on_boss_phase_presented(phase: int, phase_name: String, projectile_color: Color) -> void:
-	boss_class_label.text = "PHASE %d / 3 · %s" % [phase + 1, phase_name]
-	boss_class_label.add_theme_color_override("font_color", projectile_color)
+	_boss_phase_text = "PHASE %d / 3 · %s" % [phase + 1, phase_name]
+	_boss_phase_color = projectile_color
+	_on_boss_attack_cue_changed("")
 	_style_progress_bar(boss_health_bar, projectile_color)
 
+## Use the existing status line; phase identity returns when the attack ends.
+func _on_boss_attack_cue_changed(message: String) -> void:
+	boss_class_label.text = _boss_phase_text if message.is_empty() else message
+	boss_class_label.add_theme_color_override("font_color", _boss_phase_color if message.is_empty() else NeonUI.YELLOW)
+
 ## Updates the boss health bar value whenever the boss takes damage.
+func _on_boss_phase_thresholds_changed(phase_two: float, phase_three: float) -> void:
+	for index in _boss_phase_markers.size():
+		var fraction: float = [phase_three, phase_two][index]
+		_boss_phase_markers[index].anchor_left = fraction
+		_boss_phase_markers[index].anchor_right = fraction
+
+
 func _on_boss_health_changed(health: int) -> void:
 	boss_health_bar.value = health
 

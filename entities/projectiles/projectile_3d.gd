@@ -26,6 +26,7 @@ var _orbit_center := Vector3.ZERO
 var _orbit_radius := Vector2.ZERO
 
 @export var kind: Kind = Kind.PLAYER
+var damage := 1
 
 ## Fallback cleanup, beyond a normal traversal of the visible Combat Plane.
 @export_range(1.0, 20.0, 0.5) var lifetime_seconds: float = 6.0
@@ -104,6 +105,7 @@ func pool_activate(
 	transform = Transform3D.IDENTITY
 	scale = Vector3.ONE * maxf(size_multiplier, 1.0)
 	is_deflected = false
+	damage = 1 # Pooled payloads must not retain a previous boss attack's damage.
 	enemy_motion = Motion.STRAIGHT
 	_motion_age = 0.0
 	piercing = false

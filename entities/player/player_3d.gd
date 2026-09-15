@@ -226,8 +226,8 @@ func _reset_feedback_state() -> void:
 ## Applies damage through the shared GameManager/SignalBus authority. A native
 ## Shield absorbs the hit and opens the reference's short immunity window;
 ## returns true only when this call consumed a life.
-func receive_damage(combat_position: Vector3, source: DamageSource) -> bool:
-	if not GameManager.is_game_active or is_invincible or dev_god_mode or GameManager.lives <= 0:
+func receive_damage(combat_position: Vector3, source: DamageSource, amount: int = 1) -> bool:
+	if amount <= 0 or not GameManager.is_game_active or is_invincible or dev_god_mode or GameManager.lives <= 0:
 		return false
 	if has_shield:
 		has_shield = false
@@ -240,9 +240,14 @@ func receive_damage(combat_position: Vector3, source: DamageSource) -> bool:
 		_start_invincibility(DamageTuning.SHIELD_INVULNERABILITY)
 		return false
 	combat_position.y = 0.0
-	var survives_hit := GameManager.lives > 1 or GameManager.practice_mode
+	var survives_hit := GameManager.lives > amount or GameManager.practice_mode
 	AudioManager.play_player_hit()
-	SignalBus.player_hit.emit()
+	# Resolve shield/invulnerability once, while retaining the existing one-life
+	# signal contract for scoring, HUD and practice mode.
+	for point in mini(amount, GameManager.lives):
+		if GameManager.lives <= 0 or not GameManager.is_game_active:
+			break
+		SignalBus.player_hit.emit()
 	if survives_hit:
 		_start_invincibility(_get_invulnerability_duration(source))
 	damage_taken.emit(combat_position, source, GameManager.lives)
@@ -334,6 +339,8 @@ func _on_area_entered(area: Area3D) -> void:
 			return
 		receive_damage(area.global_position, DamageSource.HOSTILE_ORDNANCE)
 	elif area.collision_layer & PhysicsLayers.ENEMY_CRAFT:
+		if area.has_method("can_deal_contact_damage") and not area.can_deal_contact_damage():
+			return
 		receive_damage(area.global_position, DamageSource.ENEMY_CONTACT)
 
 

@@ -179,7 +179,7 @@ func _spawn_reflection_target() -> void:
 		enemy.queue_free()
 
 
-func _on_enemy_projectile_hit(_target: Area3D, _combat_position: Vector3) -> void:
+func _on_enemy_projectile_hit(_target: Area3D, _combat_position: Vector3, _damage: int) -> void:
 	_contacts += 1
 	_update_contact_status()
 
