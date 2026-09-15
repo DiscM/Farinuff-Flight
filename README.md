@@ -54,3 +54,20 @@ Expedition runs are intentionally session-scoped: quitting the process or abando
 The completion asset source is `tools/generate_native_completion_assets.py`. It generates six original low-poly GLBs in `assets/models/native/`: an orbital sentinel, orbital/piercing/explosive modules, a shock ring, and a muzzle flare. Existing authored boss hulls and butterfly variants supply the rest of the fleet.
 
 Run `python3 tools/check_native_transition.py` for file-only resource and GLB checks. CI retains autoload/VFX smoke coverage and adds `tests/native_completion_smoke.tscn` for native upgrades, projectile recycling, and boss variants. Static checks do not establish engine parsing, visual quality, combat balance, or frame rate. The gameplay screenshots above predate the completion changes.
+
+### GitHub smoke tests
+
+CI uses Godot 4.6.3 and `tools/run_smoke_tests.py` to run all 13 scenes. Each scene must exit successfully, print its completion marker, and report no GDScript errors. A scene has a 120-second timeout; failures do not skip the remaining scenes, and GitHub retains their logs as the `smoke-test-logs` artifact.
+
+To reproduce CI in a disposable checkout, set `GODOT_PATH` to the Godot 4.6.3 executable and run:
+
+```sh
+python3 tools/check_native_transition.py
+python3 tests/check_native_completion.py
+python3 tests/test_smoke_runner.py
+cat tests/ci_settings.cfg >> project.godot
+"$GODOT_PATH" --headless --path . --import
+python3 tools/run_smoke_tests.py
+```
+
+The CI settings serialize asset imports to avoid a Godot font-import crash and give smoke tests their own save directory. They are appended directly because Godot ignores `override.cfg` during editor imports. To run one scene, append its name, for example `python3 tools/run_smoke_tests.py dev_commands_smoke`. Local logs are stored in `.godot/smoke-logs/`.
