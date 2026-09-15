@@ -70,7 +70,7 @@ func _check_boss(wave: int) -> void:
 	boss.take_damage(ceili(boss.max_health * .4))
 	_expect(boss.phase == 1, "Wave %d reaches phase two" % wave)
 	await _expect_frozen("Second phase %d" % wave)
-	boss.take_damage(ceili(boss.max_health * .3))
+	boss.take_damage(boss.health - floori(boss.max_health * .29))
 	_expect(boss.phase == 2, "Wave %d reaches final phase" % wave)
 	await _expect_frozen("Final phase %d" % wave)
 	get_tree().paused = true

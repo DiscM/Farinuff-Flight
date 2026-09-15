@@ -177,9 +177,9 @@ func _on_reflected_projectile_hit(target: Area3D, combat_position: Vector3) -> v
 		target.take_damage(1)
 
 
-func _on_enemy_projectile_hit(target: Area3D, combat_position: Vector3) -> void:
+func _on_enemy_projectile_hit(target: Area3D, combat_position: Vector3, damage: int = 1) -> void:
 	if target == player:
-		player.receive_damage(combat_position, PlayerCraft.DamageSource.ENEMY_PROJECTILE)
+		player.receive_damage(combat_position, PlayerCraft.DamageSource.ENEMY_PROJECTILE, damage)
 	else:
 		effect_manager.play_effect(NativeEffect.EffectKind.IMPACT, combat_position)
 

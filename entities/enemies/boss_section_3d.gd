@@ -6,6 +6,9 @@ var is_active := false
 var health := 12
 var _target_label: Label3D
 
+func can_deal_contact_damage() -> bool:
+	return false # The parent boss owns explicitly telegraphed hit resolution.
+
 func activate(hit_points: int) -> void:
 	health = hit_points
 	if _target_label == null:

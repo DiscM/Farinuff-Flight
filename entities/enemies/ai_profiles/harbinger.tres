@@ -1,0 +1,13 @@
+[gd_resource type="Resource" script_class="BossCombatProfile" load_steps=7 format=3]
+
+[ext_resource type="Script" path="res://systems/boss_combat_profile.gd" id="1"]
+[ext_resource type="Script" path="res://systems/boss_attack_definition.gd" id="2"]
+[ext_resource type="Resource" path="res://entities/enemies/attacks/slam.tres" id="3"]
+[ext_resource type="Resource" path="res://entities/enemies/attacks/charge.tres" id="4"]
+[ext_resource type="Resource" path="res://entities/enemies/attacks/projectile.tres" id="5"]
+[ext_resource type="Resource" path="res://entities/enemies/attacks/projectile_alternate.tres" id="6"]
+
+[resource]
+script = ExtResource("1")
+display_name = "Void Harbinger"
+attacks = Array[ExtResource("2")]([ExtResource("3"), ExtResource("4"), ExtResource("5"), ExtResource("6")])

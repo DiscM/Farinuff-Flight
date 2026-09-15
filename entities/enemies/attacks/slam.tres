@@ -1,0 +1,18 @@
+[gd_resource type="Resource" script_class="BossAttackDefinition" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://systems/boss_attack_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = &"slam"
+family = 0
+minimum_phase = 0
+alternate_pattern = false
+minimum_range = 0.0
+maximum_range = 220.0
+ideal_range = 175.0
+weight = 2.0
+retreat_bias = -0.8
+cooldown = 5.0
+telegraph_duration = 1.1
+recovery_duration = 1.7

@@ -1,4 +1,4 @@
-[gd_scene load_steps=15 format=3]
+[gd_scene load_steps=20 format=3]
 
 [ext_resource type="Script" path="res://entities/enemies/boss_enemy_3d.gd" id="1"]
 [ext_resource type="Script" path="res://entities/enemies/boss_section_3d.gd" id="2"]
@@ -10,6 +10,15 @@
 [ext_resource type="PackedScene" path="res://assets/models/animated/boss_tempest_core.glb" id="model4"]
 [ext_resource type="Shader" path="res://effects/shaders/native_telegraph_3d.gdshader" id="4_telegraph"]
 [ext_resource type="Script" path="res://systems/boss_flight_orchestrator.gd" id="flight_ai"]
+[ext_resource type="Script" path="res://systems/boss_ai.gd" id="boss_ai"]
+
+[ext_resource type="Script" path="res://systems/boss_health.gd" id="health"]
+
+[ext_resource type="Script" path="res://systems/boss_attack_executor.gd" id="executor"]
+
+[ext_resource type="Script" path="res://systems/boss_combat_presentation.gd" id="presentation"]
+
+[ext_resource type="Script" path="res://systems/boss_projectile_patterns.gd" id="patterns"]
 
 [sub_resource type="BoxShape3D" id="Hull"]
 size = Vector3(6.8, 1.0, 6.2)
@@ -35,8 +44,18 @@ script = ExtResource("1")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("Hull")
 disabled = true
-[node name="FlightAI" type="Node" parent="."]
+[node name="BossAI" type="Node" parent="."]
+script = ExtResource("boss_ai")
+[node name="Flight" type="Node" parent="BossAI"]
 script = ExtResource("flight_ai")
+[node name="Health" type="Node" parent="."]
+script = ExtResource("health")
+[node name="AttackExecutor" type="Node" parent="BossAI"]
+script = ExtResource("executor")
+[node name="Presentation" type="Node3D" parent="BossAI"]
+script = ExtResource("presentation")
+[node name="ProjectilePatterns" type="Node3D" parent="BossAI"]
+script = ExtResource("patterns")
 [node name="Visuals" type="Node3D" parent="."]
 [node name="assault" parent="Visuals" instance=ExtResource("model0")]
 [node name="bulwark" parent="Visuals" instance=ExtResource("model1")]

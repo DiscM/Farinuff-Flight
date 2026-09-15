@@ -7,7 +7,7 @@ class_name ProjectileManager3D
 signal explosion_requested(combat_position: Vector3, primary_target: Area3D)
 signal projectile_fired(kind: int, combat_position: Vector3, direction: Vector3, speed_pixels: float)
 signal player_projectile_hit(target: Area3D, combat_position: Vector3)
-signal enemy_projectile_hit(target: Area3D, combat_position: Vector3)
+signal enemy_projectile_hit(target: Area3D, combat_position: Vector3, damage: int)
 signal enemy_projectile_deflected(projectile: Area3D, combat_position: Vector3)
 signal deflected_projectile_hit(target: Area3D, combat_position: Vector3)
 
@@ -145,13 +145,13 @@ func fire_drone_projectile(combat_position: Vector3, direction: Vector3) -> void
 	_fire(Projectile.Kind.PLAYER, combat_position, direction, WeaponTuning.PROJECTILE_SPEED, 1.0)
 
 
-func fire_enemy_projectile(combat_position: Vector3, direction: Vector3, speed_pixels: float = EnemyTuning.DEFAULT_SPEED, motion: Projectile.Motion = Projectile.Motion.STRAIGHT, tint: Color = Color.TRANSPARENT, boss_style: int = -1) -> void:
-	_fire(Projectile.Kind.ENEMY, combat_position, direction, speed_pixels * EnemyTuning.SPEED_MULTIPLIER, 1.0, motion, tint, boss_style)
+func fire_enemy_projectile(combat_position: Vector3, direction: Vector3, speed_pixels: float = EnemyTuning.DEFAULT_SPEED, motion: Projectile.Motion = Projectile.Motion.STRAIGHT, tint: Color = Color.TRANSPARENT, boss_style: int = -1, damage: int = 1) -> void:
+	_fire(Projectile.Kind.ENEMY, combat_position, direction, speed_pixels * EnemyTuning.SPEED_MULTIPLIER, 1.0, motion, tint, boss_style, damage)
 
 
 ## Warned releases travel faster while retaining each pattern's speed mix.
-func fire_telegraphed_enemy_projectile(combat_position: Vector3, direction: Vector3, speed_pixels: float = EnemyTuning.DEFAULT_SPEED, motion: Projectile.Motion = Projectile.Motion.STRAIGHT, tint: Color = Color.TRANSPARENT, boss_style: int = -1) -> void:
-	fire_enemy_projectile(combat_position, direction, speed_pixels * EnemyTuning.TELEGRAPH_SPEED_MULTIPLIER, motion, tint, boss_style)
+func fire_telegraphed_enemy_projectile(combat_position: Vector3, direction: Vector3, speed_pixels: float = EnemyTuning.DEFAULT_SPEED, motion: Projectile.Motion = Projectile.Motion.STRAIGHT, tint: Color = Color.TRANSPARENT, boss_style: int = -1, damage: int = 1) -> void:
+	fire_enemy_projectile(combat_position, direction, speed_pixels * EnemyTuning.TELEGRAPH_SPEED_MULTIPLIER, motion, tint, boss_style, damage)
 
 
 ## Clears both native projectile families for review reset and scene teardown.
@@ -224,7 +224,8 @@ func _fire(
 	size_multiplier: float = 1.0,
 	enemy_motion: Projectile.Motion = Projectile.Motion.STRAIGHT,
 	enemy_tint: Color = Color.TRANSPARENT,
-	boss_style: int = -1
+	boss_style: int = -1,
+	damage: int = 1
 ) -> void:
 	if not is_ready or not GameManager.is_game_active:
 		return
@@ -245,6 +246,7 @@ func _fire(
 	var projectile_velocity := _flight_space.screen_motion_to_combat(screen_direction * speed_pixels)
 	_track_checkout(pool, projectile)
 	projectile.pool_activate(combat_position, projectile_velocity, _combat_bounds, size_multiplier)
+	projectile.damage = maxi(1, damage)
 	if not projectile.is_active:
 		_untrack_checkout(pool, projectile)
 		pool.rejected_shots += 1
@@ -299,7 +301,7 @@ func _on_projectile_hit(
 		AudioManager.play_hit_marker()
 		deflected_projectile_hit.emit(target, combat_position)
 	else:
-		enemy_projectile_hit.emit(target, combat_position)
+		enemy_projectile_hit.emit(target, combat_position, projectile.damage)
 
 
 func _on_projectile_returned(projectile: Area3D, pool: PoolState) -> void:
