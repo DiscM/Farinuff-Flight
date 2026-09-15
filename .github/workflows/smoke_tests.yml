@@ -32,8 +32,15 @@ jobs:
       - name: Import project (refresh class cache)
         timeout-minutes: 5
         run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/smoke-logs"
           cat tests/ci_settings.cfg >> project.godot
-          ./Godot_v4.6.3-stable_linux.x86_64 --headless --path . --import
+          ./Godot_v4.6.3-stable_linux.x86_64 --headless --path . --import 2>&1 | tee "$RUNNER_TEMP/smoke-logs/import.log"
+          # Godot can exit zero after aborting an import, leaving scenes unusable.
+          if grep -Eq '(SCRIPT ERROR|ERROR):' "$RUNNER_TEMP/smoke-logs/import.log"; then
+            echo "::error::Godot asset import failed; see import.log in the smoke-test-logs artifact."
+            exit 1
+          fi
 
       - name: Run smoke tests
         run: |

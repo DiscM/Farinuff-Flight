@@ -70,4 +70,4 @@ cat tests/ci_settings.cfg >> project.godot
 python3 tools/run_smoke_tests.py
 ```
 
-The CI settings serialize asset imports to avoid a Godot font-import crash and give smoke tests their own save directory. They are appended directly because Godot ignores `override.cfg` during editor imports. To run one scene, append its name, for example `python3 tools/run_smoke_tests.py dev_commands_smoke`. Local logs are stored in `.godot/smoke-logs/`.
+The CI settings serialize asset imports to avoid a Godot font-import crash and give smoke tests their own save directory. They disable Blender source imports: runtime scenes use the checked-in GLB exports, so the runner does not need Blender. The workflow checks `import.log` for errors before starting the scenes and includes it in the log artifact. Settings are appended directly because Godot ignores `override.cfg` during editor imports. To run one scene, append its name, for example `python3 tools/run_smoke_tests.py dev_commands_smoke`. Local logs are stored in `.godot/smoke-logs/`.
