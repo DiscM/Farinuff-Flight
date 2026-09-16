@@ -29,25 +29,24 @@ var _music_player: AudioStreamPlayer
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	_ensure_music_bus()
+	_ensure_bus("Music")
+	_ensure_bus("SFX")
 	for i in range(POOL_SIZE):
 		var player := AudioStreamPlayer.new()
-		player.bus = "Master"
+		player.bus = "SFX"
 		add_child(player)
 		_players.append(player)
 	_start_music()
-	# SaveManager._ready runs before ours and applies volumes while the Music
-	# bus doesn't exist yet — re-apply now that the bus has been created.
+	# SaveManager starts before the Music/SFX buses exist; apply saved levels now.
 	SaveManager._apply_audio_settings()
 
-## Creates the "Music" audio bus (routed to Master) if it doesn't exist yet,
-## so the music volume can be mixed independently of the SFX.
-func _ensure_music_bus() -> void:
-	if AudioServer.get_bus_index("Music") >= 0:
+## Music and combat sound effects remain independently adjustable under Master.
+func _ensure_bus(bus_name: String) -> void:
+	if AudioServer.get_bus_index(bus_name) >= 0:
 		return
 	AudioServer.add_bus()
 	var idx := AudioServer.get_bus_count() - 1
-	AudioServer.set_bus_name(idx, "Music")
+	AudioServer.set_bus_name(idx, bus_name)
 	AudioServer.set_bus_send(idx, "Master")
 
 ## Starts the looping ambient music bed. The Music bus volume (applied from

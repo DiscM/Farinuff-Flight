@@ -1,6 +1,7 @@
 name: Smoke Tests
 
 on:
+  workflow_call:
   push:
     branches: [main, master]
   pull_request:
@@ -14,11 +15,8 @@ jobs:
         with:
           submodules: true
 
-      - name: Download Godot 4.6.3 headless
-        run: |
-          curl -fsSL -o godot.zip https://github.com/godotengine/godot/releases/download/4.6.3-stable/Godot_v4.6.3-stable_linux.x86_64.zip
-          unzip -q godot.zip
-          chmod +x Godot_v4.6.3-stable_linux.x86_64
+      - name: Install verified pinned Godot editor
+        run: python3 tools/install_release_engine.py --editor-dir "$RUNNER_TEMP/godot"
 
       - name: Check native resource contracts
         run: python3 tools/check_native_transition.py
@@ -29,13 +27,16 @@ jobs:
       - name: Check smoke runner failure handling
         run: python3 tests/test_smoke_runner.py
 
+      - name: Check release package gate
+        run: python3 tests/test_release_tools.py
+
       - name: Import project (refresh class cache)
         timeout-minutes: 5
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/smoke-logs"
           cat tests/ci_settings.cfg >> project.godot
-          ./Godot_v4.6.3-stable_linux.x86_64 --headless --path . --import 2>&1 | tee "$RUNNER_TEMP/smoke-logs/import.log"
+          godot --headless --path . --import 2>&1 | tee "$RUNNER_TEMP/smoke-logs/import.log"
           # Godot can exit zero after aborting an import, leaving scenes unusable.
           if grep -Eq '(SCRIPT ERROR|ERROR):' "$RUNNER_TEMP/smoke-logs/import.log"; then
             echo "::error::Godot asset import failed; see import.log in the smoke-test-logs artifact."
@@ -45,7 +46,7 @@ jobs:
       - name: Run smoke tests
         run: |
           python3 tools/run_smoke_tests.py \
-            --godot ./Godot_v4.6.3-stable_linux.x86_64 \
+            --godot godot \
             --log-dir "$RUNNER_TEMP/smoke-logs"
 
       - name: Upload smoke-test logs

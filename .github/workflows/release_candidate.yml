@@ -1,0 +1,36 @@
+name: Release Candidate
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: read
+
+jobs:
+  smoke-tests:
+    uses: ./.github/workflows/smoke_tests.yml
+
+  windows-candidate:
+    needs: smoke-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      - name: Install verified engine and matching export templates
+        run: python3 tools/install_release_engine.py --editor-dir "$RUNNER_TEMP/godot" --templates
+
+      - name: Export and inspect Windows package
+        run: python3 tools/export_release.py --output builds/windows
+
+      - name: Upload candidate and evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-candidate-${{ github.sha }}
+          path: builds/windows/
+          if-no-files-found: warn

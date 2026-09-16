@@ -36,7 +36,7 @@ func _ready() -> void:
 	receiver.queue_free()
 	await get_tree().process_frame
 	if passed:
-		print("NEON_CABINET_SMOKE_PASS: selection can change; install applies exactly once")
+		print("NEON_CABINET_SMOKE_PASS selection can change; install applies exactly once")
 	else:
 		push_error("Install must apply only the final selected module exactly once")
 	get_tree().quit(0 if passed else 1)

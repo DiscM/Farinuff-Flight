@@ -4,7 +4,7 @@ extends Node2D
 ## screen), then shrinks away and frees itself when the boss dies.
 ## Created by scenes/game.gd in response to SignalBus.boss_spawned.
 
-const BLACK_HOLE_SCENE := preload("res://effects/shaders/PixelPlanets/Planets/BlackHole/BlackHole.tscn")
+const BLACK_HOLE_SCENE := preload("res://Planets/BlackHole/BlackHole.tscn")
 const DISK_DIAMETER := 300.0             # BlackHole scene's full disk extent at scale 1
 const HOLE_CENTER := Vector2(50.0, 50.0) # Visual center of the hole in the scene's local space
 

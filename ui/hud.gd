@@ -3,6 +3,8 @@ extends CanvasLayer
 
 const HUD_PANEL_ALPHA := 0.08
 const HUD_PANEL_DARK_ALPHA := 0.12
+const CRAFT_CLEARANCE_PIXELS := 44.0
+const OCCLUDED_HUD_ALPHA := 0.2
 
 @onready var left_dock: Control = $LeftDock
 @onready var boss_dock: Control = $BossDock
@@ -247,7 +249,7 @@ func _on_boss_died(_points: int) -> void:
 ## active effect in the PowerUpPanel. Timed effects (rapid fire, spread shot,
 ## magnet) show a live countdown and a depleting bar; the shield shows a
 ## persistent "HELD" chip until it absorbs a hit.
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if _wave_progress != null:
 		_wave_progress.max_value = maxi(GameManager.orbs_needed_this_wave, 1)
 		_wave_progress.value = GameManager.orbs_collected_this_wave
@@ -258,6 +260,23 @@ func _process(_delta: float) -> void:
 		var route := ExpeditionManager.get_current_node()
 		_route_label.text = "PRACTICE" if GameManager.practice_mode else str(route.display_name).to_upper() if route != null and ExpeditionManager.is_expedition_active() else "ENDLESS" if GameManager.current_wave > 20 else "EXPEDITION"
 	_sync_power_up_timers()
+	_update_craft_visibility(delta)
+
+
+## Fade overlays before the craft crosses them. Projection uses the actual
+## camera, so resizing, camera shake, and boss arenas keep the same hitboxes.
+func _update_craft_visibility(delta: float) -> void:
+	var camera := get_viewport().get_camera_3d()
+	var craft_visible := is_instance_valid(_player) and _player is Node3D and camera != null
+	var craft_screen := Vector2.ZERO
+	if craft_visible:
+		craft_visible = not camera.is_position_behind((_player as Node3D).global_position)
+		craft_screen = camera.unproject_position((_player as Node3D).global_position)
+	var clearance := CRAFT_CLEARANCE_PIXELS * get_viewport().get_visible_rect().size.y / 720.0
+	for panel: Control in [get_node("CombatHeader"), boss_dock]:
+		var overlapping := craft_visible and panel.get_global_rect().grow(clearance).has_point(craft_screen)
+		var target := OCCLUDED_HUD_ALPHA if overlapping else 1.0
+		panel.modulate.a = move_toward(panel.modulate.a, target, delta * 8.0)
 
 func _sync_power_up_timers() -> void:
 	if not is_instance_valid(_player):

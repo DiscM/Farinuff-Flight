@@ -165,6 +165,26 @@ func _check_save_manager() -> void:
 	SaveManager.high_score = 42
 	SaveManager._load_data()
 	_expect(SaveManager.high_score == 700, "Malformed primary save must recover from its backup")
+	var recovered_backup := FileAccess.get_file_as_bytes(backup_path)
+	SaveManager.record_high_score(702)
+	_expect(FileAccess.get_file_as_bytes(backup_path) == recovered_backup,
+		"Saving recovered progress must preserve the good backup, not rotate the corrupt primary")
+	SaveManager.high_score = 0
+	SaveManager._load_data()
+	_expect(SaveManager.high_score == 702, "Recovered progress can be saved and reopened")
+
+	# A crash before temporary-file promotion must leave committed progress intact.
+	var interrupted := FileAccess.open(temp_path, FileAccess.WRITE)
+	interrupted.store_string('{"version": 6, "high_score": 999999')
+	interrupted.close()
+	SaveManager.high_score = 0
+	SaveManager._load_data()
+	_expect(SaveManager.high_score == 702, "Interrupted temporary writes never supersede committed progress")
+	SaveManager.record_high_score(703)
+	SaveManager.high_score = 0
+	SaveManager._load_data()
+	_expect(SaveManager.high_score == 703 and not FileAccess.file_exists(temp_path),
+		"The next successful save replaces an interrupted temporary write")
 
 	# A v2 save remains compatible and receives the current campaign defaults.
 	_write_save('{"version": 2, "high_score": 800, "has_seen_flight_school": true, "settings": {}}')

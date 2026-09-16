@@ -57,7 +57,7 @@ Run `python3 tools/check_native_transition.py` for file-only resource and GLB ch
 
 ### GitHub smoke tests
 
-CI uses Godot 4.6.3 and `tools/run_smoke_tests.py` to run all 13 scenes. Each scene must exit successfully, print its completion marker, and report no GDScript errors. A scene has a 120-second timeout; failures do not skip the remaining scenes, and GitHub retains their logs as the `smoke-test-logs` artifact.
+CI uses the checksum-pinned Godot 4.6.3 editor and `tools/run_smoke_tests.py` to run all 20 scenes, including frontend navigation, Expedition progression, menu boot, reward installation, backdrop drift, audio controls, and combat readability. Each scene must exit successfully, print its completion marker, and report no GDScript errors. A scene has a 120-second timeout; failures do not skip the remaining scenes, and GitHub retains their logs as the `smoke-test-logs` artifact.
 
 To reproduce CI in a disposable checkout, set `GODOT_PATH` to the Godot 4.6.3 executable and run:
 
@@ -65,9 +65,27 @@ To reproduce CI in a disposable checkout, set `GODOT_PATH` to the Godot 4.6.3 ex
 python3 tools/check_native_transition.py
 python3 tests/check_native_completion.py
 python3 tests/test_smoke_runner.py
+python3 tests/test_release_tools.py
 cat tests/ci_settings.cfg >> project.godot
 "$GODOT_PATH" --headless --path . --import
 python3 tools/run_smoke_tests.py
 ```
 
-The CI settings serialize asset imports to avoid a Godot font-import crash and give smoke tests their own save directory. They disable Blender source imports: runtime scenes use the checked-in GLB exports, so the runner does not need Blender. The workflow checks `import.log` for errors before starting the scenes and includes it in the log artifact. Settings are appended directly because Godot ignores `override.cfg` during editor imports. To run one scene, append its name, for example `python3 tools/run_smoke_tests.py dev_commands_smoke`. Local logs are stored in `.godot/smoke-logs/`.
+The CI settings serialize asset imports to avoid a Godot font-import crash and disable Blender source imports: runtime scenes use the checked-in GLB exports, so the runner does not need Blender. The workflow checks `import.log` for errors before starting the scenes and includes it in the log artifact. Settings are appended directly because Godot ignores `override.cfg` during editor imports.
+
+After resources have been imported, the runner also works directly in a development checkout without appending CI settings. It creates a temporary project and a different disposable user-data directory for each scene, before autoloads start. Player saves and the working `project.godot` remain untouched; temporary profiles are removed after success, failure, or timeout. The runner uses filesystem symlinks (Linux/macOS, or Windows with symlink support). To run one scene, append its name, for example `python3 tools/run_smoke_tests.py dev_commands_smoke`. Local logs are stored in `.godot/smoke-logs/`.
+
+### Production release candidates
+
+The [implementation ledger](docs/production-implementation.md) tracks the production slices and their remaining acceptance evidence. `Release Candidate` can be dispatched in GitHub Actions or triggered with a `v*` tag. It requires the smoke suite to pass, downloads the matching verified export templates, and retains a Windows package as an artifact. It does not publish a release or update a storefront.
+
+From a clean checkout with Godot 4.6.3 available:
+
+```sh
+python3 tools/install_release_engine.py --templates
+python3 tools/export_release.py --godot "$GODOT_PATH" --output builds/windows-candidate
+```
+
+The output directory must be empty. Use `--allow-dirty` only for local development validation; the build records that state. Export uses a temporary project with serial imports and Blender imports disabled. Each artifact contains the executable/PCK, complete license files, notices, a checked PCK inventory, build version/revision, export log, and SHA-256 checksums. The gate rejects development/source-only files and missing runtime planet scenes. Authored runtime hulls under `assets/models/mockups/` remain included.
+
+Export and automated checks do not establish Windows execution, minimum hardware, commercial asset permissions, or release approval. Test install, launch, a full run, controls, quit/reopen, update, and rollback on target machines before promoting a candidate. Current headless tests retain Godot teardown diagnostics in their logs; these are not a measured memory-stability result.

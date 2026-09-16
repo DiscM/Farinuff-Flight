@@ -10,6 +10,7 @@ extends Node
 const CLEAN_CAMPAIGN_STATE := {
 	"discovered_node_ids": [],
 	"seen_story_beat_ids": [],
+	"recovered_fragment_ids": [],
 	"expedition_clear_count": 0,
 	"last_ending_id": "",
 }
@@ -62,7 +63,7 @@ func _run() -> void:
 	await get_tree().process_frame
 
 	if _failures.is_empty():
-		print("PASS: expedition progression smoke tests")
+		print("EXPEDITION_PROGRESSION_SMOKE_PASS")
 		get_tree().quit(0)
 	else:
 		for failure in _failures:
@@ -141,9 +142,11 @@ func _check_progression() -> void:
 	)
 	_expect(transition.pending_route_choice, "Wave 10 requires a route choice")
 	_expect(
-		transition.story_beat_ids == [&"broken_perimeter_debrief", &"iron_wake_fragment"],
-		"Wave 10 queues the debrief and Iron Wake fragment"
+		transition.story_beat_ids.has(&"broken_perimeter_debrief"),
+		"Wave 10 queues the sector debrief"
 	)
+	_expect(ExpeditionManager.get_snapshot().recovered_fragment_ids.count(&"iron_wake_fragment") == 1,
+		"Clearing Iron Wake recovers its archive fragment even before it is viewed")
 	ExpeditionManager.record_story_viewed(&"broken_perimeter_debrief")
 	ExpeditionManager.record_story_viewed(&"iron_wake_fragment")
 	ExpeditionManager.record_story_viewed(&"iron_wake_fragment")
@@ -163,9 +166,11 @@ func _check_progression() -> void:
 	_expect(transition.next_reachable_node_ids == [&"quiet_core"], "Wave 15 reveals only The Quiet Core")
 	_expect(not transition.pending_route_choice, "The final route is fixed after Wave 15")
 	_expect(
-		transition.story_beat_ids == [&"tempest_reach_debrief", &"echo_field_fragment"],
-		"Wave 15 queues the debrief and Echo Field fragment"
+		transition.story_beat_ids.has(&"tempest_reach_debrief"),
+		"Wave 15 queues the sector debrief"
 	)
+	_expect(ExpeditionManager.get_snapshot().recovered_fragment_ids.count(&"echo_field_fragment") == 1,
+		"Clearing Echo Field recovers its archive fragment even before it is viewed")
 
 	# The fixed final route stays selectable as a confirmation, never applied.
 	selection = ExpeditionManager.choose_route(&"quiet_core")
@@ -228,7 +233,7 @@ func _check_progression() -> void:
 
 
 func _check_persistence_round_trip() -> void:
-	# Only the four durable fields reach the save layer and they round-trip.
+	# Durable discovery and ending fields reach the save layer; active runs do not.
 	var snapshot := ExpeditionManager.get_snapshot()
 	var saved: Dictionary = SaveManager.get_campaign_state()
 	_expect(

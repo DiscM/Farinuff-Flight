@@ -61,6 +61,33 @@ class SmokeRunnerTests(unittest.TestCase):
         self.assertIn("AUTOLOAD_SMOKE_PASS", result.stdout)
         self.assertIn("Smoke tests: 1/2 passed", result.stdout)
 
+    def test_scenes_receive_distinct_disposable_profiles(self) -> None:
+        result = self.run_fixture(
+            'import pathlib, re, sys\n'
+            'project = pathlib.Path(sys.argv[sys.argv.index("--path") + 1])\n'
+            'config = (project / "project.godot").read_text()\n'
+            'names = re.findall(r\'config/custom_user_dir_name="([^"]+)"\', config)\n'
+            'assert names and names[-1].startswith("farinuff-smoke-")\n'
+            'assert "config/use_custom_user_dir=true" in config\n'
+            'assert (project / "autoloads" / "save_manager.gd").exists()\n'
+            'print("PROFILE=" + names[-1])\n'
+            'print(pathlib.Path(sys.argv[-1]).stem.upper() + "_PASS")\n',
+            "pooling_smoke", "autoload_smoke",
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        profiles = [line.removeprefix("PROFILE=") for line in result.stdout.splitlines()
+                    if line.startswith("PROFILE=")]
+        self.assertEqual(len(set(profiles)), 2)
+
+    def test_production_journey_scenes_are_registered(self) -> None:
+        result = self.run_fixture(
+            'import pathlib, sys\nprint(pathlib.Path(sys.argv[-1]).stem.upper() + "_PASS")\n',
+            "frontend_navigation_smoke", "expedition_progression_smoke",
+            "menu_boot_smoke", "neon_cabinet_smoke", "background_drift_smoke",
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("Smoke tests: 5/5 passed", result.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()

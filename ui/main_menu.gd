@@ -1,7 +1,7 @@
 extends Control
 ## Neon Cabinet entry: backdrop plus the shared frontend, with no legacy menu.
 
-const PIXEL_PLANET_SCENE_PATH := "res://effects/shaders/PixelPlanets/Planets/GasPlanetLayers/GasPlanetLayers.tscn"
+const PIXEL_PLANET_SCENE_PATH := "res://Planets/GasPlanetLayers/GasPlanetLayers.tscn"
 const NATIVE_RUN_PATH := "res://scenes/native_3d_run.tscn"
 const CRT_ENABLED_PROFILE := preload("res://effects/rendering/frontier_palette.gd").CRT_PROFILE
 const CRT_DISABLED_PROFILE := {

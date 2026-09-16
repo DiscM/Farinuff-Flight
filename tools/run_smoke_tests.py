@@ -4,14 +4,17 @@
 from __future__ import annotations
 
 import argparse
+from contextlib import contextmanager
+import json
 import os
 from pathlib import Path
 import re
 import shutil
 import subprocess
+import tempfile
 
+from godot_workspace import ROOT, staged_project, user_data_root
 
-ROOT = Path(__file__).resolve().parents[1]
 SCENES = (
     "dev_commands_smoke",
     "in_house_vfx_smoke",
@@ -26,7 +29,32 @@ SCENES = (
     "resource_cache_smoke",
     "run_warmup_benchmark",
     "autoload_smoke",
+    "frontend_navigation_smoke",
+    "expedition_progression_smoke",
+    "menu_boot_smoke",
+    "neon_cabinet_smoke",
+    "background_drift_smoke",
+    "audio_settings_smoke",
+    "combat_readability_smoke",
 )
+
+
+@contextmanager
+def isolated_project():
+    """Reuse imported resources, but never open a player's user:// directory.
+
+    A private project file overrides the user directory before autoload startup.
+    Per-scene profiles also prevent one passing test from contaminating another.
+    No override is written into the working project or its import cache.
+    """
+    data_root = user_data_root()
+    data_root.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix="farinuff-smoke-", dir=data_root) as profile:
+        settings = (ROOT / "project.godot").read_text(encoding="utf-8")
+        settings += "\n[application]\nconfig/use_custom_user_dir=true\n"
+        settings += "config/custom_user_dir_name=" + json.dumps(Path(profile).name) + "\n"
+        with staged_project(settings) as project:
+            yield project
 
 
 def run_scene(godot: str, scene: str, log_dir: Path, timeout: float) -> bool:
@@ -35,17 +63,20 @@ def run_scene(godot: str, scene: str, log_dir: Path, timeout: float) -> bool:
     problem = ""
     with log_path.open("w", encoding="utf-8") as log:
         try:
-            result = subprocess.run(
-                [godot, "--headless", "--path", str(ROOT), f"res://tests/{scene}.tscn"],
-                stdout=log,
-                stderr=subprocess.STDOUT,
-                timeout=timeout,
-                check=False,
-            )
+            with isolated_project() as project:
+                result = subprocess.run(
+                    [godot, "--headless", "--path", str(project), f"res://tests/{scene}.tscn"],
+                    stdout=log,
+                    stderr=subprocess.STDOUT,
+                    timeout=timeout,
+                    check=False,
+                )
             if result.returncode:
                 problem = f"Godot exited with code {result.returncode}"
         except subprocess.TimeoutExpired:
             problem = f"timed out after {timeout:g} seconds"
+        except OSError as error:
+            problem = f"unable to prepare or launch isolated test: {error}"
 
     output = log_path.read_text(encoding="utf-8", errors="replace")
     print(output, end="" if output.endswith("\n") else "\n", flush=True)
