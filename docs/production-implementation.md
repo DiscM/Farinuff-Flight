@@ -11,7 +11,7 @@ scope is the Wave-20 Expedition, optional Endless, three hulls, and 13 upgrades.
 | Slice | Milestone | Deliverable | Status / remaining evidence |
 | --- | --- | --- | --- |
 | 01 — Repeatable baseline | M0 | Disposable test profiles; frontend, progression, boot, reward, and backdrop checks in CI | Implemented; 20/20 scenes pass locally |
-| 02 — Inspectable release package | M0 / M3 | Pinned engine/templates, Windows export, package inventory, checksums, revision and logs | Implemented; fresh-cache Windows export passes locally; clean Windows execution and GitHub run pending |
+| 02 — Inspectable release package | M0 / M3 | Pinned engine/templates, Windows export, package inventory, checksums, revision and logs | Implemented; clean-checkout, fresh-cache Windows export passes locally; Windows execution and GitHub run pending |
 | 03 — Independent sound controls | M1 | Master, Music, SFX, and UI routing, saved controls, regression check | Implemented and tested; listening/mix approval remains external |
 | 04 — Combat clarity | M1 | HUD occlusion and bright-backdrop comparison in movement at 720p/1080p | Implemented and captured; fresh-player readability acceptance pending |
 | 05 — Opening presentation | M1 | Art reference, bundled licensed typography/icons, reflection teaching and first-upgrade timing | Queued; eight fresh-player sessions and approved captures required |
@@ -40,6 +40,12 @@ September 16, 2026, Godot `4.6.3.stable.official.7d41c59c4`, local macOS:
   release. GitHub's release workflow requires a clean checkout.
   The local invocation used `--git /Library/Developer/CommandLineTools/usr/bin/git`
   because the system Git shim is blocked by an unaccepted Xcode license.
+- A second export from a separate, clean checkout of implementation commit
+  `da533e57` also passed without `--allow-dirty` or an existing import cache.
+  `builds/production-clean-windows/build.json` records `dirty: false`, the exact
+  commit and engine. All **3,637 package entries**, remap targets, and **12 artifact
+  checksums** verified; the package manifest reports no errors. This establishes
+  local reproducibility, not Windows runtime or GitHub Actions acceptance.
 - The export now uses the `res://Planets/` alias consistently. The previous
   nested-project paths worked in the source tree but were absent from the PCK.
 - The shipping-audio inventory retains 10 preloaded cues and removes 170 unused
