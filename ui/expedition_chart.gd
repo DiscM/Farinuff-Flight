@@ -26,7 +26,7 @@ func _show_dossier(node_id: StringName) -> void:
 	selected_id = node_id
 	var dossier := ExpeditionManager.get_node_dossier(node_id)
 	_dossier.text = "%s · %s\nTHREATS · %s\nSECTOR BOSS · %s" % [dossier.get("title", ""), dossier.get("waves", ""), dossier.get("threats", ""), dossier.get("boss", "")]
-	var hull := MetaProgression.get_selected_ship_profile()
+	var hull := MetaProgression.get_item(MetaProgression.selected_ship)
 	_dossier.text += "\nSHIP · " + str(hull.get("name", "Swallowtail"))
 	var challenges := PackedStringArray()
 	for modifier: Dictionary in MetaProgression.CHALLENGE_MODIFIERS:

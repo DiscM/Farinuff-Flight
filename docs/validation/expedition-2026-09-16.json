@@ -1,0 +1,409 @@
+{
+  "date": "2026-09-16",
+  "engine": "4.6.3.stable.official.7d41c59c4",
+  "platform": "macOS",
+  "renderer": "headless dummy",
+  "source_base_commit": "37a2a13c4de32424972bc51dc2b0f0bb5ccddc74",
+  "source_working_tree_includes_preexisting_copy_edits": true,
+  "assisted": true,
+  "human_acceptance": false,
+  "command": "python3 tools/run_smoke_tests.py --godot \"$GODOT_PATH\" --log-dir .godot/expedition-full-suite",
+  "summary": {
+    "smoke_scenes_passed": 20,
+    "smoke_scenes_total": 20,
+    "journeys_passed": 24,
+    "return_home": 12,
+    "endless_through_wave_25": 12,
+    "installed_upgrade_ids": [
+      "afterburner",
+      "auto_aim",
+      "drone_escort",
+      "explosive_rounds",
+      "hull_plating",
+      "magnet_field",
+      "orbitals",
+      "overclock",
+      "piercing",
+      "rear_gunner",
+      "shield_burst",
+      "spread_shot_elite",
+      "twin_cannons"
+    ],
+    "native_inventory_resources": 347,
+    "native_completion_assertions": 375,
+    "runner_tests_passed": 8,
+    "release_tool_tests_passed": 7
+  },
+  "test_and_fix_source_sha256": {
+    "autoloads/game_manager.gd": "1ea3a5a62a33b0a079cb38387cea5ff3d646a182b0ed42935a0105cd1f8a2980",
+    "ui/expedition_chart.gd": "8d6af9e3e7333197b6591288d586dd8b29d303faf76202865903cdd473eef574",
+    "tests/expedition_progression_smoke.gd": "cb4df67ebeb293f1e28e7b4a17f2cff8931ab875e8c6b657c79be3d55c3ff831",
+    "tests/expedition_journey_checks.gd": "053b11deef7129d7994d838292d350ab562a698844717d899df0908cdd7813c2"
+  },
+  "log_sha256": {
+    "audio_settings_smoke.log": "5a4ee747b934070d81b8da5e4fed638e8489c9bc6e04305020abf4c809a501e6",
+    "autoload_smoke.log": "bf9722e33332aefd90dacc06fc1dd80ab0f715aa9bbf276d0bdbb0e46958df67",
+    "background_drift_smoke.log": "57fad35cf7809942dab0475aaf7546666a686c1b15ad6ec26d56935b5a2de287",
+    "boss_ai_smoke.log": "262dd6ea58338cbc37023ce2af330cfb1553d0df31c521413a1b63b20838ed20",
+    "boss_flight_smoke.log": "6fc6714dc6633ee5186720523a2fb901447d579994d0d57783e97178adedde96",
+    "boss_patterns_smoke.log": "449042cadef2df3282088067ec4ee2603a956d8714fcd911ebf5ffab598ea829",
+    "combat_motion_smoke.log": "43e075c7037960ca96ec4cb8ddaf5292ed8c052c134f439d739b1b71069f54c5",
+    "combat_readability_smoke.log": "7e493194e8856f78d7fbf6a2cd7b40df77096a00131f60141a9f40d97bab6a6e",
+    "dev_commands_smoke.log": "6597202c0c1e4c295a2a93059bbd805c169c00d3bce77140ef13fd68146b6b21",
+    "expedition_progression_smoke.log": "8564bd6b082b8a711673f904a5fc1ed8b6184ea1f9e99b673d7edda0ac98569f",
+    "frontend_navigation_smoke.log": "69ce4c43b697aa1430d37ae1dc5254694d8f9ed7ce4ecd7b082b8018181369e9",
+    "frontier_visual_smoke.log": "0d500a4e15c5cf57f8e2e646fd1b65f6b4d3f2fdf07b3b144aa670fc5f41c6aa",
+    "in_house_vfx_smoke.log": "839742549ee78d691d9324076b923e6d8c12b0b56c75bebd50ef1e320eb0eea1",
+    "menu_boot_smoke.log": "6959ffe4f70ff87d95c7661949a145fc96f4cc2465a319c1d93cb5acc761d066",
+    "native_completion_smoke.log": "a08d949b5846aec966bafee7c24df041a1d949aba582bf3de4bb1b2728507720",
+    "neon_cabinet_smoke.log": "03e43af59ec443e4ec6ca02f79601bbefbe5c6fa43ea2c1f92e2ca1cb3021b6b",
+    "pixel_enemy_material_smoke.log": "358fe16e5d53930d65bbe59c28bb5ab048a960ac4fafd1947d7a2393f0d65ac6",
+    "pooling_smoke.log": "d0a018a269b95c7df0671ca0904a0c918be753f52f11d153dabccf72ddd93e05",
+    "resource_cache_smoke.log": "6308bf4d2cd97883fad33c7ad1d03a85ad5f0bc9563fffd24bf9ca70d49bf475",
+    "run_warmup_benchmark.log": "91fea14559f94696f1a0d9f5a05c70b63a655791e14dd52fd78fd755919d556e"
+  },
+  "limits": [
+    "Scripted orb progress and boss damage; random encounters and boss physics disabled for assertions.",
+    "These runs do not measure natural economy, encounter timing, or build viability.",
+    "Existing ObjectDB/resource teardown and dummy-renderer shader RID diagnostics remain; no script errors occurred.",
+    "No Windows executable or physical controller was tested."
+  ],
+  "journeys": [
+    {
+      "assisted": true,
+      "case": "ship_swallowtail/iron_wake/tempest_veil/base",
+      "ending": "return_home",
+      "failures_so_far": 0,
+      "salvage": 846,
+      "score": 31000,
+      "upgrades": [
+        "magnet_field",
+        "twin_cannons",
+        "hull_plating"
+      ],
+      "waves_cleared": 20
+    },
+    {
+      "assisted": true,
+      "case": "ship_swallowtail/iron_wake/echo_field/base",
+      "ending": "follow_signal",
+      "failures_so_far": 0,
+      "salvage": 1306,
+      "score": 51000,
+      "upgrades": [
+        "twin_cannons",
+        "overclock",
+        "auto_aim"
+      ],
+      "waves_cleared": 25
+    },
+    {
+      "assisted": true,
+      "case": "ship_swallowtail/ghost_lanes/tempest_veil/base",
+      "ending": "return_home",
+      "failures_so_far": 0,
+      "salvage": 846,
+      "score": 31000,
+      "upgrades": [
+        "drone_escort",
+        "spread_shot_elite",
+        "rear_gunner"
+      ],
+      "waves_cleared": 20
+    },
+    {
+      "assisted": true,
+      "case": "ship_swallowtail/ghost_lanes/echo_field/base",
+      "ending": "follow_signal",
+      "failures_so_far": 0,
+      "salvage": 1306,
+      "score": 51000,
+      "upgrades": [
+        "hull_plating",
+        "spread_shot_elite",
+        "afterburner"
+      ],
+      "waves_cleared": 25
+    },
+    {
+      "assisted": true,
+      "case": "ship_interceptor/iron_wake/tempest_veil/base",
+      "ending": "return_home",
+      "failures_so_far": 0,
+      "salvage": 846,
+      "score": 31000,
+      "upgrades": [
+        "auto_aim",
+        "magnet_field",
+        "spread_shot_elite"
+      ],
+      "waves_cleared": 20
+    },
+    {
+      "assisted": true,
+      "case": "ship_interceptor/iron_wake/echo_field/base",
+      "ending": "follow_signal",
+      "failures_so_far": 0,
+      "salvage": 1306,
+      "score": 51000,
+      "upgrades": [
+        "hull_plating",
+        "drone_escort",
+        "spread_shot_elite"
+      ],
+      "waves_cleared": 25
+    },
+    {
+      "assisted": true,
+      "case": "ship_interceptor/ghost_lanes/tempest_veil/base",
+      "ending": "return_home",
+      "failures_so_far": 0,
+      "salvage": 846,
+      "score": 31000,
+      "upgrades": [
+        "hull_plating",
+        "afterburner",
+        "shield_burst"
+      ],
+      "waves_cleared": 20
+    },
+    {
+      "assisted": true,
+      "case": "ship_interceptor/ghost_lanes/echo_field/base",
+      "ending": "follow_signal",
+      "failures_so_far": 0,
+      "salvage": 1306,
+      "score": 51000,
+      "upgrades": [
+        "afterburner",
+        "overclock",
+        "auto_aim"
+      ],
+      "waves_cleared": 25
+    },
+    {
+      "assisted": true,
+      "case": "ship_bulwark/iron_wake/tempest_veil/base",
+      "ending": "return_home",
+      "failures_so_far": 0,
+      "salvage": 846,
+      "score": 31000,
+      "upgrades": [
+        "twin_cannons",
+        "spread_shot_elite",
+        "magnet_field"
+      ],
+      "waves_cleared": 20
+    },
+    {
+      "assisted": true,
+      "case": "ship_bulwark/iron_wake/echo_field/base",
+      "ending": "follow_signal",
+      "failures_so_far": 0,
+      "salvage": 1306,
+      "score": 51000,
+      "upgrades": [
+        "hull_plating",
+        "afterburner",
+        "auto_aim"
+      ],
+      "waves_cleared": 25
+    },
+    {
+      "assisted": true,
+      "case": "ship_bulwark/ghost_lanes/tempest_veil/base",
+      "ending": "return_home",
+      "failures_so_far": 0,
+      "salvage": 846,
+      "score": 31000,
+      "upgrades": [
+        "overclock",
+        "twin_cannons",
+        "afterburner"
+      ],
+      "waves_cleared": 20
+    },
+    {
+      "assisted": true,
+      "case": "ship_bulwark/ghost_lanes/echo_field/base",
+      "ending": "follow_signal",
+      "failures_so_far": 0,
+      "salvage": 1306,
+      "score": 51000,
+      "upgrades": [
+        "drone_escort",
+        "spread_shot_elite",
+        "magnet_field"
+      ],
+      "waves_cleared": 25
+    },
+    {
+      "assisted": true,
+      "case": "ship_swallowtail/iron_wake/tempest_veil/full",
+      "ending": "return_home",
+      "failures_so_far": 0,
+      "salvage": 846,
+      "score": 31000,
+      "upgrades": [
+        "shield_burst",
+        "hull_plating",
+        "piercing"
+      ],
+      "waves_cleared": 20
+    },
+    {
+      "assisted": true,
+      "case": "ship_swallowtail/iron_wake/echo_field/full",
+      "ending": "follow_signal",
+      "failures_so_far": 0,
+      "salvage": 1306,
+      "score": 51000,
+      "upgrades": [
+        "hull_plating",
+        "explosive_rounds",
+        "piercing"
+      ],
+      "waves_cleared": 25
+    },
+    {
+      "assisted": true,
+      "case": "ship_swallowtail/ghost_lanes/tempest_veil/full",
+      "ending": "return_home",
+      "failures_so_far": 0,
+      "salvage": 846,
+      "score": 31000,
+      "upgrades": [
+        "spread_shot_elite",
+        "rear_gunner",
+        "afterburner"
+      ],
+      "waves_cleared": 20
+    },
+    {
+      "assisted": true,
+      "case": "ship_swallowtail/ghost_lanes/echo_field/full",
+      "ending": "follow_signal",
+      "failures_so_far": 0,
+      "salvage": 1306,
+      "score": 51000,
+      "upgrades": [
+        "hull_plating",
+        "afterburner",
+        "piercing"
+      ],
+      "waves_cleared": 25
+    },
+    {
+      "assisted": true,
+      "case": "ship_interceptor/iron_wake/tempest_veil/full",
+      "ending": "return_home",
+      "failures_so_far": 0,
+      "salvage": 846,
+      "score": 31000,
+      "upgrades": [
+        "auto_aim",
+        "piercing",
+        "orbitals"
+      ],
+      "waves_cleared": 20
+    },
+    {
+      "assisted": true,
+      "case": "ship_interceptor/iron_wake/echo_field/full",
+      "ending": "follow_signal",
+      "failures_so_far": 0,
+      "salvage": 1306,
+      "score": 51000,
+      "upgrades": [
+        "auto_aim",
+        "explosive_rounds",
+        "rear_gunner"
+      ],
+      "waves_cleared": 25
+    },
+    {
+      "assisted": true,
+      "case": "ship_interceptor/ghost_lanes/tempest_veil/full",
+      "ending": "return_home",
+      "failures_so_far": 0,
+      "salvage": 846,
+      "score": 31000,
+      "upgrades": [
+        "shield_burst",
+        "spread_shot_elite",
+        "afterburner"
+      ],
+      "waves_cleared": 20
+    },
+    {
+      "assisted": true,
+      "case": "ship_interceptor/ghost_lanes/echo_field/full",
+      "ending": "follow_signal",
+      "failures_so_far": 0,
+      "salvage": 1306,
+      "score": 51000,
+      "upgrades": [
+        "piercing",
+        "magnet_field",
+        "auto_aim"
+      ],
+      "waves_cleared": 25
+    },
+    {
+      "assisted": true,
+      "case": "ship_bulwark/iron_wake/tempest_veil/full",
+      "ending": "return_home",
+      "failures_so_far": 0,
+      "salvage": 846,
+      "score": 31000,
+      "upgrades": [
+        "drone_escort",
+        "auto_aim",
+        "spread_shot_elite"
+      ],
+      "waves_cleared": 20
+    },
+    {
+      "assisted": true,
+      "case": "ship_bulwark/iron_wake/echo_field/full",
+      "ending": "follow_signal",
+      "failures_so_far": 0,
+      "salvage": 1306,
+      "score": 51000,
+      "upgrades": [
+        "hull_plating",
+        "drone_escort",
+        "overclock"
+      ],
+      "waves_cleared": 25
+    },
+    {
+      "assisted": true,
+      "case": "ship_bulwark/ghost_lanes/tempest_veil/full",
+      "ending": "return_home",
+      "failures_so_far": 0,
+      "salvage": 846,
+      "score": 31000,
+      "upgrades": [
+        "overclock",
+        "auto_aim",
+        "drone_escort"
+      ],
+      "waves_cleared": 20
+    },
+    {
+      "assisted": true,
+      "case": "ship_bulwark/ghost_lanes/echo_field/full",
+      "ending": "follow_signal",
+      "failures_so_far": 0,
+      "salvage": 1306,
+      "score": 51000,
+      "upgrades": [
+        "drone_escort",
+        "orbitals",
+        "explosive_rounds"
+      ],
+      "waves_cleared": 25
+    }
+  ]
+}
