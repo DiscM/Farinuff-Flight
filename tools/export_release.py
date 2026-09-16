@@ -74,9 +74,9 @@ def main() -> int:
                          presets, flags=re.MULTILINE)
         (staged / "export_presets.cfg").write_text(presets)
         (output / "shipping-audio.json").write_text(json.dumps(sorted(SHIPPING_AUDIO), indent=2) + "\n")
-        # The custom cursor has no imported texture on a fresh checkout. Disable
-        # it for the editor's first boot, then restore it in the shipping config.
-        (staged / "project.godot").write_text(export_settings + '\n[display]\nmouse_cursor/custom_image=""\n')
+        # The cursor and bundled theme fonts have not been imported on first boot.
+        # Restore both settings after import, before exporting the shipping config.
+        (staged / "project.godot").write_text(export_settings + '\n[display]\nmouse_cursor/custom_image=""\n[gui]\ntheme/custom=""\n')
         import_log = output / "import.log"
         with import_log.open("w") as log:
             imported = subprocess.run([godot, "--headless", "--path", str(staged), "--import"],
@@ -105,6 +105,7 @@ def main() -> int:
     # PixelPlanets is a nested Godot project: the exporter ignores its raw
     # LICENSE even with an include_filter. Ship full notices as loose files.
     licenses = {
+        "Barlow-OFL.txt": "assets/fonts/barlow/OFL.txt",
         "PixelPlanets-LICENSE.txt": "effects/shaders/PixelPlanets/LICENSE",
         "Kenney-License.txt": "ui/kenney_ui-pack-space-expansion/License.txt",
         "SunGraphica-source-info.txt": "assets/Game UI collection FREE version/Sungraphica + info .txt",

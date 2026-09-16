@@ -457,7 +457,7 @@ func _arrange_cabinet_hud() -> void:
 	orb_panel.custom_minimum_size.x = 140
 	power_up_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	for label in [score_label, wave_label]:
-		label.add_theme_font_override("font", NeonUI.HEADING_FONT)
+		label.add_theme_font_override("font", NeonUI.DATA_FONT)
 		label.add_theme_font_size_override("font_size", 14)
 	combo_label.add_theme_font_size_override("font_size", 11)
 	_route_label.hide()
@@ -488,9 +488,13 @@ func _arrange_cabinet_hud() -> void:
 	left_dock.hide()
 	right_dock.hide()
 	boss_dock.offset_top = 58
-	boss_dock.offset_bottom = 96
+	boss_dock.offset_bottom = 110
 	boss_dock.offset_left = -180
 	boss_dock.offset_right = 180
+	boss_class_label.add_theme_font_override("font", NeonUI.DATA_FONT)
+	boss_class_label.add_theme_font_size_override("font_size", 11)
+	boss_name_label.add_theme_font_override("font", NeonUI.DATA_FONT)
+	boss_name_label.add_theme_font_size_override("font_size", 14)
 	boss_health_bar.custom_minimum_size.y = 4
 	header.minimum_size_changed.connect(_fit_combat_header)
 	get_viewport().size_changed.connect(_fit_combat_header)

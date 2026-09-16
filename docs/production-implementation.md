@@ -14,7 +14,7 @@ scope is the Wave-20 Expedition, optional Endless, three hulls, and 13 upgrades.
 | 02 — Inspectable release package | M0 / M3 | Pinned engine/templates, Windows export, package inventory, checksums, revision and logs | Implemented; clean-checkout, fresh-cache Windows export passes locally; Windows execution and GitHub run pending |
 | 03 — Independent sound controls | M1 | Master, Music, SFX, and UI routing, saved controls, regression check | Implemented and tested; listening/mix approval remains external |
 | 04 — Combat clarity | M1 | HUD occlusion and bright-backdrop comparison in movement at 720p/1080p | Implemented and captured; fresh-player readability acceptance pending |
-| 05 — Opening presentation | M1 | Art reference, bundled licensed typography/icons, reflection teaching and first-upgrade timing | Queued; eight fresh-player sessions and approved captures required |
+| 05 — Opening presentation | M1 | Art reference, bundled licensed typography/icons, reflection teaching and first-upgrade timing | Implemented; 24 review captures plus practice, local timing tool verified; eight fresh-player sessions and visual approval remain open |
 | 06 — Whole Expedition | M2 | Hull/route/build matrix, boss phases, economy, ending and Endless validation | Queued; representative human playthroughs required |
 | 07 — Player trust | M3 | Save fault/rollback tests; local settings separation; graphics/HUD/input/accessibility options | Started: recovery followed by save, interrupted writes, and release guards added; remaining options, Cloud decision and physical-device work queued |
 | 08 — Candidate performance | M3 | Repeatable load scenario and release-package hardware measurements | Queued; Windows minimum-spec hardware required |
@@ -69,13 +69,42 @@ Automated checks do not establish art quality, fresh-player comprehension, a
 reviewed audio mix, hardware performance, asset permissions, or storefront
 approval. No Windows executable was run on Windows during this macOS session.
 
+### Opening presentation verification
+
+September 16, 2026, same pinned engine and local macOS environment:
+
+- Bundled Barlow body/display fonts and their SIL OFL, with source revision and
+  checksums. Added 24 original SVG symbols for 31 catalog/currency IDs.
+- [Opening reference](../design/production-opening/README.md): eight surfaces at
+  1080p, 720p, and 720p with larger menu text, plus the reflection lesson. These
+  are staged engineering captures, not visual acceptance or natural playthroughs.
+- `python3 tools/run_smoke_tests.py --godot "$GODOT_PATH"`: **20/20 pass**;
+  session logs in `.godot/opening-full-suite/`. No smoke scenes were added.
+  The existing combat-readability scene also passed after the final HUD changes.
+- Native transition inventory: **346 resources, 11 GLBs, 13 upgrades**, pass.
+  Native completion assertions **375**, smoke-runner tests **8**, and release
+  tool tests **7**, all pass.
+- Fresh-cache Windows development export: **3,697 PCK entries** verified, no
+  manifest errors, all artifact checksums valid. All three bundled fonts and
+  the OFL are present; the loose OFL matches the source. This package records
+  the dirty working tree and is not a promoted candidate.
+- Opt-in [opening timing](opening-playtest.md) verified through actual movement,
+  shots, reflection, a reflected hit, and committed upgrade installation.
+  Practice reports its actual hull and initial wave. Truncated log records are
+  skipped with a warning while earlier observations are retained.
+- Standards and Spec reviews completed; timing and practice-copy findings were
+  corrected and re-reviewed without remaining actionable findings.
+
+These input-driven checks do not establish human pacing. Wave thresholds and the
+first-installation schedule are unchanged. The eight-player M1 cohort, listening
+review, and visual approval remain required.
+
 ## Next slice
 
-Continue 05: consolidate the existing art references, bundle licensed display
-and body fonts, replace representative hull/upgrade emoji with coherent icons,
-and measure the reflection-to-first-upgrade opening before changing pacing.
-Then repeat the capture set at 720p/1080p and larger text size, and run the M1
-fresh-player cohort. Later milestones stay open until their evidence is recorded.
+Continue 06: validate the whole Expedition across representative hulls, routes,
+and builds, including every boss phase, the reward economy, the ending, and the
+transition into Endless. Run the M1 fresh-player cohort alongside that work;
+later milestones stay open until their own evidence is recorded.
 
 ## External decisions and evidence
 

@@ -1,0 +1,28 @@
+{
+  "upstream": "https://github.com/google/fonts",
+  "revision": "92345ac0dbb28d27dbd32f3a782e84c55eaac214",
+  "license": "SIL Open Font License 1.1",
+  "modified": false,
+  "files": [
+    {
+      "file": "Barlow-Regular.ttf",
+      "source": "https://raw.githubusercontent.com/google/fonts/92345ac0dbb28d27dbd32f3a782e84c55eaac214/ofl/barlow/Barlow-Regular.ttf",
+      "sha256": "95aa02c7c43096e0dd44d787ba6216864a67157e402adab59b35572e0c1577ea"
+    },
+    {
+      "file": "Barlow-SemiBold.ttf",
+      "source": "https://raw.githubusercontent.com/google/fonts/92345ac0dbb28d27dbd32f3a782e84c55eaac214/ofl/barlow/Barlow-SemiBold.ttf",
+      "sha256": "86577cb32f8abe3673db53ca0f4221e6856751a4f6730c867e00f720f8bb1fc5"
+    },
+    {
+      "file": "BarlowCondensed-BoldItalic.ttf",
+      "source": "https://raw.githubusercontent.com/google/fonts/92345ac0dbb28d27dbd32f3a782e84c55eaac214/ofl/barlowcondensed/BarlowCondensed-BoldItalic.ttf",
+      "sha256": "d8694f65cd70c3e5e600ead37657aab0adb5f63b275d0c1f6f4a7046de222145"
+    },
+    {
+      "file": "OFL.txt",
+      "source": "https://raw.githubusercontent.com/google/fonts/92345ac0dbb28d27dbd32f3a782e84c55eaac214/ofl/barlow/OFL.txt",
+      "sha256": "186d750eb496a4c17a76385f82be6aea2ac1cf2de074a811d63786cf374ea73f"
+    }
+  ]
+}

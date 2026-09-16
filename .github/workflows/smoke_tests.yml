@@ -42,6 +42,10 @@ jobs:
             echo "::error::Godot asset import failed; see import.log in the smoke-test-logs artifact."
             exit 1
           fi
+          cat >> project.godot <<'SETTINGS'
+          [gui]
+          theme/custom="res://ui/themes/farinuff_frontend_theme.tres"
+          SETTINGS
 
       - name: Run smoke tests
         run: |

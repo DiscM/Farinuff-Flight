@@ -159,6 +159,11 @@ func _ready() -> void:
 	boost_meter.player = player
 	boost_meter.status = boost_status
 	hud.add_child(boost_meter)
+	if OS.get_cmdline_user_args().has("--opening-metrics") or bool(ProjectSettings.get_setting("debug/production/opening_metrics", false)):
+		var opening_metrics := preload("res://systems/opening_metrics.gd").new()
+		opening_metrics.name = "OpeningMetrics"
+		add_child(opening_metrics)
+		opening_metrics.start(self)
 	gameplay_ready.emit()
 
 

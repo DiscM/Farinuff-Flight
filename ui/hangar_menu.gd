@@ -5,6 +5,8 @@ extends Control
 
 signal closed
 
+const CatalogIcons := preload("res://ui/catalog_icons.gd")
+
 var _salvage_label: Label
 var _rows_by_id: Dictionary = {}
 var _wallet_connected: bool = false
@@ -52,7 +54,7 @@ func _build_ui() -> void:
 	panel.add_child(column)
 
 	var title := Label.new()
-	title.text = "⬡  HANGAR  ⬡"
+	title.text = "HANGAR ///"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 28)
 	title.add_theme_color_override("font_color", Color(1.0, 0.8, 0.25))
@@ -146,11 +148,7 @@ func _add_item_row(parent: VBoxContainer, item: Dictionary) -> void:
 	hbox.add_theme_constant_override("separation", 12)
 	row.add_child(hbox)
 
-	var icon := Label.new()
-	icon.text = item["icon"]
-	icon.add_theme_font_size_override("font_size", 26)
-	icon.custom_minimum_size = Vector2(36, 0)
-	hbox.add_child(icon)
+	hbox.add_child(CatalogIcons.make(str(item["id"]), 32, item["color"]))
 
 	var text_box := VBoxContainer.new()
 	text_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -167,6 +165,7 @@ func _add_item_row(parent: VBoxContainer, item: Dictionary) -> void:
 	if item.has("bonus_pct"):
 		desc_text += "\n+%d%% salvage when active." % roundi(float(item["bonus_pct"]) * 100.0)
 	desc_label.text = desc_text
+	desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	desc_label.add_theme_font_size_override("font_size", 12)
 	desc_label.add_theme_color_override("font_color", Color(0.75, 0.82, 0.95))
 	text_box.add_child(desc_label)
@@ -215,12 +214,12 @@ func _refresh_row(unlock_id: String) -> void:
 	else:
 		style.bg_color = Color(0.05, 0.07, 0.17) if level == 0 else Color(item["color"].r * 0.08, item["color"].g * 0.08, item["color"].b * 0.08)
 		style.border_color = item["color"] if level > 0 else Color(0.3, 0.4, 0.6, 0.6)
-		button.text = "⬡ %d" % next_cost
+		button.text = "%d SALVAGE" % next_cost
 		button.disabled = not MetaProgression.can_purchase(unlock_id)
 		button.add_theme_color_override("font_color", Color(1.0, 0.85, 0.4))
 
 func _refresh_salvage_label() -> void:
-	_salvage_label.text = "SALVAGE: ⬡ %d" % MetaProgression.salvage
+	_salvage_label.text = "SALVAGE: %d" % MetaProgression.salvage
 
 func _on_salvage_changed(_new_total: int) -> void:
 	_refresh_salvage_label()
