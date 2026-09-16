@@ -30,6 +30,8 @@ func _ready() -> void:
 	add_to_group("scalable_ui")
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_build_ui()
+	NeonUI.style_screen(self)
+	NeonUI.style_primary(_continue_button)
 	_continue_button.grab_focus()
 
 
@@ -244,9 +246,8 @@ func _format_loadout(hull_id: String, active_ids: Array[String]) -> String:
 	var module_names: Array[String] = []
 	for upgrade_id in active_ids:
 		var definition := _upgrade_definition(upgrade_id)
-		var icon := _safe_text(definition, "icon", FALLBACK_ICON)
 		var name := _safe_text(definition, "name", upgrade_id.replace("_", " ").to_upper())
-		module_names.append("%s %s" % [icon, name])
+		module_names.append(name)
 	var modules_text := "NONE INSTALLED" if module_names.is_empty() else " · ".join(module_names)
 	return "LOADOUT  ·  %s\nNATIVE MODULES  %d/%d  ·  %s" % [
 		_selected_ship_name() if hull_id == _selected_hull_id() else FALLBACK_NAME,

@@ -7,6 +7,7 @@ signal upgrade_chosen
 
 const NativeUpgradeCatalog := preload("res://entities/player/native_player_upgrades.gd")
 const SHIP_PREVIEW_SCRIPT := preload("res://entities/player/ship_upgrade_preview.gd")
+const CatalogIcons := preload("res://ui/catalog_icons.gd")
 const MAX_CHOICES := 3
 const FALLBACK_ICON := "✦"
 const FALLBACK_NAME := "UPGRADE"
@@ -216,11 +217,8 @@ func _make_card(upg: Dictionary) -> PanelContainer:
 	inner.add_theme_constant_override("separation", 6 if panel_only else 10)
 	card.add_child(inner)
 
-	var icon := Label.new()
-	icon.text = _safe_text(upg, "icon", FALLBACK_ICON)
-	icon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	icon.add_theme_font_size_override("font_size", 22 if panel_only else 28)
-	# The actual ship preview identifies the module without platform-dependent emoji.
+	var icon := CatalogIcons.make(upgrade_id, 24 if panel_only else 32, upgrade_color)
+	# Ship previews remain the primary module illustration.
 	icon.visible = not show_ship_previews
 	inner.add_child(icon)
 

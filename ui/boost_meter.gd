@@ -11,7 +11,7 @@ func _ready() -> void:
 	add_theme_stylebox_override("fill", fill)
 	if is_instance_valid(status):
 		status.add_theme_color_override("font_color", NeonUI.YELLOW)
-		status.add_theme_font_override("font", NeonUI.HEADING_FONT)
+		status.add_theme_font_override("font", NeonUI.DATA_FONT)
 	max_value = 1.0
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if get_parent().has_method("mount_boost"):

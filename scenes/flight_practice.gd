@@ -27,6 +27,8 @@ func _ready() -> void:
 	player.boost_chained.connect(_on_chain)
 	xp_orb_manager.xp_orb_collected.connect(_on_practice_orb)
 	_ready_for_practice = true
+	InputBindings.bindings_changed.connect(_refresh_lesson_bindings)
+	InputBindings.device_changed.connect(_refresh_lesson_bindings)
 	if _boss_wave > 0:
 		_start_boss()
 	else:
@@ -34,10 +36,11 @@ func _ready() -> void:
 
 func _build_lesson_ui() -> void:
 	var panel := PanelContainer.new()
+	panel.add_to_group("scalable_ui")
 	panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
 	panel.offset_left = -210
 	panel.offset_right = 210
-	panel.offset_top = 76
+	panel.offset_top = 122 if _boss_wave > 0 else 76
 	var column := VBoxContainer.new()
 	panel.add_child(column)
 	_lesson = Label.new()
@@ -76,12 +79,16 @@ func _physics_process(delta: float) -> void:
 
 func _show_step() -> void:
 	_lesson.text = [
-		"FLIGHT SCHOOL · 1 / 4\nMove across the combat plane, aim, and fire. Practice cannot cost a run or spend supplies.",
-		"FLIGHT SCHOOL · 2 / 4\nBoost into the slow volley to reflect it. You can keep practicing after a hit.",
-		"FLIGHT SCHOOL · 3 / 4\nReflect three shots in one boost. Press boost while CHAIN is lit for one follow-up, then recharge.",
-		"FLIGHT SCHOOL · 4 / 4\nCollect the orbs. Each orb fills NEXT WAVE and NEXT LIFE; twelve orb value restores a life.",
-		"FLIGHT SCHOOL COMPLETE\nReflection turns incoming fire into your weapon. Launch an Expedition when you are ready.",
+		"FLIGHT SCHOOL · 1 / 4\nMove your ship, aim, and hold %s to fire. Practice does not use supplies." % InputBindings.binding_label("shoot"),
+		"FLIGHT SCHOOL · 2 / 4\nPress %s to boost into the incoming shots. Reflected shots fly back and damage enemies. Getting hit will not end practice." % InputBindings.binding_label("boost"),
+		"REFLECTED! · 3 / 4\nReflect three shots in one boost. While CHAIN is lit, press %s for a follow-up boost." % InputBindings.binding_label("boost"),
+		"FLIGHT SCHOOL · 4 / 4\nCollect the orbs. During a run, orb points fill the WAVE meter and advance you to the next wave.",
+		"FLIGHT SCHOOL COMPLETE\nYou also gained a life: every 12 orb points fills the HEART meter. Launch an Expedition from the main menu when you are ready.",
 	][_step]
+
+func _refresh_lesson_bindings() -> void:
+	if _ready_for_practice and _boss_wave == 0:
+		_show_step()
 
 func _on_chain() -> void:
 	if _step != 2 or _boss_wave > 0:

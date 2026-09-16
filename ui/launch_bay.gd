@@ -11,6 +11,7 @@ signal launch_confirmed
 signal closed
 
 const SHIP_PREVIEW_SCRIPT := preload("res://entities/player/ship_upgrade_preview.gd")
+const CatalogIcons := preload("res://ui/catalog_icons.gd")
 const NATIVE_HULL_IDS: Array[String] = [
 	"ship_swallowtail",
 	"ship_interceptor",
@@ -146,7 +147,6 @@ func _make_section_label(text: String) -> Label:
 func _make_ship_card(ship: Dictionary) -> PanelContainer:
 	var ship_id := str(ship.get("id", "")).strip_edges()
 	var ship_name := _safe_text(ship, "name", FALLBACK_NAME)
-	var ship_icon := _safe_text(ship, "icon", FALLBACK_ICON)
 	var ship_description := _safe_text(ship, "description", FALLBACK_DESCRIPTION)
 	var ship_color := _safe_color(ship, "color", FALLBACK_COLOR)
 	var card := PanelContainer.new()
@@ -166,11 +166,7 @@ func _make_ship_card(ship: Dictionary) -> PanelContainer:
 	var preview := _make_ship_preview(ship_id)
 	box.add_child(preview)
 
-	var icon := Label.new()
-	icon.text = ship_icon
-	icon.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	icon.add_theme_font_size_override("font_size", 20)
-	box.add_child(icon)
+	box.add_child(CatalogIcons.make(ship_id, 24, ship_color))
 
 	var name_label := Label.new()
 	name_label.text = ship_name
@@ -244,7 +240,7 @@ func _refresh_ship_card(ship_id: String) -> void:
 	if not is_unlocked:
 		style.bg_color = Color(0.03, 0.04, 0.10)
 		style.border_color = Color(0.25, 0.3, 0.45, 0.5)
-		button.text = "🔒 ⬡%d" % int(ship.get("cost", 0))
+		button.text = "LOCKED · %d SALVAGE" % int(ship.get("cost", 0))
 		button.disabled = true
 		button.add_theme_color_override("font_color", Color(0.45, 0.5, 0.65))
 		card.modulate = Color(0.62, 0.66, 0.76, 1.0)
@@ -305,10 +301,8 @@ func _make_modifier_toggle(modifier: Dictionary) -> Control:
 
 	var toggle := CheckButton.new()
 	var modifier_id := str(modifier.get("id", ""))
-	toggle.text = "%s  %s" % [
-		_safe_text(modifier, "icon", FALLBACK_ICON),
-		_safe_text(modifier, "name", "UNKNOWN MODIFIER"),
-	]
+	row.add_child(CatalogIcons.make(modifier_id, 24, _safe_color(modifier, "color", FALLBACK_COLOR)))
+	toggle.text = _safe_text(modifier, "name", "UNKNOWN MODIFIER")
 	toggle.tooltip_text = _safe_text(modifier, "description", FALLBACK_DESCRIPTION)
 	toggle.add_theme_font_size_override("font_size", 14)
 	row.add_child(toggle)
@@ -324,7 +318,7 @@ func _make_modifier_toggle(modifier: Dictionary) -> Control:
 		toggle.toggled.connect(_on_modifier_toggled.bind(modifier_id))
 	else:
 		toggle.disabled = true
-		toggle.text += "  🔒 ⬡%d" % int(modifier.get("cost", 0))
+		toggle.text += " · LOCKED · %d SALVAGE" % int(modifier.get("cost", 0))
 		bonus.modulate.a = 0.45
 	return row
 

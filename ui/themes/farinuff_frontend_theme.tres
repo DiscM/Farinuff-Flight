@@ -1,9 +1,8 @@
-[gd_resource type="Theme" load_steps=13 format=3 uid="uid://farinuff_frontend_theme"]
+[gd_resource type="Theme" load_steps=14 format=3 uid="uid://farinuff_frontend_theme"]
 
 [ext_resource type="Font" path="res://ui/themes/cabinet_heading.tres" id="1_heading"]
-
-[sub_resource type="SystemFont" id="Font_default"]
-font_names = PackedStringArray("Arial", "Helvetica", "Roboto")
+[ext_resource type="FontFile" path="res://assets/fonts/barlow/Barlow-Regular.ttf" id="2_body"]
+[ext_resource type="FontFile" path="res://assets/fonts/barlow/Barlow-SemiBold.ttf" id="3_emphasis"]
 
 [sub_resource type="StyleBoxFlat" id="S_btn_normal"]
 content_margin_left = 18.0
@@ -191,7 +190,7 @@ shadow_offset = Vector2(2, 3)
 
 [resource]
 default_theme_scale_color = Color(1, 1, 1, 1)
-default_font = SubResource("Font_default")
+default_font = ExtResource("2_body")
 default_font_size = 16
 Label/colors/font_color = Color(0.9, 0.98, 1, 1)
 Label/colors/font_metadata_color = Color(0.78, 0.95, 1, 1)
@@ -225,3 +224,5 @@ ConfirmationDialog/styles/confirm_hover = SubResource("S_dialog_confirm_hover")
 ConfirmationDialog/styles/confirm_pressed = SubResource("S_dialog_confirm_pressed")
 CommsTicker/styles/panel = SubResource("S_panel_dark")
 Button/fonts/font = ExtResource("1_heading")
+RichTextLabel/fonts/normal_font = ExtResource("2_body")
+RichTextLabel/fonts/bold_font = ExtResource("3_emphasis")

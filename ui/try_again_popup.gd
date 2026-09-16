@@ -221,9 +221,8 @@ func _format_loadout(hull_id: String, active_ids: Array[String]) -> String:
 	var modules: Array[String] = []
 	for upgrade_id in active_ids:
 		var definition := _upgrade_definition(upgrade_id)
-		var icon := _safe_text(definition, "icon", FALLBACK_ICON)
 		var name := _safe_text(definition, "name", upgrade_id.replace("_", " ").to_upper())
-		modules.append("%s %s" % [icon, name])
+		modules.append(name)
 	var module_text := "NONE INSTALLED" if modules.is_empty() else " · ".join(modules)
 	return "LOADOUT  ·  %s\nNATIVE MODULES  %d/%d  ·  %s" % [
 		hull_name.to_upper(),
