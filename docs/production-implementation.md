@@ -15,7 +15,7 @@ scope is the Wave-20 Expedition, optional Endless, three hulls, and 13 upgrades.
 | 03 — Independent sound controls | M1 | Master, Music, SFX, and UI routing, saved controls, regression check | Implemented and tested; listening/mix approval remains external |
 | 04 — Combat clarity | M1 | HUD occlusion and bright-backdrop comparison in movement at 720p/1080p | Implemented and captured; fresh-player readability acceptance pending |
 | 05 — Opening presentation | M1 | Art reference, bundled licensed typography/icons, reflection teaching and first-upgrade timing | Implemented; 24 review captures plus practice, local timing tool verified; eight fresh-player sessions and visual approval remain open |
-| 06 — Whole Expedition | M2 | Hull/route/build matrix, boss phases, economy, ending and Endless validation | Queued; representative human playthroughs required |
+| 06 — Whole Expedition | M2 | Hull/route/build matrix, boss phases, economy, ending and Endless validation | Assisted matrix and settlement/dossier fixes implemented; natural runs, balance, boss readability, and victory music remain open |
 | 07 — Player trust | M3 | Save fault/rollback tests; local settings separation; graphics/HUD/input/accessibility options | Started: recovery followed by save, interrupted writes, and release guards added; remaining options, Cloud decision and physical-device work queued |
 | 08 — Candidate performance | M3 | Repeatable load scenario and release-package hardware measurements | Queued; Windows minimum-spec hardware required |
 | 09 — Demo and store | M4 | Tested demo policy, representative capture pack, accurate store copy and disclosures | Queued after opening acceptance; Steam account and asset permissions unresolved |
@@ -104,12 +104,43 @@ These input-driven checks do not establish human pacing. Wave thresholds and the
 first-installation schedule are unchanged. The eight-player M1 cohort, listening
 review, and visual approval remain required.
 
+### Whole Expedition engineering verification
+
+September 16, 2026, same pinned engine and local macOS environment:
+
+- Extended the existing Expedition smoke scene with 24 assisted production
+  journeys: three hulls, four route combinations, and base/full-meta profiles.
+  Twelve return home; twelve continue through the Wave-25 Harbinger. No smoke
+  scenes or CI entries were added.
+- Fixed score records lost on Return Home or living-run abandonment. Final
+  settlement now saves the record and remains safe to repeat. Fixed route
+  dossiers that incorrectly fell back to the Swallowtail name.
+- The journeys cover reward/allocation commit guards, all five boss identities,
+  phase cleanup, courier success/timeout, route fragments, simultaneous final
+  boss death and continue, both endings, Endless build retention, and settlement.
+  All 13 upgrade IDs appeared among the recorded installations.
+- Full existing smoke suite: **20/20 pass**, including **24/24 journeys**;
+  session logs in `.godot/expedition-full-suite/`. Native inventory **347
+  resources, 11 GLBs, 13 upgrades**; completion assertions **375**, runner tests
+  **8**, and release-tool tests **7**, all pass. Existing teardown diagnostics
+  remain; no GDScript errors occurred in the final suite.
+- [Seven staged captures](../design/production-expedition/README.md) show each
+  boss's third phase with reduced flashing, the selected Interceptor dossier,
+  and the ending. Live AI ran for the boss captures; god mode and staged health
+  make these review references, not natural runs or readability acceptance.
+- [Protocol and result records](expedition-playtest.md) separate the repeatable
+  engineering evidence from the hull/build/economy playtests still required.
+  M2 remains open, including the planned victory music resolution and mix review.
+- Standards and Spec reviews finished without remaining actionable findings.
+  The courier check was corrected to drive timeout processing and assert actor
+  cleanup instead of directly cancelling the objective.
+
 ## Next slice
 
-Continue 06: validate the whole Expedition across representative hulls, routes,
-and builds, including every boss phase, the reward economy, the ending, and the
-transition into Endless. Run the M1 fresh-player cohort alongside that work;
-later milestones stay open until their own evidence is recorded.
+Continue 07: separate local device settings from durable progression and finish
+the save recovery, graphics, HUD, input, and accessibility work. Run the M1 cohort
+and M2 natural-run protocol alongside engineering, and complete the ending's
+music resolution. Later milestones stay open until their own evidence is recorded.
 
 ## External decisions and evidence
 

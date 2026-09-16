@@ -51,6 +51,8 @@ func _run() -> void:
 
 	_check_progression()
 	_check_persistence_round_trip()
+	_check_run_settlement()
+	_failures.append_array(await preload("res://tests/expedition_journey_checks.gd").new().run(self))
 
 	# Restore the player's real save files and in-memory state. ExpeditionManager
 	# reloads so the autoload stays consistent with the restored save.
@@ -256,6 +258,30 @@ func _check_persistence_round_trip() -> void:
 		not saved.has("current_node_id") and not saved.has("selected_route_id"),
 		"Active-run state must never reach the save layer"
 	)
+
+
+func _check_run_settlement() -> void:
+	# Return Home and abandonment finalize without a player death. Both must
+	# retain a record score, and repeated finalization must not pay twice.
+	GameManager.start_game(false)
+	GameManager.high_score = 0
+	SaveManager.high_score = 0
+	GameManager.score = 43210
+	GameManager.current_wave = 21
+	GameManager.is_game_active = false
+	var wallet_before := MetaProgression.salvage
+	var runs_before := MetaProgression.stat_total_runs
+	GameManager.finalize_run()
+	_expect(GameManager.high_score == 43210 and SaveManager.high_score == 43210,
+		"A successful run saves its high score without requiring a defeat")
+	_expect(GameManager.last_run_was_record, "Victory settlement records the new high score")
+	var credited := GameManager.run_salvage
+	GameManager.finalize_run()
+	_expect(MetaProgression.salvage == wallet_before + credited,
+		"Repeated settlement cannot duplicate the run's salvage")
+	_expect(MetaProgression.stat_total_runs == runs_before + 1,
+		"Repeated settlement records one finished run")
+	GameManager.is_game_active = false
 
 
 func _contains(values: Array[StringName], target: StringName) -> bool:

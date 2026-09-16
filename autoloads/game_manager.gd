@@ -368,11 +368,15 @@ func _on_player_hit() -> void:
 
 	if lives <= 0:
 		is_game_active = false
-		if score > high_score:
-			high_score = score
-			last_run_was_record = true
-			SaveManager.record_high_score(high_score)
+		_record_run_high_score()
 		SignalBus.game_over.emit(score)
+
+
+func _record_run_high_score() -> void:
+	if score > high_score:
+		high_score = score
+		last_run_was_record = true
+		SaveManager.record_high_score(high_score)
 
 ## Tracks recent damage timestamps and triggers a screen shake when
 ## the player takes multiple hits within a short window. Clears the
@@ -490,6 +494,7 @@ func finalize_run() -> void:
 	if practice_mode or _run_finalized:
 		return
 	_run_finalized = true
+	_record_run_high_score()
 	var waves_cleared := maxi(current_wave - 1, 0)
 	run_salvage_score_bonus = roundi(float(MetaProgression.score_to_salvage(score)) * run_salvage_multiplier)
 	run_salvage_wave_bonus = roundi(float(waves_cleared * MetaProgression.SALVAGE_PER_WAVE_CLEARED) * run_salvage_multiplier)
