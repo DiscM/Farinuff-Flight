@@ -231,11 +231,15 @@ func _return_to_menu() -> void:
 ## operations on the run controller prevents the UI from reaching into manager
 ## internals or reviving legacy 2D actors.
 func dev_add_orbs(amount: int = 50) -> void:
+	if not OS.is_debug_build():
+		return
 	if GameManager.is_game_active and amount > 0:
 		SignalBus.xp_orb_collected.emit(amount)
 
 
 func dev_add_lives(amount: int = 5) -> void:
+	if not OS.is_debug_build():
+		return
 	if amount <= 0:
 		return
 	GameManager.lives += amount
@@ -243,6 +247,8 @@ func dev_add_lives(amount: int = 5) -> void:
 
 
 func dev_clear_hostiles() -> void:
+	if not OS.is_debug_build():
+		return
 	for enemy in get_tree().get_nodes_in_group(&"native_3d_enemies"):
 		if is_instance_valid(enemy) and enemy.has_method(&"take_damage"):
 			enemy.take_damage(999999)
@@ -251,30 +257,42 @@ func dev_clear_hostiles() -> void:
 
 
 func dev_force_generation(generation: int) -> void:
+	if not OS.is_debug_build():
+		return
 	GameManager.dev_enemy_generation_override = clampi(generation, 1, 4)
 	encounters.threat.set_generation(GameManager.dev_enemy_generation_override)
 
 
 func dev_spawn_archetype(kind: StringName) -> Node:
+	if not OS.is_debug_build():
+		return null
 	return encounters.dev_spawn_archetype(kind)
 
 
 func dev_trigger_enemy_abilities() -> void:
+	if not OS.is_debug_build():
+		return
 	for enemy in get_tree().get_nodes_in_group(&"native_3d_regular_enemies"):
 		if is_instance_valid(enemy) and enemy.has_method(&"dev_trigger_ability"):
 			enemy.dev_trigger_ability()
 
 
 func dev_spawn_boss_variant(variant: StringName) -> bool:
+	if not OS.is_debug_build():
+		return false
 	return encounters.dev_spawn_boss_variant(variant)
 
 
 func dev_trigger_elite_reward() -> void:
+	if not OS.is_debug_build():
+		return
 	if not _ended and not is_instance_valid(_run_overlay):
 		SignalBus.elite_upgrade_triggered.emit()
 
 
 func dev_trigger_point_allocation(points: int = 3) -> void:
+	if not OS.is_debug_build():
+		return
 	if not _ended and not is_instance_valid(_run_overlay) and points > 0:
 		SignalBus.allocation_triggered.emit(points)
 

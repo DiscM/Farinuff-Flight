@@ -32,7 +32,7 @@ func _run() -> void:
 	for failure in _failures:
 		push_error(failure)
 	if _failures.is_empty():
-		print("MENU_BOOT_SMOKE_PASS: direct frontend startup; first-flight and practice routing preserved")
+		print("MENU_BOOT_SMOKE_PASS direct frontend startup; first-flight and practice routing preserved")
 	get_tree().quit(0 if _failures.is_empty() else 1)
 
 func _expect(condition: bool, message: String) -> void:

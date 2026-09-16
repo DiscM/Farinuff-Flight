@@ -4,7 +4,7 @@ extends Node
 ## Proves, deterministically, the page registry contract: unknown ids are
 ## rejected, opening a page focuses its primary safe action, back() returns to
 ## the Command Deck, modals are exclusive and restore the exact invoking
-## control, ui_cancel closes a modal before navigating back, and placeholder
+## control, ui_cancel closes a modal before navigating back, and registered
 ## pages render with ids that match the registry.
 ##
 ## Run with:
@@ -15,7 +15,7 @@ extends Node
 const SHELL_SCENE := preload("res://ui/frontend/frontend_shell.tscn")
 const CONFIRMATION_DIALOG_SCENE := preload("res://ui/shared/confirmation_dialog.tscn")
 
-const PLACEHOLDER_PAGES: Array[StringName] = [
+const PAGES: Array[StringName] = [
 	&"expedition_map",
 	&"launch_bay",
 	&"hangar",
@@ -39,17 +39,19 @@ func _run() -> void:
 
 	await _check_unknown_page_rejected()
 	await check_page_focuses_primary()
-	await _check_placeholder_pages()
+	await _check_registered_pages()
 	await _check_back_returns_to_command_deck()
 	await _check_modal_exclusive_and_blocking()
 	await _check_modal_restores_exact_invoker()
 	await _check_modal_signal_close_restores_invoker()
 	await _check_ui_cancel_closes_modal_before_back()
 	await _check_shell_signals()
+	await ResourceCache.wait_for_scene(ResourceCache.NATIVE_RUN_PATH)
+	_shell.queue_free()
 	await _wait_frames(1)
 
 	if _failures.is_empty():
-		print("PASS: frontend navigation smoke tests")
+		print("FRONTEND_NAVIGATION_SMOKE_PASS")
 		get_tree().quit(0)
 	else:
 		for failure in _failures:
@@ -74,16 +76,16 @@ func _check_unknown_page_rejected() -> void:
 	)
 
 
-func _check_placeholder_pages() -> void:
-	for page_id in PLACEHOLDER_PAGES:
+func _check_registered_pages() -> void:
+	for page_id in PAGES:
 		_shell.show_page(page_id)
 		await _wait_frames(1)
 		var page := _shell.get_current_page()
 		_expect(
 			page != null and str(page.get_meta(&"frontend_page_id", &"")) == str(page_id),
-			"Placeholder page id must match the registry entry for %s" % page_id
+			"Page id must match the registry entry for %s" % page_id
 		)
-		_expect(page != null and _page_title_matches(page, page_id), "Placeholder %s must render its title" % page_id)
+		_expect(page != null and _page_title_matches(page, page_id), "Page %s must render its title" % page_id)
 		_expect(_shell.get_current_page_id() == page_id, "get_current_page_id must track the shown page")
 		_expect(_shell.back() == true, "back() from %s must report that it navigated" % page_id)
 

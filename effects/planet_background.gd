@@ -1,7 +1,8 @@
 extends Node2D
 ## Spawns PixelPlanets scenery and scrolls it continuously behind combat.
 
-const BASE_PATH = "res://effects/shaders/PixelPlanets/Planets/"
+# Use the project-root alias; Godot excludes nested projects from release packs.
+const BASE_PATH = "res://Planets/"
 # Note: BlackHole is intentionally excluded from the random pool — it is
 # reserved for boss fights (see effects/boss_black_hole.gd).
 const PLANET_SCENES = [
@@ -23,9 +24,13 @@ const PLANET_SCENES = [
 ## Canvas pixels per second; independent of player movement and planet scale.
 @export var drift_velocity := Vector2(-8.0, 24.0)
 @export_range(0.0, 256.0, 1.0, "or_greater") var wrap_padding := 32.0
+@export_range(0.0, 1.0) var flight_brightness := 0.65
+@export_range(0.0, 1.0) var boss_brightness := 0.35
 
 var current_planet: Control
 var _planet_layers: Array[Control] = []
+var _source_colors: Array = []
+var _brightness := 0.65
 
 ## Spawns a random planet on creation.
 func _ready() -> void:
@@ -34,6 +39,10 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if not is_instance_valid(current_planet):
 		return
+	var target_brightness := boss_brightness if GameManager.boss_active else flight_brightness
+	if not is_equal_approx(_brightness, target_brightness):
+		_brightness = move_toward(_brightness, target_brightness, delta * 0.75)
+		_apply_backdrop_palette()
 	# Freeze the vendored planet's surface clock as well as its travel. Its
 	# own time resumes where it stopped, without a catch-up jump after the boss.
 	current_planet.set_process(not GameManager.boss_active)
@@ -85,6 +94,9 @@ func _spawn_planet() -> void:
 		current_planet.set_seed(int(planet_seed))
 		
 	current_planet.randomize_colors()
+	_source_colors = Array(current_planet.get_colors())
+	_brightness = boss_brightness if GameManager.boss_active else flight_brightness
+	_apply_backdrop_palette()
 	
 	# Center the planet
 	# PixelPlanets nodes use Control anchors, but we want to treat it as a sprite
@@ -94,6 +106,15 @@ func _spawn_planet() -> void:
 	
 	# Random rotation speed if supported
 	current_planet.set_rotates(randf_range(0.01, 0.05))
+
+
+## Palette values reach every shader layer, including the brightest star.
+## Canvas modulation alone is insufficient for shaders that write COLOR.
+func _apply_backdrop_palette() -> void:
+	var colors: Array[Color] = []
+	for color: Color in _source_colors:
+		colors.append(Color.from_hsv(color.h, color.s * 0.7, color.v * _brightness, color.a))
+	current_planet.set_colors(colors)
 
 ## PixelPlanets scenes share materials by default; local copies prevent later spawns
 ## from overwriting palettes and shader seeds on planets already on screen.

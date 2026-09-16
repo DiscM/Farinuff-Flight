@@ -20,6 +20,8 @@ const LEGACY_SAVE_VERSION := 1
 const DEFAULT_SETTINGS: Dictionary = {
 	"master_volume": 0.8,
 	"music_volume": 0.8,
+	# Preserve the previous direct-to-Master mix for existing and fresh profiles.
+	"sfx_volume": 1.0,
 	"ui_volume": 0.8,
 	"screen_shake": true,
 	"crt_effect": true,
@@ -382,6 +384,7 @@ func _save_data() -> void:
 func _apply_audio_settings() -> void:
 	_apply_bus_volume("Master", float(settings.get("master_volume", 0.8)))
 	_apply_bus_volume("Music", float(settings.get("music_volume", 0.8)))
+	_apply_bus_volume("SFX", float(settings.get("sfx_volume", 1.0)))
 	_apply_bus_volume("UI", float(settings.get("ui_volume", 0.8)))
 
 func _apply_bus_volume(bus_name: String, raw_volume: float) -> void:

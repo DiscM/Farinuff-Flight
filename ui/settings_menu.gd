@@ -92,6 +92,23 @@ func _build_ui() -> void:
 	audio.add_child(music)
 	_refresh_music_label(music.value)
 
+	var sfx_label := Label.new()
+	sfx_label.text = "Sound effects: %d%%" % roundi(float(SaveManager.get_setting("sfx_volume", 1.0)) * 100)
+	audio.add_child(sfx_label)
+	var sfx_volume := HSlider.new()
+	sfx_volume.name = "SFXVolume"
+	sfx_volume.tooltip_text = "Combat sounds, including boost, reflection, damage, and pickups."
+	sfx_volume.min_value = 0.0
+	sfx_volume.max_value = 1.0
+	sfx_volume.step = 0.05
+	sfx_volume.value = float(SaveManager.get_setting("sfx_volume", 1.0))
+	sfx_volume.custom_minimum_size.y = 34
+	sfx_volume.value_changed.connect(func(value: float):
+		SaveManager.update_setting("sfx_volume", value)
+		sfx_label.text = "Sound effects: %d%%" % roundi(value * 100)
+	)
+	audio.add_child(sfx_volume)
+
 	var ui_label := Label.new()
 	ui_label.text = "Menu audio: %d%%" % roundi(float(SaveManager.get_setting("ui_volume", 0.8)) * 100)
 	audio.add_child(ui_label)
