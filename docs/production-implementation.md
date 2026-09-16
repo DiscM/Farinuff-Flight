@@ -88,6 +88,11 @@ September 16, 2026, same pinned engine and local macOS environment:
   manifest errors, all artifact checksums valid. All three bundled fonts and
   the OFL are present; the loose OFL matches the source. This package records
   the dirty working tree and is not a promoted candidate.
+- A second fresh-cache export from a clean checkout of `506fad4e`, including
+  the pinned PixelPlanets submodule, passed with **3,697 entries** and **13
+  artifact checksums** verified. `builds/production-opening-clean-windows/`
+  records `dirty: false`; the package includes the font remaps, font data, and
+  full OFL. Windows runtime testing and GitHub execution remain pending.
 - Opt-in [opening timing](opening-playtest.md) verified through actual movement,
   shots, reflection, a reflected hit, and committed upgrade installation.
   Practice reports its actual hull and initial wave. Truncated log records are
