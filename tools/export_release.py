@@ -10,6 +10,7 @@ from pathlib import Path
 import re
 import shutil
 import subprocess
+import uuid
 
 from inspect_release import inspect, read_pack, SHIPPING_AUDIO
 from godot_workspace import ROOT, staged_project
@@ -29,6 +30,7 @@ def main() -> int:
     parser.add_argument("--git", default="git")
     parser.add_argument("--output", required=True, type=Path, help="new, empty artifact directory")
     parser.add_argument("--allow-dirty", action="store_true", help="local validation only; records dirty state")
+    parser.add_argument("--benchmark", action="store_true", help="dedicated non-shipping performance package with isolated progress")
     args = parser.parse_args()
     godot = shutil.which(args.godot)
     if godot is None:
@@ -63,12 +65,20 @@ def main() -> int:
     # Import/export settings belong to a private project, not the developer's
     # project.godot or the source revision recorded in the candidate metadata.
     export_settings = project + '\n[editor]\nimport/use_multiple_threads=false\n[filesystem]\nimport/blender/enabled=false\n'
+    benchmark_profile = "farinuff-performance-" + uuid.uuid4().hex if args.benchmark else None
+    if args.benchmark:
+        export_settings += ('\n[application]\nrun/main_scene="res://benchmarks/candidate_performance.tscn"\n'
+                            'run/flush_stdout_on_print=true\nconfig/use_custom_user_dir=true\nconfig/custom_user_dir_name=' + json.dumps(benchmark_profile)
+                            + '\n[benchmark]\nenabled=true\n')
     with staged_project(export_settings, reuse_import_cache=False) as staged:
         # Only the explicitly inventoried sampler cues belong in a candidate.
         excluded_audio = sorted(path.relative_to(ROOT).as_posix() for path in (ROOT / "assets").rglob("*")
                                 if path.suffix.lower() in {".wav", ".ogg", ".mp3", ".flac"}
                                 and path.relative_to(ROOT).as_posix() not in SHIPPING_AUDIO)
         presets = (staged / "export_presets.cfg").read_text()
+        if args.benchmark:
+            presets = presets.replace('custom_features=""', 'custom_features="performance_benchmark"')
+            presets = presets.replace('benchmarks/**,', '')
         presets = re.sub(r'^exclude_filter="([^"]*)"',
                          lambda match: 'exclude_filter=' + json.dumps(match[1] + "," + ",".join(excluded_audio), ensure_ascii=False),
                          presets, flags=re.MULTILINE)
@@ -96,7 +106,7 @@ def main() -> int:
     if not executable.exists() or executable.stat().st_size == 0:
         raise ValueError("Export did not produce a Windows executable")
     records = read_pack(executable.with_suffix(".pck"))
-    errors = inspect(records)
+    errors = inspect(records, benchmark=args.benchmark)
     (output / "package-manifest.json").write_text(json.dumps({"files": records, "errors": errors}, indent=2) + "\n")
     if errors:
         print("\n".join(errors))
@@ -125,6 +135,8 @@ def main() -> int:
         "preset": "Windows Desktop",
         "built_at_utc": datetime.now(timezone.utc).isoformat(),
         "package_files": len(records),
+        "purpose": "performance_benchmark" if args.benchmark else "release_candidate",
+        "benchmark_profile": benchmark_profile,
         "validation": "Export and package inspection only; target-machine playtest and permissions remain required.",
     }
     (output / "build.json").write_text(json.dumps(metadata, indent=2) + "\n")
@@ -134,7 +146,8 @@ def main() -> int:
             with file.open("rb") as source:
                 checksums.append(f"{hashlib.file_digest(source, 'sha256').hexdigest()}  {file.relative_to(output).as_posix()}")
     (output / "SHA256SUMS.txt").write_text("\n".join(checksums) + "\n")
-    print(f"Windows candidate: {output} ({len(records)} verified package entries)")
+    label = "Non-shipping Windows benchmark" if args.benchmark else "Windows candidate"
+    print(f"{label}: {output} ({len(records)} verified package entries)")
     return 0
 
 

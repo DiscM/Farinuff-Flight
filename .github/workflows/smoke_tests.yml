@@ -30,6 +30,9 @@ jobs:
       - name: Check release package gate
         run: python3 tests/test_release_tools.py
 
+      - name: Check performance evidence tools
+        run: python3 tests/test_performance_tools.py
+
       - name: Import project (refresh class cache)
         timeout-minutes: 5
         run: |

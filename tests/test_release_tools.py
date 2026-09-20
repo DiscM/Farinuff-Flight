@@ -10,10 +10,19 @@ import unittest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "tools"))
 from export_release import export_errors
-from inspect_release import inspect, read_pack, REQUIRED_RESOURCES, SHIPPING_AUDIO
+from inspect_release import inspect, read_pack, REQUIRED_RESOURCES, SHIPPING_AUDIO, BENCHMARK_RESOURCES
 
 
 class ReleaseInspectionTests(unittest.TestCase):
+    def test_benchmark_resources_require_explicit_nonshipping_mode(self) -> None:
+        records = [{"path": p} for p in REQUIRED_RESOURCES | SHIPPING_AUDIO | BENCHMARK_RESOURCES | {"project.binary", "THIRD_PARTY_NOTICES.md"}]
+        self.assertEqual(len(inspect(records)), len(BENCHMARK_RESOURCES))
+        self.assertEqual(inspect(records, benchmark=True), [])
+        records.append({"path": "benchmarks/candidate_performance.gdc"})
+        self.assertEqual(inspect(records, benchmark=True), [])
+        records.append({"path": "benchmarks/unlisted_debug_helper.gd"})
+        self.assertEqual(len(inspect(records, benchmark=True)), 1)
+
     def make_pack(self, path: Path, contents: dict[str, bytes]) -> None:
         # Godot v3: 104-byte header, content bytes, then a directory of records.
         payload = b"".join(contents.values())

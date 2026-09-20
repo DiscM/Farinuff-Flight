@@ -17,7 +17,7 @@ scope is the Wave-20 Expedition, optional Endless, three hulls, and 13 upgrades.
 | 05 — Opening presentation | M1 | Art reference, bundled licensed typography/icons, reflection teaching and first-upgrade timing | Implemented; 24 review captures plus practice, local timing tool verified; eight fresh-player sessions and visual approval remain open |
 | 06 — Whole Expedition | M2 | Hull/route/build matrix, boss phases, economy, ending and Endless validation | Assisted matrix and settlement/dossier fixes implemented; natural runs, balance, boss readability, and victory music remain open |
 | 07 — Player trust | M3 | Save fault/rollback tests; local settings separation; graphics/HUD/input/accessibility options | Implemented with save recovery, independent settings, display/HUD/toggle-fire controls and interruption handling; Cloud remains off; exported-package and physical-device acceptance open |
-| 08 — Candidate performance | M3 | Repeatable load scenario and release-package hardware measurements | Queued; Windows minimum-spec hardware required |
+| 08 — Candidate performance | M3 | Repeatable load scenario and release-package hardware measurements | Engineering implemented; Mac release diagnostic captured; foreground Windows minimum-spec and long-session acceptance open |
 | 09 — Demo and store | M4 | Tested demo policy, representative capture pack, accurate store copy and disclosures | Queued after opening acceptance; Steam account and asset permissions unresolved |
 | 10 — Launch and support | M5 | Candidate promotion/rollback rehearsal, support route and known issues | Queued after release-candidate acceptance; no publication authorized or performed |
 
@@ -172,12 +172,55 @@ September 19, 2026, same pinned engine and local macOS environment:
 - Standards and Spec reviews finished without remaining actionable findings
   after the migration, interruption, quit-retry, and deferred-overlay fixes.
 
+### Slice 08 — Candidate performance (September 19, 2026)
+
+- Added a dedicated, non-shipping benchmark covering generation-four pressure,
+  all five bosses in their third phase, simultaneous hazards, seven stacked
+  upgrades, actual pause-menu restarts, and longer Endless windows. Selector
+  seeds and attack sequences are recorded; attack IDs matched across the three
+  release cycles. [Protocol and commands](candidate-performance.md).
+- The runner retains raw wall-clock intervals, p50/p95/p99, hitches, process RSS,
+  renderer allocations, scene timing, pool counters, configuration, build/runtime
+  hashes and a [viewport capture](../design/production-performance/README.md).
+  Cleanup waits for the host's memory sample before the next cycle begins.
+  Source profiles are disposable; benchmark packages use separate profiles.
+- Fixed a cold-load stall observed with nested resource-loader workers and
+  GDScript/renderer locks. Root scene loading remains asynchronous; dependencies
+  now stay on their request's worker. The final release workload completed.
+- A pinned Mac release template executed the identified Windows benchmark PCK:
+  **21/21 workloads, three real restarts, three 60-second Endless windows**.
+  This was explicitly a background diagnostic, after strict foreground attempts
+  were invalidated by focus loss. Of 36,959 sampled frames, 22,373 were unfocused.
+  It is not a Windows executable or foreground minimum-spec measurement.
+- Cleanup nodes stayed **38**, resources **1,030**, and objects were
+  **2,864 / 2,865 / 2,865**. Post-cleanup RSS was **257.0 / 241.2 / 248.2 MB**;
+  process peak was **451.2 MB**. Pools had **zero growth after warmup**. The short
+  three-cycle headless probe also completed, with zero orphan nodes. This small
+  observation does not establish long-session stability.
+- Background p95 intervals ranged **10.73–28.89 ms**, with **74 >50 ms intervals**.
+  No 60 FPS pass is claimed. Startup to first playable run was **7.87 seconds**;
+  production retry transitions were **621 / 1,343 / 878 ms** on this diagnostic
+  host/configuration. Texture conversion and shutdown texture/RID diagnostics
+  remain recorded; their ownership is unresolved. [Validation record](validation/candidate-performance-2026-09-19.json).
+- Final existing suite: **20/20 scenes**, including **24/24 assisted journeys**.
+  Native inventory **350 resources / 11 GLBs / 13 upgrades**, **375** file-only
+  assertions, **8** runner tests, **8** release-gate tests and **12** performance
+  tool tests pass. CI includes the new Python checks; no smoke scenes were added.
+  Two-axis review finished with no remaining actionable findings.
+- Both fresh-cache exports pass inspection: **3,705** benchmark entries and
+  **3,699** normal shipping entries, with **zero benchmark paths** in the latter.
+  These local artifacts are accurately marked dirty, not promoted candidates.
+  M3 remains open for foreground Windows hardware, long sessions, teardown
+  ownership, physical input and exported-player acceptance.
+
 ## Next slice
 
-08 — Candidate performance: establish a repeatable high-load scenario and record
-frame-time, memory, startup, retry, and transition measurements from an identified
-release package. Use that work to investigate the existing teardown diagnostics.
-Windows minimum-spec measurements and physical-device acceptance remain required.
+09 — Demo and store: settle the demo boundary and migration policy, prepare
+representative captures and accurate store copy, and finish permission/disclosure
+records. Publication still depends on opening acceptance and the unresolved
+Steam account and asset permissions. No publication is authorized by this ledger.
+Foreground Windows performance, long sessions and physical-device acceptance
+remain required alongside that work.
 Run the M1 cohort and M2 natural-run protocol alongside engineering, and complete
 the ending's music resolution. Milestones stay open until their evidence exists.
 
