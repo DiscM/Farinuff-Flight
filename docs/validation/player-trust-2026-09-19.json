@@ -1,0 +1,151 @@
+{
+  "slice": "07 \u2014 Player trust",
+  "date": "2026-09-19",
+  "base_commit": "f46afd60df2e8cf40abcc99124f63277f68256b9",
+  "engine": "4.6.3.stable.official.7d41c59c4",
+  "environment": {
+    "os": "macOS",
+    "gpu": "Apple A18 Pro",
+    "renderer": "Metal Forward+",
+    "save_profiles": "disposable",
+    "existing_copy_edits_in_captures": true,
+    "exported_windows_execution": false
+  },
+  "smoke_suite": {
+    "passed": 20,
+    "total": 20,
+    "scenes": [
+      "audio_settings_smoke",
+      "autoload_smoke",
+      "background_drift_smoke",
+      "boss_ai_smoke",
+      "boss_flight_smoke",
+      "boss_patterns_smoke",
+      "combat_motion_smoke",
+      "combat_readability_smoke",
+      "dev_commands_smoke",
+      "expedition_progression_smoke",
+      "frontend_navigation_smoke",
+      "frontier_visual_smoke",
+      "in_house_vfx_smoke",
+      "menu_boot_smoke",
+      "native_completion_smoke",
+      "neon_cabinet_smoke",
+      "pixel_enemy_material_smoke",
+      "pooling_smoke",
+      "resource_cache_smoke",
+      "run_warmup_benchmark"
+    ],
+    "per_scene_timeout_seconds": 240,
+    "assisted_journeys": 24,
+    "script_errors": 0,
+    "log_directory": ".godot/player-trust-final-suite",
+    "new_scenes": 0,
+    "initial_run": "18/20: motion fixture required a neutral input observation; Expedition timed out at 120 seconds during concurrent live capture. Final run used the corrected fixture after capture stopped."
+  },
+  "static_checks": {
+    "native_resources": 350,
+    "glbs": 11,
+    "upgrades": 13,
+    "completion_assertions": 375,
+    "smoke_runner_tests": 8,
+    "release_tool_tests": 7,
+    "headless_import": "pass"
+  },
+  "live_save_retry": {
+    "injected_failure": "directory at save_data.json.tmp",
+    "kept_application_open": true,
+    "retry_then_actual_quit": true,
+    "reopened_main_menu": true,
+    "high_score": 12345,
+    "salvage": 103,
+    "total_runs": 1,
+    "hud_scale": 1.3,
+    "storage_notice": "",
+    "staged_score_and_wave": true,
+    "god_mode": true
+  },
+  "reviews": {
+    "standards": "no remaining actionable findings",
+    "spec": "no remaining actionable findings"
+  },
+  "cloud": "disabled; no platform/account configuration changed",
+  "milestone_M3": "open",
+  "open_evidence": [
+    "exported Windows gameplay and update/rollback",
+    "physical controller and full keyboard-only journey",
+    "cross-aspect spawn/aim fairness",
+    "low-color-discrimination and long-string/readability acceptance",
+    "reviewed languages and string externalization",
+    "two-machine/offline/conflict/account Cloud behavior",
+    "demo-to-full migration policy in slice 09",
+    "natural session length before suspend/checkpoint decision",
+    "target-hardware frame times and memory"
+  ],
+  "diagnostics": [
+    "Existing headless ObjectDB/resource/dummy-shader teardown diagnostics",
+    "Metal quit logged particle-shader and texture cleanup diagnostics; slice 08 investigation remains open"
+  ],
+  "captures": [
+    {
+      "path": "design/production-player-trust/captures/hud-1080-130.png",
+      "width": 1920,
+      "height": 1080,
+      "sha256": "34279e08e21f62c2ae1a96422b93d461a00863959d74d674fd09029d2683fa37"
+    },
+    {
+      "path": "design/production-player-trust/captures/hud-16-10-130.png",
+      "width": 1280,
+      "height": 800,
+      "sha256": "6d69eec3b212d67f551c7f7badcb35cf4b9f15b69061906fa8b8525e44600f43"
+    },
+    {
+      "path": "design/production-player-trust/captures/hud-720-130.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "cfcc7afb743107283f54015873b5aa18f07c90ce4a6753c8a4a0346d2f8bb67b"
+    },
+    {
+      "path": "design/production-player-trust/captures/hud-ultrawide-130.png",
+      "width": 1920,
+      "height": 810,
+      "sha256": "b1db4ace90f6abe653cfa9a6a829ef2b0c97359cedbc7a949dec8c8b734e8b2e"
+    },
+    {
+      "path": "design/production-player-trust/captures/newer-save-warning-720.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "78878c76e9f3ed6d9073e4aca47a9a85ce460e22cbe5a5730c7c50fa1e450fd5"
+    },
+    {
+      "path": "design/production-player-trust/captures/quit-confirmation-720-large.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "e2ff88f04f8e90a3c785cd6be53aec896f37e7e1468f583a0653375000c239dc"
+    },
+    {
+      "path": "design/production-player-trust/captures/quit-save-failure-720-large.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "0eaddd5559b5bacfe8fe98eb96a3f7c99abad41de2f6c3ca96b8c581876165ea"
+    },
+    {
+      "path": "design/production-player-trust/captures/settings-access-hud-720-large.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "84fe1a361ddc48d327335e17cf0933deb443a8780a88644c77c3b7a5db3a5f27"
+    },
+    {
+      "path": "design/production-player-trust/captures/settings-controls-720-large.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "89c9227c5d644c966f28317414d2fe1e5347a5168dfd70002b2f244ed60d3118"
+    },
+    {
+      "path": "design/production-player-trust/captures/settings-display-options-720-large.png",
+      "width": 1280,
+      "height": 720,
+      "sha256": "c0eab217f38444d33b500235adf3bf59d6d20d0fa8ef0cc52b24cb95ba7b8f18"
+    }
+  ]
+}

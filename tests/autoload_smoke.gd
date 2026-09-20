@@ -17,6 +17,8 @@ func _ready() -> void:
 
 
 func _run() -> void:
+	var disk_snapshot := preload("res://tests/save_file_snapshot.gd").new()
+	_failures.append_array(preload("res://tests/player_trust_save_checks.gd").new().run())
 	_check_object_pool()
 	await _check_save_manager()
 	await _check_meta_progression()
@@ -25,6 +27,7 @@ func _run() -> void:
 	# unrelated parse errors during teardown.
 	await ResourceCache.wait_for_scene(ResourceCache.NATIVE_RUN_PATH)
 
+	disk_snapshot.restore()
 	if _failures.is_empty():
 		print("AUTOLOAD_SMOKE_PASS")
 		print("PASS: autoload smoke tests")

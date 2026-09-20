@@ -20,6 +20,7 @@ func run(owner: Node) -> Array[String]:
 	_owner = owner
 	_tree = owner.get_tree()
 	owner.process_mode = Node.PROCESS_MODE_ALWAYS
+	await _check_reward_quit_overlap()
 	var index := 0
 	for full_meta in [false, true]:
 		for hull: String in HULLS:
@@ -31,6 +32,68 @@ func run(owner: Node) -> Array[String]:
 	_tree.current_scene = owner
 	_tree.paused = false
 	return _failures
+
+
+func _check_reward_quit_overlap() -> void:
+	_case = "reward/quit overlap"
+	_fixture("ship_swallowtail", false, 2) # Story Off, so the elite is the last overlay.
+	var game := RUN.instantiate()
+	_tree.root.add_child(game)
+	_tree.current_scene = game
+	game.get_window().focus_exited.emit() # Interrupt while actor warmup is awaiting.
+	if not await _until(func(): return game.encounters.started, "interrupted run preparation"):
+		await _dispose(game)
+		return
+	game.encounters.set_physics_process(false)
+	game.player.set_dev_god_mode(true)
+	await _frames(2)
+	_expect(_tree.paused and is_instance_valid(game._pause_overlay), "Run startup and its empty reward queue preserve the loading interruption")
+	game._close_pause_menu()
+	for interruption: String in ["quit", "focus", "controller"]:
+		game._queue_elite_reward()
+		var panel := await _overlay(game, &"upgrade_chosen")
+		if panel == null:
+			break
+		var selected: String = panel.chosen_upgrades[0].id
+		var select: Button = panel.cards_by_id[selected].get_meta("select_button")
+		select.pressed.emit()
+		panel._install_button.pressed.emit()
+		match interruption:
+			"quit":
+				game._confirm_window_close()
+			"focus":
+				game.get_window().focus_exited.emit()
+			"controller":
+				InputBindings.family = "gamepad"
+				InputBindings.active_gamepad = 42
+				InputBindings._on_joy_connection_changed(42, false)
+		await _tree.create_timer(0.25, true).timeout
+		_expect(_tree.paused and not is_instance_valid(game._run_overlay), "The final reward cannot resume unattended after " + interruption)
+		if interruption == "quit":
+			game._exit_confirmation.get_child(0)._finish(false)
+		else:
+			_expect(is_instance_valid(game._pause_overlay), "Reward completion retains an interruption until explicit resume")
+			game._close_pause_menu()
+		await _frames(2)
+		_expect(not _tree.paused and not is_instance_valid(game._pause_overlay), "Explicit resume never strands a pause after " + interruption)
+	GameManager.is_game_active = false
+	game._end_run(GameManager.score)
+	game._confirm_window_close() # Before the deferred Try Again mount.
+	await _frames(2)
+	_expect(not is_instance_valid(game._run_overlay) and game._exit_confirmation.is_ancestor_of(_tree.root.gui_get_focus_owner()), "A deferred end screen waits for quit cancellation without stealing focus")
+	game._exit_confirmation.get_child(0)._finish(false)
+	var retry := await _overlay(game, &"try_again_accepted")
+	if retry != null:
+		retry._countdown = 0.1
+		game._confirm_window_close()
+		await _tree.create_timer(0.25, true).timeout
+		_expect(is_instance_valid(retry) and not retry._action_taken and retry._countdown > 0.0, "Quit confirmation suspends the pending Try Again countdown")
+		_expect(game._exit_confirmation.is_ancestor_of(_tree.root.gui_get_focus_owner()), "A countdown cannot move focus behind the quit modal")
+		game._exit_confirmation.get_child(0)._finish(false)
+		retry._on_try_again()
+		await _frames(2)
+		_expect(GameManager.is_game_active and not _tree.paused, "Cancelling quit retains the offered continuation")
+	await _dispose(game)
 
 
 func _fixture(hull: String, full_meta: bool, index: int) -> void:

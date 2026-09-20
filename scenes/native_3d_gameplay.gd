@@ -61,6 +61,11 @@ const MONITOR_POOL_PRESSURE := &"native_3d/pool_pressure"
 
 var _previous_hdr_2d: bool = false
 var _pause_overlay: CanvasLayer
+var _exit_confirmation: CanvasLayer
+var _previous_auto_accept_quit := true
+var _gameplay_prepared := false
+var _interruption_pending := false
+var _quit_finalized := false
 var _metrics_timer := 0.0
 var _metrics_interval := 0.25
 var _drone: PlayerDrone
@@ -88,6 +93,11 @@ func _enter_tree() -> void:
 
 func _ready() -> void:
 	add_to_group(&"native_3d_gameplay")
+	_previous_auto_accept_quit = get_tree().auto_accept_quit
+	get_tree().auto_accept_quit = false
+	get_window().focus_exited.connect(_pause_for_interruption)
+	get_window().close_requested.connect(_confirm_window_close)
+	InputBindings.active_gamepad_disconnected.connect(_pause_for_interruption)
 	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
 	GameManager.is_game_active = false
 	if not actors_root.child_entered_tree.is_connected(_on_actor_entered_tree):
@@ -128,6 +138,8 @@ func _ready() -> void:
 		$TransitionOverlay/Message.text = "Drone preparation failed. See the debugger."
 		return
 	await _prepare_run_actors()
+	if _quit_finalized:
+		return
 	player.fire_requested.connect(projectile_manager.fire_player_projectile)
 	player.muzzle_feedback_requested.connect(_on_player_fired)
 	player.deflection_requested.connect(projectile_manager.deflect_enemy_projectiles)
@@ -164,6 +176,9 @@ func _ready() -> void:
 		opening_metrics.name = "OpeningMetrics"
 		add_child(opening_metrics)
 		opening_metrics.start(self)
+	_gameplay_prepared = true
+	if _interruption_pending:
+		_pause_for_interruption()
 	gameplay_ready.emit()
 
 
@@ -669,9 +684,24 @@ func _get_presentation_pool_pressure() -> float:
 func _unhandled_input(event: InputEvent) -> void:
 	if not InputBindings.is_pause_event(event) or event.is_echo():
 		return
+	get_viewport().set_input_as_handled()
+	_pause_for_interruption()
+
+
+func _pause_for_interruption() -> void:
+	player.reset_action_input()
+	if not _gameplay_prepared or is_instance_valid(_exit_confirmation):
+		_interruption_pending = true
+		return
+	# Reward/route/ending screens already own the pause. Never stack a second
+	# pause overlay over them, or automatically resume when focus returns.
+	if get_tree().paused:
+		if not is_instance_valid(_pause_overlay):
+			_interruption_pending = true
+		return
 	if not GameManager.is_game_active or is_instance_valid(_pause_overlay):
 		return
-	get_viewport().set_input_as_handled()
+	_interruption_pending = false
 	_pause_overlay = CanvasLayer.new()
 	_pause_overlay.layer = 20
 	_pause_overlay.process_mode = Node.PROCESS_MODE_ALWAYS
@@ -683,11 +713,80 @@ func _unhandled_input(event: InputEvent) -> void:
 	get_tree().paused = true
 
 
-func _close_pause_menu() -> void:
+func _confirm_window_close() -> void:
+	if is_instance_valid(_exit_confirmation):
+		return
+	var was_paused := get_tree().paused
+	get_tree().paused = true
+	_exit_confirmation = CanvasLayer.new()
+	_exit_confirmation.layer = 100
+	_exit_confirmation.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(_exit_confirmation)
+	_set_quit_overlay_active(true)
+	var dialog := preload("res://ui/shared/run_confirmation.gd").new()
+	dialog.title = "Quit the game?"
+	dialog.dialog_text = "This run will end and cannot be resumed. Earned salvage and your score record will be saved before exiting."
+	dialog.confirmed.connect(_attempt_quit)
+	dialog.canceled.connect(func():
+		_exit_confirmation.queue_free()
+		_exit_confirmation = null
+		_set_quit_overlay_active(false)
+		_resume_after_quit_cancel(was_paused)
+	)
+	_exit_confirmation.add_child(dialog)
+
+
+func _attempt_quit() -> void:
+	if not _quit_finalized:
+		_quit_finalized = true
+		if _gameplay_prepared:
+			if has_method("abandon_run"):
+				call("abandon_run")
+			else:
+				GameManager.finalize_run()
+	if SaveManager.save_before_quit():
+		_quit_application()
+	else:
+		_show_quit_save_failure.call_deferred()
+
+
+func _set_quit_overlay_active(_active: bool) -> void:
+	pass
+
+
+func _show_quit_save_failure() -> void:
+	var dialog := preload("res://ui/shared/run_confirmation.gd").new()
+	dialog.title = "Save failed"
+	dialog.dialog_text = "Your run has ended, but some changes have not been saved.\n\n" + SaveManager.get_storage_notice() + "\n\nRetry after fixing the problem, or exit without saving these changes."
+	dialog.confirm_text = "QUIT WITHOUT SAVING"
+	dialog.cancel_text = "RETRY SAVE"
+	dialog.confirmed.connect(_quit_application)
+	dialog.canceled.connect(_attempt_quit)
+	_exit_confirmation.add_child(dialog)
+
+
+func _quit_application() -> void:
+	get_tree().quit()
+
+
+func _resume_after_quit_cancel(was_paused: bool) -> void:
+	if not was_paused:
+		_resume_gameplay()
+
+
+func _resume_gameplay() -> void:
+	if is_instance_valid(_exit_confirmation) or is_instance_valid(_pause_overlay):
+		return
 	get_tree().paused = false
+	if _interruption_pending:
+		_pause_for_interruption()
+
+
+func _close_pause_menu() -> void:
 	if is_instance_valid(_pause_overlay):
 		_pause_overlay.queue_free()
 	_pause_overlay = null
+	_resume_gameplay()
 
 
 func _exit_tree() -> void:
@@ -701,6 +800,7 @@ func _exit_tree() -> void:
 	if get_viewport() != null:
 		get_viewport().use_hdr_2d = _previous_hdr_2d
 	if get_tree() != null:
+		get_tree().auto_accept_quit = _previous_auto_accept_quit
 		get_tree().paused = false
 	GameManager.is_game_active = false
 

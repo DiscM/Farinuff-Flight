@@ -2,6 +2,7 @@ extends Node
 ## Owns gameplay bindings without changing the menu navigation safety keys.
 signal bindings_changed
 signal device_changed
+signal active_gamepad_disconnected
 
 const ACTIONS := ["move_left", "move_right", "move_up", "move_down", "shoot", "boost", "pause"]
 const TITLES := ["Move left", "Move right", "Move up", "Move down", "Fire", "Boost / reflect", "Pause"]
@@ -37,6 +38,7 @@ func _ready() -> void:
 	var pads := Input.get_connected_joypads()
 	if not pads.is_empty():
 		active_gamepad = pads[0]
+	Input.joy_connection_changed.connect(_on_joy_connection_changed)
 	apply_bindings()
 
 func _input(event: InputEvent) -> void:
@@ -201,3 +203,16 @@ func event_label(event: InputEvent) -> String:
 
 func is_pause_event(event: InputEvent) -> bool:
 	return event.is_action_pressed("pause") or (event is InputEventKey and event.pressed and event.keycode == KEY_ESCAPE)
+
+
+func _on_joy_connection_changed(device: int, connected: bool) -> void:
+	if connected or family != "gamepad" or device != active_gamepad:
+		return
+	family = "keyboard"
+	active_gamepad = -1
+	# Clear the disconnected device's retained action states before offering a
+	# keyboard resume. A newly connected pad takes over on its next input.
+	for action: String in ACTIONS:
+		Input.action_release(action)
+	device_changed.emit()
+	active_gamepad_disconnected.emit()

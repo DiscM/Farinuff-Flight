@@ -59,6 +59,7 @@ func _ready() -> void:
 	_build_wave_progress()
 	_apply_mockup_style()
 	_arrange_cabinet_hud()
+	SaveManager.settings_changed.connect(_fit_combat_header)
 	SignalBus.score_changed.connect(_on_score_changed)
 	SignalBus.combo_changed.connect(_on_combo_changed)
 	SignalBus.lives_changed.connect(_on_lives_changed)
@@ -260,6 +261,7 @@ func _process(delta: float) -> void:
 		var route := ExpeditionManager.get_current_node()
 		_route_label.text = "PRACTICE" if GameManager.practice_mode else str(route.display_name).to_upper() if route != null and ExpeditionManager.is_expedition_active() else "ENDLESS" if GameManager.current_wave > 20 else "EXPEDITION"
 	_sync_power_up_timers()
+	power_up_panel.visible = power_up_container.get_child_count() > 0
 	_update_craft_visibility(delta)
 
 
@@ -441,10 +443,12 @@ func _arrange_cabinet_hud() -> void:
 	header.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	header.add_theme_stylebox_override("panel", _hud_outline(NeonUI.CYAN, NeonUI.INK_DARK))
 	add_child(header)
+	var stack := VBoxContainer.new()
+	header.add_child(stack)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
-	header.add_child(row)
-	for panel in [score_panel, combo_panel, wave_panel, lives_panel, orb_panel, power_up_panel]:
+	stack.add_child(row)
+	for panel in [score_panel, combo_panel, wave_panel, lives_panel, orb_panel]:
 		panel.reparent(row)
 		panel.custom_minimum_size = Vector2.ZERO
 		panel.size_flags_horizontal = Control.SIZE_FILL
@@ -455,7 +459,10 @@ func _arrange_cabinet_hud() -> void:
 	wave_panel.custom_minimum_size.x = 130
 	lives_panel.custom_minimum_size.x = 54
 	orb_panel.custom_minimum_size.x = 140
-	power_up_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	power_up_panel.reparent(stack)
+	power_up_panel.custom_minimum_size = Vector2.ZERO
+	power_up_panel.add_theme_stylebox_override("panel", StyleBoxEmpty.new())
+	power_up_panel.hide()
 	for label in [score_label, wave_label]:
 		label.add_theme_font_override("font", NeonUI.DATA_FONT)
 		label.add_theme_font_size_override("font_size", 14)
@@ -484,7 +491,7 @@ func _arrange_cabinet_hud() -> void:
 	boost_slot.alignment = BoxContainer.ALIGNMENT_CENTER
 	boost_slot.add_theme_constant_override("separation", 3)
 	row.add_child(boost_slot)
-	row.move_child(boost_slot, power_up_panel.get_index())
+
 	left_dock.hide()
 	right_dock.hide()
 	boss_dock.offset_top = 58
@@ -503,12 +510,20 @@ func _arrange_cabinet_hud() -> void:
 
 func _fit_combat_header() -> void:
 	var header := get_node("CombatHeader") as PanelContainer
-	var width := minf(maxf(720.0, header.get_combined_minimum_size().x), get_viewport().get_visible_rect().size.x - 24.0)
+	var factor := float(SaveManager.get_setting("hud_scale", 1.0))
+	var width := minf(maxf(720.0, header.get_combined_minimum_size().x), (get_viewport().get_visible_rect().size.x - 24.0) / factor)
+	var height := maxf(40.0, header.get_combined_minimum_size().y)
+	header.scale = Vector2.ONE * factor
 	header.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
-	header.offset_left = -width / 2.0
-	header.offset_right = width / 2.0
+	header.offset_left = -width * factor / 2.0
+	header.offset_right = header.offset_left + width
 	header.offset_top = 10
-	header.offset_bottom = 50
+	header.offset_bottom = 10 + height
+	boss_dock.scale = Vector2.ONE * factor
+	boss_dock.offset_left = -180.0 * factor
+	boss_dock.offset_right = boss_dock.offset_left + 360.0
+	boss_dock.offset_top = 10 + height * factor + 8
+	boss_dock.offset_bottom = boss_dock.offset_top + 52
 
 
 ## The flight controller adds its meter after the HUD has entered the tree.

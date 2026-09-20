@@ -95,6 +95,9 @@ var _orbital_hit_clock := 0.0
 var _upgrade_visuals: UpgradeVisuals
 var _elite_upgrades: Dictionary[String, bool] = {}
 var dev_god_mode := false
+var _fire_latched := false
+var _fire_waiting_for_release := true
+var _boost_waiting_for_release := true
 var _dev_power_overrides: Dictionary[String, bool] = {}
 var _visual_debug_flags: Dictionary[String, bool] = {
 	"envelope": false,
@@ -111,6 +114,8 @@ func _init() -> void:
 
 
 func _ready() -> void:
+	InputBindings.bindings_changed.connect(reset_action_input)
+	InputBindings.device_changed.connect(reset_action_input)
 	for hull_path in ["PlayerHullGLB", "InterceptorHull", "BulwarkHull"]:
 		FrontierMaterials.apply(visuals.get_node(hull_path))
 		var model := visuals.get_node(hull_path) as Node3D
@@ -378,7 +383,15 @@ func _get_invulnerability_duration(source: DamageSource) -> float:
 
 
 func _update_shooting() -> void:
-	if not Input.is_action_pressed("shoot") or not shoot_timer.is_stopped():
+	if _fire_waiting_for_release:
+		_fire_waiting_for_release = Input.is_action_pressed("shoot")
+		return
+	var wants_fire := Input.is_action_pressed("shoot")
+	if bool(SaveManager.get_setting("toggle_fire", false)):
+		if Input.is_action_just_pressed("shoot"):
+			_fire_latched = not _fire_latched
+		wants_fire = _fire_latched
+	if not wants_fire or not shoot_timer.is_stopped():
 		return
 	var muzzle := get_socket(&"MuzzleCenter")
 	if muzzle == null:
@@ -573,10 +586,13 @@ func _move_boost(input_direction: Vector2, delta: float) -> void:
 
 
 func _update_boost(delta: float) -> void:
+	if _boost_waiting_for_release:
+		_boost_waiting_for_release = Input.is_action_pressed("boost")
+	var boost_pressed := not _boost_waiting_for_release and Input.is_action_just_pressed("boost")
 	if is_boosting:
 		boost_duration_timer -= delta
 		deflection_requested.emit(global_position, velocity)
-		if Input.is_action_just_pressed("boost") and _has_boost_chain():
+		if boost_pressed and _has_boost_chain():
 			_begin_boost()
 			return
 		drift_speed_bonus = move_toward(
@@ -597,7 +613,7 @@ func _update_boost(delta: float) -> void:
 			boost_chain_window_timer = maxf(boost_chain_window_timer - delta, 0.0)
 		drift_speed_bonus = move_toward(drift_speed_bonus, 1.0, FlightTuning.DRIFT_DECAY_RATE * delta)
 		boost_cooldown_timer = maxf(boost_cooldown_timer - delta, 0.0)
-		if Input.is_action_just_pressed("boost") and (boost_cooldown_timer <= 0.0 or (_has_boost_chain() and boost_chain_window_timer > 0.0)):
+		if boost_pressed and (boost_cooldown_timer <= 0.0 or (_has_boost_chain() and boost_chain_window_timer > 0.0)):
 			_begin_boost()
 
 
@@ -639,10 +655,12 @@ func _get_boost_cooldown() -> float:
 
 
 func _update_aiming() -> void:
-	var stick_direction := Vector2(
-		Input.get_joy_axis(InputBindings.active_gamepad, JOY_AXIS_RIGHT_X),
-		Input.get_joy_axis(InputBindings.active_gamepad, JOY_AXIS_RIGHT_Y)
-	)
+	var stick_direction := Vector2.ZERO
+	if InputBindings.active_gamepad >= 0:
+		stick_direction = Vector2(
+			Input.get_joy_axis(InputBindings.active_gamepad, JOY_AXIS_RIGHT_X),
+			Input.get_joy_axis(InputBindings.active_gamepad, JOY_AXIS_RIGHT_Y)
+		)
 	if stick_direction.length() > clampf(float(SaveManager.get_setting("aim_deadzone", 0.4)), 0.15, 0.6):
 		last_aim_direction = _flight_space.input_to_combat_direction(stick_direction)
 		is_using_free_aim = true
@@ -1002,3 +1020,14 @@ func get_boost_state() -> Dictionary:
 		"chain_fraction": clampf(remaining / (FlightTuning.BOOST_DURATION + FlightTuning.BOOST_CHAIN_WINDOW), 0.0, 1.0),
 		"recharge": 1.0 - clampf(boost_cooldown_timer / maxf(_get_boost_cooldown(), 0.01), 0.0, 1.0),
 	}
+
+
+func reset_action_input() -> void:
+	_fire_latched = false
+	_fire_waiting_for_release = true
+	_boost_waiting_for_release = true
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_PAUSED or what == NOTIFICATION_UNPAUSED:
+		reset_action_input()

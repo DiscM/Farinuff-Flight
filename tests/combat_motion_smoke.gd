@@ -76,6 +76,10 @@ func _run() -> void:
 
 func _check_player() -> void:
 	var contact_transform := player.collision_shape.transform
+	# Physics is disabled in this fixture; explicitly observe neutral input once
+	# so the production held-button guard can accept the following fresh press.
+	Input.action_release("shoot")
+	player._update_shooting()
 	player.set_elite_upgrade_enabled("twin_cannons", true)
 	player.set_elite_upgrade_enabled("hull_plating", true)
 	player.set_elite_upgrade_enabled("afterburner", true)

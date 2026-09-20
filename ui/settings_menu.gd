@@ -134,6 +134,9 @@ func _build_ui() -> void:
 	display.add_child(_make_toggle("CRT scanline effect", "crt_effect"))
 	display.add_child(_make_toggle("Screen distortion", "screen_distortion"))
 	display.add_child(_make_toggle("Fullscreen", "fullscreen", false))
+	display.add_child(_choice("GraphicsQuality", "Graphics quality", "graphics_quality", ["low", "medium", "high"], ["Low", "Medium", "High"]))
+	display.add_child(_choice("FrameCap", "Frame limit", "frame_cap", [0, 30, 60, 120, 144, 240], ["Unlimited", "30 FPS", "60 FPS", "120 FPS", "144 FPS", "240 FPS"]))
+	display.add_child(_make_toggle("VSync", "vsync"))
 	var window_size := OptionButton.new()
 	window_size.name = "WindowSize"
 	window_size.accessibility_name = "Window size"
@@ -156,6 +159,13 @@ func _build_ui() -> void:
 	text_size.select(clampi(roundi((float(SaveManager.get_setting("menu_text_scale", 1.0)) - 1.0) / 0.15), 0, 2))
 	text_size.item_selected.connect(func(index: int): SaveManager.update_setting("menu_text_scale", 1.0 + index * 0.15))
 	access.add_child(text_size)
+	access.add_child(_choice("HUDScale", "Combat HUD size", "hud_scale", [1.0, 1.15, 1.3], ["100%", "115%", "130%"]))
+	controls.add_child(_make_toggle("Toggle fire on / off with each press", "toggle_fire", false))
+	var fire_note := Label.new()
+	fire_note.text = "Toggle fire stops when you pause, change controls, or lose focus. Release the button before firing again."
+	fire_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	fire_note.add_theme_font_size_override("font_size", 14)
+	controls.add_child(fire_note)
 	var deadzone_label := Label.new()
 	deadzone_label.text = "Right stick aim deadzone: %d%%" % roundi(float(SaveManager.get_setting("aim_deadzone", 0.4)) * 100)
 	controls.add_child(deadzone_label)
@@ -184,6 +194,7 @@ func _build_ui() -> void:
 	column.add_child(note)
 
 	var close_button := Button.new()
+	close_button.name = "CloseButton"
 	close_button.text = "CLOSE"
 	close_button.custom_minimum_size = Vector2(180, 46)
 	close_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
@@ -198,6 +209,8 @@ func _build_ui() -> void:
 ## SaveManager.
 func _make_toggle(label_text: String, setting_key: String, fallback: bool = true) -> CheckButton:
 	var toggle := CheckButton.new()
+	toggle.name = setting_key
+	toggle.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	toggle.text = label_text
 	toggle.button_pressed = bool(SaveManager.get_setting(setting_key, fallback))
 	toggle.add_theme_font_size_override("font_size", 17)
@@ -272,3 +285,14 @@ func _make_category(tabs: TabContainer, category_name: String) -> VBoxContainer:
 	contents.add_theme_constant_override("separation", 14)
 	scroll.add_child(contents)
 	return contents
+
+
+func _choice(node_name: String, title: String, key: String, values: Array, labels: Array) -> OptionButton:
+	var choice := OptionButton.new()
+	choice.name = node_name
+	choice.accessibility_name = title
+	for label: String in labels:
+		choice.add_item(title + ": " + label)
+	choice.select(maxi(values.find(SaveManager.get_setting(key)), 0))
+	choice.item_selected.connect(func(index: int): SaveManager.update_setting(key, values[index]))
+	return choice

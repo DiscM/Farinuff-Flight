@@ -68,6 +68,16 @@ func _embed_panel() -> void:
 		var action := _menu.get_primary_safe_action() as Button
 		if action != null:
 			action.get_parent().reparent(layout)
+	elif menu_kind == "settings":
+		# Large text can make the settings panel taller than the hosted viewport.
+		# Keep its exit action reachable while the options scroll.
+		var close_button := _menu.find_child("CloseButton", true, false)
+		if close_button != null:
+			close_button.reparent(layout)
+		panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		var tabs := _menu.find_children("*", "TabContainer", true, false)
+		if not tabs.is_empty():
+			tabs[0].custom_minimum_size.y = 160
 	NeonUI.style_screen(_menu)
 
 func _back() -> void:
