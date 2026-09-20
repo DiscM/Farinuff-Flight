@@ -43,10 +43,18 @@ func _check_effect_reuse() -> void:
 
 func _check_pause_and_trails() -> void:
 	var ribbons := player.get_node("EngineRibbons")
+	ribbons.reset()
+	ribbons.advance(1.0 / 60.0, 0.0, false, true)
+	_expect(ribbons.mesh.get_surface_count() == 1, "Nozzle jets are visible before a wake has accumulated")
 	for index in 90:
 		player.position.x += 0.12
 		ribbons.advance(1.0 / 60.0, 1.0, true, true)
 	_expect(ribbons._left.size() == ribbons.MAX_SAMPLES, "Ribbon history remains bounded")
+	_expect(ribbons.mesh.get_surface_count() == 1, "Jets and boost diamonds share the ribbon draw surface")
+	var vertices: PackedVector3Array = ribbons.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+	_expect(vertices.size() <= (ribbons.MAX_SAMPLES - 1) * 12 + 42, "Boost propulsion keeps a fixed vertex budget")
+	ribbons.ignite()
+	_expect(is_equal_approx(ribbons._ignition, 1.0), "Chained boosts restart the nozzle ignition accent")
 	effect_manager.play_effect(NativeEffect.EffectKind.VOID_COLLAPSE, Vector3.ZERO)
 	await get_tree().process_frame
 	var effect := effect_manager._checked_out.back() as NativeEffect
@@ -54,16 +62,23 @@ func _check_pause_and_trails() -> void:
 	var elapsed := effect._elapsed
 	var sky_time: float = $Backdrop/BackgroundShaderClock._elapsed_seconds
 	var landmark_transform: Transform3D = $World3D/FrontierLandmarks._relay.transform
+	var nozzle_time: float = ribbons._elapsed
+	player.set_physics_process(true)
 	await get_tree().create_timer(0.12, true).timeout
 	_expect(is_equal_approx(effect._elapsed, elapsed), "Paused effects stop advancing")
 	_expect(is_equal_approx($Backdrop/BackgroundShaderClock._elapsed_seconds, sky_time), "Paused sky stops advancing")
 	_expect($World3D/FrontierLandmarks._relay.transform.is_equal_approx(landmark_transform), "Paused landmark stops rotating")
+	_expect(is_equal_approx(ribbons._elapsed, nozzle_time), "Paused nozzle shimmer stops advancing")
+	player.set_physics_process(false)
 	get_tree().paused = false
 	player.position.x += 40.0
 	ribbons.advance(1.0 / 60.0, 1.0, false, true)
 	_expect(ribbons._left.size() == 1, "Teleports clear ribbon history")
+	ribbons.advance(0.25, 0.0, false, true)
+	_expect(is_zero_approx(ribbons._ignition), "The white ignition peak quickly settles back to cyan")
 	ribbons.advance(1.0 / 60.0, 0.0, false, false)
 	_expect(ribbons._left.is_empty() and ribbons.mesh.get_surface_count() == 0, "Inactive propulsion clears geometry")
+	_expect(is_zero_approx(ribbons._ignition) and is_zero_approx(ribbons._elapsed), "Inactive propulsion clears ignition and animation time")
 	player.position = Vector3.ZERO
 
 

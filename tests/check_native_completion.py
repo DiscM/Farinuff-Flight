@@ -415,6 +415,11 @@ def check_bosses_and_generations() -> None:
     require("section.activate" in boss_script and "section.deactivate" in boss_script, "boss sections must activate/deactivate per variant")
     require("func _active_section_count()" in boss_script, "boss must expose active section accounting")
     require(len(re.findall(r'parent="Visuals" instance=ExtResource\("model\d+"\)', boss_scene)) == 5, "boss scene must contain five hull model variants")
+    for model_id in ("boss_assault", "boss_bulwark", "boss_tempest", "boss_void_harbinger", "boss_tempest_core", "tempest_section"):
+        model_path = f"assets/models/voxel_bosses/meshes/{model_id}.glb"
+        require((ROOT / model_path).is_file(), f"{model_path}: voxel boss asset missing")
+        require(f'res://{model_path}' in boss_scene, f"boss scene must use voxel asset {model_id}")
+    require("surface_style = 1" in boss_scene, "voxel bosses must use the production pixel material")
     require(boss_scene.count('script = ExtResource("2")') == 2, "boss scene must contain two destructible section scripts")
     require('name="Left" type="Area3D"' in boss_scene and 'name="Right" type="Area3D"' in boss_scene, "boss scene must expose left/right sections")
     require_all(
@@ -450,9 +455,10 @@ def check_bosses_and_generations() -> None:
     for archetype in ARCHETYPES:
         actor_path = f"entities/enemies/{archetype}_enemy_3d.tscn"
         actor = read(actor_path)
-        model_path = f"assets/models/animated/{archetype}_enemy.glb"
-        require((ROOT / model_path).exists(), f"{model_path}: animated runtime model missing")
-        require(f'res://{model_path}' in actor, f"{actor_path}: animated runtime model not wired")
+        model_path = f"assets/models/voxel_frontier/meshes/{archetype}_enemy.glb"
+        require((ROOT / model_path).exists(), f"{model_path}: voxel runtime model missing")
+        require(f'res://{model_path}' in actor, f"{actor_path}: voxel runtime model not wired")
+        require("surface_style = 1" in actor, f"{actor_path}: voxel hull must use the production pixel material")
         require(f"res://entities/enemies/{archetype}_enemy_generation_1.tres" in actor, f"{actor_path}: generation I resource not wired")
         require("gameplay_stats = ExtResource(\"3_stats\")" in actor, f"{actor_path}: gameplay_stats must be resource-backed")
         for generation in GENERATION_NUMBERS:

@@ -45,6 +45,37 @@ func _check_debug_ui() -> void:
 	var pause := PAUSE_MENU.instantiate()
 	pause_overlay.add_child(pause)
 	_expect(pause.find_child("DevWrap", true, false) != null, "Pause menu exposes Dev / Debug in debug builds")
+	_expect(pause.get_node("LeftDock/MenuButtons/ResumeWrap/Button").has_focus(), "Pause focuses the safe Resume action")
+	var briefing: Control = pause.find_child("RunBriefing", true, false)
+	_expect(briefing != null and briefing.visible, "Pause presents the flight briefing")
+	var meter: ProgressBar = briefing.find_child("WaveProgress", true, false)
+	_expect(meter != null and meter.value == GameManager.orbs_collected_this_wave, "Briefing reports actual wave progress")
+	var old_family := InputBindings.family
+	InputBindings.family = "gamepad"
+	InputBindings.device_changed.emit()
+	_expect(briefing._controls.text.contains(InputBindings.binding_label("boost", "gamepad")), "Briefing follows controller input hints")
+	InputBindings.family = old_family
+	InputBindings.device_changed.emit()
+	pause._on_dev_tools()
+	_expect(not briefing.visible, "Developer tools replace the briefing without overlapping it")
+	var score_before := GameManager.score
+	GameManager.score = 12345
+	pause._on_dev_tools()
+	_expect(briefing.visible, "Closing developer tools restores the briefing")
+	_expect(_briefing_contains(briefing, "12345"), "Briefing refreshes after developer changes")
+	GameManager.score = score_before
+	GameManager.boss_active = true
+	briefing._refresh_snapshot()
+	_expect(briefing.find_child("WaveProgress", true, false) == null and _briefing_contains(briefing, "BOSS ENGAGED"), "Boss briefing replaces XP progress with the boss objective")
+	GameManager.boss_active = false
+	GameManager.expedition_completed = true
+	briefing._refresh_snapshot()
+	_expect(_briefing_contains(briefing, "ENDLESS / WAVE"), "Completed expeditions show Endless mode")
+	GameManager.expedition_completed = false
+	GameManager.practice_mode = true
+	briefing._refresh_snapshot()
+	_expect(_briefing_contains(briefing, "PRACTICE / WAVE"), "Practice has its own briefing")
+	GameManager.practice_mode = false
 	var panel := DEV_MENU.instantiate()
 	add_child(panel)
 	_expect(panel.get_child_count() == 1, "Developer panel has one layout root")
@@ -52,6 +83,13 @@ func _check_debug_ui() -> void:
 	_expect(panel.get_child(0).get_child_count() == 3, "Developer panel builds title, separator, and command scroller")
 	panel.queue_free()
 	pause_overlay.queue_free()
+
+
+func _briefing_contains(briefing: Control, text: String) -> bool:
+	for label in briefing.find_children("*", "Label", true, false):
+		if label.text.contains(text):
+			return true
+	return false
 
 
 func _check_player_commands() -> void:

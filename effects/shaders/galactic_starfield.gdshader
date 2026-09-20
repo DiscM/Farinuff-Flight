@@ -120,6 +120,20 @@ void fragment() {
 	color += nebula_pink.rgb * filament_mask * 0.12 * nebula_strength;
 	color *= mix(1.0, 0.68, dust_lane * cloud_mask * 0.58);
 
+	// A long, broken veil gives the sky a composition at flight scale. Reuse
+	// the cloud samples above: no texture, extra noise octaves, or draw pass.
+	// Its rim is brighter toward the perimeter; the firing corridor stays dark.
+	float edge_space = smoothstep(0.20, 0.88, length(uv * vec2(0.72, 1.0)));
+	float veil_axis = uv.y + uv.x * 0.38 + warp.x * 0.42 - 0.13;
+	float veil_body = exp(-abs(veil_axis) * 5.2);
+	float veil_rim = exp(-abs(veil_axis - 0.09 - fine_cloud * 0.10) * 22.0);
+	float veil_breakup = smoothstep(0.30, 0.76, broad_cloud * 0.55 + fine_cloud * 0.45);
+	vec3 veil_color = mix(nebula_blue.rgb, nebula_pink.rgb, smoothstep(-0.7, 0.7, uv.x));
+	color += veil_color * (veil_body * 0.10 + veil_rim * veil_breakup * 0.42)
+		* edge_space * nebula_strength;
+	// Fine dark breaks suggest suspended dust against the distant light.
+	color *= 1.0 - veil_body * smoothstep(0.59, 0.77, fine_cloud) * 0.18;
+
 	// The slow, dense layer reads as depth; sparse foreground stars are
 	// brighter and occasionally grow a four-point diffraction glint.
 	vec2 star_uv = uv + vec2(0.0, 0.5);

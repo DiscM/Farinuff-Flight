@@ -80,7 +80,7 @@ func _build_ui() -> void:
 
 	# Title
 	var title := Label.new()
-	title.text = "⚙  UPGRADE YOUR SHIP  ⚙"
+	title.text = "SHIP SYSTEMS"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
 	title.add_theme_font_size_override("font_size", 26 if compact_layout else 30)
@@ -226,7 +226,7 @@ func _show_completed_state() -> void:
 ## (showing the sum of existing + pending allocations), button disabled
 ## states, and the confirm button (only enabled when all points are spent).
 func _refresh_ui() -> void:
-	points_label.text = "Points to spend: " + str(points_remaining)
+	points_label.text = "POINTS: " + str(points_remaining)
 
 	var fr_total: int = GameManager.stat_fire_rate_level + alloc_fire_rate
 	var hp_total: int = GameManager.stat_health_level + alloc_health

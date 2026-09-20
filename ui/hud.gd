@@ -45,11 +45,11 @@ const SHIELD_CHIP: Dictionary = {"key": &"shield", "label": "SHIELD", "color": C
 
 var _effect_chips: Dictionary = {}  # StringName key -> {panel, time, bar}
 var _player: Node = null
+var _occluding_boss: Node3D
+var _boss_visibility_meshes: Array[MeshInstance3D] = []
 var _wave_progress: ProgressBar
 var _wave_progress_label: Label
 var _route_label: Label
-var _boss_phase_text := ""
-var _boss_phase_color := Color.WHITE
 var _boss_phase_markers: Array[ColorRect] = []
 
 ## Connects all HUD-relevant signals from the SignalBus, hides the boss
@@ -70,7 +70,6 @@ func _ready() -> void:
 	SignalBus.boss_health_changed.connect(_on_boss_health_changed)
 	SignalBus.boss_phase_presented.connect(_on_boss_phase_presented)
 	SignalBus.boss_phase_thresholds_changed.connect(_on_boss_phase_thresholds_changed)
-	SignalBus.boss_attack_cue_changed.connect(_on_boss_attack_cue_changed)
 	# Anchors preserve the configured HP thresholds when the HUD resizes.
 	for fraction in [0.3, 0.6]:
 		var marker := ColorRect.new()
@@ -201,7 +200,6 @@ func _on_boss_spawned(health: int, max_health: int, boss_name: String) -> void:
 	var is_elite := GameManager.current_wave % 10 == 0
 	boss_name_label.text = boss_name
 	boss_class_label.text = "ELITE BOSS" if is_elite else "BOSS"
-	_boss_phase_text = boss_class_label.text
 	boss_name_label.add_theme_color_override("font_color",
 		NeonUI.WHITE if is_elite else Color(1.0, 0.82, 0.88))
 	boss_bar_container.visible = true
@@ -212,17 +210,11 @@ func _on_boss_spawned(health: int, max_health: int, boss_name: String) -> void:
 	tween.tween_property(boss_bar_container, "modulate:a", 0.3, 0.15)
 	tween.tween_property(boss_bar_container, "modulate:a", 1.0, 0.15)
 
-## Persistent phase identity complements the short combat transition notice.
+## Keep phase identity visible; attack warnings are presented in the arena.
 func _on_boss_phase_presented(phase: int, phase_name: String, projectile_color: Color) -> void:
-	_boss_phase_text = "PHASE %d / 3 · %s" % [phase + 1, phase_name]
-	_boss_phase_color = projectile_color
-	_on_boss_attack_cue_changed("")
+	boss_class_label.text = "PHASE %d / 3 · %s" % [phase + 1, phase_name]
+	boss_class_label.add_theme_color_override("font_color", projectile_color)
 	_style_progress_bar(boss_health_bar, projectile_color)
-
-## Use the existing status line; phase identity returns when the attack ends.
-func _on_boss_attack_cue_changed(message: String) -> void:
-	boss_class_label.text = _boss_phase_text if message.is_empty() else message
-	boss_class_label.add_theme_color_override("font_color", _boss_phase_color if message.is_empty() else NeonUI.YELLOW)
 
 ## Updates the boss health bar value whenever the boss takes damage.
 func _on_boss_phase_thresholds_changed(phase_two: float, phase_three: float) -> void:
@@ -265,7 +257,7 @@ func _process(delta: float) -> void:
 	_update_craft_visibility(delta)
 
 
-## Fade overlays before the craft crosses them. Projection uses the actual
+## Fade overlays before the craft or a boss crosses them. Projection uses the actual
 ## camera, so resizing, camera shake, and boss arenas keep the same hitboxes.
 func _update_craft_visibility(delta: float) -> void:
 	var camera := get_viewport().get_camera_3d()
@@ -275,10 +267,41 @@ func _update_craft_visibility(delta: float) -> void:
 		craft_visible = not camera.is_position_behind((_player as Node3D).global_position)
 		craft_screen = camera.unproject_position((_player as Node3D).global_position)
 	var clearance := CRAFT_CLEARANCE_PIXELS * get_viewport().get_visible_rect().size.y / 720.0
+	var boss_rect := _get_boss_screen_rect(camera)
 	for panel: Control in [get_node("CombatHeader"), boss_dock]:
 		var overlapping := craft_visible and panel.get_global_rect().grow(clearance).has_point(craft_screen)
+		overlapping = overlapping or (boss_rect.has_area() and panel.get_global_rect().intersects(boss_rect))
 		var target := OCCLUDED_HUD_ALPHA if overlapping else 1.0
 		panel.modulate.a = move_toward(panel.modulate.a, target, delta * 8.0)
+
+
+func _get_boss_screen_rect(camera: Camera3D) -> Rect2:
+	if camera == null:
+		return Rect2()
+	var boss := get_tree().get_first_node_in_group(&"native_3d_bosses") as Node3D
+	if not is_instance_valid(boss) or not boss.is_visible_in_tree() or camera.is_position_behind(boss.global_position):
+		_occluding_boss = null
+		_boss_visibility_meshes.clear()
+		return Rect2()
+	if not is_instance_valid(_occluding_boss) or boss != _occluding_boss:
+		_occluding_boss = boss
+		_boss_visibility_meshes.clear()
+		for node in boss.find_children("*", "MeshInstance3D", true, false):
+			_boss_visibility_meshes.append(node as MeshInstance3D)
+	var minimum := Vector2(INF, INF)
+	var maximum := Vector2(-INF, -INF)
+	for mesh in _boss_visibility_meshes:
+		if not is_instance_valid(mesh) or not mesh.is_visible_in_tree() or mesh.mesh == null:
+			continue
+		var bounds := mesh.get_aabb()
+		for corner in 8:
+			var point := camera.unproject_position(mesh.global_transform * bounds.get_endpoint(corner))
+			minimum = minimum.min(point)
+			maximum = maximum.max(point)
+	if not minimum.is_finite():
+		return Rect2()
+	# A small border anticipates articulated panels extending beyond rest bounds.
+	return Rect2(minimum, maximum - minimum).grow(12.0)
 
 func _sync_power_up_timers() -> void:
 	if not is_instance_valid(_player):

@@ -28,11 +28,11 @@ func _build_ui() -> void:
 	add_child(bg)
 
 	var panel := PanelContainer.new()
-	panel.set_anchors_preset(Control.PRESET_CENTER)
-	panel.offset_left = -minf(340.0, get_viewport_rect().size.x * 0.5 - 20.0)
-	panel.offset_top = -minf(285.0, get_viewport_rect().size.y * 0.5 - 20.0)
-	panel.offset_right = minf(340.0, get_viewport_rect().size.x * 0.5 - 20.0)
-	panel.offset_bottom = minf(285.0, get_viewport_rect().size.y * 0.5 - 20.0)
+	panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	panel.offset_left = maxf(24, (get_viewport_rect().size.x - 920) * 0.5)
+	panel.offset_right = -panel.offset_left
+	panel.offset_top = 24
+	panel.offset_bottom = -24
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(0.04, 0.06, 0.15)
 	style.border_color = Color(0.2, 0.75, 1.0, 0.8)
@@ -53,9 +53,10 @@ func _build_ui() -> void:
 	title.add_theme_font_size_override("font_size", 30)
 	title.add_theme_color_override("font_color", Color(0.3, 0.85, 1.0))
 	column.add_child(title)
+	preload("res://ui/shared/menu_briefing.gd").wrap_heading(title)
 	var tabs := TabContainer.new()
 	tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	tabs.custom_minimum_size.y = minf(340.0, maxf(160.0, get_viewport_rect().size.y - 260.0))
+	tabs.custom_minimum_size.y = 160
 	tabs.use_hidden_tabs_for_min_size = false
 	column.add_child(tabs)
 	var audio := _make_category(tabs, "Audio")
@@ -146,7 +147,7 @@ func _build_ui() -> void:
 	window_size.item_selected.connect(func(index: int): SaveManager.update_setting("window_size", WindowLayout.PRESET_IDS[index]))
 	display.add_child(window_size)
 	var window_note := Label.new()
-	window_note.text = "Window size takes effect when you leave fullscreen. Large sizes are adjusted to fit your display."
+	window_note.text = "Windowed mode only."
 	window_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	window_note.add_theme_font_size_override("font_size", 14)
 	display.add_child(window_note)
@@ -162,7 +163,7 @@ func _build_ui() -> void:
 	access.add_child(_choice("HUDScale", "Combat HUD size", "hud_scale", [1.0, 1.15, 1.3], ["100%", "115%", "130%"]))
 	controls.add_child(_make_toggle("Toggle fire on / off with each press", "toggle_fire", false))
 	var fire_note := Label.new()
-	fire_note.text = "Toggle fire stops when you pause, change controls, or lose focus. Release the button before firing again."
+	fire_note.text = "After pausing, release Fire to re-arm."
 	fire_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	fire_note.add_theme_font_size_override("font_size", 14)
 	controls.add_child(fire_note)
@@ -170,7 +171,7 @@ func _build_ui() -> void:
 	deadzone_label.text = "Right stick aim deadzone: %d%%" % roundi(float(SaveManager.get_setting("aim_deadzone", 0.4)) * 100)
 	controls.add_child(deadzone_label)
 	var deadzone := HSlider.new()
-	deadzone.tooltip_text = "How far you must move the right stick before aiming changes. Increase this if your aim drifts on its own."
+	deadzone.tooltip_text = "Aim stick threshold. Increase to reduce drift."
 	deadzone.min_value = 0.15
 	deadzone.max_value = 0.6
 	deadzone.step = 0.05
@@ -188,7 +189,7 @@ func _build_ui() -> void:
 	controls.add_child(_controls_button)
 
 	var note := Label.new()
-	note.text = "Changes are saved automatically."
+	note.text = "Autosaved"
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	note.add_theme_font_size_override("font_size", 13)
 	note.add_theme_color_override("font_color", Color(0.55, 0.65, 0.8))

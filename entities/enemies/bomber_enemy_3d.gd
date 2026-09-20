@@ -17,7 +17,7 @@ const BOMBER_GENERATION_STATS := [
 	preload("res://entities/enemies/bomber_enemy_generation_4.tres"),
 ]
 
-const DRIFT_BOUNDARY_MARGIN_PIXELS := 30.0
+const DRIFT_BOUNDARY_MARGIN_PIXELS := 50.0
 const BOMB_FIRST_DROP_MIN_SECONDS := 0.5
 const BOMB_SPEED_MIN_PIXELS := 300.0
 const BOMB_SPEED_MAX_PIXELS := 400.0

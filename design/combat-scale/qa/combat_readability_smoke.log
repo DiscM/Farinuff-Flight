@@ -1,0 +1,58 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+WARNING: save_data.json: Could not write the save folder. Check free disk space and folder permissions.
+     at: push_warning (core/variant/variant_utility.cpp:1034)
+     GDScript backtrace (most recent call first):
+         [0] _fail (res://systems/versioned_json_store.gd:83)
+         [1] write_data (res://systems/versioned_json_store.gd:60)
+         [2] _save_data (res://autoloads/save_manager.gd:381)
+         [3] record_high_score (res://autoloads/save_manager.gd:124)
+         [4] _record_run_high_score (res://autoloads/game_manager.gd:379)
+         [5] finalize_run (res://autoloads/game_manager.gd:497)
+         [6] _attempt_quit (res://scenes/native_3d_gameplay.gd:746)
+         [7] _finish (res://ui/shared/run_confirmation.gd:112)
+         [8] _check_quit_save_retry (res://tests/combat_readability_smoke.gd:240)
+         [9] _ready (res://tests/combat_readability_smoke.gd:47)
+WARNING: save_data.json: Could not write the save folder. Check free disk space and folder permissions.
+     at: push_warning (core/variant/variant_utility.cpp:1034)
+     GDScript backtrace (most recent call first):
+         [0] _fail (res://systems/versioned_json_store.gd:83)
+         [1] write_data (res://systems/versioned_json_store.gd:60)
+         [2] _save_data (res://autoloads/save_manager.gd:381)
+         [3] save_meta (res://autoloads/save_manager.gd:152)
+         [4] _persist (res://autoloads/meta_progression.gd:445)
+         [5] record_run_stats (res://autoloads/meta_progression.gd:384)
+         [6] finalize_run (res://autoloads/game_manager.gd:503)
+         [7] _attempt_quit (res://scenes/native_3d_gameplay.gd:746)
+         [8] _finish (res://ui/shared/run_confirmation.gd:112)
+         [9] _check_quit_save_retry (res://tests/combat_readability_smoke.gd:240)
+         [10] _ready (res://tests/combat_readability_smoke.gd:47)
+WARNING: save_data.json: Could not write the save folder. Check free disk space and folder permissions.
+     at: push_warning (core/variant/variant_utility.cpp:1034)
+     GDScript backtrace (most recent call first):
+         [0] _fail (res://systems/versioned_json_store.gd:83)
+         [1] write_data (res://systems/versioned_json_store.gd:60)
+         [2] _save_data (res://autoloads/save_manager.gd:381)
+         [3] save_meta (res://autoloads/save_manager.gd:152)
+         [4] _persist (res://autoloads/meta_progression.gd:445)
+         [5] earn_salvage (res://autoloads/meta_progression.gd:253)
+         [6] finalize_run (res://autoloads/game_manager.gd:507)
+         [7] _attempt_quit (res://scenes/native_3d_gameplay.gd:746)
+         [8] _finish (res://ui/shared/run_confirmation.gd:112)
+         [9] _check_quit_save_retry (res://tests/combat_readability_smoke.gd:240)
+         [10] _ready (res://tests/combat_readability_smoke.gd:47)
+WARNING: save_data.json: Could not write the save folder. Check free disk space and folder permissions.
+     at: push_warning (core/variant/variant_utility.cpp:1034)
+     GDScript backtrace (most recent call first):
+         [0] _fail (res://systems/versioned_json_store.gd:83)
+         [1] write_data (res://systems/versioned_json_store.gd:60)
+         [2] _save_data (res://autoloads/save_manager.gd:381)
+         [3] save_before_quit (res://autoloads/save_manager.gd:298)
+         [4] _attempt_quit (res://scenes/native_3d_gameplay.gd:747)
+         [5] _finish (res://ui/shared/run_confirmation.gd:112)
+         [6] _check_quit_save_retry (res://tests/combat_readability_smoke.gd:240)
+         [7] _ready (res://tests/combat_readability_smoke.gd:47)
+COMBAT_READABILITY_SMOKE_PASS
+WARNING: ObjectDB instances leaked at exit (run with --verbose for details).
+   at: cleanup (core/object/object.cpp:2663)
+ERROR: 2 RID allocations of type 'N13RendererDummy15MaterialStorage11DummyShaderE' were leaked at exit.

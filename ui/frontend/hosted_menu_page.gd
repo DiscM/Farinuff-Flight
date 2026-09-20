@@ -60,6 +60,7 @@ func _embed_panel() -> void:
 	layout.add_child(scroll)
 	panel.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	panel.custom_minimum_size = Vector2.ZERO
 	panel.reparent(scroll)
 	panel.show()
@@ -68,7 +69,7 @@ func _embed_panel() -> void:
 		var action := _menu.get_primary_safe_action() as Button
 		if action != null:
 			action.get_parent().reparent(layout)
-	elif menu_kind == "settings":
+	elif menu_kind in ["settings", "hangar"]:
 		# Large text can make the settings panel taller than the hosted viewport.
 		# Keep its exit action reachable while the options scroll.
 		var close_button := _menu.find_child("CloseButton", true, false)
@@ -78,6 +79,13 @@ func _embed_panel() -> void:
 		var tabs := _menu.find_children("*", "TabContainer", true, false)
 		if not tabs.is_empty():
 			tabs[0].custom_minimum_size.y = 160
+	elif menu_kind == "flight_school":
+		# Lesson navigation stays available even with large text or a long tip.
+		var next := _menu.get_primary_safe_action() as Button
+		next.get_parent().reparent(layout)
+		_menu._skip_button.reparent(layout)
+		for inner in panel.find_children("*", "ScrollContainer", true, false):
+			inner.custom_minimum_size.y = 160
 	NeonUI.style_screen(_menu)
 
 func _back() -> void:

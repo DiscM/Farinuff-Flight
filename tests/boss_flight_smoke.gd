@@ -133,7 +133,7 @@ func _check_arena_edges(boss: Boss) -> void:
 		_expect(flight_space.combat_motion_to_screen(boss.global_position - start).length() < 6.0, "Flight never snaps inward after a ram")
 		for tick in 180:
 			_step(boss)
-		_expect(flight_space.get_combat_bounds(-100.0).has_point(Vector2(boss.global_position.x, boss.global_position.z)), "Every hull recovers from every corner")
+		_expect(flight_space.get_combat_bounds(-Flight.ARENA_INSET).has_point(Vector2(boss.global_position.x, boss.global_position.z)), "Every enlarged hull and pod assembly recovers from every corner")
 		# Put the player near the wall and ensure pursuit does not pin the boss there.
 		player.global_position = Vector3(corner.x, 0, corner.y)
 		for tick in 480:

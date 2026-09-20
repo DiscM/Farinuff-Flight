@@ -1,7 +1,7 @@
 [gd_scene load_steps=10 format=3]
 
 [ext_resource type="Script" path="res://tests/mockup_models_preview.gd" id="1_script"]
-[ext_resource type="PackedScene" path="res://assets/models/mockups/player_ship_mockup.glb" id="2_player"]
+[ext_resource type="PackedScene" path="res://assets/models/ships/player_ship_mockup.glb" id="2_player"]
 [ext_resource type="PackedScene" path="res://assets/models/redesign/next_round/basic_enemy.glb" id="3_basic"]
 [ext_resource type="PackedScene" path="res://assets/models/redesign/next_round/fast_enemy.glb" id="4_fast"]
 [ext_resource type="PackedScene" path="res://assets/models/redesign/next_round/bomber_enemy.glb" id="5_bomber"]

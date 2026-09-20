@@ -1,0 +1,54 @@
+{
+	"debris_count": 18,
+	"enemy_count": 5,
+	"motion": [
+		{
+			"collision_stable": true,
+			"pixel_shader": "res://effects/shaders/models/pixel_planet_enemy_3d.gdshader",
+			"role": "basic",
+			"socket_error": 0.0000019073486328125,
+			"windup_angle_radians": 0.406527787446976
+		},
+		{
+			"collision_stable": true,
+			"pixel_shader": "res://effects/shaders/models/pixel_planet_enemy_3d.gdshader",
+			"role": "fast",
+			"socket_error": 0.000000119209289550781,
+			"windup_angle_radians": 0.561464190483093
+		},
+		{
+			"collision_stable": true,
+			"pixel_shader": "res://effects/shaders/models/pixel_planet_enemy_3d.gdshader",
+			"role": "bomber",
+			"socket_error": 0.00000000000007105427357601,
+			"windup_angle_radians": 0.349065512418747
+		},
+		{
+			"collision_stable": true,
+			"pixel_shader": "res://effects/shaders/models/pixel_planet_enemy_3d.gdshader",
+			"role": "tank",
+			"socket_error": 0.00000095367431640625,
+			"windup_angle_radians": 0.157077580690384
+		},
+		{
+			"collision_stable": true,
+			"pixel_shader": "res://effects/shaders/models/pixel_planet_enemy_3d.gdshader",
+			"role": "sniper",
+			"socket_error": 0.0,
+			"windup_angle_radians": 0.209438249468803
+		}
+	],
+	"native_scales": [
+		0.675000011920929,
+		0.363000005483627,
+		0.536499977111816,
+		0.88400000333786,
+		0.511500000953674
+	],
+	"peer_flash": 0.0,
+	"projectile_health_after": 499,
+	"projectile_health_before": 500,
+	"scene": "scenes/flight_practice.tscn",
+	"sniper_release_clip": "attack",
+	"struck_flash": 0.8
+}

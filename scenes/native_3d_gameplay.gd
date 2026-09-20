@@ -725,7 +725,7 @@ func _confirm_window_close() -> void:
 	_set_quit_overlay_active(true)
 	var dialog := preload("res://ui/shared/run_confirmation.gd").new()
 	dialog.title = "Quit the game?"
-	dialog.dialog_text = "This run will end and cannot be resumed. Earned salvage and your score record will be saved before exiting."
+	dialog.dialog_text = "Save earned salvage and score, then quit? This run cannot be resumed."
 	dialog.confirmed.connect(_attempt_quit)
 	dialog.canceled.connect(func():
 		_exit_confirmation.queue_free()
@@ -757,7 +757,7 @@ func _set_quit_overlay_active(_active: bool) -> void:
 func _show_quit_save_failure() -> void:
 	var dialog := preload("res://ui/shared/run_confirmation.gd").new()
 	dialog.title = "Save failed"
-	dialog.dialog_text = "Your run has ended, but some changes have not been saved.\n\n" + SaveManager.get_storage_notice() + "\n\nRetry after fixing the problem, or exit without saving these changes."
+	dialog.dialog_text = "Run ended. Unsaved changes remain.\n\n" + SaveManager.get_storage_notice() + "\n\nRetry saving or exit without saving."
 	dialog.confirm_text = "QUIT WITHOUT SAVING"
 	dialog.cancel_text = "RETRY SAVE"
 	dialog.confirmed.connect(_quit_application)

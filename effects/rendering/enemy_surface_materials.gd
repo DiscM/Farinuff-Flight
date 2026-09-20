@@ -12,7 +12,10 @@ static var _authored_sources: Dictionary = {}
 
 static func apply_to(visuals: Node3D, style: Style, pixel_density: float = 8.0) -> void:
 	var shader: Shader = PIXEL_SHADER if style == Style.PIXEL_PLANET else ALLOY_SHADER
-	for node in visuals.find_children("*", "MeshInstance3D", true, false):
+	var meshes := visuals.find_children("*", "MeshInstance3D", true, false)
+	if visuals is MeshInstance3D:
+		meshes.append(visuals)
+	for node in meshes:
 		var mesh := node as MeshInstance3D
 		if mesh.mesh == null:
 			continue
@@ -42,9 +45,18 @@ static func _convert(source: Material, shader: Shader) -> ShaderMaterial:
 		base_color = authored.albedo_color
 		metallic = authored.metallic
 		roughness = authored.roughness
+		# GLB color factors alone discard painted panels, vents and hazard marks.
+		# Preserve the UV atlas through either art style; textureless legacy hulls
+		# keep exactly the same color-only conversion.
+		material.set_shader_parameter(&"has_albedo_texture", authored.albedo_texture != null)
+		material.set_shader_parameter(&"albedo_texture", authored.albedo_texture)
+		material.set_shader_parameter(&"uv_scale", Vector2(authored.uv1_scale.x, authored.uv1_scale.y))
+		material.set_shader_parameter(&"uv_offset", Vector2(authored.uv1_offset.x, authored.uv1_offset.y))
 		if authored.emission_enabled:
 			emission_color = Color(authored.emission.r, authored.emission.g, authored.emission.b, 1.0)
 			emission_strength = authored.emission_energy_multiplier
+			material.set_shader_parameter(&"has_emission_texture", authored.emission_texture != null)
+			material.set_shader_parameter(&"emission_texture", authored.emission_texture)
 	material.set_shader_parameter(&"base_color", base_color)
 	material.set_shader_parameter(&"emission_color", emission_color)
 	material.set_shader_parameter(&"emission_strength", emission_strength)

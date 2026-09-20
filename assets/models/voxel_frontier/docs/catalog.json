@@ -1,0 +1,18 @@
+{
+  "schema_version": 1,
+  "package_id": "farinuff-flight.voxel-frontier",
+  "version": "1.0.0",
+  "assets": [
+    {"id": "ff.vf.enemy.basic", "file": "basic_enemy.glb", "name": "CINDER / Raider", "category": "enemy", "role": "basic", "palette": "scarlet / ember", "silhouette": "compact stepped arrowhead"},
+    {"id": "ff.vf.enemy.fast", "file": "fast_enemy.glb", "name": "NEEDLE / Interceptor", "category": "enemy", "role": "fast", "palette": "warm orange", "silhouette": "narrow speed-oriented hull"},
+    {"id": "ff.vf.enemy.bomber", "file": "bomber_enemy.glb", "name": "MANTIS / Carrier", "category": "enemy", "role": "bomber", "palette": "sage green / lime", "silhouette": "broad ordnance carrier"},
+    {"id": "ff.vf.enemy.tank", "file": "tank_enemy.glb", "name": "BASTION / Heavy", "category": "enemy", "role": "tank", "palette": "violet / purple", "silhouette": "blocky armored mass"},
+    {"id": "ff.vf.enemy.sniper", "file": "sniper_enemy.glb", "name": "LONGBOW / Marksman", "category": "enemy", "role": "sniper", "palette": "steel blue / cyan with warm reactor", "silhouette": "long precision weapon body"},
+    {"id": "ff.vf.debris.relay", "file": "relay_fragment.glb", "name": "Relay Fragment", "category": "debris", "role": "relay wreckage"},
+    {"id": "ff.vf.debris.solar", "file": "solar_fragment.glb", "name": "Solar Array Fragment", "category": "debris", "role": "broken solar panel"},
+    {"id": "ff.vf.debris.cargo", "file": "cargo_wreck.glb", "name": "Cargo Wreck", "category": "debris", "role": "abandoned cargo module"},
+    {"id": "ff.vf.debris.engine", "file": "engine_wreck.glb", "name": "Engine Wreck", "category": "debris", "role": "detached propulsion module"},
+    {"id": "ff.vf.debris.hull", "file": "hull_fragment.glb", "name": "Hull Fragment", "category": "debris", "role": "broken armor section"},
+    {"id": "ff.vf.debris.asteroid", "file": "asteroid_cluster.glb", "name": "Asteroid Cluster", "category": "debris", "role": "voxel stone and exposed ore"}
+  ]
+}

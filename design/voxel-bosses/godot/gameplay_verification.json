@@ -1,0 +1,88 @@
+{
+	"assets": [
+		{
+			"active_pods": 0.0,
+			"asset": "boss_assault",
+			"attack": true,
+			"attack_id": "projectile",
+			"native_scale": true,
+			"passed": true,
+			"practice": true,
+			"projectiles_fired": 5.0,
+			"wave": 5.0,
+			"windup": true,
+			"windup_attack": "projectile",
+			"windup_pods": []
+		},
+		{
+			"active_pods": 2.0,
+			"asset": "boss_bulwark",
+			"attack": true,
+			"attack_id": "projectile",
+			"native_scale": true,
+			"passed": true,
+			"practice": true,
+			"projectiles_fired": 8.0,
+			"wave": 10.0,
+			"windup": true,
+			"windup_attack": "projectile",
+			"windup_pods": [
+				"windup",
+				"windup"
+			]
+		},
+		{
+			"active_pods": 2.0,
+			"asset": "boss_tempest",
+			"attack": true,
+			"attack_id": "projectile",
+			"native_scale": true,
+			"passed": true,
+			"practice": true,
+			"projectiles_fired": 12.0,
+			"wave": 15.0,
+			"windup": true,
+			"windup_attack": "projectile",
+			"windup_pods": [
+				"windup",
+				"windup"
+			]
+		},
+		{
+			"active_pods": 2.0,
+			"asset": "boss_void_harbinger",
+			"attack": true,
+			"attack_id": "projectile",
+			"native_scale": true,
+			"passed": true,
+			"practice": true,
+			"projectiles_fired": 10.0,
+			"wave": 25.0,
+			"windup": true,
+			"windup_attack": "projectile",
+			"windup_pods": [
+				"windup",
+				"windup"
+			]
+		},
+		{
+			"active_pods": 2,
+			"asset": "boss_tempest_core",
+			"attack": true,
+			"attack_id": "projectile",
+			"native_scale": true,
+			"passed": true,
+			"pod_destroyed": true,
+			"practice": true,
+			"projectiles_fired": 12,
+			"wave": 20,
+			"windup": true,
+			"windup_attack": "projectile",
+			"windup_pods": [
+				"windup",
+				"windup"
+			]
+		}
+	],
+	"method": "Production Flight Practice, frozen player with practice invulnerability, normal boss AI and projectile pool; one boss at a time, native wrapper scales"
+}

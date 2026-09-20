@@ -2,13 +2,14 @@ extends RefCounted
 ## Window presentation is independent of the 1280x720 gameplay/UI baseline.
 ## Full-resolution canvas_items rendering gives larger windows more 3D detail.
 
-const DEFAULT_PRESET := "large"
-const PRESET_IDS := ["compact", "medium", "large", "fit"]
-const PRESET_LABELS := ["1280 × 720", "1600 × 900", "1920 × 1080", "Fit display"]
+const DEFAULT_PRESET := "spacious"
+const PRESET_IDS := ["compact", "medium", "large", "spacious", "fit"]
+const PRESET_LABELS := ["1280 × 720", "1600 × 900", "1920 × 1080", "2560 × 1440", "Fit display"]
 const PRESET_SIZES := {
 	"compact": Vector2i(1280, 720),
 	"medium": Vector2i(1600, 900),
 	"large": Vector2i(1920, 1080),
+	"spacious": Vector2i(2560, 1440),
 }
 const DISPLAY_FRACTION := 0.90
 
@@ -22,7 +23,7 @@ static func normalize_preset(value: Variant) -> String:
 
 
 static func preset_rect(preset: String, usable_rect: Rect2i) -> Rect2i:
-	var requested: Vector2i = PRESET_SIZES.get(preset, Vector2i(1920, 1080))
+	var requested: Vector2i = PRESET_SIZES.get(preset, PRESET_SIZES[DEFAULT_PRESET])
 	if preset == "fit":
 		requested = Vector2i(usable_rect.size.x, roundi(usable_rect.size.x * 9.0 / 16.0))
 	var fitted := fit_size(requested, usable_rect.size)

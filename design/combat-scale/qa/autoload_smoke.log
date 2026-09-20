@@ -1,0 +1,141 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+WARNING: Recovered save_data.json from its backup.
+     at: push_warning (core/variant/variant_utility.cpp:1034)
+     GDScript backtrace (most recent call first):
+         [0] load_data (res://systems/versioned_json_store.gd:43)
+         [1] run (res://tests/player_trust_save_checks.gd:52)
+         [2] _run (res://tests/autoload_smoke.gd:21)
+WARNING: save_data.json: This file belongs to a newer game version. Reopen that version to save changes.
+     at: push_warning (core/variant/variant_utility.cpp:1034)
+     GDScript backtrace (most recent call first):
+         [0] _fail (res://systems/versioned_json_store.gd:83)
+         [1] write_data (res://systems/versioned_json_store.gd:56)
+         [2] run (res://tests/player_trust_save_checks.gd:53)
+         [3] _run (res://tests/autoload_smoke.gd:21)
+ERROR: Parse JSON failed. Error at line 0: Expected key
+   at: parse_string (core/io/json.cpp:624)
+   GDScript backtrace (most recent call first):
+       [0] read_candidate (res://systems/versioned_json_store.gd:18)
+       [1] load_data (res://systems/versioned_json_store.gd:35)
+       [2] run (res://tests/player_trust_save_checks.gd:57)
+       [3] _run (res://tests/autoload_smoke.gd:21)
+ERROR: Parse JSON failed. Error at line 0: Expected key
+   at: parse_string (core/io/json.cpp:624)
+   GDScript backtrace (most recent call first):
+       [0] read_candidate (res://systems/versioned_json_store.gd:18)
+       [1] write_data (res://systems/versioned_json_store.gd:50)
+       [2] run (res://tests/player_trust_save_checks.gd:57)
+       [3] _run (res://tests/autoload_smoke.gd:21)
+WARNING: save_data.json: This file belongs to a newer game version. Reopen that version to save changes.
+     at: push_warning (core/variant/variant_utility.cpp:1034)
+     GDScript backtrace (most recent call first):
+         [0] _fail (res://systems/versioned_json_store.gd:83)
+         [1] write_data (res://systems/versioned_json_store.gd:56)
+         [2] run (res://tests/player_trust_save_checks.gd:57)
+         [3] _run (res://tests/autoload_smoke.gd:21)
+ERROR: Parse JSON failed. Error at line 0: Expected key
+   at: parse_string (core/io/json.cpp:624)
+   GDScript backtrace (most recent call first):
+       [0] read_candidate (res://systems/versioned_json_store.gd:18)
+       [1] load_data (res://systems/versioned_json_store.gd:35)
+       [2] _select_load_data (res://autoloads/save_manager.gd:345)
+       [3] _load_data (res://autoloads/save_manager.gd:171)
+       [4] run (res://tests/player_trust_save_checks.gd:62)
+       [5] _run (res://tests/autoload_smoke.gd:21)
+WARNING: local_settings.json: This file belongs to a newer game version. Reopen that version to save changes.
+     at: push_warning (core/variant/variant_utility.cpp:1034)
+     GDScript backtrace (most recent call first):
+         [0] _fail (res://systems/versioned_json_store.gd:83)
+         [1] write_data (res://systems/versioned_json_store.gd:56)
+         [2] _save_preferences (res://autoloads/save_manager.gd:288)
+         [3] run (res://tests/player_trust_save_checks.gd:79)
+         [4] _run (res://tests/autoload_smoke.gd:21)
+ERROR: Parse JSON failed. Error at line 0: Expected key
+   at: parse_string (core/io/json.cpp:624)
+   GDScript backtrace (most recent call first):
+       [0] read_candidate (res://systems/versioned_json_store.gd:18)
+       [1] load_data (res://systems/versioned_json_store.gd:35)
+       [2] _load_preferences (res://autoloads/save_manager.gd:241)
+       [3] _load_data (res://autoloads/save_manager.gd:172)
+       [4] run (res://tests/player_trust_save_checks.gd:91)
+       [5] _run (res://tests/autoload_smoke.gd:21)
+WARNING: Recovered local_settings.json from its backup.
+     at: push_warning (core/variant/variant_utility.cpp:1034)
+     GDScript backtrace (most recent call first):
+         [0] load_data (res://systems/versioned_json_store.gd:43)
+         [1] _load_preferences (res://autoloads/save_manager.gd:241)
+         [2] _load_data (res://autoloads/save_manager.gd:172)
+         [3] run (res://tests/player_trust_save_checks.gd:91)
+         [4] _run (res://tests/autoload_smoke.gd:21)
+ERROR: Parse JSON failed. Error at line 0: Expected key
+   at: parse_string (core/io/json.cpp:624)
+   GDScript backtrace (most recent call first):
+       [0] read_candidate (res://systems/versioned_json_store.gd:18)
+       [1] write_data (res://systems/versioned_json_store.gd:50)
+       [2] _save_preferences (res://autoloads/save_manager.gd:288)
+       [3] run (res://tests/player_trust_save_checks.gd:95)
+       [4] _run (res://tests/autoload_smoke.gd:21)
+WARNING: local_settings.json: Could not write the save folder. Check free disk space and folder permissions.
+     at: push_warning (core/variant/variant_utility.cpp:1034)
+     GDScript backtrace (most recent call first):
+         [0] _fail (res://systems/versioned_json_store.gd:83)
+         [1] write_data (res://systems/versioned_json_store.gd:60)
+         [2] _save_preferences (res://autoloads/save_manager.gd:288)
+         [3] _load_preferences (res://autoloads/save_manager.gd:259)
+         [4] _load_data (res://autoloads/save_manager.gd:172)
+         [5] run (res://tests/player_trust_save_checks.gd:109)
+         [6] _run (res://tests/autoload_smoke.gd:21)
+WARNING: local_settings.json: Could not write the save folder. Check free disk space and folder permissions.
+     at: push_warning (core/variant/variant_utility.cpp:1034)
+     GDScript backtrace (most recent call first):
+         [0] _fail (res://systems/versioned_json_store.gd:83)
+         [1] write_data (res://systems/versioned_json_store.gd:60)
+         [2] _save_preferences (res://autoloads/save_manager.gd:288)
+         [3] _save_data (res://autoloads/save_manager.gd:377)
+         [4] run (res://tests/player_trust_save_checks.gd:110)
+         [5] _run (res://tests/autoload_smoke.gd:21)
+ERROR: Parse JSON failed. Error at line 0: Expected key
+   at: parse_string (core/io/json.cpp:624)
+   GDScript backtrace (most recent call first):
+       [0] read_candidate (res://systems/versioned_json_store.gd:18)
+       [1] load_data (res://systems/versioned_json_store.gd:35)
+       [2] _select_load_data (res://autoloads/save_manager.gd:345)
+       [3] _load_data (res://autoloads/save_manager.gd:171)
+       [4] _check_save_manager (res://tests/autoload_smoke.gd:131)
+       [5] _run (res://tests/autoload_smoke.gd:23)
+ERROR: Parse JSON failed. Error at line 0: Expected key
+   at: parse_string (core/io/json.cpp:624)
+   GDScript backtrace (most recent call first):
+       [0] read_candidate (res://systems/versioned_json_store.gd:18)
+       [1] load_data (res://systems/versioned_json_store.gd:35)
+       [2] _select_load_data (res://autoloads/save_manager.gd:345)
+       [3] _load_data (res://autoloads/save_manager.gd:171)
+       [4] _check_save_manager (res://tests/autoload_smoke.gd:169)
+       [5] _run (res://tests/autoload_smoke.gd:23)
+WARNING: Recovered save_data.json from its backup.
+     at: push_warning (core/variant/variant_utility.cpp:1034)
+     GDScript backtrace (most recent call first):
+         [0] load_data (res://systems/versioned_json_store.gd:43)
+         [1] _select_load_data (res://autoloads/save_manager.gd:345)
+         [2] _load_data (res://autoloads/save_manager.gd:171)
+         [3] _check_save_manager (res://tests/autoload_smoke.gd:169)
+         [4] _run (res://tests/autoload_smoke.gd:23)
+ERROR: Parse JSON failed. Error at line 0: Expected key
+   at: parse_string (core/io/json.cpp:624)
+   GDScript backtrace (most recent call first):
+       [0] read_candidate (res://systems/versioned_json_store.gd:18)
+       [1] write_data (res://systems/versioned_json_store.gd:50)
+       [2] _save_data (res://autoloads/save_manager.gd:381)
+       [3] record_high_score (res://autoloads/save_manager.gd:124)
+       [4] _check_save_manager (res://tests/autoload_smoke.gd:172)
+       [5] _run (res://tests/autoload_smoke.gd:23)
+WARNING: Save remains read-only because it was created by a newer build.
+     at: push_warning (core/variant/variant_utility.cpp:1034)
+     GDScript backtrace (most recent call first):
+         [0] _save_data (res://autoloads/save_manager.gd:356)
+         [1] record_high_score (res://autoloads/save_manager.gd:124)
+         [2] _check_save_manager (res://tests/autoload_smoke.gd:264)
+         [3] _run (res://tests/autoload_smoke.gd:23)
+AUTOLOAD_SMOKE_PASS
+PASS: autoload smoke tests

@@ -1,0 +1,42 @@
+{
+	"fonts": {
+		"cabinet_heading": {
+			"family": "Oxanium ExtraLight",
+			"render_variation": {
+				"2003265652": 600.0
+			}
+		},
+		"interface_body": {
+			"family": "IBM Plex Sans",
+			"render_variation": {
+
+			}
+		},
+		"interface_bold_italic": {
+			"family": "IBM Plex Sans",
+			"render_variation": {
+				"2003072104": 100.0,
+				"2003265652": 600.0
+			}
+		},
+		"interface_emphasis": {
+			"family": "IBM Plex Sans",
+			"render_variation": {
+				"2003072104": 100.0,
+				"2003265652": 600.0
+			}
+		},
+		"interface_italic": {
+			"family": "IBM Plex Sans",
+			"render_variation": {
+
+			}
+		}
+	},
+	"menu_text_scale": 1.0,
+	"numeric_widths": [
+		48.0,
+		48.0
+	],
+	"window": "(2560, 1440)"
+}

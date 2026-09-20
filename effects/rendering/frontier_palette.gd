@@ -23,11 +23,11 @@ const CRT_PROFILE := {
 
 static func apply_galaxy(material: ShaderMaterial) -> void:
 	material.set_shader_parameter(&"space_color", SPACE)
-	material.set_shader_parameter(&"nebula_blue", Color("25324d"))
+	material.set_shader_parameter(&"nebula_blue", Color("294462"))
 	material.set_shader_parameter(&"nebula_violet", Color("48365b"))
 	material.set_shader_parameter(&"nebula_pink", Color("745074"))
-	material.set_shader_parameter(&"nebula_strength", 0.58)
-	material.set_shader_parameter(&"star_brightness", 0.56)
+	material.set_shader_parameter(&"nebula_strength", 0.72)
+	material.set_shader_parameter(&"star_brightness", 0.66)
 	material.set_shader_parameter(&"drift_speed", 0.009)
 
 

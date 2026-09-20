@@ -7,6 +7,12 @@ render_mode unshaded, cull_back, depth_draw_opaque;
 // See res://effects/shaders/PixelPlanets/LICENSE and design/pixel-enemies/README.md.
 // Mesh normals supply the form that the 2D planets synthesize with a sphere.
 uniform vec4 base_color : source_color = vec4(0.64, 0.025, 0.035, 1.0);
+uniform sampler2D albedo_texture : source_color, filter_nearest_mipmap, repeat_disable;
+uniform bool has_albedo_texture = false;
+uniform sampler2D emission_texture : source_color, filter_nearest_mipmap, repeat_disable;
+uniform bool has_emission_texture = false;
+uniform vec2 uv_scale = vec2(1.0);
+uniform vec2 uv_offset = vec2(0.0);
 uniform vec4 emission_color : source_color = vec4(0.0);
 uniform float emission_strength : hint_range(0.0, 12.0) = 0.0;
 uniform vec4 shadow_color : source_color = vec4(0.13, 0.10, 0.23, 1.0);
@@ -80,6 +86,15 @@ void vertex() {
 }
 
 void fragment() {
+	// Texture paint remains under the existing stepped lighting. UV sampling is
+	// nearest-filtered to preserve the atlas's deliberately crisp markings.
+	vec2 atlas_uv = UV * uv_scale + uv_offset;
+	vec3 painted = has_albedo_texture ? texture(albedo_texture, atlas_uv).rgb : vec3(1.0);
+	vec3 surface_color = base_color.rgb * painted;
+	vec3 surface_emission = emission_color.rgb;
+	if (has_emission_texture) {
+		surface_emission *= texture(emission_texture, atlas_uv).rgb;
+	}
 	// Dominant-axis mapping also gives vertical armor faces square cells.
 	vec3 axis = abs(hull_normal);
 	vec2 surface_position = hull_position.xz;
@@ -102,23 +117,25 @@ void fragment() {
 	float middle = step(shadow_border + checker * dither_width, shade);
 	float bright = step(light_border + checker * dither_width, shade);
 
-	float panel_luma = dot(base_color.rgb, vec3(0.2126, 0.7152, 0.0722));
+	float panel_luma = dot(surface_color, vec3(0.2126, 0.7152, 0.0722));
 	float panel = smoothstep(0.015, 0.12, panel_luma);
-	vec3 dark_tone = mix(base_color.rgb * 0.30, shadow_color.rgb, panel * 0.72);
-	vec3 middle_tone = mix(dark_tone, base_color.rgb, 0.66);
-	vec3 light_tone = mix(base_color.rgb, highlight_color.rgb, panel * 0.14);
+	vec3 dark_tone = mix(surface_color * 0.30, shadow_color.rgb, panel * 0.72);
+	vec3 middle_tone = mix(dark_tone, surface_color, 0.66);
+	vec3 light_tone = mix(surface_color, highlight_color.rgb, panel * 0.14);
 	vec3 color = mix(dark_tone, middle_tone, middle);
 	color = mix(color, light_tone, bright);
 	vec3 glow = vec3(0.0);
 
 	if (emission_strength > 0.0) {
-		vec3 energy = mix(emission_color.rgb, instance_energy_override.rgb, instance_energy_override.a * 0.55);
+		vec3 energy = mix(surface_emission, instance_energy_override.rgb, instance_energy_override.a * 0.55);
 		vec3 accent = mix(highlight_color.rgb, instance_accent_override.rgb, instance_accent_override.a);
 		// Pause-aware, stepped reactor light. Armor itself never scrolls.
 		float time = floor(instance_animation_time * 8.0) / 8.0;
 		float pulse = step(0.2, sin(time * 2.2 + instance_phase_offset));
 		float hot_cell = step(0.74, hash_cell(cell + vec2(23.1, 8.4))) * pulse;
 		color = mix(energy * 0.82, accent, hot_cell * 0.48);
+		// Reactor paint/slots also remain legible beneath generation feedback.
+		color *= painted;
 		glow = color * min(emission_strength, 1.2) * (0.24 + pulse * 0.08);
 	}
 

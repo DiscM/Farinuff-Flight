@@ -1,0 +1,1504 @@
+{
+  "assets": [
+    {
+      "animations": [
+        {
+          "channels": 12,
+          "duration_seconds": 2.633333444595337,
+          "name": "cruise"
+        },
+        {
+          "channels": 12,
+          "duration_seconds": 0.2666666805744171,
+          "name": "hit"
+        },
+        {
+          "channels": 12,
+          "duration_seconds": 0.5666666626930237,
+          "name": "windup"
+        },
+        {
+          "channels": 12,
+          "duration_seconds": 0.36666667461395264,
+          "name": "attack"
+        }
+      ],
+      "bounds_max_xyz": [
+        2.375,
+        0.375,
+        2.375
+      ],
+      "bounds_min_xyz": [
+        -2.375,
+        -0.375,
+        -3.125
+      ],
+      "bytes": 204544,
+      "collisionless": true,
+      "degenerate_triangles": 0,
+      "degenerate_uv_triangles": 0,
+      "dimensions_xyz": [
+        4.75,
+        0.75,
+        5.5
+      ],
+      "embedded_images": [
+        {
+          "bit_depth": 8,
+          "bytes": 2345,
+          "channels": 3,
+          "height": 256,
+          "rgba_pixels_sha256": "e25fa991169c6f5fe148c9025ee1b895a178c3936d0b81a2a3bf363c76a516bf",
+          "sha256": "777a5ed383f898bb065b861a780a3e4ba9f01eae8f1202c75e58ed8109c07768",
+          "width": 256
+        }
+      ],
+      "external_buffers_or_images": false,
+      "file": "basic_enemy.glb",
+      "id": "ff.vf.enemy.basic",
+      "joint_counts": [
+        4
+      ],
+      "materials": [
+        {
+          "base_color_factor": [
+            0.4969329950608704,
+            0.046665086336880095,
+            0.08021982031446832,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 0,
+          "name": "VF_basic_armor.001"
+        },
+        {
+          "base_color_factor": [
+            0.8796223968878317,
+            0.23074004852434915,
+            0.19120168274079138,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 1,
+          "name": "VF_basic_edge.001"
+        },
+        {
+          "base_color_factor": [
+            0.018500220128379697,
+            0.024157632448504756,
+            0.05448027644244237,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 2,
+          "name": "VF_basic_structure.001"
+        },
+        {
+          "base_color_factor": [
+            1.0,
+            0.47353149614800955,
+            0.1946178304415758,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0.800000011920929,
+            0.37882519332804065,
+            0.15569427245399758
+          ],
+          "index": 3,
+          "name": "VF_basic_reactor.001"
+        },
+        {
+          "base_color_factor": [
+            0.846873231509858,
+            0.3277780980565422,
+            0.1301364766903643,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 4,
+          "name": "VF_basic_trim.001"
+        }
+      ],
+      "mesh_nodes": 6,
+      "name": "CINDER / Raider",
+      "role": "basic",
+      "sha256": "af88a72ae07f8f7bd0c030b0288b995a242789814581cacf9f1ee85a864905fa",
+      "skins": 1,
+      "status": "pass",
+      "surfaces": 12,
+      "triangles": 1592,
+      "uv_channels": [
+        "TEXCOORD_0"
+      ],
+      "vertices": 3184
+    },
+    {
+      "animations": [
+        {
+          "channels": 12,
+          "duration_seconds": 2.633333444595337,
+          "name": "cruise"
+        },
+        {
+          "channels": 12,
+          "duration_seconds": 0.2666666805744171,
+          "name": "hit"
+        },
+        {
+          "channels": 12,
+          "duration_seconds": 0.5666666626930237,
+          "name": "windup"
+        },
+        {
+          "channels": 12,
+          "duration_seconds": 0.36666667461395264,
+          "name": "attack"
+        }
+      ],
+      "bounds_max_xyz": [
+        1.2100000381469727,
+        0.33000001311302185,
+        4.070000171661377
+      ],
+      "bounds_min_xyz": [
+        -1.2100000381469727,
+        -0.33000001311302185,
+        -4.070000171661377
+      ],
+      "bytes": 206112,
+      "collisionless": true,
+      "degenerate_triangles": 0,
+      "degenerate_uv_triangles": 0,
+      "dimensions_xyz": [
+        2.4200000762939453,
+        0.6600000262260437,
+        8.140000343322754
+      ],
+      "embedded_images": [
+        {
+          "bit_depth": 8,
+          "bytes": 2345,
+          "channels": 3,
+          "height": 256,
+          "rgba_pixels_sha256": "e25fa991169c6f5fe148c9025ee1b895a178c3936d0b81a2a3bf363c76a516bf",
+          "sha256": "777a5ed383f898bb065b861a780a3e4ba9f01eae8f1202c75e58ed8109c07768",
+          "width": 256
+        }
+      ],
+      "external_buffers_or_images": false,
+      "file": "fast_enemy.glb",
+      "id": "ff.vf.enemy.fast",
+      "joint_counts": [
+        4
+      ],
+      "materials": [
+        {
+          "base_color_factor": [
+            0.6938717612919899,
+            0.17788841598362912,
+            0.03560131487502034,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 0,
+          "name": "VF_fast_armor.001"
+        },
+        {
+          "base_color_factor": [
+            1.0,
+            0.4620769996544071,
+            0.13843161503245183,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 1,
+          "name": "VF_fast_edge.001"
+        },
+        {
+          "base_color_factor": [
+            0.021219010376003555,
+            0.02518685962736163,
+            0.052860647023180246,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 2,
+          "name": "VF_fast_structure.001"
+        },
+        {
+          "base_color_factor": [
+            1.0,
+            0.7156935005064807,
+            0.24228112246555486,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0.800000011920929,
+            0.5725547875844654,
+            0.19382490208484082
+          ],
+          "index": 3,
+          "name": "VF_fast_reactor.001"
+        }
+      ],
+      "mesh_nodes": 6,
+      "name": "NEEDLE / Interceptor",
+      "role": "fast",
+      "sha256": "12b9351b9a91b1e6cf4802b444487f87fdfac0b4d875515a6b892eed55bf01c4",
+      "skins": 1,
+      "status": "pass",
+      "surfaces": 10,
+      "triangles": 1612,
+      "uv_channels": [
+        "TEXCOORD_0"
+      ],
+      "vertices": 3224
+    },
+    {
+      "animations": [
+        {
+          "channels": 12,
+          "duration_seconds": 2.633333444595337,
+          "name": "cruise"
+        },
+        {
+          "channels": 12,
+          "duration_seconds": 0.2666666805744171,
+          "name": "hit"
+        },
+        {
+          "channels": 12,
+          "duration_seconds": 0.5666666626930237,
+          "name": "windup"
+        },
+        {
+          "channels": 12,
+          "duration_seconds": 0.36666667461395264,
+          "name": "attack"
+        }
+      ],
+      "bounds_max_xyz": [
+        4.059999942779541,
+        0.41999998688697815,
+        2.380000114440918
+      ],
+      "bounds_min_xyz": [
+        -4.059999942779541,
+        -0.41999998688697815,
+        -2.6600000858306885
+      ],
+      "bytes": 303828,
+      "collisionless": true,
+      "degenerate_triangles": 0,
+      "degenerate_uv_triangles": 0,
+      "dimensions_xyz": [
+        8.119999885559082,
+        0.8399999737739563,
+        5.0400002002716064
+      ],
+      "embedded_images": [
+        {
+          "bit_depth": 8,
+          "bytes": 2345,
+          "channels": 3,
+          "height": 256,
+          "rgba_pixels_sha256": "e25fa991169c6f5fe148c9025ee1b895a178c3936d0b81a2a3bf363c76a516bf",
+          "sha256": "777a5ed383f898bb065b861a780a3e4ba9f01eae8f1202c75e58ed8109c07768",
+          "width": 256
+        }
+      ],
+      "external_buffers_or_images": false,
+      "file": "bomber_enemy.glb",
+      "id": "ff.vf.enemy.bomber",
+      "joint_counts": [
+        4
+      ],
+      "materials": [
+        {
+          "base_color_factor": [
+            0.07818742180518633,
+            0.32314320911295075,
+            0.12213877222960187,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 0,
+          "name": "VF_bomber_armor.001"
+        },
+        {
+          "base_color_factor": [
+            0.3564001441459435,
+            0.5775804404296506,
+            0.19806931955994886,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 1,
+          "name": "VF_bomber_edge.001"
+        },
+        {
+          "base_color_factor": [
+            0.0202885630566524,
+            0.03433980680868217,
+            0.05126945837404324,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 2,
+          "name": "VF_bomber_structure.001"
+        },
+        {
+          "base_color_factor": [
+            0.5457244613701866,
+            1.0,
+            0.23455058216100522,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0.4365795677390629,
+            0.800000011920929,
+            0.1876404671019385
+          ],
+          "index": 3,
+          "name": "VF_bomber_reactor.001"
+        },
+        {
+          "base_color_factor": [
+            0.5520114015120001,
+            0.6938717612919899,
+            0.2195261997292692,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 4,
+          "name": "VF_bomber_trim.001"
+        }
+      ],
+      "mesh_nodes": 6,
+      "name": "MANTIS / Carrier",
+      "role": "bomber",
+      "sha256": "9bc6ebfd3bd88ae8b227b3d6907bb34dbbd6b43270823d5f37d4461b23cd42fc",
+      "skins": 1,
+      "status": "pass",
+      "surfaces": 14,
+      "triangles": 2500,
+      "uv_channels": [
+        "TEXCOORD_0"
+      ],
+      "vertices": 5000
+    },
+    {
+      "animations": [
+        {
+          "channels": 12,
+          "duration_seconds": 2.633333444595337,
+          "name": "cruise"
+        },
+        {
+          "channels": 12,
+          "duration_seconds": 0.2666666805744171,
+          "name": "hit"
+        },
+        {
+          "channels": 12,
+          "duration_seconds": 0.5666666626930237,
+          "name": "windup"
+        },
+        {
+          "channels": 12,
+          "duration_seconds": 0.36666667461395264,
+          "name": "attack"
+        }
+      ],
+      "bounds_max_xyz": [
+        2.940000057220459,
+        0.9800000190734863,
+        2.940000057220459
+      ],
+      "bounds_min_xyz": [
+        -2.940000057220459,
+        -0.41999998688697815,
+        -2.940000057220459
+      ],
+      "bytes": 358572,
+      "collisionless": true,
+      "degenerate_triangles": 0,
+      "degenerate_uv_triangles": 0,
+      "dimensions_xyz": [
+        5.880000114440918,
+        1.4000000059604645,
+        5.880000114440918
+      ],
+      "embedded_images": [
+        {
+          "bit_depth": 8,
+          "bytes": 2345,
+          "channels": 3,
+          "height": 256,
+          "rgba_pixels_sha256": "e25fa991169c6f5fe148c9025ee1b895a178c3936d0b81a2a3bf363c76a516bf",
+          "sha256": "777a5ed383f898bb065b861a780a3e4ba9f01eae8f1202c75e58ed8109c07768",
+          "width": 256
+        }
+      ],
+      "external_buffers_or_images": false,
+      "file": "tank_enemy.glb",
+      "id": "ff.vf.enemy.tank",
+      "joint_counts": [
+        4
+      ],
+      "materials": [
+        {
+          "base_color_factor": [
+            0.162029375639111,
+            0.08865558628577294,
+            0.3277780980565422,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 0,
+          "name": "VF_tank_armor.001"
+        },
+        {
+          "base_color_factor": [
+            0.45078578283822346,
+            0.29177064981753587,
+            0.6239603916750761,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 1,
+          "name": "VF_tank_edge.001"
+        },
+        {
+          "base_color_factor": [
+            0.021219010376003555,
+            0.019382360956935723,
+            0.04518620438567554,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 2,
+          "name": "VF_tank_structure.001"
+        },
+        {
+          "base_color_factor": [
+            0.8796223968878317,
+            0.26225065752969623,
+            0.665387298282272,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0.7036979303314972,
+            0.20980053260625198,
+            0.5323098261998567
+          ],
+          "index": 3,
+          "name": "VF_tank_reactor.001"
+        },
+        {
+          "base_color_factor": [
+            0.5840784178911641,
+            0.18782077230067787,
+            0.4019777798321958,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 4,
+          "name": "VF_tank_trim.001"
+        }
+      ],
+      "mesh_nodes": 6,
+      "name": "BASTION / Heavy",
+      "role": "tank",
+      "sha256": "63b54413c4347b0bb9d3e4f9dd9b456fdc3e8b716756830e8c397103188c621b",
+      "skins": 1,
+      "status": "pass",
+      "surfaces": 13,
+      "triangles": 2960,
+      "uv_channels": [
+        "TEXCOORD_0"
+      ],
+      "vertices": 5920
+    },
+    {
+      "animations": [
+        {
+          "channels": 12,
+          "duration_seconds": 2.633333444595337,
+          "name": "cruise"
+        },
+        {
+          "channels": 12,
+          "duration_seconds": 0.2666666805744171,
+          "name": "hit"
+        },
+        {
+          "channels": 12,
+          "duration_seconds": 0.5666666626930237,
+          "name": "windup"
+        },
+        {
+          "channels": 12,
+          "duration_seconds": 0.36666667461395264,
+          "name": "attack"
+        }
+      ],
+      "bounds_max_xyz": [
+        1.3200000524520874,
+        0.36000001430511475,
+        3.9600000381469727
+      ],
+      "bounds_min_xyz": [
+        -1.3200000524520874,
+        -0.36000001430511475,
+        -4.440000057220459
+      ],
+      "bytes": 206924,
+      "collisionless": true,
+      "degenerate_triangles": 0,
+      "degenerate_uv_triangles": 0,
+      "dimensions_xyz": [
+        2.640000104904175,
+        0.7200000286102295,
+        8.400000095367432
+      ],
+      "embedded_images": [
+        {
+          "bit_depth": 8,
+          "bytes": 2345,
+          "channels": 3,
+          "height": 256,
+          "rgba_pixels_sha256": "e25fa991169c6f5fe148c9025ee1b895a178c3936d0b81a2a3bf363c76a516bf",
+          "sha256": "777a5ed383f898bb065b861a780a3e4ba9f01eae8f1202c75e58ed8109c07768",
+          "width": 256
+        }
+      ],
+      "external_buffers_or_images": false,
+      "file": "sniper_enemy.glb",
+      "id": "ff.vf.enemy.sniper",
+      "joint_counts": [
+        4
+      ],
+      "materials": [
+        {
+          "base_color_factor": [
+            0.05126945837404324,
+            0.21223075741405523,
+            0.3419144249086609,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 0,
+          "name": "VF_sniper_armor.001"
+        },
+        {
+          "base_color_factor": [
+            0.25415209433082675,
+            0.5711248294648731,
+            0.6583748172794485,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 1,
+          "name": "VF_sniper_edge.001"
+        },
+        {
+          "base_color_factor": [
+            0.018500220128379697,
+            0.026241221894849898,
+            0.05612849004960009,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 2,
+          "name": "VF_sniper_structure.001"
+        },
+        {
+          "base_color_factor": [
+            1.0,
+            0.5028864580325687,
+            0.1651321945016676,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0.800000011920929,
+            0.4023091853009042,
+            0.1321057577744984
+          ],
+          "index": 3,
+          "name": "VF_sniper_reactor.001"
+        },
+        {
+          "base_color_factor": [
+            0.6938717612919899,
+            0.3277780980565422,
+            0.12213877222960187,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 4,
+          "name": "VF_sniper_trim.001"
+        }
+      ],
+      "mesh_nodes": 6,
+      "name": "LONGBOW / Marksman",
+      "role": "sniper",
+      "sha256": "43e8d42df5d124c1935e122389bd5235a26e63dccf28bdf6a1d02adbc8c95ca6",
+      "skins": 1,
+      "status": "pass",
+      "surfaces": 10,
+      "triangles": 1608,
+      "uv_channels": [
+        "TEXCOORD_0"
+      ],
+      "vertices": 3216
+    },
+    {
+      "animations": [],
+      "bounds_max_xyz": [
+        2.380000114440918,
+        0.41999998688697815,
+        2.380000114440918
+      ],
+      "bounds_min_xyz": [
+        -2.940000057220459,
+        -0.41999998688697815,
+        -2.6600000858306885
+      ],
+      "bytes": 80764,
+      "collisionless": true,
+      "degenerate_triangles": 0,
+      "degenerate_uv_triangles": 0,
+      "dimensions_xyz": [
+        5.320000171661377,
+        0.8399999737739563,
+        5.0400002002716064
+      ],
+      "embedded_images": [
+        {
+          "bit_depth": 8,
+          "bytes": 2345,
+          "channels": 3,
+          "height": 256,
+          "rgba_pixels_sha256": "e25fa991169c6f5fe148c9025ee1b895a178c3936d0b81a2a3bf363c76a516bf",
+          "sha256": "777a5ed383f898bb065b861a780a3e4ba9f01eae8f1202c75e58ed8109c07768",
+          "width": 256
+        }
+      ],
+      "external_buffers_or_images": false,
+      "file": "relay_fragment.glb",
+      "id": "ff.vf.debris.relay",
+      "joint_counts": [],
+      "materials": [
+        {
+          "base_color_factor": [
+            0.13843161503245183,
+            0.19806931955994886,
+            0.3049873140698863,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 0,
+          "name": "VF_debris_armor.001"
+        },
+        {
+          "base_color_factor": [
+            0.33245153634617935,
+            0.41254261348390375,
+            0.5271151257058131,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 1,
+          "name": "VF_debris_edge.001"
+        },
+        {
+          "base_color_factor": [
+            0.0295568344378088,
+            0.03433980680868217,
+            0.07618538148130785,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 2,
+          "name": "VF_debris_structure.001"
+        },
+        {
+          "base_color_factor": [
+            0.12477181756095049,
+            0.3419144249086609,
+            0.4072402119017367,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 3,
+          "name": "VF_debris_trim.001"
+        },
+        {
+          "base_color_factor": [
+            0.3712376804741491,
+            0.25415209433082675,
+            0.13843161503245183,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 4,
+          "name": "VF_debris_brass.001"
+        }
+      ],
+      "mesh_nodes": 1,
+      "name": "Relay Fragment",
+      "role": "relay wreckage",
+      "sha256": "d97332aa26b68c5cafc2816c3278ff528d61c641ecce3e23f8478aa2d3742a97",
+      "skins": 0,
+      "status": "pass",
+      "surfaces": 5,
+      "triangles": 1040,
+      "uv_channels": [
+        "TEXCOORD_0"
+      ],
+      "vertices": 2080
+    },
+    {
+      "animations": [],
+      "bounds_max_xyz": [
+        2.380000114440918,
+        0.9800000190734863,
+        1.5399999618530273
+      ],
+      "bounds_min_xyz": [
+        -2.380000114440918,
+        -0.41999998688697815,
+        -1.5399999618530273
+      ],
+      "bytes": 74584,
+      "collisionless": true,
+      "degenerate_triangles": 0,
+      "degenerate_uv_triangles": 0,
+      "dimensions_xyz": [
+        4.760000228881836,
+        1.4000000059604645,
+        3.0799999237060547
+      ],
+      "embedded_images": [
+        {
+          "bit_depth": 8,
+          "bytes": 2345,
+          "channels": 3,
+          "height": 256,
+          "rgba_pixels_sha256": "e25fa991169c6f5fe148c9025ee1b895a178c3936d0b81a2a3bf363c76a516bf",
+          "sha256": "777a5ed383f898bb065b861a780a3e4ba9f01eae8f1202c75e58ed8109c07768",
+          "width": 256
+        }
+      ],
+      "external_buffers_or_images": false,
+      "file": "solar_fragment.glb",
+      "id": "ff.vf.debris.solar",
+      "joint_counts": [],
+      "materials": [
+        {
+          "base_color_factor": [
+            0.13843161503245183,
+            0.19806931955994886,
+            0.3049873140698863,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 0,
+          "name": "VF_debris_armor.001"
+        },
+        {
+          "base_color_factor": [
+            0.33245153634617935,
+            0.41254261348390375,
+            0.5271151257058131,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 1,
+          "name": "VF_debris_edge.001"
+        },
+        {
+          "base_color_factor": [
+            0.0295568344378088,
+            0.03433980680868217,
+            0.07618538148130785,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 2,
+          "name": "VF_debris_structure.001"
+        },
+        {
+          "base_color_factor": [
+            0.12477181756095049,
+            0.3419144249086609,
+            0.4072402119017367,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 3,
+          "name": "VF_debris_trim.001"
+        },
+        {
+          "base_color_factor": [
+            0.3712376804741491,
+            0.25415209433082675,
+            0.13843161503245183,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 4,
+          "name": "VF_debris_brass.001"
+        }
+      ],
+      "mesh_nodes": 1,
+      "name": "Solar Array Fragment",
+      "role": "broken solar panel",
+      "sha256": "9b3ea4d52f94b98e2cde4231ff78058d22342af76c83fde2350569ac441ab4bc",
+      "skins": 0,
+      "status": "pass",
+      "surfaces": 5,
+      "triangles": 952,
+      "uv_channels": [
+        "TEXCOORD_0"
+      ],
+      "vertices": 1904
+    },
+    {
+      "animations": [],
+      "bounds_max_xyz": [
+        1.8200000524520874,
+        0.699999988079071,
+        1.2599999904632568
+      ],
+      "bounds_min_xyz": [
+        -1.8200000524520874,
+        -0.699999988079071,
+        -1.2599999904632568
+      ],
+      "bytes": 91484,
+      "collisionless": true,
+      "degenerate_triangles": 0,
+      "degenerate_uv_triangles": 0,
+      "dimensions_xyz": [
+        3.640000104904175,
+        1.399999976158142,
+        2.5199999809265137
+      ],
+      "embedded_images": [
+        {
+          "bit_depth": 8,
+          "bytes": 2345,
+          "channels": 3,
+          "height": 256,
+          "rgba_pixels_sha256": "e25fa991169c6f5fe148c9025ee1b895a178c3936d0b81a2a3bf363c76a516bf",
+          "sha256": "777a5ed383f898bb065b861a780a3e4ba9f01eae8f1202c75e58ed8109c07768",
+          "width": 256
+        }
+      ],
+      "external_buffers_or_images": false,
+      "file": "cargo_wreck.glb",
+      "id": "ff.vf.debris.cargo",
+      "joint_counts": [],
+      "materials": [
+        {
+          "base_color_factor": [
+            0.13843161503245183,
+            0.19806931955994886,
+            0.3049873140698863,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 0,
+          "name": "VF_debris_armor.001"
+        },
+        {
+          "base_color_factor": [
+            0.33245153634617935,
+            0.41254261348390375,
+            0.5271151257058131,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 1,
+          "name": "VF_debris_edge.001"
+        },
+        {
+          "base_color_factor": [
+            0.12477181756095049,
+            0.3419144249086609,
+            0.4072402119017367,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 2,
+          "name": "VF_debris_trim.001"
+        },
+        {
+          "base_color_factor": [
+            0.3712376804741491,
+            0.25415209433082675,
+            0.13843161503245183,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 3,
+          "name": "VF_debris_brass.001"
+        }
+      ],
+      "mesh_nodes": 1,
+      "name": "Cargo Wreck",
+      "role": "abandoned cargo module",
+      "sha256": "721946de1db8de7b9a655e6b4093574b056bfe4e5d32631b4b83646abcb464f4",
+      "skins": 0,
+      "status": "pass",
+      "surfaces": 4,
+      "triangles": 1208,
+      "uv_channels": [
+        "TEXCOORD_0"
+      ],
+      "vertices": 2416
+    },
+    {
+      "animations": [],
+      "bounds_max_xyz": [
+        1.2599999904632568,
+        1.2599999904632568,
+        1.8200000524520874
+      ],
+      "bounds_min_xyz": [
+        -1.2599999904632568,
+        -1.2599999904632568,
+        -1.8200000524520874
+      ],
+      "bytes": 101296,
+      "collisionless": true,
+      "degenerate_triangles": 0,
+      "degenerate_uv_triangles": 0,
+      "dimensions_xyz": [
+        2.5199999809265137,
+        2.5199999809265137,
+        3.640000104904175
+      ],
+      "embedded_images": [
+        {
+          "bit_depth": 8,
+          "bytes": 2345,
+          "channels": 3,
+          "height": 256,
+          "rgba_pixels_sha256": "e25fa991169c6f5fe148c9025ee1b895a178c3936d0b81a2a3bf363c76a516bf",
+          "sha256": "777a5ed383f898bb065b861a780a3e4ba9f01eae8f1202c75e58ed8109c07768",
+          "width": 256
+        }
+      ],
+      "external_buffers_or_images": false,
+      "file": "engine_wreck.glb",
+      "id": "ff.vf.debris.engine",
+      "joint_counts": [],
+      "materials": [
+        {
+          "base_color_factor": [
+            0.13843161503245183,
+            0.19806931955994886,
+            0.3049873140698863,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 0,
+          "name": "VF_debris_armor.001"
+        },
+        {
+          "base_color_factor": [
+            0.33245153634617935,
+            0.41254261348390375,
+            0.5271151257058131,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 1,
+          "name": "VF_debris_edge.001"
+        },
+        {
+          "base_color_factor": [
+            0.0295568344378088,
+            0.03433980680868217,
+            0.07618538148130785,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 2,
+          "name": "VF_debris_structure.001"
+        },
+        {
+          "base_color_factor": [
+            0.3712376804741491,
+            0.25415209433082675,
+            0.13843161503245183,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 3,
+          "name": "VF_debris_brass.001"
+        }
+      ],
+      "mesh_nodes": 1,
+      "name": "Engine Wreck",
+      "role": "detached propulsion module",
+      "sha256": "a4b36758ee79c6363f293d412d97079bf343a0cb59c67ff16de9519e0edf9734",
+      "skins": 0,
+      "status": "pass",
+      "surfaces": 4,
+      "triangles": 1348,
+      "uv_channels": [
+        "TEXCOORD_0"
+      ],
+      "vertices": 2696
+    },
+    {
+      "animations": [],
+      "bounds_max_xyz": [
+        2.0999999046325684,
+        0.41999998688697815,
+        1.5399999618530273
+      ],
+      "bounds_min_xyz": [
+        -2.0999999046325684,
+        -0.41999998688697815,
+        -1.5399999618530273
+      ],
+      "bytes": 68264,
+      "collisionless": true,
+      "degenerate_triangles": 0,
+      "degenerate_uv_triangles": 0,
+      "dimensions_xyz": [
+        4.199999809265137,
+        0.8399999737739563,
+        3.0799999237060547
+      ],
+      "embedded_images": [
+        {
+          "bit_depth": 8,
+          "bytes": 2345,
+          "channels": 3,
+          "height": 256,
+          "rgba_pixels_sha256": "e25fa991169c6f5fe148c9025ee1b895a178c3936d0b81a2a3bf363c76a516bf",
+          "sha256": "777a5ed383f898bb065b861a780a3e4ba9f01eae8f1202c75e58ed8109c07768",
+          "width": 256
+        }
+      ],
+      "external_buffers_or_images": false,
+      "file": "hull_fragment.glb",
+      "id": "ff.vf.debris.hull",
+      "joint_counts": [],
+      "materials": [
+        {
+          "base_color_factor": [
+            0.13843161503245183,
+            0.19806931955994886,
+            0.3049873140698863,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 0,
+          "name": "VF_debris_armor.001"
+        },
+        {
+          "base_color_factor": [
+            0.33245153634617935,
+            0.41254261348390375,
+            0.5271151257058131,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 1,
+          "name": "VF_debris_edge.001"
+        },
+        {
+          "base_color_factor": [
+            0.12477181756095049,
+            0.3419144249086609,
+            0.4072402119017367,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 2,
+          "name": "VF_debris_trim.001"
+        },
+        {
+          "base_color_factor": [
+            0.3712376804741491,
+            0.25415209433082675,
+            0.13843161503245183,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 3,
+          "name": "VF_debris_brass.001"
+        }
+      ],
+      "mesh_nodes": 1,
+      "name": "Hull Fragment",
+      "role": "broken armor section",
+      "sha256": "e925ca30ec80af26708038012caa58074b03b863762df9b1ac289d1dd6d3a90c",
+      "skins": 0,
+      "status": "pass",
+      "surfaces": 4,
+      "triangles": 876,
+      "uv_channels": [
+        "TEXCOORD_0"
+      ],
+      "vertices": 1752
+    },
+    {
+      "animations": [],
+      "bounds_max_xyz": [
+        1.8200000524520874,
+        1.2599999904632568,
+        1.5399999618530273
+      ],
+      "bounds_min_xyz": [
+        -1.8200000524520874,
+        -1.2599999904632568,
+        -1.5399999618530273
+      ],
+      "bytes": 78072,
+      "collisionless": true,
+      "degenerate_triangles": 0,
+      "degenerate_uv_triangles": 0,
+      "dimensions_xyz": [
+        3.640000104904175,
+        2.5199999809265137,
+        3.0799999237060547
+      ],
+      "embedded_images": [
+        {
+          "bit_depth": 8,
+          "bytes": 2345,
+          "channels": 3,
+          "height": 256,
+          "rgba_pixels_sha256": "e25fa991169c6f5fe148c9025ee1b895a178c3936d0b81a2a3bf363c76a516bf",
+          "sha256": "777a5ed383f898bb065b861a780a3e4ba9f01eae8f1202c75e58ed8109c07768",
+          "width": 256
+        }
+      ],
+      "external_buffers_or_images": false,
+      "file": "asteroid_cluster.glb",
+      "id": "ff.vf.debris.asteroid",
+      "joint_counts": [],
+      "materials": [
+        {
+          "base_color_factor": [
+            0.13843161503245183,
+            0.19806931955994886,
+            0.3049873140698863,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 0,
+          "name": "VF_debris_armor.001"
+        },
+        {
+          "base_color_factor": [
+            0.33245153634617935,
+            0.41254261348390375,
+            0.5271151257058131,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 1,
+          "name": "VF_debris_edge.001"
+        },
+        {
+          "base_color_factor": [
+            0.0295568344378088,
+            0.03433980680868217,
+            0.07618538148130785,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 2,
+          "name": "VF_debris_structure.001"
+        },
+        {
+          "base_color_factor": [
+            0.3712376804741491,
+            0.25415209433082675,
+            0.13843161503245183,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 3,
+          "name": "VF_debris_brass.001"
+        }
+      ],
+      "mesh_nodes": 1,
+      "name": "Asteroid Cluster",
+      "role": "voxel stone and exposed ore",
+      "sha256": "e4b5a515808ff9aa2b6848243d68d702b7b8105a4bf5fa7fb1280baa239375da",
+      "skins": 0,
+      "status": "pass",
+      "surfaces": 4,
+      "triangles": 1016,
+      "uv_channels": [
+        "TEXCOORD_0"
+      ],
+      "vertices": 2032
+    }
+  ],
+  "evidence_type": "Static file validation; rendered appearance is a separate check",
+  "package_id": "farinuff-flight.voxel-frontier",
+  "policy": {
+    "allow_collision_camera_light_nodes": false,
+    "max_texture_dimension": 4096,
+    "max_triangles_per_asset": 20000,
+    "max_vertices_per_asset": 40000,
+    "required_texture": "embedded base-color PNG on every material",
+    "required_uv": "TEXCOORD_0"
+  },
+  "schema_version": 1,
+  "status": "pass",
+  "textures": [
+    {
+      "bit_depth": 8,
+      "bytes": 2345,
+      "channels": 3,
+      "file": "assets/models/voxel_frontier/textures/voxel_surface_atlas.png",
+      "height": 256,
+      "rgba_pixels_sha256": "e25fa991169c6f5fe148c9025ee1b895a178c3936d0b81a2a3bf363c76a516bf",
+      "sha256": "777a5ed383f898bb065b861a780a3e4ba9f01eae8f1202c75e58ed8109c07768",
+      "width": 256
+    }
+  ]
+}

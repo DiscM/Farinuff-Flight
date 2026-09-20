@@ -1,0 +1,386 @@
+{
+  "name": "Voxel Frontier Surface Atlas",
+  "version": "1.0.0",
+  "provenance": "Original artwork authored procedurally for Farinuff Flight; no external image inputs.",
+  "generator": "tools/build_voxel_frontier_atlas.py",
+  "texture": "textures/voxel_surface_atlas.png",
+  "sha256": "777a5ed383f898bb065b861a780a3e4ba9f01eae8f1202c75e58ed8109c07768",
+  "dimensions": [
+    256,
+    256
+  ],
+  "tile_dimensions": [
+    64,
+    64
+  ],
+  "grid": [
+    4,
+    4
+  ],
+  "channels": "RGB; R=G=B at every pixel; opaque",
+  "color_space": "sRGB base-color modulation; material base color supplies role tint",
+  "palette_8bit": {
+    "recess": 92,
+    "shadow": 136,
+    "mid": 183,
+    "base": 218,
+    "light": 245
+  },
+  "min_feature_width_pixels": 2,
+  "sampling": "Nearest filtering recommended. Use the inset UV bounds to avoid neighboring tiles.",
+  "uv_contract": "Row-major tile IDs start at the PNG top-left. Blender UV origin is bottom-left. Image top row maps to v near 1. UV bounds are inclusive pixel centers inset 2.5 pixels from tile edges.",
+  "tiles": [
+    {
+      "id": 0,
+      "name": "clean_armor",
+      "purpose": "Quiet hull panel with stepped highlights and four corner fasteners.",
+      "column": 0,
+      "row_from_top": 0,
+      "pixel_bounds": [
+        0,
+        0,
+        63,
+        63
+      ],
+      "uv_min": [
+        0.009765625,
+        0.759765625
+      ],
+      "uv_max": [
+        0.240234375,
+        0.990234375
+      ],
+      "mean_luminance": 0.8384
+    },
+    {
+      "id": 1,
+      "name": "inset_plate",
+      "purpose": "Inset access plate with a thick gasket and a small release latch.",
+      "column": 1,
+      "row_from_top": 0,
+      "pixel_bounds": [
+        64,
+        0,
+        127,
+        63
+      ],
+      "uv_min": [
+        0.259765625,
+        0.759765625
+      ],
+      "uv_max": [
+        0.490234375,
+        0.990234375
+      ],
+      "mean_luminance": 0.7808
+    },
+    {
+      "id": 2,
+      "name": "vents",
+      "purpose": "Five deep ventilation slots in a bright armored surround.",
+      "column": 2,
+      "row_from_top": 0,
+      "pixel_bounds": [
+        128,
+        0,
+        191,
+        63
+      ],
+      "uv_min": [
+        0.509765625,
+        0.759765625
+      ],
+      "uv_max": [
+        0.740234375,
+        0.990234375
+      ],
+      "mean_luminance": 0.7612
+    },
+    {
+      "id": 3,
+      "name": "reactor_cells",
+      "purpose": "Four bright reactor cells inside a divided retaining frame.",
+      "column": 3,
+      "row_from_top": 0,
+      "pixel_bounds": [
+        192,
+        0,
+        255,
+        63
+      ],
+      "uv_min": [
+        0.759765625,
+        0.759765625
+      ],
+      "uv_max": [
+        0.990234375,
+        0.990234375
+      ],
+      "mean_luminance": 0.7705
+    },
+    {
+      "id": 4,
+      "name": "hull_stripes",
+      "purpose": "Two broad service stripes and a recessed longitudinal hull seam.",
+      "column": 0,
+      "row_from_top": 1,
+      "pixel_bounds": [
+        0,
+        64,
+        63,
+        127
+      ],
+      "uv_min": [
+        0.009765625,
+        0.509765625
+      ],
+      "uv_max": [
+        0.240234375,
+        0.740234375
+      ],
+      "mean_luminance": 0.8229
+    },
+    {
+      "id": 5,
+      "name": "solar_cells",
+      "purpose": "Three by four photovoltaic cells with bright conductive bus bars.",
+      "column": 1,
+      "row_from_top": 1,
+      "pixel_bounds": [
+        64,
+        64,
+        127,
+        127
+      ],
+      "uv_min": [
+        0.259765625,
+        0.509765625
+      ],
+      "uv_max": [
+        0.490234375,
+        0.740234375
+      ],
+      "mean_luminance": 0.7245
+    },
+    {
+      "id": 6,
+      "name": "cargo_hatch",
+      "purpose": "Cargo hatch with opposed doors, a center seam, and reinforced hinges.",
+      "column": 2,
+      "row_from_top": 1,
+      "pixel_bounds": [
+        128,
+        64,
+        191,
+        127
+      ],
+      "uv_min": [
+        0.509765625,
+        0.509765625
+      ],
+      "uv_max": [
+        0.740234375,
+        0.740234375
+      ],
+      "mean_luminance": 0.7959
+    },
+    {
+      "id": 7,
+      "name": "broken_cut_face",
+      "purpose": "Stepped fractured cross-section with exposed dark core and bright broken edges.",
+      "column": 3,
+      "row_from_top": 1,
+      "pixel_bounds": [
+        192,
+        64,
+        255,
+        127
+      ],
+      "uv_min": [
+        0.759765625,
+        0.509765625
+      ],
+      "uv_max": [
+        0.990234375,
+        0.740234375
+      ],
+      "mean_luminance": 0.7452
+    },
+    {
+      "id": 8,
+      "name": "stone",
+      "purpose": "Angular stone planes with blocky fissures, without fine noise.",
+      "column": 0,
+      "row_from_top": 2,
+      "pixel_bounds": [
+        0,
+        128,
+        63,
+        191
+      ],
+      "uv_min": [
+        0.009765625,
+        0.259765625
+      ],
+      "uv_max": [
+        0.240234375,
+        0.490234375
+      ],
+      "mean_luminance": 0.8044
+    },
+    {
+      "id": 9,
+      "name": "stone_ore",
+      "purpose": "Stone planes interrupted by large angular ore veins.",
+      "column": 1,
+      "row_from_top": 2,
+      "pixel_bounds": [
+        64,
+        128,
+        127,
+        191
+      ],
+      "uv_min": [
+        0.259765625,
+        0.259765625
+      ],
+      "uv_max": [
+        0.490234375,
+        0.490234375
+      ],
+      "mean_luminance": 0.7877
+    },
+    {
+      "id": 10,
+      "name": "truss",
+      "purpose": "Structural cross brace with a recessed cavity and corner mounting blocks.",
+      "column": 2,
+      "row_from_top": 2,
+      "pixel_bounds": [
+        128,
+        128,
+        191,
+        191
+      ],
+      "uv_min": [
+        0.509765625,
+        0.259765625
+      ],
+      "uv_max": [
+        0.740234375,
+        0.490234375
+      ],
+      "mean_luminance": 0.7909
+    },
+    {
+      "id": 11,
+      "name": "exposed_wiring",
+      "purpose": "Open maintenance channel with three stepped cable runs and bright connectors.",
+      "column": 3,
+      "row_from_top": 2,
+      "pixel_bounds": [
+        192,
+        128,
+        255,
+        191
+      ],
+      "uv_min": [
+        0.759765625,
+        0.259765625
+      ],
+      "uv_max": [
+        0.990234375,
+        0.490234375
+      ],
+      "mean_luminance": 0.7782
+    },
+    {
+      "id": 12,
+      "name": "warning_chevrons",
+      "purpose": "Broad repeating diagonal hazard chevrons inside a quiet panel surround.",
+      "column": 0,
+      "row_from_top": 3,
+      "pixel_bounds": [
+        0,
+        192,
+        63,
+        255
+      ],
+      "uv_min": [
+        0.009765625,
+        0.009765625
+      ],
+      "uv_max": [
+        0.240234375,
+        0.240234375
+      ],
+      "mean_luminance": 0.8232
+    },
+    {
+      "id": 13,
+      "name": "engine_grille",
+      "purpose": "Engine intake grille with deep channels and a reinforced bright frame.",
+      "column": 1,
+      "row_from_top": 3,
+      "pixel_bounds": [
+        64,
+        192,
+        127,
+        255
+      ],
+      "uv_min": [
+        0.259765625,
+        0.009765625
+      ],
+      "uv_max": [
+        0.490234375,
+        0.240234375
+      ],
+      "mean_luminance": 0.7551
+    },
+    {
+      "id": 14,
+      "name": "heavy_armor",
+      "purpose": "Overlapping heavy armor slabs with a central seam and thick corner bolts.",
+      "column": 2,
+      "row_from_top": 3,
+      "pixel_bounds": [
+        128,
+        192,
+        191,
+        255
+      ],
+      "uv_min": [
+        0.509765625,
+        0.009765625
+      ],
+      "uv_max": [
+        0.740234375,
+        0.240234375
+      ],
+      "mean_luminance": 0.8042
+    },
+    {
+      "id": 15,
+      "name": "clean_edge",
+      "purpose": "Quiet bright edge panel with a broad chamfer and sparse service marks.",
+      "column": 3,
+      "row_from_top": 3,
+      "pixel_bounds": [
+        192,
+        192,
+        255,
+        255
+      ],
+      "uv_min": [
+        0.759765625,
+        0.009765625
+      ],
+      "uv_max": [
+        0.990234375,
+        0.240234375
+      ],
+      "mean_luminance": 0.8545
+    }
+  ]
+}

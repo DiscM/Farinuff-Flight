@@ -13,7 +13,8 @@ const PROFILES: Array[Profile] = [
 	preload("res://entities/enemies/flight_profiles/harbinger.tres"),
 	preload("res://entities/enemies/flight_profiles/core.tres"),
 ]
-const ARENA_INSET := 100.0
+# Reserve the complete enlarged hull and weapon-pod span, including visual yaw.
+const ARENA_INSET := 160.0
 
 signal maneuver_changed(maneuver: Profile.Maneuver)
 

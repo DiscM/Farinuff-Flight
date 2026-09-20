@@ -1,0 +1,186 @@
+{
+	"passed": true,
+	"renderer": "forward_plus",
+	"styles": [
+		{
+			"assets": [
+				{
+					"asset": "basic",
+					"changed_pixels": 10835,
+					"passed": true
+				},
+				{
+					"asset": "fast",
+					"changed_pixels": 2208,
+					"passed": true
+				},
+				{
+					"asset": "bomber",
+					"changed_pixels": 15300,
+					"passed": true
+				},
+				{
+					"asset": "tank",
+					"changed_pixels": 35998,
+					"passed": true
+				},
+				{
+					"asset": "sniper",
+					"changed_pixels": 5059,
+					"passed": true
+				},
+				{
+					"asset": "relay_fragment",
+					"changed_pixels": 12348,
+					"passed": true
+				},
+				{
+					"asset": "solar_fragment",
+					"changed_pixels": 16824,
+					"passed": true
+				},
+				{
+					"asset": "cargo_wreck",
+					"changed_pixels": 11822,
+					"passed": true
+				},
+				{
+					"asset": "engine_wreck",
+					"changed_pixels": 9422,
+					"passed": true
+				},
+				{
+					"asset": "hull_fragment",
+					"changed_pixels": 14054,
+					"passed": true
+				},
+				{
+					"asset": "asteroid_cluster",
+					"changed_pixels": 9816,
+					"passed": true
+				}
+			],
+			"style": "production"
+		},
+		{
+			"assets": [
+				{
+					"asset": "basic",
+					"changed_pixels": 10835,
+					"passed": true
+				},
+				{
+					"asset": "fast",
+					"changed_pixels": 2208,
+					"passed": true
+				},
+				{
+					"asset": "bomber",
+					"changed_pixels": 15300,
+					"passed": true
+				},
+				{
+					"asset": "tank",
+					"changed_pixels": 35998,
+					"passed": true
+				},
+				{
+					"asset": "sniper",
+					"changed_pixels": 5059,
+					"passed": true
+				},
+				{
+					"asset": "relay_fragment",
+					"changed_pixels": 12348,
+					"passed": true
+				},
+				{
+					"asset": "solar_fragment",
+					"changed_pixels": 16824,
+					"passed": true
+				},
+				{
+					"asset": "cargo_wreck",
+					"changed_pixels": 11822,
+					"passed": true
+				},
+				{
+					"asset": "engine_wreck",
+					"changed_pixels": 9422,
+					"passed": true
+				},
+				{
+					"asset": "hull_fragment",
+					"changed_pixels": 14054,
+					"passed": true
+				},
+				{
+					"asset": "asteroid_cluster",
+					"changed_pixels": 9816,
+					"passed": true
+				}
+			],
+			"style": "pixel_planet"
+		},
+		{
+			"assets": [
+				{
+					"asset": "basic",
+					"changed_pixels": 11409,
+					"passed": true
+				},
+				{
+					"asset": "fast",
+					"changed_pixels": 2265,
+					"passed": true
+				},
+				{
+					"asset": "bomber",
+					"changed_pixels": 16077,
+					"passed": true
+				},
+				{
+					"asset": "tank",
+					"changed_pixels": 39425,
+					"passed": true
+				},
+				{
+					"asset": "sniper",
+					"changed_pixels": 5257,
+					"passed": true
+				},
+				{
+					"asset": "relay_fragment",
+					"changed_pixels": 13840,
+					"passed": true
+				},
+				{
+					"asset": "solar_fragment",
+					"changed_pixels": 17293,
+					"passed": true
+				},
+				{
+					"asset": "cargo_wreck",
+					"changed_pixels": 12921,
+					"passed": true
+				},
+				{
+					"asset": "engine_wreck",
+					"changed_pixels": 10266,
+					"passed": true
+				},
+				{
+					"asset": "hull_fragment",
+					"changed_pixels": 14863,
+					"passed": true
+				},
+				{
+					"asset": "asteroid_cluster",
+					"changed_pixels": 10721,
+					"passed": true
+				}
+			],
+			"style": "authored_alloy"
+		}
+	]
+}

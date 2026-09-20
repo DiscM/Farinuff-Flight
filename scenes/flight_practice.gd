@@ -79,11 +79,11 @@ func _physics_process(delta: float) -> void:
 
 func _show_step() -> void:
 	_lesson.text = [
-		"FLIGHT SCHOOL · 1 / 4\nMove your ship, aim, and hold %s to fire. Practice does not use supplies." % InputBindings.binding_label("shoot"),
-		"FLIGHT SCHOOL · 2 / 4\nPress %s to boost into the incoming shots. Reflected shots fly back and damage enemies. Getting hit will not end practice." % InputBindings.binding_label("boost"),
-		"REFLECTED! · 3 / 4\nReflect three shots in one boost. When BOOST AGAIN appears, press %s for a follow-up boost." % InputBindings.binding_label("boost"),
-		"FLIGHT SCHOOL · 4 / 4\nCollect the orbs. During a run, orb points fill the WAVE meter and advance you to the next wave.",
-		"FLIGHT SCHOOL COMPLETE\nYou also gained a life: every 12 orb points fills the HEART meter. Choose Start Run from the main menu when you are ready.",
+		"FLIGHT SCHOOL · 1 / 4\nMove · Aim · Hold %s to fire\nNo supplies used." % InputBindings.binding_label("shoot"),
+		"FLIGHT SCHOOL · 2 / 4\nBoost with %s to reflect shots.\nHits cannot end practice." % InputBindings.binding_label("boost"),
+		"REFLECTED! · 3 / 4\nReflect 3 shots in one boost.\nBOOST AGAIN → press %s" % InputBindings.binding_label("boost"),
+		"FLIGHT SCHOOL · 4 / 4\nCollect orbs to fill the WAVE meter.",
+		"FLIGHT SCHOOL COMPLETE\n+1 life per 12 orb points.\nMain Menu → Start Run",
 	][_step]
 
 func _refresh_lesson_bindings() -> void:
@@ -113,13 +113,13 @@ func _start_boss() -> void:
 	var bounds := flight_space.get_combat_bounds()
 	boss.activate_generation(flight_space, Vector3(bounds.get_center().x, 0, bounds.position.y + bounds.size.y * 0.22), Vector3.BACK, GameManager.get_enemy_generation(_boss_wave))
 	boss.finished.connect(_on_boss_finished)
-	_lesson.text = "BOSS PRACTICE\nPractice with a basic ship and no upgrades. Getting hit will not end practice. Destroy the boss's weapon pods to reduce its fire."
+	_lesson.text = "BOSS PRACTICE\nBase ship · No upgrades\nHits cannot end practice.\nDestroy weapon pods to reduce boss fire."
 
 func _on_boss_finished(_reason: int, _position: Vector3) -> void:
 	projectile_manager.clear_enemy_projectiles()
 	hazard_manager.clear_hazards()
 	GameManager.boss_active = false
-	_lesson.text = "BOSS PRACTICE COMPLETE\nOpen Pause to repeat this practice, or return to Flight School."
+	_lesson.text = "BOSS PRACTICE COMPLETE\nPause → Restart or Flight School"
 
 func _leave() -> void:
 	if _leaving:

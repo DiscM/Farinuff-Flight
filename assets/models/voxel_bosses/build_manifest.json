@@ -1,0 +1,201 @@
+{
+  "version": "1.0.0",
+  "blender_version": "5.2.1 LTS",
+  "assets": [
+    {
+      "id": "boss_assault",
+      "role": "assault",
+      "file": "meshes/boss_assault.glb",
+      "bytes": 652572,
+      "sha256": "bb4e75e9312f3618ae6b79f06ab2f011ff36f9183122dd831a32a12c6ebbe945",
+      "meshes": 6,
+      "bones": [
+        "Body",
+        "Port",
+        "Starboard",
+        "Weapon"
+      ],
+      "clips": [
+        "cruise",
+        "hit",
+        "windup",
+        "attack"
+      ],
+      "sockets": {
+        "Socket_Muzzle": "Weapon",
+        "Socket_MuzzleCenter": "Weapon",
+        "Socket_Core": "Body",
+        "Socket_EngineLeft": "Body",
+        "Socket_MuzzleLeft": "Weapon",
+        "Socket_WingHardpointLeft": "Port",
+        "Socket_EngineRight": "Body",
+        "Socket_MuzzleRight": "Weapon",
+        "Socket_WingHardpointRight": "Starboard"
+      },
+      "voxel_size": 0.28
+    },
+    {
+      "id": "boss_bulwark",
+      "role": "bulwark",
+      "file": "meshes/boss_bulwark.glb",
+      "bytes": 792976,
+      "sha256": "48c78b4259b08a62ceb265a18f54fce9542e4e985fe25b2c6f5b68bb3b3ef10c",
+      "meshes": 6,
+      "bones": [
+        "Body",
+        "Port",
+        "Starboard",
+        "Weapon"
+      ],
+      "clips": [
+        "cruise",
+        "hit",
+        "windup",
+        "attack"
+      ],
+      "sockets": {
+        "Socket_Muzzle": "Weapon",
+        "Socket_MuzzleCenter": "Weapon",
+        "Socket_Core": "Body",
+        "Socket_EngineLeft": "Body",
+        "Socket_MuzzleLeft": "Weapon",
+        "Socket_ShieldEmitterLeft": "Port",
+        "Socket_EngineRight": "Body",
+        "Socket_MuzzleRight": "Weapon",
+        "Socket_ShieldEmitterRight": "Starboard"
+      },
+      "voxel_size": 0.28
+    },
+    {
+      "id": "boss_tempest",
+      "role": "tempest",
+      "file": "meshes/boss_tempest.glb",
+      "bytes": 566836,
+      "sha256": "09c7c7893f967253c1bca39bb4ce349250c11f6ff513fbc3fbd51ae6953d1cf9",
+      "meshes": 6,
+      "bones": [
+        "Body",
+        "Port",
+        "Starboard",
+        "Weapon"
+      ],
+      "clips": [
+        "cruise",
+        "hit",
+        "windup",
+        "attack"
+      ],
+      "sockets": {
+        "Socket_Muzzle": "Weapon",
+        "Socket_MuzzleCenter": "Weapon",
+        "Socket_Core": "Body",
+        "Socket_EngineLeft": "Body",
+        "Socket_MuzzleLeft": "Weapon",
+        "Socket_EmitterFrontLeft": "Port",
+        "Socket_EmitterRearLeft": "Port",
+        "Socket_EngineRight": "Body",
+        "Socket_MuzzleRight": "Weapon",
+        "Socket_EmitterFrontRight": "Starboard",
+        "Socket_EmitterRearRight": "Starboard"
+      },
+      "voxel_size": 0.28
+    },
+    {
+      "id": "boss_void_harbinger",
+      "role": "void_harbinger",
+      "file": "meshes/boss_void_harbinger.glb",
+      "bytes": 650916,
+      "sha256": "7362d49679c42e26c36d275b47cd0242c687e702808d09f5704b8ec1f8f56dff",
+      "meshes": 6,
+      "bones": [
+        "Body",
+        "Port",
+        "Starboard",
+        "Weapon"
+      ],
+      "clips": [
+        "cruise",
+        "hit",
+        "windup",
+        "attack"
+      ],
+      "sockets": {
+        "Socket_Muzzle": "Weapon",
+        "Socket_MuzzleCenter": "Weapon",
+        "Socket_Core": "Body",
+        "Socket_EngineLeft": "Body",
+        "Socket_MuzzleLeft": "Weapon",
+        "Socket_CrownLeft": "Port",
+        "Socket_EngineRight": "Body",
+        "Socket_MuzzleRight": "Weapon",
+        "Socket_CrownRight": "Starboard"
+      },
+      "voxel_size": 0.28
+    },
+    {
+      "id": "boss_tempest_core",
+      "role": "tempest_core",
+      "file": "meshes/boss_tempest_core.glb",
+      "bytes": 916836,
+      "sha256": "4c8f1c43e7e3743482f7c74d21436ec8ca810cfb069a06caa66305a9019ca6d0",
+      "meshes": 6,
+      "bones": [
+        "Body",
+        "Port",
+        "Starboard",
+        "Weapon"
+      ],
+      "clips": [
+        "cruise",
+        "hit",
+        "windup",
+        "attack"
+      ],
+      "sockets": {
+        "Socket_Muzzle": "Weapon",
+        "Socket_MuzzleCenter": "Weapon",
+        "Socket_Core": "Body",
+        "Socket_EngineLeft": "Body",
+        "Socket_MuzzleLeft": "Weapon",
+        "Socket_EngineRight": "Body",
+        "Socket_MuzzleRight": "Weapon",
+        "Socket_SectionFront": "Body",
+        "Socket_SectionRear": "Body",
+        "Socket_SectionLeft": "Body",
+        "Socket_SectionRight": "Body"
+      },
+      "voxel_size": 0.28
+    },
+    {
+      "id": "tempest_section",
+      "role": "section",
+      "file": "meshes/tempest_section.glb",
+      "bytes": 307948,
+      "sha256": "0781ab25e39a26b748517c1d92a11db4fcfddcd0f97c9e9fd70367caca126a72",
+      "meshes": 6,
+      "bones": [
+        "Body",
+        "Port",
+        "Starboard",
+        "Weapon"
+      ],
+      "clips": [
+        "cruise",
+        "hit",
+        "windup",
+        "attack"
+      ],
+      "sockets": {
+        "Socket_Muzzle": "Weapon",
+        "Socket_MuzzleCenter": "Weapon",
+        "Socket_Core": "Body",
+        "Socket_EngineLeft": "Body",
+        "Socket_MuzzleLeft": "Weapon",
+        "Socket_EngineRight": "Body",
+        "Socket_MuzzleRight": "Weapon",
+        "Socket_Attach": "Body"
+      },
+      "voxel_size": 0.28
+    }
+  ]
+}

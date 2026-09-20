@@ -2,7 +2,7 @@ extends RefCounted
 class_name NeonUI
 
 const HEADING_FONT := preload("res://ui/themes/cabinet_heading.tres")
-const DATA_FONT := preload("res://assets/fonts/barlow/Barlow-SemiBold.ttf")
+const DATA_FONT := preload("res://ui/themes/interface_emphasis.tres")
 
 const CYAN := Color(0.17, 0.95, 1.0)
 const YELLOW := Color(1.0, 0.9, 0.08)

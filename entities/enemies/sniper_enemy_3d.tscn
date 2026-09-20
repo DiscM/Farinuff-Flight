@@ -1,11 +1,11 @@
 [gd_scene load_steps=9 format=3]
 
 [ext_resource type="Script" path="res://entities/enemies/sniper_enemy_3d.gd" id="1_enemy"]
-[ext_resource type="PackedScene" path="res://assets/models/animated/sniper_enemy.glb" id="2_model"]
+[ext_resource type="PackedScene" path="res://assets/models/voxel_frontier/meshes/sniper_enemy.glb" id="2_model"]
 [ext_resource type="Resource" path="res://entities/enemies/sniper_enemy_generation_1.tres" id="3_stats"]
 [ext_resource type="Shader" path="res://effects/shaders/lane_telegraph_3d.gdshader" id="4_warning"]
 [sub_resource type="BoxShape3D" id="BoxShape3D_hitbox"]
-size = Vector3(1.470000, 0.500000, 4.072740)
+size = Vector3(2.572500, 0.500000, 7.127295)
 [sub_resource type="PlaneMesh" id="AimMesh"]
 size = Vector2(1, 1)
 
@@ -28,6 +28,7 @@ script = ExtResource("1_enemy")
 aim_material_gen2 = SubResource("AimMaterialGen2")
 aim_material_later = SubResource("AimMaterial")
 gameplay_stats = ExtResource("3_stats")
+surface_style = 1
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("BoxShape3D_hitbox")
@@ -37,23 +38,23 @@ disabled = true
 position = Vector3(0, 0.08, 0)
 
 [node name="SniperHullGLB" parent="Visuals" instance=ExtResource("2_model")]
-scale = Vector3(0.511500, 0.511500, 0.511500)
+scale = Vector3(0.895125, 0.895125, 0.895125)
 
 [node name="Attachments" type="Node3D" parent="."]
 
 [node name="Sockets" type="Node3D" parent="Attachments"]
 
 [node name="MuzzleCenter" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(0.000000, 0.120300, -2.239750)
+position = Vector3(0.000000, 0.150525, -3.919562)
 
 [node name="LaserOrigin" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(0.000000, 0.120300, -2.239750)
+position = Vector3(0.000000, 0.150525, -3.919562)
 
 [node name="EngineLeft" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(-0.066650, 0.080000, 2.128150)
+position = Vector3(-0.116638, 0.080000, 3.724263)
 
 [node name="EngineRight" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(0.066650, 0.080000, 2.128150)
+position = Vector3(0.116638, 0.080000, 3.724263)
 
 [node name="Modules" type="Node3D" parent="Attachments"]
 

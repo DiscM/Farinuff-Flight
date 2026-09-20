@@ -1,10 +1,10 @@
 [gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://entities/enemies/bomber_enemy_3d.gd" id="1_enemy"]
-[ext_resource type="PackedScene" path="res://assets/models/animated/bomber_enemy.glb" id="2_model"]
+[ext_resource type="PackedScene" path="res://assets/models/voxel_frontier/meshes/bomber_enemy.glb" id="2_model"]
 [ext_resource type="Resource" path="res://entities/enemies/bomber_enemy_generation_1.tres" id="3_stats"]
 [sub_resource type="BoxShape3D" id="BoxShape3D_hitbox"]
-size = Vector3(3.775200, 0.500000, 3.073200)
+size = Vector3(6.606600, 0.500000, 5.378100)
 
 [node name="BomberEnemy3D" type="Area3D"]
 editor_description = "Scene-managed Bomber Enemy Gen I. Inert until activate(); Y=0 combat root. The box preserves the 34x26 baseline-pixel reference envelope under the shared camera."
@@ -25,26 +25,26 @@ disabled = true
 position = Vector3(0, 0.08, 0)
 
 [node name="BomberHullGLB" parent="Visuals" instance=ExtResource("2_model")]
-scale = Vector3(0.536500, 0.536500, 0.536500)
+scale = Vector3(0.938875, 0.938875, 0.938875)
 
 [node name="Attachments" type="Node3D" parent="."]
 
 [node name="Sockets" type="Node3D" parent="Attachments"]
 
 [node name="MuzzleCenter" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(0.000000, 0.187300, -1.555850)
+position = Vector3(0.000000, 0.267775, -2.722738)
 
 [node name="EngineLeft" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(-0.922200, 0.177150, 1.029500)
+position = Vector3(-1.613850, 0.250013, 1.801625)
 
 [node name="EngineRight" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(0.922200, 0.177150, 1.029500)
+position = Vector3(1.613850, 0.250013, 1.801625)
 
 [node name="BombBayLeft" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(-0.922200, 0.177150, -0.868550)
+position = Vector3(-1.613850, 0.250013, -1.519963)
 
 [node name="BombBayRight" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(0.922200, 0.177150, -0.868550)
+position = Vector3(1.613850, 0.250013, -1.519963)
 
 [node name="Modules" type="Node3D" parent="Attachments"]
 

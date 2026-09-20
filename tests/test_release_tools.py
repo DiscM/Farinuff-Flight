@@ -63,7 +63,7 @@ class ReleaseInspectionTests(unittest.TestCase):
     def test_development_files_are_rejected_but_shipping_mockup_hulls_are_allowed(self) -> None:
         records = [{"path": path} for path in [
             "project.binary", "THIRD_PARTY_NOTICES.md",
-            "assets/models/mockups/butterfly.glb.import",
+            "assets/models/ships/butterfly.glb.import",
             "mockups_v11/composition.png", "mcp_interaction_server.gdc",
             "tests/autoload_smoke.gdc", "assets/models/source.blend",
             ".godot/imported/source.blend-abcdef.scn",

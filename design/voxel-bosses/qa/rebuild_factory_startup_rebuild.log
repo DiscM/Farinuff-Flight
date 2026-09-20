@@ -1,0 +1,100 @@
+INFO Draco is available, use library at /Applications/Blender.app/Contents/Resources/5.2/scripts/addons_core/io_scene_gltf2/libbf_intern_draco_bridge.dylib
+INFO MeshOptimizer is available, use library at /Applications/Blender.app/Contents/Resources/5.2/scripts/addons_core/io_scene_gltf2/libbf_intern_meshopt_bridge.dylib
+14:12:46 | INFO: Starting glTF 2.0 export
+14:12:46 | INFO: Extracting primitive: VF_boss_assault_Body_mesh
+14:12:46 | INFO: Primitives created: 3
+14:12:46 | INFO: Extracting primitive: VF_boss_assault_Engines_mesh
+14:12:46 | INFO: Primitives created: 2
+14:12:46 | INFO: Extracting primitive: VF_boss_assault_Port_mesh
+14:12:46 | INFO: Primitives created: 3
+14:12:46 | INFO: Extracting primitive: VF_boss_assault_Reactor_mesh
+14:12:46 | INFO: Primitives created: 1
+14:12:46 | INFO: Extracting primitive: VF_boss_assault_Starboard_mesh
+14:12:46 | INFO: Primitives created: 3
+14:12:46 | INFO: Extracting primitive: VF_boss_assault_Weapon_mesh
+14:12:46 | INFO: Primitives created: 4
+14:12:46 | INFO: Finished glTF 2.0 export in 0.1276869773864746 s
+
+14:12:46 | INFO: Starting glTF 2.0 export
+14:12:46 | INFO: Extracting primitive: VF_boss_bulwark_Body_mesh
+14:12:46 | INFO: Primitives created: 3
+14:12:46 | INFO: Extracting primitive: VF_boss_bulwark_Engines_mesh
+14:12:46 | INFO: Primitives created: 2
+14:12:46 | INFO: Extracting primitive: VF_boss_bulwark_Port_mesh
+14:12:46 | INFO: Primitives created: 5
+14:12:46 | INFO: Extracting primitive: VF_boss_bulwark_Reactor_mesh
+14:12:46 | INFO: Primitives created: 1
+14:12:46 | INFO: Extracting primitive: VF_boss_bulwark_Starboard_mesh
+14:12:46 | INFO: Primitives created: 5
+14:12:46 | INFO: Extracting primitive: VF_boss_bulwark_Weapon_mesh
+14:12:46 | INFO: Primitives created: 2
+14:12:46 | INFO: Finished glTF 2.0 export in 0.1348419189453125 s
+
+14:12:46 | INFO: Starting glTF 2.0 export
+14:12:46 | INFO: Extracting primitive: VF_boss_tempest_Body_mesh
+14:12:46 | INFO: Primitives created: 2
+14:12:46 | INFO: Extracting primitive: VF_boss_tempest_Engines_mesh
+14:12:46 | INFO: Primitives created: 2
+14:12:46 | INFO: Extracting primitive: VF_boss_tempest_Port_mesh
+14:12:46 | INFO: Primitives created: 4
+14:12:46 | INFO: Extracting primitive: VF_boss_tempest_Reactor_mesh
+14:12:46 | INFO: Primitives created: 1
+14:12:46 | INFO: Extracting primitive: VF_boss_tempest_Starboard_mesh
+14:12:46 | INFO: Primitives created: 4
+14:12:46 | INFO: Extracting primitive: VF_boss_tempest_Weapon_mesh
+14:12:46 | INFO: Primitives created: 2
+14:12:46 | INFO: Finished glTF 2.0 export in 0.12083983421325684 s
+
+14:12:46 | INFO: Starting glTF 2.0 export
+14:12:46 | INFO: Extracting primitive: VF_boss_void_harbinger_Body_mesh
+14:12:46 | INFO: Primitives created: 3
+14:12:46 | INFO: Extracting primitive: VF_boss_void_harbinger_Engines_mesh
+14:12:46 | INFO: Primitives created: 2
+14:12:46 | INFO: Extracting primitive: VF_boss_void_harbinger_Port_mesh
+14:12:46 | INFO: Primitives created: 4
+14:12:46 | INFO: Extracting primitive: VF_boss_void_harbinger_Reactor_mesh
+14:12:46 | INFO: Primitives created: 1
+14:12:46 | INFO: Extracting primitive: VF_boss_void_harbinger_Starboard_mesh
+14:12:46 | INFO: Primitives created: 4
+14:12:46 | INFO: Extracting primitive: VF_boss_void_harbinger_Weapon_mesh
+14:12:46 | INFO: Primitives created: 2
+14:12:46 | INFO: Finished glTF 2.0 export in 0.13404488563537598 s
+
+14:12:46 | INFO: Starting glTF 2.0 export
+14:12:46 | INFO: Extracting primitive: VF_boss_tempest_core_Body_mesh
+14:12:46 | INFO: Primitives created: 4
+14:12:46 | INFO: Extracting primitive: VF_boss_tempest_core_Engines_mesh
+14:12:46 | INFO: Primitives created: 2
+14:12:46 | INFO: Extracting primitive: VF_boss_tempest_core_Port_mesh
+14:12:46 | INFO: Primitives created: 3
+14:12:46 | INFO: Extracting primitive: VF_boss_tempest_core_Reactor_mesh
+14:12:46 | INFO: Primitives created: 3
+14:12:46 | INFO: Extracting primitive: VF_boss_tempest_core_Starboard_mesh
+14:12:46 | INFO: Primitives created: 3
+14:12:46 | INFO: Extracting primitive: VF_boss_tempest_core_Weapon_mesh
+14:12:46 | INFO: Primitives created: 2
+14:12:47 | INFO: Finished glTF 2.0 export in 0.13095712661743164 s
+
+14:12:47 | INFO: Starting glTF 2.0 export
+14:12:47 | INFO: Extracting primitive: VF_tempest_section_Body_mesh
+14:12:47 | INFO: Primitives created: 3
+14:12:47 | INFO: Extracting primitive: VF_tempest_section_Engines_mesh
+14:12:47 | INFO: Primitives created: 2
+14:12:47 | INFO: Extracting primitive: VF_tempest_section_Port_mesh
+14:12:47 | INFO: Primitives created: 2
+14:12:47 | INFO: Extracting primitive: VF_tempest_section_Reactor_mesh
+14:12:47 | INFO: Primitives created: 1
+14:12:47 | INFO: Extracting primitive: VF_tempest_section_Starboard_mesh
+14:12:47 | INFO: Primitives created: 2
+14:12:47 | INFO: Extracting primitive: VF_tempest_section_Weapon_mesh
+14:12:47 | INFO: Primitives created: 1
+14:12:47 | INFO: Finished glTF 2.0 export in 0.06734180450439453 s
+/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-boss-rebuild-pjwbsa_v/tools/build_voxel_bosses_blender.py:312: DeprecationWarning: 'Material.use_nodes' is expected to be removed in Blender 6.0
+  mat.use_nodes=True
+/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-boss-rebuild-pjwbsa_v/tools/build_voxel_bosses_blender.py:345: DeprecationWarning: 'World.use_nodes' is expected to be removed in Blender 6.0
+  world.use_nodes=True
+
+VOXEL_BOSSES_EXPORTED [{"id": "boss_assault", "role": "assault", "file": "meshes/boss_assault.glb", "bytes": 652568, "sha256": "b48a9682b04814cd11f33208caa768a14e5b51034e9a067f9dfef217aad45501", "meshes": 6, "bones": ["Body", "Port", "Starboard", "Weapon"], "clips": ["cruise", "hit", "windup", "attack"], "sockets": {"Socket_Muzzle": "Weapon", "Socket_MuzzleCenter": "Weapon", "Socket_Core": "Body", "Socket_EngineLeft": "Body", "Socket_MuzzleLeft": "Weapon", "Socket_WingHardpointLeft": "Port", "Socket_EngineRight": "Body", "Socket_MuzzleRight": "Weapon", "Socket_WingHardpointRight": "Starboard"}, "voxel_size": 0.28}, {"id": "boss_bulwark", "role": "bulwark", "file": "meshes/boss_bulwark.glb", "bytes": 792972, "sha256": "374672212306461d094c4b69b58c39074fb1094846d60f45f8d42b0fd92c2fa5", "meshes": 6, "bones": ["Body", "Port", "Starboard", "Weapon"], "clips": ["cruise", "hit", "windup", "attack"], "sockets": {"Socket_Muzzle": "Weapon", "Socket_MuzzleCenter": "Weapon", "Socket_Core": "Body", "Socket_EngineLeft": "Body", "Socket_MuzzleLeft": "Weapon", "Socket_ShieldEmitterLeft": "Port", "Socket_EngineRight": "Body", "Socket_MuzzleRight": "Weapon", "Socket_ShieldEmitterRight": "Starboard"}, "voxel_size": 0.28}, {"id": "boss_tempest", "role": "tempest", "file": "meshes/boss_tempest.glb", "bytes": 566832, "sha256": "98c2089b33a058e945a0cad2d3a72d3d77a55626ca964de76b726a7d8156ac07", "meshes": 6, "bones": ["Body", "Port", "Starboard", "Weapon"], "clips": ["cruise", "hit", "windup", "attack"], "sockets": {"Socket_Muzzle": "Weapon", "Socket_MuzzleCenter": "Weapon", "Socket_Core": "Body", "Socket_EngineLeft": "Body", "Socket_MuzzleLeft": "Weapon", "Socket_EmitterFrontLeft": "Port", "Socket_EmitterRearLeft": "Port", "Socket_EngineRight": "Body", "Socket_MuzzleRight": "Weapon", "Socket_EmitterFrontRight": "Starboard", "Socket_EmitterRearRight": "Starboard"}, "voxel_size": 0.28}, {"id": "boss_void_harbinger", "role": "void_harbinger", "file": "meshes/boss_void_harbinger.glb", "bytes": 650912, "sha256": "b1c8d06ec915d85b2cc838a8e578f47fdd4ab5221ba3e7bef757ab6460c29939", "meshes": 6, "bones": ["Body", "Port", "Starboard", "Weapon"], "clips": ["cruise", "hit", "windup", "attack"], "sockets": {"Socket_Muzzle": "Weapon", "Socket_MuzzleCenter": "Weapon", "Socket_Core": "Body", "Socket_EngineLeft": "Body", "Socket_MuzzleLeft": "Weapon", "Socket_CrownLeft": "Port", "Socket_EngineRight": "Body", "Socket_MuzzleRight": "Weapon", "Socket_CrownRight": "Starboard"}, "voxel_size": 0.28}, {"id": "boss_tempest_core", "role": "tempest_core", "file": "meshes/boss_tempest_core.glb", "bytes": 916832, "sha256": "17d2130b243d1a25f24824ec815e8d1a57f6f6ead856a59d7c16dafd9d0ef926", "meshes": 6, "bones": ["Body", "Port", "Starboard", "Weapon"], "clips": ["cruise", "hit", "windup", "attack"], "sockets": {"Socket_Muzzle": "Weapon", "Socket_MuzzleCenter": "Weapon", "Socket_Core": "Body", "Socket_EngineLeft": "Body", "Socket_MuzzleLeft": "Weapon", "Socket_EngineRight": "Body", "Socket_MuzzleRight": "Weapon", "Socket_SectionFront": "Body", "Socket_SectionRear": "Body", "Socket_SectionLeft": "Body", "Socket_SectionRight": "Body"}, "voxel_size": 0.28}, {"id": "tempest_section", "role": "section", "file": "meshes/tempest_section.glb", "bytes": 307944, "sha256": "6918ba226be81b3223db4490a58e39ef1d86796c16427ad2c5615fb60b23a269", "meshes": 6, "bones": ["Body", "Port", "Starboard", "Weapon"], "clips": ["cruise", "hit", "windup", "attack"], "sockets": {"Socket_Muzzle": "Weapon", "Socket_MuzzleCenter": "Weapon", "Socket_Core": "Body", "Socket_EngineLeft": "Body", "Socket_MuzzleLeft": "Weapon", "Socket_EngineRight": "Body", "Socket_MuzzleRight": "Weapon", "Socket_Attach": "Body"}, "voxel_size": 0.28}]
+Blender 5.2.1 LTS (hash 9e2066aef7ef built 2026-08-25 01:35:57)
+
+Blender quit

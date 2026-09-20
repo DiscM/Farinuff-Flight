@@ -47,6 +47,7 @@ func _build_ui() -> void:
 	title.add_theme_color_override("font_color", Color(1.0, 0.25, 0.3))
 	title.add_theme_font_size_override("font_size", 44)
 	vbox.add_child(title)
+	preload("res://ui/shared/menu_briefing.gd").wrap_heading(title)
 
 	# Stocks left (icons plus a numeric readout so the count is never icon-only)
 	var stocks_lbl := Label.new()

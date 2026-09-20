@@ -31,6 +31,7 @@ var _launch_button: Button
 ## Sets up the launch bay as a process-always full-rect control and builds
 ## the UI from the MetaProgression catalogs.
 func _ready() -> void:
+	add_to_group("scalable_ui")
 	theme = preload("res://ui/themes/farinuff_frontend_theme.tres")
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	set_anchors_preset(Control.PRESET_FULL_RECT)
@@ -68,6 +69,7 @@ func _build_ui() -> void:
 	title.add_theme_font_size_override("font_size", 26)
 	title.add_theme_color_override("font_color", Color(0.3, 0.85, 1.0))
 	column.add_child(title)
+	preload("res://ui/shared/menu_briefing.gd").wrap_heading(title)
 
 	column.add_child(_make_section_label("SHIP"))
 	var ships_row := HBoxContainer.new()
@@ -86,7 +88,7 @@ func _build_ui() -> void:
 	column.add_child(_selected_ship_label)
 	_refresh_selected_ship_label()
 
-	column.add_child(_make_section_label("CHALLENGES · HARDER RUNS, MORE SALVAGE"))
+	column.add_child(_make_section_label("CHALLENGES · BONUS SALVAGE"))
 	var modifiers_box := VBoxContainer.new()
 	modifiers_box.add_theme_constant_override("separation", 4)
 	column.add_child(modifiers_box)
@@ -130,6 +132,7 @@ func _build_ui() -> void:
 	buttons_row.add_child(launch_button)
 	NeonUI.style_primary(launch_button)
 	_refresh_launch_button()
+	preload("res://ui/shared/menu_briefing.gd").fit_panel(panel, column, [buttons_row])
 	launch_button.grab_focus()
 
 func _make_section_label(text: String) -> Label:

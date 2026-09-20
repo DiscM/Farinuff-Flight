@@ -54,7 +54,11 @@ func _check_travel() -> void:
 	for model in _landmarks._debris:
 		if not variants.has(model.scene_file_path):
 			variants.append(model.scene_file_path)
-	_expect(variants.size() == 11, "All eleven station and space debris variants enter the bounded field")
+	_expect(variants.size() == 6, "All six voxel salvage variants enter the bounded field")
+	for path in variants:
+		_expect(path.begins_with("res://assets/models/voxel_frontier/meshes/"), "Scenery uses voxel salvage instead of legacy station props")
+	_expect(_landmarks._relay.scene_file_path == "res://assets/models/voxel_frontier/meshes/relay_fragment.glb", "The large station landmark uses the voxel relay")
+	_expect(_landmarks._debris.size() == 18, "The voxel salvage selection retains the eighteen-instance budget")
 
 
 func _check_boss(wave: int) -> void:

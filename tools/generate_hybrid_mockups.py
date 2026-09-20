@@ -37,7 +37,7 @@ import generate_pixel_style_mockups as px
 
 ROOT = Path(__file__).resolve().parents[1]
 OUT_DIR = ROOT / "mockups_v6"
-MODELS_DIR = ROOT / "assets" / "models" / "mockups"
+MODELS_DIR = ROOT / "assets" / "models" / "ships"
 
 Vec3 = tuple[float, float, float]
 

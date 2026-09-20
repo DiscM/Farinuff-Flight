@@ -29,6 +29,9 @@ func _ready() -> void:
 	$VBoxContainer/RetryButton.pressed.connect(_on_retry_pressed)
 	$VBoxContainer/MenuButton.pressed.connect(_on_menu_pressed)
 	_build_native_preview()
+	var heading := $VBoxContainer.get_child(0) as Label
+	if heading != null:
+		preload("res://ui/shared/menu_briefing.gd").wrap_heading(heading)
 	preload("res://ui/shared/result_layout.gd").mount(self, $VBoxContainer, [$VBoxContainer/RetryButton, $VBoxContainer/MenuButton])
 
 ## Displays the final score, the all-time high score (highlighted when the

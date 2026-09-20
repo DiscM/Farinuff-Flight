@@ -1,0 +1,153 @@
+{
+  "valid": true,
+  "roles": 6,
+  "clips": 24,
+  "bones": [
+    "Body",
+    "Port",
+    "Starboard",
+    "Weapon"
+  ],
+  "variants": [
+    {
+      "role": "assault",
+      "valid": true,
+      "notes": "Scarlet ram: swept armor braces inward, punches forward, then rebounds sharply.",
+      "clips": {
+        "cruise": {
+          "seconds": 2.8,
+          "keys": 7
+        },
+        "hit": {
+          "seconds": 0.28,
+          "keys": 4
+        },
+        "windup": {
+          "seconds": 0.76,
+          "keys": 4
+        },
+        "attack": {
+          "seconds": 0.64,
+          "keys": 6
+        }
+      }
+    },
+    {
+      "role": "bulwark",
+      "valid": true,
+      "notes": "Violet fortress: heavy armor opens slowly, braces against a broad recoil, and settles with weight.",
+      "clips": {
+        "cruise": {
+          "seconds": 3.6,
+          "keys": 7
+        },
+        "hit": {
+          "seconds": 0.4,
+          "keys": 4
+        },
+        "windup": {
+          "seconds": 1.02,
+          "keys": 4
+        },
+        "attack": {
+          "seconds": 0.96,
+          "keys": 6
+        }
+      }
+    },
+    {
+      "role": "tempest",
+      "valid": true,
+      "notes": "Storm-blue vanes: a swept charge releases into a crisp counter-sweep and a quick spring return.",
+      "clips": {
+        "cruise": {
+          "seconds": 2.4,
+          "keys": 7
+        },
+        "hit": {
+          "seconds": 0.25,
+          "keys": 4
+        },
+        "windup": {
+          "seconds": 0.7,
+          "keys": 4
+        },
+        "attack": {
+          "seconds": 0.58,
+          "keys": 6
+        }
+      }
+    },
+    {
+      "role": "void_harbinger",
+      "valid": true,
+      "notes": "Acid-green claws: slow inward contraction, wide unfurling impulse, and a lingering mechanical exhale.",
+      "clips": {
+        "cruise": {
+          "seconds": 4.2,
+          "keys": 7
+        },
+        "hit": {
+          "seconds": 0.36,
+          "keys": 4
+        },
+        "windup": {
+          "seconds": 0.96,
+          "keys": 4
+        },
+        "attack": {
+          "seconds": 0.94,
+          "keys": 6
+        }
+      }
+    },
+    {
+      "role": "tempest_core",
+      "valid": true,
+      "notes": "Amber aperture: the central weapon extends while petals open, then fires into a deep recoil and staged closure.",
+      "clips": {
+        "cruise": {
+          "seconds": 3.2,
+          "keys": 7
+        },
+        "hit": {
+          "seconds": 0.32,
+          "keys": 4
+        },
+        "windup": {
+          "seconds": 0.88,
+          "keys": 4
+        },
+        "attack": {
+          "seconds": 0.82,
+          "keys": 6
+        }
+      }
+    },
+    {
+      "role": "section",
+      "valid": true,
+      "notes": "Detached storm module: a restrained fin brace and short gun recoil keep the small silhouette legible.",
+      "clips": {
+        "cruise": {
+          "seconds": 2.0,
+          "keys": 7
+        },
+        "hit": {
+          "seconds": 0.22,
+          "keys": 4
+        },
+        "windup": {
+          "seconds": 0.58,
+          "keys": 4
+        },
+        "attack": {
+          "seconds": 0.46,
+          "keys": 6
+        }
+      }
+    }
+  ],
+  "source_sha256": "732c5d9364a229aab699a0cb6946587f4c5f994acd46b45f1b7776ef49893765",
+  "evidence_type": "Analytic recipe checks; actual GLB motion and runtime checks are separate"
+}

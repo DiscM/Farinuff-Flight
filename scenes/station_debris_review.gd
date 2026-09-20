@@ -3,7 +3,7 @@ extends Node
 
 const Landmarks := preload("res://effects/frontier_landmarks_3d.gd")
 const SceneryMaterials := preload("res://effects/rendering/station_debris_materials.gd")
-const TITLES := ["RING SECTION", "HABITAT WRECK", "SOLAR WING", "EXPOSED TRUSS", "ARMOR PLATE"]
+const TITLES := ["RELAY FRAGMENT", "SOLAR FRAGMENT", "CARGO WRECK", "ENGINE WRECK", "HULL FRAGMENT", "ASTEROID CLUSTER"]
 var _models: Array[Node3D] = []
 var _turning := false
 var _previous_hdr_2d := false
@@ -25,20 +25,20 @@ func _ready() -> void:
 	$Backdrop/Celestial.current_planet.set_colors($Backdrop/Celestial.current_planet.original_colors)
 	var relay := Landmarks.RELAY.instantiate() as Node3D
 	$World3D.add_child(relay)
-	relay.scale = Vector3.ONE * 2.4
+	relay.scale = Vector3.ONE * 6.4
 	relay.rotation_degrees = Vector3(10, -16, 0)
 	SceneryMaterials.apply_to(relay, 1.0)
 	_models.append(relay)
-	for scene in Landmarks.STATION_DEBRIS_SCENES:
+	for scene in Landmarks.DEBRIS_SCENES:
 		var model := scene.instantiate() as Node3D
 		$World3D.add_child(model)
 		model.scale = Vector3.ONE * 2.6
 		model.rotation_degrees = Vector3(10, -12, 0)
 		SceneryMaterials.apply_to(model, 1.0)
 		_models.append(model)
-	_label("PIXEL-FORGED STATION", Vector2(.04, .055), 28, Color("dfd8ed"))
-	_label("Blender wreckage · shared planet shading · clipped armor and exposed structure", Vector2(.04, .115), 15, Color("a5a0b7"))
-	_label("SHATTERED ORBITAL RELAY", Vector2(.07, .85), 16, Color("a5bfcc"))
+	_label("VOXEL SALVAGE", Vector2(.04, .055), 28, Color("dfd8ed"))
+	_label("Blender voxel wreckage · authored texture atlas · shared planet shading", Vector2(.04, .115), 15, Color("a5a0b7"))
+	_label("VOXEL RELAY LANDMARK", Vector2(.07, .85), 16, Color("a5bfcc"))
 	_label("Detail inspection · raised exposure · R to rotate", Vector2(.04, .93), 14, Color("9b94ae"))
 	for index in TITLES.size():
 		var anchor := Vector2([.47, .66, .85][index % 3], .525 if index < 3 else .835)
@@ -50,7 +50,7 @@ func _ready() -> void:
 func _layout() -> void:
 	var viewport_size := get_viewport().get_visible_rect().size
 	_models[0].global_position = _camera.project_position(viewport_size * Vector2(.22, .51), 75)
-	for index in Landmarks.STATION_DEBRIS_SCENES.size():
+	for index in Landmarks.DEBRIS_SCENES.size():
 		var anchor := Vector2([.53, .72, .91][index % 3], .36 if index < 3 else .68)
 		_models[index + 1].global_position = _camera.project_position(viewport_size * anchor, 75)
 	$Backdrop/Celestial.position = viewport_size * Vector2(.905, .035)

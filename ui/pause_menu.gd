@@ -18,6 +18,7 @@ var _dev_slot: VBoxContainer = null
 var _transitioning := false
 var _build_panel: Control
 var _confirmation: Control
+var _briefing: PanelContainer
 
 ## Builds the UI layout and plays the fade-in animation. The scene's full-rect
 ## anchors fill the viewport. Runs in PROCESS_MODE_ALWAYS so it functions while
@@ -28,6 +29,7 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_build_ui()
 	_animate_in()
+	get_node("LeftDock/MenuButtons/ResumeWrap/Button").grab_focus()
 
 ## Handles the ESC key to resume gameplay and close the pause menu.
 func _unhandled_input(event: InputEvent) -> void:
@@ -55,8 +57,10 @@ func _build_ui() -> void:
 	add_child(dock)
 
 	var heading := NeonUI.make_label("PAUSED ///", 36, NeonUI.WHITE)
-	heading.position = Vector2(22, 110)
-	heading.size = Vector2(280, 54)
+	heading.position = Vector2(22, 100)
+	heading.size = Vector2(280, 68)
+	heading.autowrap_mode = TextServer.AUTOWRAP_OFF
+	heading.clip_text = false
 	dock.add_child(heading)
 
 	var button_column := VBoxContainer.new()
@@ -82,6 +86,13 @@ func _build_ui() -> void:
 	_dev_slot.visible = false
 	_dev_slot.alignment = BoxContainer.ALIGNMENT_CENTER
 	add_child(_dev_slot)
+	_briefing = preload("res://ui/run_briefing.gd").new()
+	_briefing.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	_briefing.offset_left = 350
+	_briefing.offset_top = 60
+	_briefing.offset_right = -48
+	_briefing.offset_bottom = -60
+	add_child(_briefing)
 
 
 ## Helper: creates a centered, styled button with the given label text,
@@ -118,6 +129,7 @@ func _on_dev_tools() -> void:
 	if _transitioning or _dev_slot == null:
 		return
 	_dev_slot.visible = not _dev_slot.visible
+	_briefing.visible = not _dev_slot.visible
 	if not _dev_slot.visible or is_instance_valid(_dev_panel):
 		return
 	_dev_panel = DEV_MENU_SCENE.instantiate() as PanelContainer
@@ -165,7 +177,10 @@ func _on_settings() -> void:
 	if is_instance_valid(_settings_menu):
 		return
 	_settings_menu = SETTINGS_MENU_SCENE.instantiate()
-	_settings_menu.connect("closed", func(): _settings_menu = null)
+	_settings_menu.connect("closed", func():
+		_settings_menu = null
+		get_node("LeftDock/MenuButtons/SettingsWrap/Button").grab_focus()
+	)
 	add_child(_settings_menu)
 
 # ── Animation ──────────────────────────────────────────────────────────────────
@@ -194,7 +209,7 @@ func _on_build() -> void:
 		if GameManager.chosen_upgrade_ids.has(str(upgrade.id)):
 			lines.append("%s · %s\n%s" % [upgrade.name, upgrade.get("role", "Utility"), upgrade.description])
 	if lines.is_empty():
-		lines.append("Defeat the Wave 5 boss to choose your first upgrade.")
+		lines.append("No upgrades installed.")
 	lines.append("Upgrade levels · Fire rate %d · Lives %d · Speed %d" % [GameManager.stat_fire_rate_level, GameManager.stat_health_level, GameManager.stat_speed_level])
 	panel.body = "\n\n".join(lines)
 	panel.resolved.connect(func(_route: StringName):
@@ -208,7 +223,7 @@ func _on_retry() -> void:
 	if GameManager.practice_mode:
 		_restart_confirmed()
 	else:
-		_confirm_transition("Restart this run?", "Keep the salvage you have earned and start again at Wave 1. You will lose this run's upgrades.", _restart_confirmed)
+		_confirm_transition("Restart this run?", "Restart at Wave 1. Keep earned salvage; lose run upgrades.", _restart_confirmed)
 
 
 func _on_menu() -> void:
@@ -216,7 +231,7 @@ func _on_menu() -> void:
 		GameManager.return_to_flight_school = true
 		_menu_confirmed()
 	else:
-		_confirm_transition("End this run?", "Keep the salvage you have earned and return to the main menu. You cannot continue this run later.", _menu_confirmed)
+		_confirm_transition("End this run?", "Keep earned salvage. This run cannot be resumed.", _menu_confirmed)
 
 
 func _confirm_transition(heading: String, message: String, action: Callable) -> void:

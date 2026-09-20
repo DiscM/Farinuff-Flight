@@ -1,7 +1,8 @@
 extends Node3D
 ## A bounded drifting scenery field behind actors, held still during boss fights.
 
-const RELAY := preload("res://assets/models/frontier/station_debris/shattered_orbital_relay.glb")
+const RELAY := preload("res://assets/models/voxel_frontier/meshes/relay_fragment.glb")
+# Legacy collections remain available to their standalone asset reviews.
 const STATION_DEBRIS_SCENES := [
 	preload("res://assets/models/frontier/station_debris/station_ring_section.glb"),
 	preload("res://assets/models/frontier/station_debris/station_habitat_wreck.glb"),
@@ -17,7 +18,16 @@ const SPACE_DEBRIS_SCENES := [
 	preload("res://assets/models/frontier/space_debris/broken_survey_dish.glb"),
 	preload("res://assets/models/frontier/space_debris/faceted_asteroid.glb"),
 ]
-const DEBRIS_SCENES := STATION_DEBRIS_SCENES + SPACE_DEBRIS_SCENES
+const VOXEL_DEBRIS_SCENES := [
+	preload("res://assets/models/voxel_frontier/meshes/relay_fragment.glb"),
+	preload("res://assets/models/voxel_frontier/meshes/solar_fragment.glb"),
+	preload("res://assets/models/voxel_frontier/meshes/cargo_wreck.glb"),
+	preload("res://assets/models/voxel_frontier/meshes/engine_wreck.glb"),
+	preload("res://assets/models/voxel_frontier/meshes/hull_fragment.glb"),
+	preload("res://assets/models/voxel_frontier/meshes/asteroid_cluster.glb"),
+]
+# Six voxel salvage forms share the existing eighteen-instance scenery budget.
+const DEBRIS_SCENES := VOXEL_DEBRIS_SCENES
 const SceneryMaterials := preload("res://effects/rendering/station_debris_materials.gd")
 const DEBRIS_COUNT := 18
 ## Canvas pixels per second, matching the planet's frame-independent travel.
@@ -38,7 +48,8 @@ func _ready() -> void:
 	_relay = RELAY.instantiate() as Node3D
 	add_child(_relay)
 	_relay.rotation_degrees = Vector3(12.0, -28.0, 18.0)
-	_relay.scale = Vector3.ONE * 1.65
+	# Match the former station landmark's footprint with the smaller voxel mesh.
+	_relay.scale = Vector3.ONE * 4.4
 	SceneryMaterials.apply_to(_relay, 0.78)
 	_relay_radius = _visual_radius(_relay)
 	var rng := RandomNumberGenerator.new()

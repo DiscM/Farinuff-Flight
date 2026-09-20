@@ -1,0 +1,29 @@
+{
+  "status": "pass",
+  "godot": "4.6.3",
+  "smokes": [
+    {
+      "scene": "combat_readability_smoke",
+      "passed": true,
+      "log": "qa/combat_readability_smoke.log"
+    },
+    {
+      "scene": "frontend_navigation_smoke",
+      "passed": true,
+      "log": "qa/frontend_navigation_smoke.log"
+    },
+    {
+      "scene": "menu_boot_smoke",
+      "passed": true,
+      "log": "qa/menu_boot_smoke.log"
+    }
+  ],
+  "release_tool_unit_tests": 8,
+  "font_hashes_verified": true,
+  "live_font_report": "font-rendering.json",
+  "screenshots": [
+    "command-deck.png",
+    "settings-large-text-1280.png",
+    "combat-hud.png"
+  ]
+}

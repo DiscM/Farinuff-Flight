@@ -37,7 +37,7 @@ func _ready() -> void:
 	_column.add_theme_constant_override("separation", 12)
 	scroll.add_child(_column)
 	label("FLIGHT CONTROLS", _column, 28)
-	label("Choose a control to change, then press a key, mouse button, or controller button. You can also move a stick. The right stick is used for aiming. Escape cancels.", _column)
+	label("Select a binding to change it. Escape cancels.", _column)
 	for index: int in InputBindings.ACTIONS.size():
 		var action: String = InputBindings.ACTIONS[index]
 		label(InputBindings.TITLES[index], _column, 20)
@@ -102,7 +102,7 @@ func _begin_capture(action: String, device_family: String, button: Button) -> vo
 	box.custom_minimum_size.x = minf(520, get_viewport_rect().size.x - 48)
 	box.add_theme_constant_override("separation", 18)
 	center.add_child(box)
-	var prompt := "Let go of the sticks, then press a controller button or move a stick." if device_family == "gamepad" else "Press a key or mouse button."
+	var prompt := "Release sticks, then press a button or move a stick." if device_family == "gamepad" else "Press a key or mouse button."
 	_message = label("Change %s\n%s\nEscape cancels." % [InputBindings.TITLES[InputBindings.ACTIONS.find(action)], prompt], box, 22)
 	_swap = make_button("SWAP CONTROLS", box, _confirm_swap)
 	_swap.hide()
@@ -152,7 +152,7 @@ func _input(event: InputEvent) -> void:
 		if absf(event.axis_value) < 0.75 or not bool(_neutral_axes.get(event.axis, false)):
 			return
 		if event.axis in [JOY_AXIS_RIGHT_X, JOY_AXIS_RIGHT_Y]:
-			_message.text = "The right stick is used for aiming. Choose another control."
+			_message.text = "Right stick reserved for aim."
 			return
 	else:
 		return
@@ -162,11 +162,11 @@ func _input(event: InputEvent) -> void:
 		_end_capture()
 	elif collisions.size() == 1:
 		_pending = event.duplicate()
-		_message.text = "%s already controls %s. Swap it with %s?" % [event.as_text(), InputBindings.TITLES[InputBindings.ACTIONS.find(collisions[0])], InputBindings.TITLES[InputBindings.ACTIONS.find(_action)]]
+		_message.text = "%s: %s. Swap with %s?" % [event.as_text(), InputBindings.TITLES[InputBindings.ACTIONS.find(collisions[0])], InputBindings.TITLES[InputBindings.ACTIONS.find(_action)]]
 		_swap.show()
 		_cancel.grab_focus()
 	else:
-		_message.text = "That control is already used for several actions. Choose another control or restore the defaults."
+		_message.text = "Binding conflict. Choose another control or restore defaults."
 
 func _confirm_swap() -> void:
 	if _pending != null and InputBindings.assign(_action, _pending, true):

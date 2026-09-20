@@ -19,6 +19,12 @@ builds/
 # System/tool-specific
 .DS_Store
 
+# Visual mockups and generated previews (keep local copies)
+/mockups*/
+/design/mockups/
+/assets/models/mockups/
+# 3D models live in assets/models/ships/ and remain tracked.
+
 # Python cache from the tools/ generators
 __pycache__/
 

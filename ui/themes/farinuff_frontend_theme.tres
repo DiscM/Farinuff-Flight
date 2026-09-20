@@ -1,8 +1,10 @@
-[gd_resource type="Theme" load_steps=14 format=3 uid="uid://farinuff_frontend_theme"]
+[gd_resource type="Theme" load_steps=16 format=3 uid="uid://farinuff_frontend_theme"]
 
 [ext_resource type="Font" path="res://ui/themes/cabinet_heading.tres" id="1_heading"]
-[ext_resource type="FontFile" path="res://assets/fonts/barlow/Barlow-Regular.ttf" id="2_body"]
-[ext_resource type="FontFile" path="res://assets/fonts/barlow/Barlow-SemiBold.ttf" id="3_emphasis"]
+[ext_resource type="Font" path="res://ui/themes/interface_body.tres" id="2_body"]
+[ext_resource type="Font" path="res://ui/themes/interface_emphasis.tres" id="3_emphasis"]
+[ext_resource type="Font" path="res://ui/themes/interface_italic.tres" id="4_italic"]
+[ext_resource type="Font" path="res://ui/themes/interface_bold_italic.tres" id="5_bold_italic"]
 
 [sub_resource type="StyleBoxFlat" id="S_btn_normal"]
 content_margin_left = 18.0
@@ -226,3 +228,5 @@ CommsTicker/styles/panel = SubResource("S_panel_dark")
 Button/fonts/font = ExtResource("1_heading")
 RichTextLabel/fonts/normal_font = ExtResource("2_body")
 RichTextLabel/fonts/bold_font = ExtResource("3_emphasis")
+RichTextLabel/fonts/italics_font = ExtResource("4_italic")
+RichTextLabel/fonts/bold_italics_font = ExtResource("5_bold_italic")

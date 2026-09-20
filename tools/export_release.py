@@ -116,6 +116,8 @@ def main() -> int:
     # LICENSE even with an include_filter. Ship full notices as loose files.
     licenses = {
         "Barlow-OFL.txt": "assets/fonts/barlow/OFL.txt",
+        "Oxanium-OFL.txt": "assets/fonts/oxanium/OFL.txt",
+        "IBM-Plex-Sans-OFL.txt": "assets/fonts/ibm-plex-sans/OFL.txt",
         "PixelPlanets-LICENSE.txt": "effects/shaders/PixelPlanets/LICENSE",
         "Kenney-License.txt": "ui/kenney_ui-pack-space-expansion/License.txt",
         "SunGraphica-source-info.txt": "assets/Game UI collection FREE version/Sungraphica + info .txt",

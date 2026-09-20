@@ -100,7 +100,7 @@ func _confirm_abandon() -> void:
 	var confirmation := preload("res://ui/shared/run_confirmation.gd").new()
 	_confirmation = confirmation
 	confirmation.title = "End this run?"
-	confirmation.dialog_text = "Keep the salvage you have earned and return to the main menu. You cannot continue this run later."
+	confirmation.dialog_text = "Keep earned salvage. This run cannot be resumed."
 	confirmation.confirmed.connect(func():
 		if _resolved:
 			return
