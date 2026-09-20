@@ -11,7 +11,7 @@ const CatalogIcons := preload("res://ui/catalog_icons.gd")
 const MAX_CHOICES := 3
 const FALLBACK_ICON := "✦"
 const FALLBACK_NAME := "UPGRADE"
-const FALLBACK_DESCRIPTION := "Module details unavailable."
+const FALLBACK_DESCRIPTION := "Upgrade details unavailable."
 const FALLBACK_COLOR := Color(0.3, 1.0, 0.6)
 
 var use_custom_upgrade_pool := false
@@ -124,7 +124,7 @@ func _build_ui() -> void:
 	outer.add_child(title_bg)
 
 	var title := Label.new()
-	title.text = "CHOOSE AN UPGRADE ///"
+	title.text = "BOSS REWARD ///" if chosen_upgrades.is_empty() else "CHOOSE AN UPGRADE ///"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_color_override("font_color", Color(1.0, 0.92, 0.3))
 	title.add_theme_font_override("font", NeonUI.HEADING_FONT)
@@ -132,13 +132,15 @@ func _build_ui() -> void:
 	outer.add_child(title)
 
 	var subtitle := Label.new()
-	subtitle.text = "Choose a module. Preview your build, then install."
+	subtitle.text = "Choose an upgrade for the rest of this run."
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	subtitle.add_theme_color_override("font_color", NeonUI.WHITE)
 	subtitle.add_theme_font_size_override("font_size", 13 if compact_layout else 16)
 	outer.add_child(subtitle)
 	if GameManager.elite_supply_pending and chosen_upgrades.is_empty():
-		subtitle.text = "Elite collection complete · Supply reward"
+		subtitle.text = "All upgrades installed · Bonus reward"
+	elif chosen_upgrades.is_empty():
+		subtitle.text = "No upgrades left this run."
 	confirmation_label = subtitle
 
 	# Cards row
@@ -179,7 +181,7 @@ func _make_empty_state() -> PanelContainer:
 	card.add_child(content)
 
 	var message := Label.new()
-	message.text = "ALL ELITE UPGRADES INSTALLED\nClaim 50 orbs and 5 health.\nOrbs also grant their normal progress and healing." if GameManager.elite_supply_pending else "NO UPGRADES AVAILABLE\nAll remaining reward slots are installed or unavailable."
+	message.text = "ALL UPGRADES INSTALLED\nGain 50 orb points and 5 lives.\nOrb points also fill the wave and heart meters." if GameManager.elite_supply_pending else "NO UPGRADES LEFT\nYou already have every upgrade available this run."
 	message.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	message.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	message.add_theme_color_override("font_color", Color(0.75, 0.84, 0.98))
@@ -187,7 +189,7 @@ func _make_empty_state() -> PanelContainer:
 	content.add_child(message)
 
 	var continue_button := Button.new()
-	continue_button.text = "CLAIM 50 ORBS + 5 HEALTH" if GameManager.elite_supply_pending else "CONTINUE"
+	continue_button.text = "TAKE 50 ORB POINTS + 5 LIVES" if GameManager.elite_supply_pending else "CONTINUE"
 	continue_button.custom_minimum_size = Vector2(0, 36)
 	continue_button.pressed.connect(_on_empty_state_continue)
 	content.add_child(continue_button)

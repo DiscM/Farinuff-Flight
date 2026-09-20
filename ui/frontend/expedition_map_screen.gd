@@ -31,24 +31,24 @@ func _ready() -> void:
 	column.add_theme_constant_override("separation", 16)
 	scroll.add_child(column)
 	var title := Label.new()
-	title.text = "THE RETURN SIGNAL · EXPEDITION CHART"
+	title.text = "THE RETURN SIGNAL · ROUTE MAP"
 	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	title.add_theme_font_size_override("font_size", 26)
 	column.add_child(title)
 	var instructions := Label.new()
-	instructions.text = "Trace the twenty-wave route home. Inspect a relay to preview its threats. Every launch begins in the Far Reach; choose the next route after clearing each sector."
+	instructions.text = "Fight through 20 waves to reach home. Select a sector to see its enemies and boss. Every run starts in the Far Reach. Choose your next route after clearing a sector."
 	instructions.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	column.add_child(instructions)
 	_chart = preload("res://ui/expedition_chart.gd").new()
 	column.add_child(_chart)
 	var legend := Label.new()
-	legend.text = "◇ Reachable · ✓ Cleared · ◈ Discovered · ▣ Locked\nWhite frame: input focus. Gold frame: selected relay. Confirm a relay to inspect it."
+	legend.text = "◇ Available · ✓ Cleared · ◈ Discovered · ▣ Locked\nSelect a sector to see its details. The selected sector has a gold border."
 	if ExpeditionManager.get_snapshot().expedition_clear_count > 0:
-		legend.text += "\nVOID REACH · Follow the signal after Wave 20 to enter Endless. First contact: Void Harbinger, Wave 25."
+		legend.text += "\nENDLESS · Keep fighting after Wave 20. Void Harbinger awaits at Wave 25."
 	legend.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	column.add_child(legend)
 	_launch_button = Button.new()
-	_launch_button.text = "REVIEW LOADOUT · LAUNCH FROM WAVE 1"
+	_launch_button.text = "CHOOSE SHIP · START AT WAVE 1"
 	_launch_button.custom_minimum_size.y = 48
 	_launch_button.pressed.connect(_launch)
 	column.add_child(_launch_button)
@@ -56,7 +56,7 @@ func _ready() -> void:
 	var recovered := ExpeditionManager.get_recovered_fragments().size()
 	_archives_button.text = "ARCHIVES · %d / 4 FRAGMENTS" % recovered
 	_archives_button.disabled = recovered == 0
-	_archives_button.tooltip_text = "Recover a fragment by clearing a route sector to open the Archives."
+	_archives_button.tooltip_text = "Clear a route to find a signal fragment and unlock the Archives."
 	_archives_button.custom_minimum_size.y = 44
 	_archives_button.pressed.connect(_open_archives)
 	column.add_child(_archives_button)

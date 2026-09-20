@@ -29,7 +29,7 @@ func _ready() -> void:
 	_status.add_theme_font_size_override("font_size", 24)
 	column.add_child(_status)
 	_back = Button.new()
-	_back.text = "RETURN TO COMMAND DECK"
+	_back.text = "RETURN TO MAIN MENU"
 	_back.custom_minimum_size.y = 48
 	_back.pressed.connect(func(): returned.emit())
 	_back.hide()
@@ -41,7 +41,7 @@ func _process(_delta: float) -> void:
 
 func show_failure() -> void:
 	_failed = true
-	_status.text = "Couldn't prepare this flight.\nReturn to the command deck and try again."
+	_status.text = "Couldn't start the run.\nReturn to the main menu and try again."
 	_back.show()
 	_back.grab_focus()
 

@@ -42,7 +42,7 @@ func try_start() -> bool:
 	_sealed = false
 	craft.finished.connect(_on_finished)
 	_label.show()
-	SignalBus.combat_notice.emit("OPTIONAL · INTERCEPT THE COURIER")
+	SignalBus.combat_notice.emit("OPTIONAL · DESTROY THE COURIER")
 	return true
 
 func _process(delta: float) -> void:
@@ -64,12 +64,12 @@ func _on_finished(reason: int, position: Vector3) -> void:
 	_courier = null
 	_cleanup_in = 3.0
 	if reason != BasicEnemy3D.FinishReason.DESTROYED or not GameManager.is_game_active or GameManager.boss_active:
-		_label.text = "COURIER LOST · WAVE CONTINUES"
+		_label.text = "COURIER ESCAPED · WAVE CONTINUES"
 		return
 	GameManager.award_objective_score(500)
 	if not GameManager.is_modifier_active("mod_no_powerups"):
 		director.gameplay.power_up_manager.spawn_power_up.call_deferred(position, PowerUp.Type.RAPID_FIRE)
-	_label.text = "COURIER INTERCEPTED · +500 SCORE"
+	_label.text = "COURIER DESTROYED · +500 SCORE"
 	AudioManager.play_powerup()
 
 func cancel(message: String = "") -> void:

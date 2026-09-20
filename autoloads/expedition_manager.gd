@@ -452,10 +452,16 @@ func get_story_beat(beat_id: StringName) -> Resource:
 
 
 func get_route_description(node: Resource) -> String:
-	var profile := _resolve_profile(node.encounter_profile_id)
-	if profile == null:
-		return "Basic and fast patrols · Learn boost reflection" if node.sector_index == 1 else "Final approach · Apex defenders · Tempest Core"
-	return " · ".join(profile.threat_tags).replace("_", " ")
+	match node.encounter_profile_id:
+		&"profile_iron_wake":
+			return "Armored ships and mine layers"
+		&"profile_ghost_lanes":
+			return "Fast ships and snipers firing from both sides"
+		&"profile_tempest_veil":
+			return "Fast ships and moving mine layers"
+		&"profile_echo_field":
+			return "Groups of ships and snipers aiming ahead of you"
+	return "Small patrols and fast ships" if node.sector_index == 1 else "The fleet's strongest ships and Tempest Core"
 
 
 func get_chart_nodes() -> Array[Resource]:

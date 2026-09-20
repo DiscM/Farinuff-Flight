@@ -371,7 +371,7 @@ func _show_campaign_step(step: Dictionary) -> void:
 	var panel := preload("res://ui/sector_interlude.gd").new()
 	if _active_campaign_step.kind == "route":
 		panel.heading = "SELECT THE NEXT SECTOR"
-		panel.body = "Choose the threats ahead. Your ship build carries into the next sector. Route choices change enemy composition; salvage and wave length stay unchanged."
+		panel.body = "Choose your next route. Each route has different enemies. You keep your ship and upgrades."
 		panel.routes = ExpeditionManager.get_route_options()
 	else:
 		panel.body = preload("res://campaign/story_copy.gd").for_beat(_active_campaign_step.beat)

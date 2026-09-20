@@ -78,27 +78,27 @@ func _build_ui() -> void:
 	list.add_theme_constant_override("separation", 8)
 	scroll.add_child(list)
 
-	_add_category_header(list, "SHIP SYSTEMS")
+	_add_category_header(list, "PERMANENT UPGRADES")
 	for item in MetaProgression.SHOP_ITEMS:
 		if item["category"] == "system":
 			_add_item_row(list, item)
-	_add_category_header(list, "SHIP VARIANTS  ·  SELECT IN LAUNCH BAY")
+	_add_category_header(list, "SHIPS · CHOOSE BEFORE A RUN")
 	for ship in MetaProgression.SHIP_VARIANTS:
 		if ship["id"] != MetaProgression.DEFAULT_SHIP:
 			_add_item_row(list, ship)
-	_add_category_header(list, "CHALLENGE MODIFIERS  ·  TOGGLE IN LAUNCH BAY")
+	_add_category_header(list, "CHALLENGES · ENABLE BEFORE A RUN")
 	for modifier in MetaProgression.CHALLENGE_MODIFIERS:
 		_add_item_row(list, modifier)
-	_add_category_header(list, "ELITE BLUEPRINTS")
+	_add_category_header(list, "UPGRADE BLUEPRINTS")
 	for item in MetaProgression.SHOP_ITEMS:
 		if item["category"] == "blueprint":
 			_add_item_row(list, item)
-	_add_category_header(list, "FIELD SUPPLY  ·  CONSUMED NEXT RUN")
+	_add_category_header(list, "SUPPLIES · USED ON YOUR NEXT RUN")
 	for item in MetaProgression.CONSUMABLE_ITEMS:
 		_add_item_row(list, item)
 
 	var note := Label.new()
-	note.text = "Salvage is earned from boss kills, first-clear wave milestones, and the end-of-run bonus."
+	note.text = "Earn salvage by defeating bosses and finishing runs. Clearing a boss wave for the first time earns a bonus."
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	note.add_theme_font_size_override("font_size", 12)
@@ -106,7 +106,7 @@ func _build_ui() -> void:
 	column.add_child(note)
 
 	var stats := Label.new()
-	stats.text = "LIFETIME — RUNS: %d · KILLS: %d · BEST WAVE: %d" % [
+	stats.text = "TOTAL RUNS: %d · KILLS: %d · BEST WAVE: %d" % [
 		MetaProgression.stat_total_runs,
 		MetaProgression.stat_total_kills,
 		MetaProgression.stat_best_wave,

@@ -81,7 +81,7 @@ layout_mode = 2
 custom_minimum_size = Vector2(0, 44)
 text = "EXPEDITION MAP"
 accessibility_name = "Open Expedition Map"
-accessibility_description = "Plan the return route across the relay network."
+accessibility_description = "See the sectors and bosses on your route home."
 
 [node name="HangarButton" type="Button" parent="Margin/VBox/Sections"]
 unique_name_in_owner = true

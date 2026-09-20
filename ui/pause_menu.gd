@@ -68,9 +68,9 @@ func _build_ui() -> void:
 
 	button_column.add_child(_make_btn("ResumeWrap", "RESUME", NeonUI.YELLOW, _on_resume, true))
 	button_column.add_child(_make_btn("RetryWrap", "RESTART RUN", NeonUI.CYAN, _on_retry))
-	button_column.add_child(_make_btn("BuildWrap", "SHIP BUILD", NeonUI.CYAN, _on_build))
+	button_column.add_child(_make_btn("BuildWrap", "SHIP UPGRADES", NeonUI.CYAN, _on_build))
 	button_column.add_child(_make_btn("SettingsWrap", "SETTINGS", NeonUI.CYAN, _on_settings))
-	button_column.add_child(_make_btn("MenuWrap", "QUIT TO MENU", NeonUI.CYAN, _on_menu))
+	button_column.add_child(_make_btn("MenuWrap", "END RUN", NeonUI.CYAN, _on_menu))
 	var gameplay := get_tree().get_first_node_in_group(&"native_3d_gameplay")
 	if OS.is_debug_build() and gameplay != null and gameplay.has_method(&"dev_spawn_archetype"):
 		button_column.add_child(_make_btn("DevWrap", "DEV TOOLS", NeonUI.GREEN, _on_dev_tools))
@@ -187,15 +187,15 @@ func _on_build() -> void:
 		return
 	var panel := preload("res://ui/sector_interlude.gd").new()
 	_build_panel = panel
-	panel.heading = "SHIP BUILD"
+	panel.heading = "SHIP UPGRADES"
 	panel.show_route_map = false
 	var lines := PackedStringArray()
 	for upgrade in GameManager.ALL_UPGRADES + GameManager.META_ELITE_UPGRADES:
 		if GameManager.chosen_upgrade_ids.has(str(upgrade.id)):
 			lines.append("%s · %s\n%s" % [upgrade.name, upgrade.get("role", "Utility"), upgrade.description])
 	if lines.is_empty():
-		lines.append("Your first transformation arrives after Wave 5.")
-	lines.append("Allocated systems · Fire rate %d · Hull %d · Speed %d" % [GameManager.stat_fire_rate_level, GameManager.stat_health_level, GameManager.stat_speed_level])
+		lines.append("Defeat the Wave 5 boss to choose your first upgrade.")
+	lines.append("Upgrade levels · Fire rate %d · Lives %d · Speed %d" % [GameManager.stat_fire_rate_level, GameManager.stat_health_level, GameManager.stat_speed_level])
 	panel.body = "\n\n".join(lines)
 	panel.resolved.connect(func(_route: StringName):
 		panel.queue_free()
@@ -208,7 +208,7 @@ func _on_retry() -> void:
 	if GameManager.practice_mode:
 		_restart_confirmed()
 	else:
-		_confirm_transition("Restart Expedition?", "Bank earned salvage and start again. Your current ship build will be lost.", _restart_confirmed)
+		_confirm_transition("Restart this run?", "Keep the salvage you have earned and start again at Wave 1. You will lose this run's upgrades.", _restart_confirmed)
 
 
 func _on_menu() -> void:
@@ -216,7 +216,7 @@ func _on_menu() -> void:
 		GameManager.return_to_flight_school = true
 		_menu_confirmed()
 	else:
-		_confirm_transition("End Expedition?", "Bank earned salvage and return to the Hangar. This run cannot be resumed.", _menu_confirmed)
+		_confirm_transition("End this run?", "Keep the salvage you have earned and return to the main menu. You cannot continue this run later.", _menu_confirmed)
 
 
 func _confirm_transition(heading: String, message: String, action: Callable) -> void:

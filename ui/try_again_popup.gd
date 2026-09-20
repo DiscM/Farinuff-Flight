@@ -42,7 +42,7 @@ func _build_ui() -> void:
 
 	# Title
 	var title := Label.new()
-	title.text = "💀  YOU DIED"
+	title.text = "SHIP DESTROYED"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_color_override("font_color", Color(1.0, 0.25, 0.3))
 	title.add_theme_font_size_override("font_size", 44)
@@ -51,7 +51,7 @@ func _build_ui() -> void:
 	# Stocks left (icons plus a numeric readout so the count is never icon-only)
 	var stocks_lbl := Label.new()
 	var s := maxi(int(GameManager.try_again_stocks), 0)
-	stocks_lbl.text = "Try Again Stocks: %s (%d)" % [_stock_icons(s), s]
+	stocks_lbl.text = "Continues left: %s (%d)" % [_stock_icons(s), s]
 	stocks_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	stocks_lbl.add_theme_color_override("font_color", Color(1.0, 0.85, 0.2))
 	stocks_lbl.add_theme_font_size_override("font_size", 22)
@@ -83,10 +83,11 @@ func _build_ui() -> void:
 
 	# Try Again button
 	var yes_btn := Button.new()
-	yes_btn.text = "▶  TRY AGAIN  (−1 Stock)"
+	yes_btn.text = "▶  CONTINUE  (USE 1)"
+	yes_btn.tooltip_text = "Spend one continue to resume this run with your upgrades."
 	yes_btn.disabled = s <= 0
 	if yes_btn.disabled:
-		yes_btn.text = "NO TRY-AGAIN STOCKS"
+		yes_btn.text = "NO CONTINUES LEFT"
 	yes_btn.custom_minimum_size = Vector2(300, 58)
 	yes_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	yes_btn.add_theme_font_size_override("font_size", 22)
@@ -96,7 +97,7 @@ func _build_ui() -> void:
 
 	# Give Up button
 	var no_btn := Button.new()
-	no_btn.text = "✕  Give Up"
+	no_btn.text = "END RUN"
 	no_btn.custom_minimum_size = Vector2(200, 44)
 	no_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	no_btn.add_theme_font_size_override("font_size", 17)
@@ -132,7 +133,7 @@ var _action_taken: bool = false
 ## to the countdown label for per-frame updates.
 func _start_countdown(lbl: Label) -> void:
 	_countdown = 10.0
-	lbl.text = "Auto-decline in 10 s…"
+	lbl.text = "Run ends in 10 s…"
 	set_meta("timer_label", lbl)
 
 ## Decrements the countdown timer each frame. Triggers auto-decline when
@@ -148,7 +149,7 @@ func _process(delta: float) -> void:
 	if _countdown <= 0.0:
 		_on_give_up()
 		return
-	lbl.text = "Auto-decline in %d s…" % int(_countdown) + ("" if _countdown > 3 else "  ⚠")
+	lbl.text = "Run ends in %d s…" % int(_countdown) + ("" if _countdown > 3 else "  ⚠")
 	if _countdown <= 3.0:
 		lbl.modulate = Color(1.0, 0.4, 0.3)
 
@@ -224,7 +225,7 @@ func _format_loadout(hull_id: String, active_ids: Array[String]) -> String:
 		var name := _safe_text(definition, "name", upgrade_id.replace("_", " ").to_upper())
 		modules.append(name)
 	var module_text := "NONE INSTALLED" if modules.is_empty() else " · ".join(modules)
-	return "LOADOUT  ·  %s\nNATIVE MODULES  %d/%d  ·  %s" % [
+	return "SHIP  ·  %s\nUPGRADES  %d/%d  ·  %s" % [
 		hull_name.to_upper(),
 		active_ids.size(),
 		NativeUpgradeCatalog.SUPPORTED_IDS.size(),

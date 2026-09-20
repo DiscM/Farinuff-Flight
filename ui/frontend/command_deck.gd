@@ -9,8 +9,8 @@ extends Control
 signal expedition_requested
 signal open_section(page_id: StringName)
 
-const DEFAULT_OBJECTIVE := "Return the signal to the last charted relay"
-const DEFAULT_DISCOVERY := "No recovered fragments yet — signal source unknown."
+const DEFAULT_OBJECTIVE := "Follow the signal home."
+const DEFAULT_DISCOVERY := "Clear a route to recover a signal fragment."
 
 var _payload: Dictionary = {}
 var _launch_armed := false
@@ -30,9 +30,9 @@ func _ready() -> void:
 	map_button.pressed.connect(_on_map_pressed)
 	hangar_button.pressed.connect(_on_hangar_pressed)
 	settings_button.pressed.connect(_on_settings_pressed)
-	launch_button.tooltip_text = "Launch with your selected hull and challenge modifiers."
-	map_button.tooltip_text = "Open the Expedition Map to plan the return route."
-	hangar_button.tooltip_text = "Choose your hull and challenge modifiers."
+	launch_button.tooltip_text = "Start a run with your selected ship and challenges."
+	map_button.tooltip_text = "See the sectors and bosses on your route home."
+	hangar_button.tooltip_text = "Choose your ship and optional challenges."
 	settings_button.tooltip_text = "Learn the controls or practice your flight skills."
 	version_label.text = "BUILD %s  ·  %s  ·  SIGNAL LOCKED" % [_build_version(), MetaProgression.selected_ship.trim_prefix("ship_").to_upper()]
 	_apply_payload(_payload)
@@ -54,12 +54,12 @@ func get_primary_safe_action() -> Control:
 func _apply_payload(payload: Dictionary) -> void:
 	var objective := str(payload.get("objective_text", DEFAULT_OBJECTIVE))
 	var fragments := ExpeditionManager.get_recovered_fragments()
-	var fallback_discovery := DEFAULT_DISCOVERY if fragments.is_empty() else "%d / 4 signal fragments recovered. Read them in Archives." % fragments.size()
+	var fallback_discovery := DEFAULT_DISCOVERY if fragments.is_empty() else "%d / 4 found. Read them in Archives." % fragments.size()
 	var discovery := str(payload.get("discovery_text", fallback_discovery))
 	if _launch_armed:
-		objective = "The Expedition is launching — stand by the map."
+		objective = "Preparing your ship..."
 	objective_label.text = "%s" % objective
-	discovery_label.text = "LATEST DISCOVERY  ·  %s" % discovery
+	discovery_label.text = "SIGNAL FRAGMENTS  ·  %s" % discovery
 
 
 func _on_launch_pressed() -> void:
@@ -109,15 +109,15 @@ func _arrange_command_deck() -> void:
 	title.add_theme_font_size_override("font_size", 64)
 	title.add_theme_color_override("font_color", NeonUI.WHITE)
 	title.add_theme_constant_override("outline_size", 0)
-	launch_button.text = "LAUNCH EXPEDITION  >>>"
-	launch_button.accessibility_name = "Launch Expedition"
-	launch_button.accessibility_description = "Start at Wave 1 with the displayed ship and saved challenge modifiers."
+	launch_button.text = "START RUN  >>>"
+	launch_button.accessibility_name = "Start run"
+	launch_button.accessibility_description = "Start at Wave 1 with your selected ship and challenges."
 	NeonUI.style_primary(launch_button)
-	map_button.text = "ROUTE DETAILS"
-	map_button.accessibility_name = "Route details"
-	hangar_button.text = "CHANGE LOADOUT"
-	hangar_button.accessibility_name = "Change loadout"
-	hangar_button.accessibility_description = "Choose your hull and challenge modifiers."
+	map_button.text = "ROUTE MAP"
+	map_button.accessibility_name = "Route map"
+	hangar_button.text = "CHOOSE SHIP"
+	hangar_button.accessibility_name = "Choose ship"
+	hangar_button.accessibility_description = "Choose your ship and optional challenges."
 	settings_button.text = "FLIGHT SCHOOL"
 	settings_button.accessibility_name = "Flight School"
 	settings_button.accessibility_description = "Learn the controls or practice flight skills."

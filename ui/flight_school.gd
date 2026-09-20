@@ -13,22 +13,22 @@ const PAGE_TITLES: Array[String] = [
 	"MOVE / AIM",
 	"BOOST / REFLECT",
 	"ORB METER",
-	"BUILD / TRANSFORM",
+	"SHIP UPGRADES",
 	"EXPEDITION",
 ]
 const PAGE_TEXT: Array[String] = [
 	"MOVE WITH WASD OR THE ARROW KEYS. ON A GAMEPAD, USE THE LEFT STICK. AIM WITH THE MOUSE OR RIGHT STICK. HOLD FIRE TO KEEP PRESSURE ON.",
 	"BOOST THROUGH ENEMY FIRE TO EVADE AND REFLECT PROJECTILES. REFLECTED SHOTS RETURN AS YOUR GREEN FIRE.",
-	"COLLECT XP ORBS TO CLEAR WAVES. EVERY 12 ORB VALUE RESTORES A LIFE. BOSSES ARRIVE EVERY FIFTH WAVE.",
-	"TEMPORARY PICKUPS SHAPE THIS RUN. WAVES 5, 10, AND 15 OFFER UPGRADES THAT TRANSFORM YOUR SHIP. SALVAGE UNLOCKS FUTURE OPTIONS IN THE HANGAR.",
-	"REACH WAVE 20 AND BREAK THE TEMPEST CORE. AFTER THE CLEAR, CONTINUE INTO ENDLESS OR RETURN TO THE HANGAR.",
+	"Collect orbs to fill the meter under the wave counter. Every 12 orb points also gives you a life. A boss arrives every fifth wave.",
+	"Pick up power-ups during combat. Defeat the bosses at Waves 5, 10, and 15 to choose an upgrade for the rest of your run. Spend salvage in the Hangar on permanent upgrades.",
+	"Defeat Tempest Core at Wave 20 to complete the Expedition. Then finish your run or keep fighting in Endless mode.",
 ]
 const PAGE_TIPS: Array[String] = [
-	"TIP // KEEP MOVING; THE EDGES ARE DANGER ZONES.",
-	"TIP // BOOST IS DEFENSE, NOT ONLY SPEED.",
-	"TIP // A STRONG RUN CAN RECOVER FROM A BAD HIT.",
-	"TIP // EVERY BUILD SHOULD ANSWER A THREAT.",
-	"TIP // THE FIRST CLEAR IS A MILESTONE, NOT A HARD STOP.",
+	"TIP // Keep moving. Leave yourself room to dodge.",
+	"TIP // Reflect three shots in one boost to earn an extra boost.",
+	"TIP // Watch the heart meter to see how close you are to another life.",
+	"TIP // Open Ship Upgrades in the pause menu to review your upgrades.",
+	"TIP // Try different routes on later runs to find every signal fragment.",
 ]
 
 const CYAN := Color(0.14, 0.93, 1.0)
@@ -219,8 +219,8 @@ func _render_page() -> void:
 	_body.text = get_page_text(_page_index)
 	_tip.text = PAGE_TIPS[_page_index]
 	_back_button.disabled = _page_index == 0
-	_next_button.text = "BEGIN FLIGHT" if _page_index == get_page_count() - 1 else "NEXT"
-	_skip_button.text = "CLOSE SCHOOL" if _page_index == get_page_count() - 1 else "SKIP TRAINING"
+	_next_button.text = "DONE" if _page_index == get_page_count() - 1 else "NEXT"
+	_skip_button.text = "CLOSE" if _page_index == get_page_count() - 1 else "SKIP TUTORIAL"
 
 
 ## Public seam used by smoke tests and by any future tutorial front end.
@@ -233,9 +233,9 @@ func get_page_text(index: int) -> String:
 	if index < 0 or index >= PAGE_TEXT.size():
 		return ""
 	if index == 0:
-		return "MOVE: %s / %s / %s / %s. AIM WITH THE MOUSE OR RIGHT STICK. HOLD %s TO FIRE. PAUSE: %s." % [InputBindings.binding_label("move_up"), InputBindings.binding_label("move_left"), InputBindings.binding_label("move_down"), InputBindings.binding_label("move_right"), InputBindings.binding_label("shoot"), InputBindings.binding_label("pause")]
+		return "Move up: %s · Left: %s · Down: %s · Right: %s.\nAim with the mouse or right stick.\nHold %s to fire. Pause: %s." % [InputBindings.binding_label("move_up"), InputBindings.binding_label("move_left"), InputBindings.binding_label("move_down"), InputBindings.binding_label("move_right"), InputBindings.binding_label("shoot"), InputBindings.binding_label("pause")]
 	if index == 1:
-		return "BOOST WITH %s TO EVADE AND REFLECT PROJECTILES. REFLECTED SHOTS RETURN AS YOUR GREEN FIRE." % InputBindings.binding_label("boost")
+		return "Boost with %s to reflect enemy shots back at enemies. Cyan diamond shots cannot be reflected, so dodge them." % InputBindings.binding_label("boost")
 	return PAGE_TEXT[index]
 
 

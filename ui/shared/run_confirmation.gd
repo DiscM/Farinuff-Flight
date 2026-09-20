@@ -5,7 +5,7 @@ signal canceled
 var title := "End Expedition?"
 var dialog_text := "This run cannot be resumed."
 var confirm_text := "CONFIRM"
-var cancel_text := "CANCEL / KEEP RUN"
+var cancel_text := "CANCEL"
 var _confirm: Button
 var _progress: ProgressBar
 var _holding := false

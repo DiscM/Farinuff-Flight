@@ -72,7 +72,7 @@ func _ready() -> void:
 		column.add_child(first)
 	if allow_abandon:
 		var leave := Button.new()
-		leave.text = "END RUN AND RETURN TO HANGAR"
+		leave.text = "END RUN"
 		leave.custom_minimum_size.y = 44
 		leave.pressed.connect(_confirm_abandon)
 		column.add_child(leave)
@@ -99,8 +99,8 @@ func _confirm_abandon() -> void:
 		return
 	var confirmation := preload("res://ui/shared/run_confirmation.gd").new()
 	_confirmation = confirmation
-	confirmation.title = "End this Expedition?"
-	confirmation.dialog_text = "Bank earned salvage and return to the Hangar. This run's ship build will end."
+	confirmation.title = "End this run?"
+	confirmation.dialog_text = "Keep the salvage you have earned and return to the main menu. You cannot continue this run later."
 	confirmation.confirmed.connect(func():
 		if _resolved:
 			return

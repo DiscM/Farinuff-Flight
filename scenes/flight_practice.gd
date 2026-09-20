@@ -81,9 +81,9 @@ func _show_step() -> void:
 	_lesson.text = [
 		"FLIGHT SCHOOL · 1 / 4\nMove your ship, aim, and hold %s to fire. Practice does not use supplies." % InputBindings.binding_label("shoot"),
 		"FLIGHT SCHOOL · 2 / 4\nPress %s to boost into the incoming shots. Reflected shots fly back and damage enemies. Getting hit will not end practice." % InputBindings.binding_label("boost"),
-		"REFLECTED! · 3 / 4\nReflect three shots in one boost. While CHAIN is lit, press %s for a follow-up boost." % InputBindings.binding_label("boost"),
+		"REFLECTED! · 3 / 4\nReflect three shots in one boost. When BOOST AGAIN appears, press %s for a follow-up boost." % InputBindings.binding_label("boost"),
 		"FLIGHT SCHOOL · 4 / 4\nCollect the orbs. During a run, orb points fill the WAVE meter and advance you to the next wave.",
-		"FLIGHT SCHOOL COMPLETE\nYou also gained a life: every 12 orb points fills the HEART meter. Launch an Expedition from the main menu when you are ready.",
+		"FLIGHT SCHOOL COMPLETE\nYou also gained a life: every 12 orb points fills the HEART meter. Choose Start Run from the main menu when you are ready.",
 	][_step]
 
 func _refresh_lesson_bindings() -> void:
@@ -113,7 +113,7 @@ func _start_boss() -> void:
 	var bounds := flight_space.get_combat_bounds()
 	boss.activate_generation(flight_space, Vector3(bounds.get_center().x, 0, bounds.position.y + bounds.size.y * 0.22), Vector3.BACK, GameManager.get_enemy_generation(_boss_wave))
 	boss.finished.connect(_on_boss_finished)
-	_lesson.text = "BOSS PRACTICE\nStandard loadout · no rewards · hits cannot end practice. Destroy weapon pods to reduce incoming fire."
+	_lesson.text = "BOSS PRACTICE\nPractice with a basic ship and no upgrades. Getting hit will not end practice. Destroy the boss's weapon pods to reduce its fire."
 
 func _on_boss_finished(_reason: int, _position: Vector3) -> void:
 	projectile_manager.clear_enemy_projectiles()
