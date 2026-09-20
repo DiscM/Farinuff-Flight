@@ -26,12 +26,12 @@ PREVIEW_PATH = ROOT / "renders/drafts/farinuff_kestrel_interceptor_preview.png"
 TOP_PATH = ROOT / "renders/drafts/farinuff_kestrel_interceptor_top.png"
 
 REFERENCE_MODELS = [
-    ROOT / "assets/models/mockups/player_ship_mockup.glb",
+    ROOT / "assets/models/ships/player_ship_mockup.glb",
     ROOT / "assets/models/redesign/player_redesign_a.glb",
     ROOT / "assets/models/redesign/player_redesign_b.glb",
     ROOT / "assets/models/redesign/player_butterfly.glb",
-    ROOT / "assets/models/mockups/basic_enemy_mockup.glb",
-    ROOT / "assets/models/mockups/tank_enemy_mockup.glb",
+    ROOT / "assets/models/ships/basic_enemy_mockup.glb",
+    ROOT / "assets/models/ships/tank_enemy_mockup.glb",
 ]
 
 

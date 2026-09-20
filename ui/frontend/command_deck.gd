@@ -10,7 +10,7 @@ signal expedition_requested
 signal open_section(page_id: StringName)
 
 const DEFAULT_OBJECTIVE := "Follow the signal home."
-const DEFAULT_DISCOVERY := "Clear a route to recover a signal fragment."
+const DEFAULT_DISCOVERY := "0 / 4"
 
 var _payload: Dictionary = {}
 var _launch_armed := false
@@ -54,7 +54,7 @@ func get_primary_safe_action() -> Control:
 func _apply_payload(payload: Dictionary) -> void:
 	var objective := str(payload.get("objective_text", DEFAULT_OBJECTIVE))
 	var fragments := ExpeditionManager.get_recovered_fragments()
-	var fallback_discovery := DEFAULT_DISCOVERY if fragments.is_empty() else "%d / 4 found. Read them in Archives." % fragments.size()
+	var fallback_discovery := DEFAULT_DISCOVERY if fragments.is_empty() else "%d / 4" % fragments.size()
 	var discovery := str(payload.get("discovery_text", fallback_discovery))
 	if _launch_armed:
 		objective = "Preparing your ship..."
@@ -132,7 +132,12 @@ func _arrange_command_deck() -> void:
 	preview.configure(modules, "", MetaProgression.selected_ship)
 	preview.custom_minimum_size = Vector2(260, 250)
 	preview.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	hero.add_child(preview)
+	var showcase := preload("res://ui/frontend/ship_showcase.gd").new()
+	showcase.name = "ShipShowcase"
+	showcase.custom_minimum_size = preview.custom_minimum_size
+	showcase.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	hero.add_child(showcase)
+	showcase.set_preview(preview)
 	var hull := NeonUI.make_label(MetaProgression.selected_ship.trim_prefix("ship_").to_upper(), 26, NeonUI.CYAN)
 	hull.custom_minimum_size.y = 34
 	hero.add_child(hull)
@@ -140,6 +145,7 @@ func _arrange_command_deck() -> void:
 	var mission := NeonUI.make_label("REACH WAVE 20  /  SALVAGE ×%.2f" % bonus, 16)
 	mission.custom_minimum_size.y = 28
 	hero.add_child(mission)
+	preload("res://ui/shared/menu_briefing.gd").wrap_heading(hull)
 	version_label.hide()
 	row.resized.connect(func():
 		hero.visible = row.size.x >= 680

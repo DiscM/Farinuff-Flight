@@ -1,0 +1,1702 @@
+{
+  "assets": [
+    {
+      "animations": [
+        {
+          "channels": 12,
+          "duration_seconds": 2.799999952316284,
+          "name": "cruise"
+        },
+        {
+          "channels": 12,
+          "duration_seconds": 0.2666666805744171,
+          "name": "hit"
+        },
+        {
+          "channels": 12,
+          "duration_seconds": 0.7666666507720947,
+          "name": "windup"
+        },
+        {
+          "channels": 12,
+          "duration_seconds": 0.6333333253860474,
+          "name": "attack"
+        }
+      ],
+      "bones": [
+        "Body",
+        "Port",
+        "Starboard",
+        "Weapon"
+      ],
+      "bounds_max_xyz": [
+        4.619999885559082,
+        1.2599999904632568,
+        3.7799999713897705
+      ],
+      "bounds_min_xyz": [
+        -4.900000095367432,
+        -0.699999988079071,
+        -6.019999980926514
+      ],
+      "bytes": 652572,
+      "collisionless": true,
+      "degenerate_triangles": 0,
+      "degenerate_uv_triangles": 0,
+      "dimensions_xyz": [
+        9.519999980926514,
+        1.9599999785423279,
+        9.799999952316284
+      ],
+      "embedded_images": [
+        {
+          "bit_depth": 8,
+          "bytes": 2345,
+          "channels": 3,
+          "height": 256,
+          "rgba_pixels_sha256": "e25fa991169c6f5fe148c9025ee1b895a178c3936d0b81a2a3bf363c76a516bf",
+          "sha256": "777a5ed383f898bb065b861a780a3e4ba9f01eae8f1202c75e58ed8109c07768",
+          "width": 256
+        }
+      ],
+      "external_buffers_or_images": false,
+      "file": "boss_assault.glb",
+      "id": "ff.vb.boss_assault",
+      "joint_counts": [
+        4
+      ],
+      "materials": [
+        {
+          "base_color_factor": [
+            0.4564110338687897,
+            0.04666508734226227,
+            0.07036009430885315,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 0,
+          "name": "VB_assault_armor"
+        },
+        {
+          "base_color_factor": [
+            0.8227857351303101,
+            0.2158605009317398,
+            0.14126329123973846,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 1,
+          "name": "VB_assault_edge"
+        },
+        {
+          "base_color_factor": [
+            0.019382361322641373,
+            0.019382361322641373,
+            0.04817182570695877,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 2,
+          "name": "VB_assault_structure"
+        },
+        {
+          "base_color_factor": [
+            1.0,
+            0.533276379108429,
+            0.23074005544185638,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0.800000011920929,
+            0.426621109643893,
+            0.18459204710412092
+          ],
+          "index": 3,
+          "name": "VB_assault_reactor"
+        },
+        {
+          "base_color_factor": [
+            0.6239603757858276,
+            0.23839756846427917,
+            0.08437620848417282,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 4,
+          "name": "VB_assault_trim"
+        }
+      ],
+      "mesh_nodes": 6,
+      "motion": [
+        {
+          "clip": "cruise",
+          "moving_bones": [
+            "Port",
+            "Starboard"
+          ]
+        },
+        {
+          "clip": "hit",
+          "moving_bones": [
+            "Body",
+            "Port",
+            "Starboard",
+            "Weapon"
+          ]
+        },
+        {
+          "clip": "windup",
+          "moving_bones": [
+            "Body",
+            "Port",
+            "Starboard",
+            "Weapon"
+          ]
+        },
+        {
+          "clip": "attack",
+          "moving_bones": [
+            "Body",
+            "Port",
+            "Starboard",
+            "Weapon"
+          ]
+        }
+      ],
+      "name": "ASSAULT COMMANDER",
+      "pose_continuity": "pass: cruise loop, hit return, windup-to-attack handoff, attack-to-idle return",
+      "rig_node": "VB_boss_assault_MotionRig",
+      "role": "assault",
+      "sha256": "bb4e75e9312f3618ae6b79f06ab2f011ff36f9183122dd831a32a12c6ebbe945",
+      "skins": 1,
+      "sockets": {
+        "Socket_Core": {
+          "bone": "Body",
+          "local_translation": [
+            0,
+            -1.30385160446167e-08,
+            1.399999976158142
+          ]
+        },
+        "Socket_EngineLeft": {
+          "bone": "Body",
+          "local_translation": [
+            -1.1200000047683716,
+            -3.7799999713897705,
+            0.13999998569488525
+          ]
+        },
+        "Socket_EngineRight": {
+          "bone": "Body",
+          "local_translation": [
+            1.1200000047683716,
+            -3.7799999713897705,
+            0.13999998569488525
+          ]
+        },
+        "Socket_Muzzle": {
+          "bone": "Weapon",
+          "local_translation": [
+            0,
+            4.820000648498535,
+            0.5600000023841858
+          ]
+        },
+        "Socket_MuzzleCenter": {
+          "bone": "Weapon",
+          "local_translation": [
+            0,
+            4.820000648498535,
+            0.5600000023841858
+          ]
+        },
+        "Socket_MuzzleLeft": {
+          "bone": "Weapon",
+          "local_translation": [
+            -2.240000009536743,
+            2.859999418258667,
+            0.5600000023841858
+          ]
+        },
+        "Socket_MuzzleRight": {
+          "bone": "Weapon",
+          "local_translation": [
+            2.240000009536743,
+            2.859999418258667,
+            0.5600000023841858
+          ]
+        },
+        "Socket_WingHardpointLeft": {
+          "bone": "Port",
+          "local_translation": [
+            -2.619999885559082,
+            0.2799999713897705,
+            0.5600000619888306
+          ]
+        },
+        "Socket_WingHardpointRight": {
+          "bone": "Starboard",
+          "local_translation": [
+            2.619999885559082,
+            0.2799999713897705,
+            0.5600000619888306
+          ]
+        }
+      },
+      "status": "pass",
+      "surfaces": 16,
+      "triangles": 5564,
+      "uv_channels": [
+        "TEXCOORD_0"
+      ],
+      "vertices": 11128
+    },
+    {
+      "animations": [
+        {
+          "channels": 12,
+          "duration_seconds": 3.5999999046325684,
+          "name": "cruise"
+        },
+        {
+          "channels": 12,
+          "duration_seconds": 0.4000000059604645,
+          "name": "hit"
+        },
+        {
+          "channels": 12,
+          "duration_seconds": 1.0333333015441895,
+          "name": "windup"
+        },
+        {
+          "channels": 12,
+          "duration_seconds": 0.9666666388511658,
+          "name": "attack"
+        }
+      ],
+      "bones": [
+        "Body",
+        "Port",
+        "Starboard",
+        "Weapon"
+      ],
+      "bounds_max_xyz": [
+        4.619999885559082,
+        1.8200000524520874,
+        2.940000057220459
+      ],
+      "bounds_min_xyz": [
+        -4.900000095367432,
+        -0.699999988079071,
+        -3.2200000286102295
+      ],
+      "bytes": 792976,
+      "collisionless": true,
+      "degenerate_triangles": 0,
+      "degenerate_uv_triangles": 0,
+      "dimensions_xyz": [
+        9.519999980926514,
+        2.5200000405311584,
+        6.1600000858306885
+      ],
+      "embedded_images": [
+        {
+          "bit_depth": 8,
+          "bytes": 2345,
+          "channels": 3,
+          "height": 256,
+          "rgba_pixels_sha256": "e25fa991169c6f5fe148c9025ee1b895a178c3936d0b81a2a3bf363c76a516bf",
+          "sha256": "777a5ed383f898bb065b861a780a3e4ba9f01eae8f1202c75e58ed8109c07768",
+          "width": 256
+        }
+      ],
+      "external_buffers_or_images": false,
+      "file": "boss_bulwark.glb",
+      "id": "ff.vb.boss_bulwark",
+      "joint_counts": [
+        4
+      ],
+      "materials": [
+        {
+          "base_color_factor": [
+            0.19120168685913086,
+            0.09084171056747437,
+            0.31854677200317383,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 0,
+          "name": "VB_bulwark_armor"
+        },
+        {
+          "base_color_factor": [
+            0.43965718150138855,
+            0.30946892499923706,
+            0.5972017645835876,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 1,
+          "name": "VB_bulwark_edge"
+        },
+        {
+          "base_color_factor": [
+            0.022173885256052017,
+            0.019382361322641373,
+            0.04817182570695877,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 2,
+          "name": "VB_bulwark_structure"
+        },
+        {
+          "base_color_factor": [
+            1.0,
+            0.34670406579971313,
+            0.6444796919822693,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0.800000011920929,
+            0.27736325677280504,
+            0.515583761268612
+          ],
+          "index": 3,
+          "name": "VB_bulwark_reactor"
+        },
+        {
+          "base_color_factor": [
+            0.5906188488006592,
+            0.17144110798835754,
+            0.34191441535949707,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 4,
+          "name": "VB_bulwark_trim"
+        }
+      ],
+      "mesh_nodes": 6,
+      "motion": [
+        {
+          "clip": "cruise",
+          "moving_bones": [
+            "Port",
+            "Starboard"
+          ]
+        },
+        {
+          "clip": "hit",
+          "moving_bones": [
+            "Body",
+            "Port",
+            "Starboard",
+            "Weapon"
+          ]
+        },
+        {
+          "clip": "windup",
+          "moving_bones": [
+            "Body",
+            "Port",
+            "Starboard",
+            "Weapon"
+          ]
+        },
+        {
+          "clip": "attack",
+          "moving_bones": [
+            "Body",
+            "Port",
+            "Starboard",
+            "Weapon"
+          ]
+        }
+      ],
+      "name": "IRON BULWARK",
+      "pose_continuity": "pass: cruise loop, hit return, windup-to-attack handoff, attack-to-idle return",
+      "rig_node": "VB_boss_bulwark_MotionRig",
+      "role": "bulwark",
+      "sha256": "48c78b4259b08a62ceb265a18f54fce9542e4e985fe25b2c6f5b68bb3b3ef10c",
+      "skins": 1,
+      "sockets": {
+        "Socket_Core": {
+          "bone": "Body",
+          "local_translation": [
+            0,
+            -9.313225746154785e-09,
+            1.4000000953674316
+          ]
+        },
+        "Socket_EngineLeft": {
+          "bone": "Body",
+          "local_translation": [
+            -1.399999976158142,
+            -2.93999981880188,
+            0.14000000059604645
+          ]
+        },
+        "Socket_EngineRight": {
+          "bone": "Body",
+          "local_translation": [
+            1.399999976158142,
+            -2.93999981880188,
+            0.14000000059604645
+          ]
+        },
+        "Socket_Muzzle": {
+          "bone": "Weapon",
+          "local_translation": [
+            0,
+            2.0200002193450928,
+            0.5600000619888306
+          ]
+        },
+        "Socket_MuzzleCenter": {
+          "bone": "Weapon",
+          "local_translation": [
+            0,
+            2.0200002193450928,
+            0.5600000619888306
+          ]
+        },
+        "Socket_MuzzleLeft": {
+          "bone": "Weapon",
+          "local_translation": [
+            -0.5600000023841858,
+            2.0200002193450928,
+            0.5600000619888306
+          ]
+        },
+        "Socket_MuzzleRight": {
+          "bone": "Weapon",
+          "local_translation": [
+            0.5600000023841858,
+            2.0200002193450928,
+            0.5600000619888306
+          ]
+        },
+        "Socket_ShieldEmitterLeft": {
+          "bone": "Port",
+          "local_translation": [
+            -2.6200003623962402,
+            -6.51925802230835e-09,
+            1.4000000953674316
+          ]
+        },
+        "Socket_ShieldEmitterRight": {
+          "bone": "Starboard",
+          "local_translation": [
+            2.6200003623962402,
+            -6.51925802230835e-09,
+            1.4000000953674316
+          ]
+        }
+      },
+      "status": "pass",
+      "surfaces": 18,
+      "triangles": 6796,
+      "uv_channels": [
+        "TEXCOORD_0"
+      ],
+      "vertices": 13592
+    },
+    {
+      "animations": [
+        {
+          "channels": 12,
+          "duration_seconds": 2.4000000953674316,
+          "name": "cruise"
+        },
+        {
+          "channels": 12,
+          "duration_seconds": 0.2666666805744171,
+          "name": "hit"
+        },
+        {
+          "channels": 12,
+          "duration_seconds": 0.699999988079071,
+          "name": "windup"
+        },
+        {
+          "channels": 12,
+          "duration_seconds": 0.5666666626930237,
+          "name": "attack"
+        }
+      ],
+      "bones": [
+        "Body",
+        "Port",
+        "Starboard",
+        "Weapon"
+      ],
+      "bounds_max_xyz": [
+        4.619999885559082,
+        1.2599999904632568,
+        4.619999885559082
+      ],
+      "bounds_min_xyz": [
+        -4.900000095367432,
+        -0.41999998688697815,
+        -4.619999885559082
+      ],
+      "bytes": 566836,
+      "collisionless": true,
+      "degenerate_triangles": 0,
+      "degenerate_uv_triangles": 0,
+      "dimensions_xyz": [
+        9.519999980926514,
+        1.679999977350235,
+        9.239999771118164
+      ],
+      "embedded_images": [
+        {
+          "bit_depth": 8,
+          "bytes": 2345,
+          "channels": 3,
+          "height": 256,
+          "rgba_pixels_sha256": "e25fa991169c6f5fe148c9025ee1b895a178c3936d0b81a2a3bf363c76a516bf",
+          "sha256": "777a5ed383f898bb065b861a780a3e4ba9f01eae8f1202c75e58ed8109c07768",
+          "width": 256
+        }
+      ],
+      "external_buffers_or_images": false,
+      "file": "boss_tempest.glb",
+      "id": "ff.vb.boss_tempest",
+      "joint_counts": [
+        4
+      ],
+      "materials": [
+        {
+          "base_color_factor": [
+            0.22322796285152435,
+            0.5972017645835876,
+            0.672443151473999,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 0,
+          "name": "VB_tempest_edge"
+        },
+        {
+          "base_color_factor": [
+            0.01850022003054619,
+            0.024157632142305374,
+            0.05951123684644699,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 1,
+          "name": "VB_tempest_structure"
+        },
+        {
+          "base_color_factor": [
+            0.32314321398735046,
+            0.8069522380828857,
+            0.9559733271598816,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0.25851457504204767,
+            0.6455618000859289,
+            0.7647786731239954
+          ],
+          "index": 2,
+          "name": "VB_tempest_reactor"
+        },
+        {
+          "base_color_factor": [
+            0.04817182570695877,
+            0.21952620148658752,
+            0.34670406579971313,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 3,
+          "name": "VB_tempest_armor"
+        },
+        {
+          "base_color_factor": [
+            0.10702310502529144,
+            0.18782077729701996,
+            0.5088813304901123,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 4,
+          "name": "VB_tempest_trim"
+        }
+      ],
+      "mesh_nodes": 6,
+      "motion": [
+        {
+          "clip": "cruise",
+          "moving_bones": [
+            "Port",
+            "Starboard"
+          ]
+        },
+        {
+          "clip": "hit",
+          "moving_bones": [
+            "Body",
+            "Port",
+            "Starboard",
+            "Weapon"
+          ]
+        },
+        {
+          "clip": "windup",
+          "moving_bones": [
+            "Body",
+            "Port",
+            "Starboard",
+            "Weapon"
+          ]
+        },
+        {
+          "clip": "attack",
+          "moving_bones": [
+            "Body",
+            "Port",
+            "Starboard",
+            "Weapon"
+          ]
+        }
+      ],
+      "name": "TEMPEST",
+      "pose_continuity": "pass: cruise loop, hit return, windup-to-attack handoff, attack-to-idle return",
+      "rig_node": "VB_boss_tempest_MotionRig",
+      "role": "tempest",
+      "sha256": "09c7c7893f967253c1bca39bb4ce349250c11f6ff513fbc3fbd51ae6953d1cf9",
+      "skins": 1,
+      "sockets": {
+        "Socket_Core": {
+          "bone": "Body",
+          "local_translation": [
+            0,
+            1.1175870895385742e-08,
+            1.399999976158142
+          ]
+        },
+        "Socket_EmitterFrontLeft": {
+          "bone": "Port",
+          "local_translation": [
+            -2.620000123977661,
+            3.9200000762939453,
+            0.8399999141693115
+          ]
+        },
+        "Socket_EmitterFrontRight": {
+          "bone": "Starboard",
+          "local_translation": [
+            2.620000123977661,
+            3.9200000762939453,
+            0.8399999141693115
+          ]
+        },
+        "Socket_EmitterRearLeft": {
+          "bone": "Port",
+          "local_translation": [
+            -2.620000123977661,
+            -3.919999837875366,
+            0.839999794960022
+          ]
+        },
+        "Socket_EmitterRearRight": {
+          "bone": "Starboard",
+          "local_translation": [
+            2.620000123977661,
+            -3.919999837875366,
+            0.839999794960022
+          ]
+        },
+        "Socket_EngineLeft": {
+          "bone": "Body",
+          "local_translation": [
+            -0.8399999737739563,
+            -2.0999999046325684,
+            0.14000000059604645
+          ]
+        },
+        "Socket_EngineRight": {
+          "bone": "Body",
+          "local_translation": [
+            0.8399999737739563,
+            -2.0999999046325684,
+            0.14000000059604645
+          ]
+        },
+        "Socket_Muzzle": {
+          "bone": "Weapon",
+          "local_translation": [
+            0,
+            1.7400000095367432,
+            0.5600000619888306
+          ]
+        },
+        "Socket_MuzzleCenter": {
+          "bone": "Weapon",
+          "local_translation": [
+            0,
+            1.7400000095367432,
+            0.5600000619888306
+          ]
+        },
+        "Socket_MuzzleLeft": {
+          "bone": "Weapon",
+          "local_translation": [
+            -0.5600000023841858,
+            1.7400000095367432,
+            0.5600000619888306
+          ]
+        },
+        "Socket_MuzzleRight": {
+          "bone": "Weapon",
+          "local_translation": [
+            0.5600000023841858,
+            1.7400000095367432,
+            0.5600000619888306
+          ]
+        }
+      },
+      "status": "pass",
+      "surfaces": 15,
+      "triangles": 4804,
+      "uv_channels": [
+        "TEXCOORD_0"
+      ],
+      "vertices": 9608
+    },
+    {
+      "animations": [
+        {
+          "channels": 12,
+          "duration_seconds": 4.199999809265137,
+          "name": "cruise"
+        },
+        {
+          "channels": 12,
+          "duration_seconds": 0.36666667461395264,
+          "name": "hit"
+        },
+        {
+          "channels": 12,
+          "duration_seconds": 0.9666666388511658,
+          "name": "windup"
+        },
+        {
+          "channels": 12,
+          "duration_seconds": 0.9333333373069763,
+          "name": "attack"
+        }
+      ],
+      "bones": [
+        "Body",
+        "Port",
+        "Starboard",
+        "Weapon"
+      ],
+      "bounds_max_xyz": [
+        4.900000095367432,
+        1.5399999618530273,
+        4.900000095367432
+      ],
+      "bounds_min_xyz": [
+        -5.179999828338623,
+        -0.699999988079071,
+        -3.7799999713897705
+      ],
+      "bytes": 650916,
+      "collisionless": true,
+      "degenerate_triangles": 0,
+      "degenerate_uv_triangles": 0,
+      "dimensions_xyz": [
+        10.079999923706055,
+        2.2399999499320984,
+        8.680000066757202
+      ],
+      "embedded_images": [
+        {
+          "bit_depth": 8,
+          "bytes": 2345,
+          "channels": 3,
+          "height": 256,
+          "rgba_pixels_sha256": "e25fa991169c6f5fe148c9025ee1b895a178c3936d0b81a2a3bf363c76a516bf",
+          "sha256": "777a5ed383f898bb065b861a780a3e4ba9f01eae8f1202c75e58ed8109c07768",
+          "width": 256
+        }
+      ],
+      "external_buffers_or_images": false,
+      "file": "boss_void_harbinger.glb",
+      "id": "ff.vb.boss_void_harbinger",
+      "joint_counts": [
+        4
+      ],
+      "materials": [
+        {
+          "base_color_factor": [
+            0.13013647496700287,
+            0.20507873594760895,
+            0.05612849071621895,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 0,
+          "name": "VB_void_harbinger_armor"
+        },
+        {
+          "base_color_factor": [
+            0.44520118832588196,
+            0.5840784311294556,
+            0.19806931912899017,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 1,
+          "name": "VB_void_harbinger_edge"
+        },
+        {
+          "base_color_factor": [
+            0.02955683507025242,
+            0.01850022003054619,
+            0.04817182570695877,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 2,
+          "name": "VB_void_harbinger_structure"
+        },
+        {
+          "base_color_factor": [
+            0.6307571530342102,
+            1.0,
+            0.35153260827064514,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0.5046057299465794,
+            0.800000011920929,
+            0.28122609080711136
+          ],
+          "index": 3,
+          "name": "VB_void_harbinger_reactor"
+        },
+        {
+          "base_color_factor": [
+            0.20507873594760895,
+            0.13286831974983215,
+            0.35640013217926025,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 4,
+          "name": "VB_void_harbinger_trim"
+        }
+      ],
+      "mesh_nodes": 6,
+      "motion": [
+        {
+          "clip": "cruise",
+          "moving_bones": [
+            "Port",
+            "Starboard"
+          ]
+        },
+        {
+          "clip": "hit",
+          "moving_bones": [
+            "Body",
+            "Port",
+            "Starboard",
+            "Weapon"
+          ]
+        },
+        {
+          "clip": "windup",
+          "moving_bones": [
+            "Body",
+            "Port",
+            "Starboard",
+            "Weapon"
+          ]
+        },
+        {
+          "clip": "attack",
+          "moving_bones": [
+            "Body",
+            "Port",
+            "Starboard",
+            "Weapon"
+          ]
+        }
+      ],
+      "name": "VOID HARBINGER",
+      "pose_continuity": "pass: cruise loop, hit return, windup-to-attack handoff, attack-to-idle return",
+      "rig_node": "VB_boss_void_harbinger_MotionRig",
+      "role": "void_harbinger",
+      "sha256": "7362d49679c42e26c36d275b47cd0242c687e702808d09f5704b8ec1f8f56dff",
+      "skins": 1,
+      "sockets": {
+        "Socket_Core": {
+          "bone": "Body",
+          "local_translation": [
+            0,
+            5.587935447692871e-09,
+            1.4000000953674316
+          ]
+        },
+        "Socket_CrownLeft": {
+          "bone": "Port",
+          "local_translation": [
+            -0.38000011444091797,
+            -3.919999837875366,
+            0.8399999141693115
+          ]
+        },
+        "Socket_CrownRight": {
+          "bone": "Starboard",
+          "local_translation": [
+            0.38000011444091797,
+            -3.919999837875366,
+            0.8399999141693115
+          ]
+        },
+        "Socket_EngineLeft": {
+          "bone": "Body",
+          "local_translation": [
+            -0.8399999737739563,
+            -3.2200000286102295,
+            0.14000000059604645
+          ]
+        },
+        "Socket_EngineRight": {
+          "bone": "Body",
+          "local_translation": [
+            0.8399999737739563,
+            -3.2200000286102295,
+            0.14000000059604645
+          ]
+        },
+        "Socket_Muzzle": {
+          "bone": "Weapon",
+          "local_translation": [
+            0,
+            2.580000162124634,
+            0.5600000023841858
+          ]
+        },
+        "Socket_MuzzleCenter": {
+          "bone": "Weapon",
+          "local_translation": [
+            0,
+            2.580000162124634,
+            0.5600000023841858
+          ]
+        },
+        "Socket_MuzzleLeft": {
+          "bone": "Weapon",
+          "local_translation": [
+            -0.5600000023841858,
+            2.580000162124634,
+            0.5600000023841858
+          ]
+        },
+        "Socket_MuzzleRight": {
+          "bone": "Weapon",
+          "local_translation": [
+            0.5600000023841858,
+            2.580000162124634,
+            0.5600000023841858
+          ]
+        }
+      },
+      "status": "pass",
+      "surfaces": 16,
+      "triangles": 5504,
+      "uv_channels": [
+        "TEXCOORD_0"
+      ],
+      "vertices": 11008
+    },
+    {
+      "animations": [
+        {
+          "channels": 12,
+          "duration_seconds": 3.200000047683716,
+          "name": "cruise"
+        },
+        {
+          "channels": 12,
+          "duration_seconds": 0.3333333432674408,
+          "name": "hit"
+        },
+        {
+          "channels": 12,
+          "duration_seconds": 0.8666666746139526,
+          "name": "windup"
+        },
+        {
+          "channels": 12,
+          "duration_seconds": 0.8333333134651184,
+          "name": "attack"
+        }
+      ],
+      "bones": [
+        "Body",
+        "Port",
+        "Starboard",
+        "Weapon"
+      ],
+      "bounds_max_xyz": [
+        4.619999885559082,
+        2.0999999046325684,
+        4.059999942779541
+      ],
+      "bounds_min_xyz": [
+        -4.900000095367432,
+        -0.9800000190734863,
+        -4.340000152587891
+      ],
+      "bytes": 916836,
+      "collisionless": true,
+      "degenerate_triangles": 0,
+      "degenerate_uv_triangles": 0,
+      "dimensions_xyz": [
+        9.519999980926514,
+        3.0799999237060547,
+        8.400000095367432
+      ],
+      "embedded_images": [
+        {
+          "bit_depth": 8,
+          "bytes": 2345,
+          "channels": 3,
+          "height": 256,
+          "rgba_pixels_sha256": "e25fa991169c6f5fe148c9025ee1b895a178c3936d0b81a2a3bf363c76a516bf",
+          "sha256": "777a5ed383f898bb065b861a780a3e4ba9f01eae8f1202c75e58ed8109c07768",
+          "width": 256
+        }
+      ],
+      "external_buffers_or_images": false,
+      "file": "boss_tempest_core.glb",
+      "id": "ff.vb.boss_tempest_core",
+      "joint_counts": [
+        4
+      ],
+      "materials": [
+        {
+          "base_color_factor": [
+            0.3915724754333496,
+            0.18447498977184296,
+            0.040915198624134064,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 0,
+          "name": "VB_tempest_core_armor"
+        },
+        {
+          "base_color_factor": [
+            0.7454041838645935,
+            0.5028864741325378,
+            0.17464740574359894,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 1,
+          "name": "VB_tempest_core_edge"
+        },
+        {
+          "base_color_factor": [
+            0.02955683507025242,
+            0.021219009533524513,
+            0.04970656707882881,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 2,
+          "name": "VB_tempest_core_structure"
+        },
+        {
+          "base_color_factor": [
+            0.38132601976394653,
+            0.2581828534603119,
+            0.16202937066555023,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 3,
+          "name": "VB_tempest_core_brass"
+        },
+        {
+          "base_color_factor": [
+            1.0,
+            0.7529422044754028,
+            0.35640013217926025,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0.800000011920929,
+            0.6023537725560928,
+            0.28512010999202886
+          ],
+          "index": 4,
+          "name": "VB_tempest_core_reactor"
+        },
+        {
+          "base_color_factor": [
+            0.35153260827064514,
+            0.22322796285152435,
+            0.423267662525177,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 5,
+          "name": "VB_tempest_core_trim"
+        }
+      ],
+      "mesh_nodes": 6,
+      "motion": [
+        {
+          "clip": "cruise",
+          "moving_bones": [
+            "Port",
+            "Starboard",
+            "Weapon"
+          ]
+        },
+        {
+          "clip": "hit",
+          "moving_bones": [
+            "Body",
+            "Port",
+            "Starboard",
+            "Weapon"
+          ]
+        },
+        {
+          "clip": "windup",
+          "moving_bones": [
+            "Body",
+            "Port",
+            "Starboard",
+            "Weapon"
+          ]
+        },
+        {
+          "clip": "attack",
+          "moving_bones": [
+            "Body",
+            "Port",
+            "Starboard",
+            "Weapon"
+          ]
+        }
+      ],
+      "name": "TEMPEST CORE",
+      "pose_continuity": "pass: cruise loop, hit return, windup-to-attack handoff, attack-to-idle return",
+      "rig_node": "VB_boss_tempest_core_MotionRig",
+      "role": "tempest_core",
+      "sha256": "4c8f1c43e7e3743482f7c74d21436ec8ca810cfb069a06caa66305a9019ca6d0",
+      "skins": 1,
+      "sockets": {
+        "Socket_Core": {
+          "bone": "Body",
+          "local_translation": [
+            0,
+            1.3969838619232178e-08,
+            1.399999976158142
+          ]
+        },
+        "Socket_EngineLeft": {
+          "bone": "Body",
+          "local_translation": [
+            -1.6799999475479126,
+            -3.7799997329711914,
+            0.13999998569488525
+          ]
+        },
+        "Socket_EngineRight": {
+          "bone": "Body",
+          "local_translation": [
+            1.6799999475479126,
+            -3.7799997329711914,
+            0.13999998569488525
+          ]
+        },
+        "Socket_Muzzle": {
+          "bone": "Weapon",
+          "local_translation": [
+            0,
+            3.1399996280670166,
+            0.5600000023841858
+          ]
+        },
+        "Socket_MuzzleCenter": {
+          "bone": "Weapon",
+          "local_translation": [
+            0,
+            3.1399996280670166,
+            0.5600000023841858
+          ]
+        },
+        "Socket_MuzzleLeft": {
+          "bone": "Weapon",
+          "local_translation": [
+            -0.5600000023841858,
+            3.1399996280670166,
+            0.5600000023841858
+          ]
+        },
+        "Socket_MuzzleRight": {
+          "bone": "Weapon",
+          "local_translation": [
+            0.5600000023841858,
+            3.1399996280670166,
+            0.5600000023841858
+          ]
+        },
+        "Socket_SectionFront": {
+          "bone": "Body",
+          "local_translation": [
+            0,
+            4.480000019073486,
+            0.8399999141693115
+          ]
+        },
+        "Socket_SectionLeft": {
+          "bone": "Body",
+          "local_translation": [
+            -4.760000228881836,
+            8.847564458847046e-09,
+            0.8399999141693115
+          ]
+        },
+        "Socket_SectionRear": {
+          "bone": "Body",
+          "local_translation": [
+            0,
+            -3.640000104904175,
+            0.8399999737739563
+          ]
+        },
+        "Socket_SectionRight": {
+          "bone": "Body",
+          "local_translation": [
+            4.760000228881836,
+            8.847564458847046e-09,
+            0.8399999141693115
+          ]
+        }
+      },
+      "status": "pass",
+      "surfaces": 17,
+      "triangles": 7908,
+      "uv_channels": [
+        "TEXCOORD_0"
+      ],
+      "vertices": 15816
+    },
+    {
+      "animations": [
+        {
+          "channels": 12,
+          "duration_seconds": 2.0,
+          "name": "cruise"
+        },
+        {
+          "channels": 12,
+          "duration_seconds": 0.23333333432674408,
+          "name": "hit"
+        },
+        {
+          "channels": 12,
+          "duration_seconds": 0.5666666626930237,
+          "name": "windup"
+        },
+        {
+          "channels": 12,
+          "duration_seconds": 0.46666666865348816,
+          "name": "attack"
+        }
+      ],
+      "bones": [
+        "Body",
+        "Port",
+        "Starboard",
+        "Weapon"
+      ],
+      "bounds_max_xyz": [
+        2.0999999046325684,
+        1.2599999904632568,
+        2.940000057220459
+      ],
+      "bounds_min_xyz": [
+        -2.380000114440918,
+        -0.699999988079071,
+        -3.2200000286102295
+      ],
+      "bytes": 307948,
+      "collisionless": true,
+      "degenerate_triangles": 0,
+      "degenerate_uv_triangles": 0,
+      "dimensions_xyz": [
+        4.480000019073486,
+        1.9599999785423279,
+        6.1600000858306885
+      ],
+      "embedded_images": [
+        {
+          "bit_depth": 8,
+          "bytes": 2345,
+          "channels": 3,
+          "height": 256,
+          "rgba_pixels_sha256": "e25fa991169c6f5fe148c9025ee1b895a178c3936d0b81a2a3bf363c76a516bf",
+          "sha256": "777a5ed383f898bb065b861a780a3e4ba9f01eae8f1202c75e58ed8109c07768",
+          "width": 256
+        }
+      ],
+      "external_buffers_or_images": false,
+      "file": "tempest_section.glb",
+      "id": "ff.vb.tempest_section",
+      "joint_counts": [
+        4
+      ],
+      "materials": [
+        {
+          "base_color_factor": [
+            0.13286831974983215,
+            0.2015562504529953,
+            0.3049873113632202,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 0,
+          "name": "VB_section_armor"
+        },
+        {
+          "base_color_factor": [
+            0.42869049310684204,
+            0.4910208582878113,
+            0.637596845626831,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 1,
+          "name": "VB_section_edge"
+        },
+        {
+          "base_color_factor": [
+            0.022173885256052017,
+            0.021219009533524513,
+            0.04970656707882881,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 2,
+          "name": "VB_section_structure"
+        },
+        {
+          "base_color_factor": [
+            1.0,
+            0.7454041838645935,
+            0.35153260827064514,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0.800000011920929,
+            0.5963233559775851,
+            0.28122609080711136
+          ],
+          "index": 3,
+          "name": "VB_section_reactor"
+        },
+        {
+          "base_color_factor": [
+            0.4793201684951782,
+            0.30054378509521484,
+            0.09530746936798096,
+            1.0
+          ],
+          "base_color_image": 0,
+          "emissive_factor": [
+            0,
+            0,
+            0
+          ],
+          "index": 4,
+          "name": "VB_section_trim"
+        }
+      ],
+      "mesh_nodes": 6,
+      "motion": [
+        {
+          "clip": "cruise",
+          "moving_bones": [
+            "Port",
+            "Starboard"
+          ]
+        },
+        {
+          "clip": "hit",
+          "moving_bones": [
+            "Body",
+            "Port",
+            "Starboard",
+            "Weapon"
+          ]
+        },
+        {
+          "clip": "windup",
+          "moving_bones": [
+            "Body",
+            "Port",
+            "Starboard",
+            "Weapon"
+          ]
+        },
+        {
+          "clip": "attack",
+          "moving_bones": [
+            "Body",
+            "Port",
+            "Starboard",
+            "Weapon"
+          ]
+        }
+      ],
+      "name": "ORBITAL WEAPON POD",
+      "pose_continuity": "pass: cruise loop, hit return, windup-to-attack handoff, attack-to-idle return",
+      "rig_node": "VB_tempest_section_MotionRig",
+      "role": "section",
+      "sha256": "0781ab25e39a26b748517c1d92a11db4fcfddcd0f97c9e9fd70367caca126a72",
+      "skins": 1,
+      "sockets": {
+        "Socket_Attach": {
+          "bone": "Body",
+          "local_translation": [
+            0,
+            -2.799999952316284,
+            -1.862645149230957e-09
+          ]
+        },
+        "Socket_Core": {
+          "bone": "Body",
+          "local_translation": [
+            0,
+            1.3969838619232178e-08,
+            1.399999976158142
+          ]
+        },
+        "Socket_EngineLeft": {
+          "bone": "Body",
+          "local_translation": [
+            -0.5600000023841858,
+            -2.6599998474121094,
+            0.14000000059604645
+          ]
+        },
+        "Socket_EngineRight": {
+          "bone": "Body",
+          "local_translation": [
+            0.5600000023841858,
+            -2.6599998474121094,
+            0.14000000059604645
+          ]
+        },
+        "Socket_Muzzle": {
+          "bone": "Weapon",
+          "local_translation": [
+            0,
+            2.0199999809265137,
+            0.559999942779541
+          ]
+        },
+        "Socket_MuzzleCenter": {
+          "bone": "Weapon",
+          "local_translation": [
+            0,
+            2.0199999809265137,
+            0.559999942779541
+          ]
+        },
+        "Socket_MuzzleLeft": {
+          "bone": "Weapon",
+          "local_translation": [
+            -0.5600000023841858,
+            2.0199999809265137,
+            0.559999942779541
+          ]
+        },
+        "Socket_MuzzleRight": {
+          "bone": "Weapon",
+          "local_translation": [
+            0.5600000023841858,
+            2.0199999809265137,
+            0.559999942779541
+          ]
+        }
+      },
+      "status": "pass",
+      "surfaces": 11,
+      "triangles": 2496,
+      "uv_channels": [
+        "TEXCOORD_0"
+      ],
+      "vertices": 4992
+    }
+  ],
+  "evidence_type": "Static file validation; rendered and gameplay evidence is separate",
+  "package_id": "farinuff-flight.voxel-bosses",
+  "policy": {
+    "clips": "cruise, hit, windup, attack; actual nonconstant bone motion required",
+    "collisionless": true,
+    "max_triangles_per_asset": 20000,
+    "max_vertices_per_asset": 40000,
+    "required_texture": "embedded 256×256 atlas on every material; distinct base-color tints",
+    "rig": "one four-bone rigid skeleton on every asset",
+    "sockets": "exact named markers parented to their catalogued bone"
+  },
+  "schema_version": 1,
+  "status": "pass",
+  "textures": [
+    {
+      "bit_depth": 8,
+      "bytes": 2345,
+      "channels": 3,
+      "file": "assets/models/voxel_bosses/textures/voxel_surface_atlas.png",
+      "height": 256,
+      "rgba_pixels_sha256": "e25fa991169c6f5fe148c9025ee1b895a178c3936d0b81a2a3bf363c76a516bf",
+      "sha256": "777a5ed383f898bb065b861a780a3e4ba9f01eae8f1202c75e58ed8109c07768",
+      "width": 256
+    }
+  ]
+}

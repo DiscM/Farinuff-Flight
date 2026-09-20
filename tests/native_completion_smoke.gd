@@ -12,11 +12,11 @@ const EnemyScenes := {
 	&"sniper": preload("res://entities/enemies/sniper_enemy_3d.tscn"),
 }
 const EnemyModelScales := {
-	&"basic": 0.675,
-	&"fast": 0.363,
-	&"bomber": 0.5365,
-	&"tank": 0.884,
-	&"sniper": 0.5115,
+	&"basic": 1.18125,
+	&"fast": 0.63525,
+	&"bomber": 0.938875,
+	&"tank": 1.547,
+	&"sniper": 0.895125,
 }
 const EnemySocketBindings := {
 	&"basic": {
@@ -47,9 +47,6 @@ const EnemySocketBindings := {
 		&"Socket_EngineRight": [&"EngineRight"],
 	},
 }
-const EnemyModelShader: Shader = preload(
-	"res://effects/shaders/models/imported_enemy_surface_3d.gdshader"
-)
 const PixelEnemyModelShader: Shader = preload(
 	"res://effects/shaders/models/pixel_planet_enemy_3d.gdshader"
 )
@@ -134,6 +131,8 @@ func _check_enemy_model_integrations() -> void:
 		var enemy := (EnemyScenes[archetype] as PackedScene).instantiate() as BasicEnemy
 		actors_root.add_child(enemy)
 		var model_root := enemy.get_node("Visuals").get_child(0) as Node3D
+		_expect(model_root.scene_file_path == "res://assets/models/voxel_frontier/meshes/%s_enemy.glb" % archetype,
+			"%s gameplay scene loads the voxel fleet export" % archetype)
 		var expected_scale := Vector3.ONE * float(EnemyModelScales[archetype])
 		_expect(
 			model_root.scale.is_equal_approx(expected_scale),
@@ -148,6 +147,7 @@ func _check_enemy_model_integrations() -> void:
 		var has_visual_bounds := false
 		var surface_count := 0
 		var shader_surface_count := 0
+		var textured_surface_count := 0
 		var emissive_surface_count := 0
 		var authored_colors: Array[Color] = []
 		for node in meshes:
@@ -158,15 +158,25 @@ func _check_enemy_model_integrations() -> void:
 			has_visual_bounds = true
 			for surface_index in range(mesh_instance.mesh.get_surface_count()):
 				surface_count += 1
+				var arrays := mesh_instance.mesh.surface_get_arrays(surface_index)
+				var uv: PackedVector2Array = arrays[Mesh.ARRAY_TEX_UV]
+				var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+				_expect(uv.size() == vertices.size() and not uv.is_empty(),
+					"%s exported surface keeps its authored UV coordinates" % archetype)
 				var material := mesh_instance.get_active_material(surface_index)
 				if (
 					material is ShaderMaterial
 					and (material as ShaderMaterial).shader == (
-						PixelEnemyModelShader if archetype in [&"basic", &"tank", &"bomber"] else EnemyModelShader
+						PixelEnemyModelShader
 					)
 				):
 					shader_surface_count += 1
 					var shader_material := material as ShaderMaterial
+					var atlas := shader_material.get_shader_parameter(&"albedo_texture") as Texture2D
+					if atlas != null and shader_material.get_shader_parameter(&"has_albedo_texture") == true:
+						textured_surface_count += 1
+						_expect(atlas.get_width() >= 128 and atlas.get_height() >= 128,
+							"%s production shader binds the full-resolution atlas" % archetype)
 					authored_colors.append(shader_material.get_shader_parameter(&"base_color"))
 					if float(shader_material.get_shader_parameter(&"emission_strength")) > 0.0:
 						emissive_surface_count += 1
@@ -174,6 +184,8 @@ func _check_enemy_model_integrations() -> void:
 			shader_surface_count == surface_count and surface_count > 0,
 			"%s enemy adapts every Blender surface to the runtime enemy shader" % archetype
 		)
+		_expect(textured_surface_count == surface_count,
+			"%s production shader samples the atlas on every surface" % archetype)
 		_expect(
 			_has_authored_role_color(archetype, authored_colors),
 			"%s enemy preserves its authored role palette: %s" % [archetype, authored_colors]
@@ -183,9 +195,10 @@ func _check_enemy_model_integrations() -> void:
 			"%s enemy preserves authored emissive surfaces" % archetype
 		)
 		var hitbox := enemy.get_node("CollisionShape3D").shape as BoxShape3D
+		_expect(enemy.scale.is_equal_approx(Vector3.ONE), "%s scales its presentation without scaling the actor transform" % archetype)
 		_expect(
-			has_visual_bounds and hitbox.size.x <= visual_bounds.size.x * 1.25,
-			"%s enemy hitbox does not extend far beyond its visible hull" % archetype
+			has_visual_bounds and hitbox.size.x >= visual_bounds.size.x * .75 and hitbox.size.x <= visual_bounds.size.x * 1.25,
+			"%s enemy target envelope remains fitted to its enlarged visible hull" % archetype
 		)
 		for imported_name in EnemySocketBindings[archetype]:
 			var imported_socket := model_root.find_child(imported_name, true, false) as Node3D
@@ -203,22 +216,26 @@ func _check_enemy_model_integrations() -> void:
 
 
 func _has_authored_role_color(archetype: StringName, colors: Array[Color]) -> bool:
+	# Test role identity in hue space so a professionally muted paint palette
+	# remains valid. Neutral white factors (a broken atlas export) still fail.
 	for color in colors:
+		if color.s < 0.30 or color.v < 0.40:
+			continue
 		match archetype:
 			&"basic":
-				if color.r > 0.75 and color.r > color.g * 3.0 and color.r > color.b * 3.5:
+				if color.h >= 0.92 or color.h <= 0.035:
 					return true
 			&"fast":
-				if color.r > 0.90 and color.g > 0.25 and color.g < 0.40 and color.b < 0.15:
+				if color.h > 0.035 and color.h < 0.14:
 					return true
 			&"bomber":
-				if color.g > 0.35 and color.g > color.r * 1.50 and color.g > color.b * 2.0:
+				if color.h > 0.24 and color.h < 0.46:
 					return true
 			&"tank":
-				if color.b > 0.70 and color.b > color.r * 1.40 and color.b > color.g * 2.5:
+				if color.h > 0.65 and color.h < 0.82:
 					return true
 			&"sniper":
-				if color.b > 0.75 and color.b > color.g * 1.35 and color.b > color.r * 4.0:
+				if color.h > 0.49 and color.h < 0.64:
 					return true
 	return false
 
@@ -408,6 +425,9 @@ func _check_boss_variants() -> void:
 		actors_root.add_child(boss)
 		_expect(boss.activate_generation(flight_space, Vector3.ZERO, Vector3.BACK, 1), "Boss activates")
 		_expect(boss.variant == index, "Wave %d selects the stable boss hull variant %d" % [wave, index])
+		var hull_ids := ["boss_assault", "boss_bulwark", "boss_tempest", "boss_void_harbinger", "boss_tempest_core"]
+		_expect(boss.visuals.get_child(index).scene_file_path == "res://assets/models/voxel_bosses/meshes/%s.glb" % hull_ids[index], "Boss milestone selects its packaged voxel hull")
+		_expect(boss.surface_style == 1, "Boss hull uses the production pixel material")
 		_expect(boss._motions.size() == 5, "Every boss variant imports its Blender motion rig")
 		if boss._motions.size() == 5:
 			var motion = boss._motions[index]

@@ -39,7 +39,7 @@ func _show_dossier(node_id: StringName) -> void:
 			continue
 		var recovered := snapshot.recovered_fragment_ids.has(node.fragment_beat_id)
 		var read := snapshot.seen_story_beat_ids.has(node.fragment_beat_id)
-		_dossier.text += "\nSIGNAL FRAGMENT · " + ("Found · Read" if recovered and read else "Found · Unread" if recovered else "Clear this sector to find it")
+		_dossier.text += "\nSIGNAL FRAGMENT · " + ("Found · Read" if recovered and read else "Found · Unread" if recovered else "Not recovered")
 	selection_changed.emit(node_id)
 
 func get_primary_safe_action() -> Control:

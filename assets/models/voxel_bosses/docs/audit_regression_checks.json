@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "status": "pass",
+  "source_sha256": "bb4e75e9312f3618ae6b79f06ab2f011ff36f9183122dd831a32a12c6ebbe945",
+  "evidence": "Deliberately corrupted temporary copies; delivered assets unchanged",
+  "checks": [
+    {
+      "check": "missing_named_rig",
+      "status": "pass",
+      "rejection": "boss_assault.glb: named rig node missing"
+    },
+    {
+      "check": "socket_on_wrong_bone",
+      "status": "pass",
+      "rejection": "Socket_Muzzle: socket does not follow expected Weapon bone"
+    },
+    {
+      "check": "static_placeholder_clip",
+      "status": "pass",
+      "rejection": "boss_assault.glb: hit contains no animated bone motion"
+    },
+    {
+      "check": "nonneutral_attack_return",
+      "status": "pass",
+      "rejection": "boss_assault.glb: pose discontinuity attack\u2192cruise on Weapon/translation"
+    }
+  ]
+}

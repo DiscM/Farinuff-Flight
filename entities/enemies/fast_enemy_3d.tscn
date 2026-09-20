@@ -1,10 +1,10 @@
 [gd_scene load_steps=7 format=3]
 
 [ext_resource type="Script" path="res://entities/enemies/fast_enemy_3d.gd" id="1_enemy"]
-[ext_resource type="PackedScene" path="res://assets/models/animated/fast_enemy.glb" id="2_model"]
+[ext_resource type="PackedScene" path="res://assets/models/voxel_frontier/meshes/fast_enemy.glb" id="2_model"]
 [ext_resource type="Resource" path="res://entities/enemies/fast_enemy_generation_1.tres" id="3_stats"]
 [sub_resource type="BoxShape3D" id="BoxShape3D_hitbox"]
-size = Vector3(0.868000, 0.500000, 2.545200)
+size = Vector3(1.519000, 0.500000, 4.454100)
 
 [sub_resource type="BoxMesh" id="PhaseWarningMesh"]
 size = Vector3(1, 0.025, 1)
@@ -23,6 +23,7 @@ monitorable = false
 input_ray_pickable = false
 script = ExtResource("1_enemy")
 gameplay_stats = ExtResource("3_stats")
+surface_style = 1
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("BoxShape3D_hitbox")
@@ -32,20 +33,20 @@ disabled = true
 position = Vector3(0, 0.08, 0)
 
 [node name="FastHullGLB" parent="Visuals" instance=ExtResource("2_model")]
-scale = Vector3(0.363000, 0.363000, 0.363000)
+scale = Vector3(0.635250, 0.635250, 0.635250)
 
 [node name="Attachments" type="Node3D" parent="."]
 
 [node name="Sockets" type="Node3D" parent="Attachments"]
 
 [node name="MuzzleCenter" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(0.000000, 0.109700, -1.524600)
+position = Vector3(0.000000, 0.131975, -2.668050)
 
 [node name="EngineLeft" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(-0.047850, 0.080000, 1.409100)
+position = Vector3(-0.083737, 0.080000, 2.465925)
 
 [node name="EngineRight" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(0.047850, 0.080000, 1.409100)
+position = Vector3(0.083737, 0.080000, 2.465925)
 
 [node name="Modules" type="Node3D" parent="Attachments"]
 

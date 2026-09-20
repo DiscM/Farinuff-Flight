@@ -5,6 +5,7 @@ static func mount(host: Control, body: VBoxContainer, actions: Array[Control]) -
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	host.add_child(center)
 	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override("panel", preload("res://ui/shared/menu_briefing.gd").frame())
 	panel.custom_minimum_size = Vector2(minf(700.0, host.get_viewport_rect().size.x - 40.0), maxf(320.0, host.get_viewport_rect().size.y - 40.0))
 	center.add_child(panel)
 	var margin := MarginContainer.new()
@@ -15,6 +16,7 @@ static func mount(host: Control, body: VBoxContainer, actions: Array[Control]) -
 	layout.add_theme_constant_override("separation", 10)
 	margin.add_child(layout)
 	var scroll := ScrollContainer.new()
+	preload("res://ui/shared/menu_briefing.gd").enable_scroll(scroll, "Scroll run debrief")
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.follow_focus = true
@@ -35,4 +37,7 @@ static func mount(host: Control, body: VBoxContainer, actions: Array[Control]) -
 	if not actions.is_empty():
 		if actions[0] is Button:
 			NeonUI.style_primary(actions[0])
-		actions[0].grab_focus()
+		for action in actions:
+			if action is Button and not action.disabled:
+				action.grab_focus()
+				break

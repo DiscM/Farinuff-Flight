@@ -2,12 +2,12 @@ extends Node3D
 ## In-engine look-development board for marrying the GLB mockups to Farinuff
 ## Flight's existing neon evolution, galaxy, projectile, and CRT treatments.
 
-const PLAYER_MODEL: PackedScene = preload("res://assets/models/mockups/player_ship_mockup.glb")
-const BASIC_MODEL: PackedScene = preload("res://assets/models/mockups/basic_enemy_mockup.glb")
-const FAST_MODEL: PackedScene = preload("res://assets/models/mockups/fast_enemy_mockup.glb")
-const BOMBER_MODEL: PackedScene = preload("res://assets/models/mockups/bomber_enemy_mockup.glb")
-const TANK_MODEL: PackedScene = preload("res://assets/models/mockups/tank_enemy_mockup.glb")
-const SNIPER_MODEL: PackedScene = preload("res://assets/models/mockups/sniper_enemy_mockup.glb")
+const PLAYER_MODEL: PackedScene = preload("res://assets/models/ships/player_ship_mockup.glb")
+const BASIC_MODEL: PackedScene = preload("res://assets/models/ships/basic_enemy_mockup.glb")
+const FAST_MODEL: PackedScene = preload("res://assets/models/ships/fast_enemy_mockup.glb")
+const BOMBER_MODEL: PackedScene = preload("res://assets/models/ships/bomber_enemy_mockup.glb")
+const TANK_MODEL: PackedScene = preload("res://assets/models/ships/tank_enemy_mockup.glb")
+const SNIPER_MODEL: PackedScene = preload("res://assets/models/ships/sniper_enemy_mockup.glb")
 
 const SHIP_SHADER: Shader = preload("res://effects/shaders/models/neon_ship_3d.gdshader")
 const OUTLINE_SHADER: Shader = preload("res://effects/shaders/models/neon_outline_3d.gdshader")

@@ -1,0 +1,143 @@
+{
+  "status": "pass",
+  "godot_version": "4.6.3",
+  "window": [
+    2560,
+    1440
+  ],
+  "combat_frame_scale": 1.25,
+  "regular_enemy_scale": 1.75,
+  "boss_enemy_scale": 1.6,
+  "checks": [
+    {
+      "scene": "res://tests/autoload_smoke.tscn",
+      "passed": true,
+      "log": "qa/autoload_smoke.log",
+      "sha256": "b569a656dd7a025e93341c020f061d7d004f674b8152ddefcf285cc5c564b172"
+    },
+    {
+      "scene": "res://tests/background_drift_smoke.tscn",
+      "passed": true,
+      "log": "qa/background_drift_smoke.log",
+      "sha256": "57fad35cf7809942dab0475aaf7546666a686c1b15ad6ec26d56935b5a2de287"
+    },
+    {
+      "scene": "res://tests/boss_ai_smoke.tscn",
+      "passed": true,
+      "log": "qa/boss_ai_smoke.log",
+      "sha256": "262dd6ea58338cbc37023ce2af330cfb1553d0df31c521413a1b63b20838ed20"
+    },
+    {
+      "scene": "res://tests/boss_flight_smoke.tscn",
+      "passed": true,
+      "log": "qa/boss_flight_smoke.log",
+      "sha256": "6fc6714dc6633ee5186720523a2fb901447d579994d0d57783e97178adedde96"
+    },
+    {
+      "scene": "res://tests/combat_motion_smoke.tscn",
+      "passed": true,
+      "log": "qa/combat_motion_smoke.log",
+      "sha256": "6d91d95eaa91aa3190b0c4f121080b922c9d3695f6d4f4c227b66e1e5230b69b"
+    },
+    {
+      "scene": "res://tests/combat_readability_smoke.tscn",
+      "passed": true,
+      "log": "qa/combat_readability_smoke.log",
+      "sha256": "f87bd49dbee3e842a35f83634f02b6004b04c214a930c1148e7a93abc5bfe028"
+    },
+    {
+      "scene": "res://tests/native_completion_smoke.tscn",
+      "passed": true,
+      "log": "qa/native_completion_smoke.log",
+      "sha256": "f64205bfc0e0d066ffe1f380936e7a1fc0b8cdd76bb4af3120d38d81cb60e3eb"
+    },
+    {
+      "scene": "res://tests/voxel_boss_material_smoke.tscn",
+      "passed": true,
+      "log": "qa/voxel_boss_material_smoke.log",
+      "sha256": "23338f9891328552bda5ce0dd2e11188a8c97121aaa6c6ba301bd9ccb7e834c1"
+    }
+  ],
+  "static_contract_assertions": 393,
+  "gpu_captures": [
+    {
+      "boss_hud_alpha": 1.0,
+      "capture": "res://design/combat-scale/regular-combat-2560.png",
+      "combat_bounds": "[P: (-68.34129, -40.90909), S: (136.6826, 81.81818)]",
+      "enemies": [
+        {
+          "active": true,
+          "kind": "basic",
+          "root_scale": "(1.0, 1.0, 1.0)",
+          "surfaces": 12,
+          "textured_surfaces": 12,
+          "visible_pixel_envelope": "(105.0903, 116.2367)"
+        },
+        {
+          "active": true,
+          "kind": "tank",
+          "root_scale": "(1.0, 1.0, 1.0)",
+          "surfaces": 13,
+          "textured_surfaces": 13,
+          "visible_pixel_envelope": "(170.3706, 160.0959)"
+        },
+        {
+          "active": true,
+          "kind": "bomber",
+          "root_scale": "(1.0, 1.0, 1.0)",
+          "surfaces": 14,
+          "textured_surfaces": 14,
+          "visible_pixel_envelope": "(142.7876, 86.65002)"
+        },
+        {
+          "active": true,
+          "kind": "fast",
+          "root_scale": "(1.0, 1.0, 1.0)",
+          "surfaces": 10,
+          "textured_surfaces": 10,
+          "visible_pixel_envelope": "(28.79297, 91.90369)"
+        },
+        {
+          "active": true,
+          "kind": "sniper",
+          "root_scale": "(1.0, 1.0, 1.0)",
+          "surfaces": 10,
+          "textured_surfaces": 10,
+          "visible_pixel_envelope": "(44.26025, 133.7114)"
+        }
+      ],
+      "enemy_projectiles_fired": 0,
+      "practice": true,
+      "render_size": "(2560, 1440)",
+      "ui_size": "(1280.0, 720.0)",
+      "view_bounds": "[P: (-68.34129, -40.90909), S: (136.6826, 81.81818)]",
+      "window_size": "(2560, 1440)"
+    },
+    {
+      "boss_hud_alpha": 0.200000002980232,
+      "capture": "res://design/combat-scale/boss-combat-2560.png",
+      "combat_bounds": "[P: (-150.3508, -90.0), S: (300.7017, 180.0)]",
+      "enemies": [
+        {
+          "active": true,
+          "kind": "boss",
+          "root_scale": "(1.0, 1.0, 1.0)",
+          "surfaces": 39,
+          "textured_surfaces": 39,
+          "visible_pixel_envelope": "(401.3214, 259.5026)"
+        }
+      ],
+      "enemy_projectiles_fired": 24,
+      "practice": true,
+      "render_size": "(2560, 1440)",
+      "ui_size": "(1280.0, 720.0)",
+      "view_bounds": "[P: (-68.34129, -40.90909), S: (136.6826, 81.81818)]",
+      "window_size": "(2560, 1440)"
+    }
+  ],
+  "notes": [
+    "Controlled production Flight Practice actors with an invulnerable stationary player, not a campaign endurance test.",
+    "Expected save-failure diagnostics and pre-existing dummy-renderer teardown diagnostics remain in relevant smoke logs.",
+    "Subsequent live Godot error poll after visual verification returned zero new errors."
+  ]
+}

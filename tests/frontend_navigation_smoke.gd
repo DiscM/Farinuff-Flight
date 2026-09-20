@@ -46,6 +46,8 @@ func _run() -> void:
 	await _check_modal_signal_close_restores_invoker()
 	await _check_ui_cancel_closes_modal_before_back()
 	await _check_shell_signals()
+	await _check_large_text_briefings()
+	await _check_standalone_actions()
 	await ResourceCache.wait_for_scene(ResourceCache.NATIVE_RUN_PATH)
 	_shell.queue_free()
 	await _wait_frames(1)
@@ -234,6 +236,57 @@ func _check_shell_signals() -> void:
 
 
 # --- Helpers -------------------------------------------------------------------
+
+func _check_large_text_briefings() -> void:
+	var original: float = float(SaveManager.get_setting("menu_text_scale", 1.0))
+	SaveManager.update_setting("menu_text_scale", 1.3)
+	for page_id: StringName in PAGES:
+		_shell.show_page(page_id)
+		await _wait_frames(5)
+		var page := _shell.get_current_page()
+		_expect(page.find_child("BriefingHeader", true, false) != null, "%s presents a contextual briefing" % page_id)
+		var primary: Control = page.get_primary_safe_action()
+		_expect(primary != null and _fully_visible(primary), "%s keeps its primary action visible at 130%% text" % page_id)
+		if primary is BaseButton:
+			_expect(not primary.disabled, "%s focuses an enabled action" % page_id)
+	_shell.return_to_command_deck()
+	SaveManager.update_setting("menu_text_scale", original)
+	await _wait_frames(3)
+
+func _check_standalone_actions() -> void:
+	_shell.hide()
+	var original: float = float(SaveManager.get_setting("menu_text_scale", 1.0))
+	var stocks := GameManager.try_again_stocks
+	SaveManager.update_setting("menu_text_scale", 1.3)
+	GameManager.try_again_stocks = 0
+	for scene: String in ["settings_menu", "hangar_menu", "launch_bay", "game_over", "try_again_popup", "expedition_victory"]:
+		var menu: Control = load("res://ui/%s.tscn" % scene).instantiate()
+		add_child(menu)
+		await _wait_frames(5)
+		var focus := _focused()
+		_expect(focus != null and menu.is_ancestor_of(focus) and _fully_visible(focus), "%s has a visible initial focus at 130%% text" % scene)
+		if scene == "settings_menu" or scene == "hangar_menu":
+			_expect(_fully_visible(menu.find_child("CloseButton", true, false)), "%s keeps Close inside the viewport" % scene)
+		if scene == "try_again_popup":
+			_expect(focus is Button and focus.text == "END RUN", "Recovery focuses End Run when no continues remain")
+		menu.queue_free()
+		await _wait_frames(2)
+	GameManager.try_again_stocks = stocks
+	SaveManager.update_setting("menu_text_scale", original)
+	_shell.show()
+
+func _fully_visible(control: Control) -> bool:
+	if control == null or not control.is_visible_in_tree():
+		return false
+	var rect := control.get_global_rect()
+	if not get_viewport().get_visible_rect().grow(1).encloses(rect):
+		return false
+	var ancestor := control.get_parent()
+	while ancestor != null:
+		if ancestor is Control and ancestor.clip_contents and not ancestor.get_global_rect().grow(1).encloses(rect):
+			return false
+		ancestor = ancestor.get_parent()
+	return true
 
 func _open_dialog(p_title: String, p_body: String) -> Control:
 	_shell.show_modal(CONFIRMATION_DIALOG_SCENE, {})

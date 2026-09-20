@@ -90,7 +90,7 @@ func step(delta: float, target: Node3D) -> Vector3:
 				_enter(State.REPOSITION)
 		State.REPOSITION:
 			var attack := selector.choose(distance, radial_speed, phase)
-			var bounds := _space.get_combat_bounds(-60.0)
+			var bounds := _space.get_combat_bounds(-Flight.ARENA_INSET)
 			if attack != null and bounds.has_point(Vector2(_actor.global_position.x, _actor.global_position.z)):
 				var plan := Plan.new()
 				plan.configure(attack, profile, phase)

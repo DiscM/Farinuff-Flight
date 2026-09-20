@@ -45,8 +45,8 @@ func configure(value: FlightConfig) -> void:
 func _configure_camera(camera_node: Camera3D) -> void:
 	if camera_node == null:
 		return
-	# KEEP_HEIGHT preserves the 1280x720 combat span vertically and reveals
-	# additional horizontal space at wider or higher-resolution viewports.
+	# KEEP_HEIGHT preserves the configured 900-pixel combat span vertically.
+	# Wider aspect ratios reveal extra horizontal space; resolution adds detail.
 	camera_node.projection = Camera3D.PROJECTION_ORTHOGONAL
 	camera_node.keep_aspect = Camera3D.KEEP_HEIGHT
 	camera_node.size = maxf(configuration.get_orthogonal_size(), 1.0)

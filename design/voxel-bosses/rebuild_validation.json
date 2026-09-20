@@ -1,0 +1,228 @@
+{
+  "source_root": "/Users/steve/Documents/GitHub/Farinuff-Flight",
+  "isolated_root": "/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-boss-rebuild-pjwbsa_v",
+  "input_sha256": {
+    "tools/build_voxel_bosses_blender.py": "159b25b139c8070fb96ae3b6df70e44963928603c6571af01f77fa531cc98a1a",
+    "tools/build_voxel_frontier_blender.py": "81b03d2dc7bb5657b8a33c8c56680d04a76795e9b9dcac3a13bdcc372b4ab456",
+    "tools/build_combat_motion_blender.py": "deeaa5462a5058aacbb988d31e7cf8f3df2902d00228bad38f56f31e253f7950",
+    "tools/voxel_boss_motion.py": "732c5d9364a229aab699a0cb6946587f4c5f994acd46b45f1b7776ef49893765",
+    "assets/models/voxel_bosses/textures/voxel_surface_atlas.png": "777a5ed383f898bb065b861a780a3e4ba9f01eae8f1202c75e58ed8109c07768"
+  },
+  "steps": [
+    {
+      "step": "factory_startup_rebuild",
+      "exit_code": 0,
+      "elapsed_seconds": 2.15,
+      "log": "design/voxel-bosses/qa/rebuild_factory_startup_rebuild.log"
+    },
+    {
+      "step": "finalize",
+      "exit_code": 0,
+      "elapsed_seconds": 0.87,
+      "log": "design/voxel-bosses/qa/rebuild_finalize.log"
+    }
+  ],
+  "valid": true,
+  "checks": {
+    "valid": true,
+    "blender_version": "5.2.1 LTS",
+    "scenes": [
+      "Voxel Bosses | boss_assault",
+      "Voxel Bosses | boss_bulwark",
+      "Voxel Bosses | boss_tempest",
+      "Voxel Bosses | boss_tempest_core",
+      "Voxel Bosses | boss_void_harbinger",
+      "Voxel Bosses | Collection",
+      "Voxel Bosses | tempest_section"
+    ],
+    "active_scene": "Voxel Bosses | Collection",
+    "active_camera": "VB_Studio_Camera",
+    "packed_atlas_count": 1,
+    "atlas_reference": "//../textures/voxel_surface_atlas.png",
+    "external_atlas_resolves": true,
+    "assets": [
+      {
+        "scene": "Voxel Bosses | boss_assault",
+        "meshes": 6,
+        "bones": [
+          "Body",
+          "Port",
+          "Starboard",
+          "Weapon"
+        ],
+        "clips": [
+          "cruise",
+          "hit",
+          "windup",
+          "attack"
+        ]
+      },
+      {
+        "scene": "Voxel Bosses | boss_bulwark",
+        "meshes": 6,
+        "bones": [
+          "Body",
+          "Port",
+          "Starboard",
+          "Weapon"
+        ],
+        "clips": [
+          "cruise",
+          "hit",
+          "windup",
+          "attack"
+        ]
+      },
+      {
+        "scene": "Voxel Bosses | boss_tempest",
+        "meshes": 6,
+        "bones": [
+          "Body",
+          "Port",
+          "Starboard",
+          "Weapon"
+        ],
+        "clips": [
+          "cruise",
+          "hit",
+          "windup",
+          "attack"
+        ]
+      },
+      {
+        "scene": "Voxel Bosses | boss_tempest_core",
+        "meshes": 6,
+        "bones": [
+          "Body",
+          "Port",
+          "Starboard",
+          "Weapon"
+        ],
+        "clips": [
+          "cruise",
+          "hit",
+          "windup",
+          "attack"
+        ]
+      },
+      {
+        "scene": "Voxel Bosses | boss_void_harbinger",
+        "meshes": 6,
+        "bones": [
+          "Body",
+          "Port",
+          "Starboard",
+          "Weapon"
+        ],
+        "clips": [
+          "cruise",
+          "hit",
+          "windup",
+          "attack"
+        ]
+      },
+      {
+        "scene": "Voxel Bosses | tempest_section",
+        "meshes": 6,
+        "bones": [
+          "Body",
+          "Port",
+          "Starboard",
+          "Weapon"
+        ],
+        "clips": [
+          "cruise",
+          "hit",
+          "windup",
+          "attack"
+        ]
+      }
+    ]
+  },
+  "source_sha256": "c137d86e8fa32b54269ff1fd890e7fd39a53397b5d83927a3e346f1469578160",
+  "exported_assets": {
+    "boss_assault.glb": "b48a9682b04814cd11f33208caa768a14e5b51034e9a067f9dfef217aad45501",
+    "boss_bulwark.glb": "374672212306461d094c4b69b58c39074fb1094846d60f45f8d42b0fd92c2fa5",
+    "boss_tempest.glb": "98c2089b33a058e945a0cad2d3a72d3d77a55626ca964de76b726a7d8156ac07",
+    "boss_tempest_core.glb": "17d2130b243d1a25f24824ec815e8d1a57f6f6ead856a59d7c16dafd9d0ef926",
+    "boss_void_harbinger.glb": "b1c8d06ec915d85b2cc838a8e578f47fdd4ab5221ba3e7bef757ab6460c29939",
+    "tempest_section.glb": "6918ba226be81b3223db4490a58e39ef1d86796c16427ad2c5615fb60b23a269"
+  },
+  "scope": "Isolated reproducibility and saved source portability; source preview is not runtime gameplay verification.",
+  "delivered_comparison": {
+    "boss_assault.glb": {
+      "binary_payload_identical": true,
+      "json_identical_ignoring_blender_scene_suffix": true,
+      "scene_names": {
+        "delivered": [
+          "Voxel Bosses | boss_assault.002"
+        ],
+        "rebuilt": [
+          "Voxel Bosses | boss_assault"
+        ]
+      }
+    },
+    "boss_bulwark.glb": {
+      "binary_payload_identical": true,
+      "json_identical_ignoring_blender_scene_suffix": true,
+      "scene_names": {
+        "delivered": [
+          "Voxel Bosses | boss_bulwark.002"
+        ],
+        "rebuilt": [
+          "Voxel Bosses | boss_bulwark"
+        ]
+      }
+    },
+    "boss_tempest.glb": {
+      "binary_payload_identical": true,
+      "json_identical_ignoring_blender_scene_suffix": true,
+      "scene_names": {
+        "delivered": [
+          "Voxel Bosses | boss_tempest.002"
+        ],
+        "rebuilt": [
+          "Voxel Bosses | boss_tempest"
+        ]
+      }
+    },
+    "boss_tempest_core.glb": {
+      "binary_payload_identical": true,
+      "json_identical_ignoring_blender_scene_suffix": true,
+      "scene_names": {
+        "delivered": [
+          "Voxel Bosses | boss_tempest_core.002"
+        ],
+        "rebuilt": [
+          "Voxel Bosses | boss_tempest_core"
+        ]
+      }
+    },
+    "boss_void_harbinger.glb": {
+      "binary_payload_identical": true,
+      "json_identical_ignoring_blender_scene_suffix": true,
+      "scene_names": {
+        "delivered": [
+          "Voxel Bosses | boss_void_harbinger.002"
+        ],
+        "rebuilt": [
+          "Voxel Bosses | boss_void_harbinger"
+        ]
+      }
+    },
+    "tempest_section.glb": {
+      "binary_payload_identical": true,
+      "json_identical_ignoring_blender_scene_suffix": true,
+      "scene_names": {
+        "delivered": [
+          "Voxel Bosses | tempest_section.002"
+        ],
+        "rebuilt": [
+          "Voxel Bosses | tempest_section"
+        ]
+      }
+    }
+  },
+  "comparison_note": "All geometry, atlas, rig, sockets and sampled animation bytes are identical; only harmless Blender scene-name numeric suffixes differ.",
+  "reopen_log": "design/voxel-bosses/qa/rebuild_reopen.log"
+}

@@ -766,13 +766,13 @@ func _process(delta: float) -> void:
 
 func _page_context(page_id: StringName) -> String:
 	return str({
-		&"command_deck": "Follow the Return Signal through four sectors. Defeat Tempest Core at Wave 20, then return home or continue into Endless.",
-		&"expedition_map": "Select a sector to see its enemies and boss. Every run starts at Wave 1. Choose your next route after clearing a sector.",
-		&"launch_bay": "Choose a ship and optional challenges. Challenges make the run harder and earn more salvage. Supplies from the Hangar are used when you start a run.",
-		&"hangar": "Spend salvage on permanent upgrades, ships, challenges, and supplies for your next run. Blueprints unlock upgrades you can find as boss rewards.",
-		&"flight_school": "Learn to fly, shoot, and reflect enemy fire. Practice is free and gives no rewards. Meet a boss during a run to unlock practice against it.",
-		&"settings": "Changes are saved automatically. You can turn story messages off and still collect signal fragments.",
-		&"archives": "Read the signal fragments you have found. Take different routes on future runs to find them all.",
+		&"command_deck": "Defeat Tempest Core at Wave 20. Finish or continue in Endless.",
+		&"expedition_map": "Inspect sectors for threats. Runs start at Wave 1; choose routes between sectors.",
+		&"launch_bay": "Challenges increase difficulty and salvage. Supplies are used on launch.",
+		&"hangar": "Systems are permanent. Blueprints unlock boss rewards. Supplies last one run.",
+		&"flight_school": "Free practice; no rewards. Encounter bosses to unlock boss practice.",
+		&"settings": "Autosaved. Story Off still collects fragments.",
+		&"archives": "Explore both routes to collect all fragments.",
 	}.get(page_id, DEFAULT_DETAILS))
 
 

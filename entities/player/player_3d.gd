@@ -168,10 +168,9 @@ func configure_flight_space(value: FlightSpace) -> void:
 
 
 func _physics_process(delta: float) -> void:
-	# Continuous ribbon propulsion owns the wake; no detached particle beads.
-	_update_visual_feedback(delta)
 	_update_invincibility_visual(delta)
 	if not GameManager.is_game_active:
+		_update_visual_feedback(delta)
 		return
 	advance_ship_motion(delta)
 	var input_direction := Vector2(
@@ -185,6 +184,8 @@ func _physics_process(delta: float) -> void:
 	_update_power_ups(delta)
 	_update_elite_abilities(delta)
 	_update_shooting()
+	# Resolve jets and wake after movement/aim so they touch this frame's nozzles.
+	_update_visual_feedback(delta)
 
 
 func _update_visual_feedback(delta: float) -> void:
@@ -624,6 +625,8 @@ func _begin_boost() -> void:
 		boost_chained.emit()
 	is_boosting = true
 	get_ship_motion().set_boost(true)
+	if _ribbons != null:
+		_ribbons.ignite()
 	boost_duration_timer = FlightTuning.BOOST_DURATION
 	boost_reflected_projectiles = 0
 	boost_chain_window_timer = 0.0

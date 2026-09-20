@@ -1,0 +1,53 @@
+{
+  "godot": "4.6.3",
+  "date": "2026-09-20",
+  "focused_smokes": [
+    {
+      "scene": "res://tests/voxel_boss_material_smoke.tscn",
+      "log": "qa/voxel_boss_material.log",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "scene": "res://tests/native_completion_smoke.tscn",
+      "log": "qa/native_completion.log",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "scene": "res://tests/boss_ai_smoke.tscn",
+      "log": "qa/boss_ai.log",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "scene": "res://tests/boss_patterns_smoke.tscn",
+      "log": "qa/boss_patterns.log",
+      "passed": true,
+      "exit_code": 0
+    },
+    {
+      "scene": "res://tests/boss_flight_smoke.tscn",
+      "log": "qa/boss_flight.log",
+      "passed": true,
+      "exit_code": 0
+    }
+  ],
+  "static_gate": {
+    "script": "tests/check_native_completion.py",
+    "passed": true,
+    "assertions": 393
+  },
+  "gpu_texture_comparisons": 12,
+  "gpu_passed": true,
+  "live_attack_variants": 5,
+  "live_passed": true,
+  "native_scale_presentation_frames": 5,
+  "png_evidence": 21,
+  "stopped": true,
+  "limitations": [
+    "Headless exit retains dummy shader RID and ObjectDB/resource teardown diagnostics; see unfiltered logs.",
+    "Live checks use controlled, non-banking practice and first projectile attacks; not a full campaign playthrough.",
+    "Presentation frames stage native-scale held poses below HUD; actual AI frames are separate."
+  ]
+}

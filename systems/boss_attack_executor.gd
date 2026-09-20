@@ -3,6 +3,7 @@ class_name BossAttackExecutor
 ## Runs one committed attack. It cannot choose, retarget, or skip its warning.
 const Definition := preload("res://systems/boss_attack_definition.gd")
 const Hits := preload("res://systems/boss_hit_resolver.gd")
+const Flight := preload("res://systems/boss_flight_orchestrator.gd")
 signal released(attack_id: StringName)
 var plan: BossAttackPlan
 var winding_up := false
@@ -42,7 +43,7 @@ func begin(snapshot: BossAttackPlan) -> void:
 func _charge_endpoint(snapshot: BossAttackPlan) -> Vector3:
 	var direction := _space.screen_motion_to_combat(snapshot.aim)
 	var distance := snapshot.definition.charge_distance
-	var bounds := _space.get_combat_bounds(-40.0)
+	var bounds := _space.get_combat_bounds(-Flight.ARENA_INSET)
 	# Intersect a ray with the arena. Clamping X/Z independently would bend the
 	# advertised lane and let the boss turn after the player had read the tell.
 	if not is_zero_approx(direction.x):

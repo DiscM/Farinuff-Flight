@@ -1,0 +1,21 @@
+{
+	"boss_hud_alpha": 0.200000002980232,
+	"capture": "res://design/combat-scale/boss-combat-2560.png",
+	"combat_bounds": "[P: (-150.3508, -90.0), S: (300.7017, 180.0)]",
+	"enemies": [
+		{
+			"active": true,
+			"kind": "boss",
+			"root_scale": "(1.0, 1.0, 1.0)",
+			"surfaces": 39,
+			"textured_surfaces": 39,
+			"visible_pixel_envelope": "(401.3214, 259.5026)"
+		}
+	],
+	"enemy_projectiles_fired": 24,
+	"practice": true,
+	"render_size": "(2560, 1440)",
+	"ui_size": "(1280.0, 720.0)",
+	"view_bounds": "[P: (-68.34129, -40.90909), S: (136.6826, 81.81818)]",
+	"window_size": "(2560, 1440)"
+}

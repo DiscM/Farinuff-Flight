@@ -1,0 +1,165 @@
+{
+  "version": "1.0.0",
+  "authoring": "Original Blender-authored voxel assets",
+  "blender_version": "5.2.1 LTS",
+  "atlas": "textures/voxel_surface_atlas.png",
+  "assets": [
+    {
+      "id": "basic_enemy",
+      "display_name": "CINDER / Raider",
+      "file": "meshes/basic_enemy.glb",
+      "category": "enemy",
+      "bytes": 204544,
+      "sha256": "af88a72ae07f8f7bd0c030b0288b995a242789814581cacf9f1ee85a864905fa",
+      "animations": [
+        "cruise",
+        "hit",
+        "windup",
+        "attack"
+      ],
+      "meshes": 6,
+      "embedded_images": 1,
+      "voxel_size": 0.25
+    },
+    {
+      "id": "fast_enemy",
+      "display_name": "NEEDLE / Interceptor",
+      "file": "meshes/fast_enemy.glb",
+      "category": "enemy",
+      "bytes": 206112,
+      "sha256": "12b9351b9a91b1e6cf4802b444487f87fdfac0b4d875515a6b892eed55bf01c4",
+      "animations": [
+        "cruise",
+        "hit",
+        "windup",
+        "attack"
+      ],
+      "meshes": 6,
+      "embedded_images": 1,
+      "voxel_size": 0.22
+    },
+    {
+      "id": "bomber_enemy",
+      "display_name": "MANTIS / Carrier",
+      "file": "meshes/bomber_enemy.glb",
+      "category": "enemy",
+      "bytes": 303828,
+      "sha256": "9bc6ebfd3bd88ae8b227b3d6907bb34dbbd6b43270823d5f37d4461b23cd42fc",
+      "animations": [
+        "cruise",
+        "hit",
+        "windup",
+        "attack"
+      ],
+      "meshes": 6,
+      "embedded_images": 1,
+      "voxel_size": 0.28
+    },
+    {
+      "id": "tank_enemy",
+      "display_name": "BASTION / Heavy",
+      "file": "meshes/tank_enemy.glb",
+      "category": "enemy",
+      "bytes": 358572,
+      "sha256": "63b54413c4347b0bb9d3e4f9dd9b456fdc3e8b716756830e8c397103188c621b",
+      "animations": [
+        "cruise",
+        "hit",
+        "windup",
+        "attack"
+      ],
+      "meshes": 6,
+      "embedded_images": 1,
+      "voxel_size": 0.28
+    },
+    {
+      "id": "sniper_enemy",
+      "display_name": "LONGBOW / Marksman",
+      "file": "meshes/sniper_enemy.glb",
+      "category": "enemy",
+      "bytes": 206924,
+      "sha256": "43e8d42df5d124c1935e122389bd5235a26e63dccf28bdf6a1d02adbc8c95ca6",
+      "animations": [
+        "cruise",
+        "hit",
+        "windup",
+        "attack"
+      ],
+      "meshes": 6,
+      "embedded_images": 1,
+      "voxel_size": 0.24
+    },
+    {
+      "id": "relay_fragment",
+      "display_name": "Broken relay arc",
+      "file": "meshes/relay_fragment.glb",
+      "category": "debris",
+      "bytes": 80764,
+      "sha256": "d97332aa26b68c5cafc2816c3278ff528d61c641ecce3e23f8478aa2d3742a97",
+      "animations": [],
+      "meshes": 1,
+      "embedded_images": 1,
+      "voxel_size": 0.28
+    },
+    {
+      "id": "solar_fragment",
+      "display_name": "Torn solar array",
+      "file": "meshes/solar_fragment.glb",
+      "category": "debris",
+      "bytes": 74584,
+      "sha256": "9b3ea4d52f94b98e2cde4231ff78058d22342af76c83fde2350569ac441ab4bc",
+      "animations": [],
+      "meshes": 1,
+      "embedded_images": 1,
+      "voxel_size": 0.28
+    },
+    {
+      "id": "cargo_wreck",
+      "display_name": "Ruptured freight pod",
+      "file": "meshes/cargo_wreck.glb",
+      "category": "debris",
+      "bytes": 91484,
+      "sha256": "721946de1db8de7b9a655e6b4093574b056bfe4e5d32631b4b83646abcb464f4",
+      "animations": [],
+      "meshes": 1,
+      "embedded_images": 1,
+      "voxel_size": 0.28
+    },
+    {
+      "id": "engine_wreck",
+      "display_name": "Spent ion engine",
+      "file": "meshes/engine_wreck.glb",
+      "category": "debris",
+      "bytes": 101296,
+      "sha256": "a4b36758ee79c6363f293d412d97079bf343a0cb59c67ff16de9519e0edf9734",
+      "animations": [],
+      "meshes": 1,
+      "embedded_images": 1,
+      "voxel_size": 0.28
+    },
+    {
+      "id": "hull_fragment",
+      "display_name": "Sheared armor plate",
+      "file": "meshes/hull_fragment.glb",
+      "category": "debris",
+      "bytes": 68264,
+      "sha256": "e925ca30ec80af26708038012caa58074b03b863762df9b1ac289d1dd6d3a90c",
+      "animations": [],
+      "meshes": 1,
+      "embedded_images": 1,
+      "voxel_size": 0.28
+    },
+    {
+      "id": "asteroid_cluster",
+      "display_name": "Mineral-bearing asteroid",
+      "file": "meshes/asteroid_cluster.glb",
+      "category": "debris",
+      "bytes": 78072,
+      "sha256": "e4b5a515808ff9aa2b6848243d68d702b7b8105a4bf5fa7fb1280baa239375da",
+      "animations": [],
+      "meshes": 1,
+      "embedded_images": 1,
+      "voxel_size": 0.28
+    }
+  ]
+}

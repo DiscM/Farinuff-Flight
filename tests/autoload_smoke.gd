@@ -153,13 +153,13 @@ func _check_save_manager() -> void:
 	_write_save('{"high_score": 700, "settings": {}}')
 	SaveManager._load_data()
 	_expect(SaveManager.high_score == 700, "Save without a version key must still load")
-	_expect(SaveManager.get_setting("window_size") == "large", "Legacy saves default to the larger gameplay window")
+	_expect(SaveManager.get_setting("window_size") == "spacious", "Legacy saves default to the 2560x1440 gameplay window")
 	SaveManager.update_setting("window_size", "medium")
 	SaveManager.settings["window_size"] = "compact"
 	SaveManager._load_data()
 	_expect(SaveManager.get_setting("window_size") == "medium", "Window size preference survives a save/load round trip")
 	SaveManager.update_setting("window_size", "unsupported")
-	_expect(SaveManager.get_setting("window_size") == "large", "Invalid window size falls back to the larger default")
+	_expect(SaveManager.get_setting("window_size") == "spacious", "Invalid window size falls back to the larger default")
 
 	# Versioned writes are atomic and keep a recoverable previous copy.
 	SaveManager.record_high_score(701)

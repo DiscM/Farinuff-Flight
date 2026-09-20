@@ -132,15 +132,15 @@ func _build_ui() -> void:
 	outer.add_child(title)
 
 	var subtitle := Label.new()
-	subtitle.text = "Choose an upgrade for the rest of this run."
+	subtitle.text = "Lasts this run"
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	subtitle.add_theme_color_override("font_color", NeonUI.WHITE)
 	subtitle.add_theme_font_size_override("font_size", 13 if compact_layout else 16)
 	outer.add_child(subtitle)
 	if GameManager.elite_supply_pending and chosen_upgrades.is_empty():
-		subtitle.text = "All upgrades installed · Bonus reward"
+		subtitle.text = "Bonus reward"
 	elif chosen_upgrades.is_empty():
-		subtitle.text = "No upgrades left this run."
+		subtitle.text = "All upgrades installed"
 	confirmation_label = subtitle
 
 	# Cards row
@@ -181,7 +181,7 @@ func _make_empty_state() -> PanelContainer:
 	card.add_child(content)
 
 	var message := Label.new()
-	message.text = "ALL UPGRADES INSTALLED\nGain 50 orb points and 5 lives.\nOrb points also fill the wave and heart meters." if GameManager.elite_supply_pending else "NO UPGRADES LEFT\nYou already have every upgrade available this run."
+	message.text = "ALL UPGRADES INSTALLED\n+50 orb points · +5 lives" if GameManager.elite_supply_pending else "ALL UPGRADES INSTALLED"
 	message.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	message.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	message.add_theme_color_override("font_color", Color(0.75, 0.84, 0.98))
@@ -189,7 +189,7 @@ func _make_empty_state() -> PanelContainer:
 	content.add_child(message)
 
 	var continue_button := Button.new()
-	continue_button.text = "TAKE 50 ORB POINTS + 5 LIVES" if GameManager.elite_supply_pending else "CONTINUE"
+	continue_button.text = "CLAIM REWARD" if GameManager.elite_supply_pending else "CONTINUE"
 	continue_button.custom_minimum_size = Vector2(0, 36)
 	continue_button.pressed.connect(_on_empty_state_continue)
 	content.add_child(continue_button)

@@ -1,0 +1,232 @@
+{
+  "schema_version": 1,
+  "package_id": "farinuff-flight.voxel-bosses",
+  "version": "1.0.0",
+  "assets": [
+    {
+      "id": "ff.vb.boss_assault",
+      "file": "boss_assault.glb",
+      "name": "ASSAULT COMMANDER",
+      "role": "assault",
+      "mesh_nodes": 6,
+      "rig_node": "VB_boss_assault_MotionRig",
+      "bones": [
+        "Body",
+        "Port",
+        "Starboard",
+        "Weapon"
+      ],
+      "clips": [
+        "cruise",
+        "hit",
+        "windup",
+        "attack"
+      ],
+      "clip_durations_seconds": {
+        "cruise": 2.8,
+        "hit": 0.28,
+        "windup": 0.76,
+        "attack": 0.64
+      },
+      "sockets": {
+        "Socket_Muzzle": "Weapon",
+        "Socket_MuzzleCenter": "Weapon",
+        "Socket_Core": "Body",
+        "Socket_EngineLeft": "Body",
+        "Socket_EngineRight": "Body",
+        "Socket_MuzzleLeft": "Weapon",
+        "Socket_MuzzleRight": "Weapon",
+        "Socket_WingHardpointLeft": "Port",
+        "Socket_WingHardpointRight": "Starboard"
+      }
+    },
+    {
+      "id": "ff.vb.boss_bulwark",
+      "file": "boss_bulwark.glb",
+      "name": "IRON BULWARK",
+      "role": "bulwark",
+      "mesh_nodes": 6,
+      "rig_node": "VB_boss_bulwark_MotionRig",
+      "bones": [
+        "Body",
+        "Port",
+        "Starboard",
+        "Weapon"
+      ],
+      "clips": [
+        "cruise",
+        "hit",
+        "windup",
+        "attack"
+      ],
+      "clip_durations_seconds": {
+        "cruise": 3.6,
+        "hit": 0.4,
+        "windup": 1.02,
+        "attack": 0.96
+      },
+      "sockets": {
+        "Socket_Muzzle": "Weapon",
+        "Socket_MuzzleCenter": "Weapon",
+        "Socket_Core": "Body",
+        "Socket_EngineLeft": "Body",
+        "Socket_EngineRight": "Body",
+        "Socket_MuzzleLeft": "Weapon",
+        "Socket_MuzzleRight": "Weapon",
+        "Socket_ShieldEmitterLeft": "Port",
+        "Socket_ShieldEmitterRight": "Starboard"
+      }
+    },
+    {
+      "id": "ff.vb.boss_tempest",
+      "file": "boss_tempest.glb",
+      "name": "TEMPEST",
+      "role": "tempest",
+      "mesh_nodes": 6,
+      "rig_node": "VB_boss_tempest_MotionRig",
+      "bones": [
+        "Body",
+        "Port",
+        "Starboard",
+        "Weapon"
+      ],
+      "clips": [
+        "cruise",
+        "hit",
+        "windup",
+        "attack"
+      ],
+      "clip_durations_seconds": {
+        "cruise": 2.4,
+        "hit": 0.25,
+        "windup": 0.7,
+        "attack": 0.58
+      },
+      "sockets": {
+        "Socket_Muzzle": "Weapon",
+        "Socket_MuzzleCenter": "Weapon",
+        "Socket_Core": "Body",
+        "Socket_EngineLeft": "Body",
+        "Socket_EngineRight": "Body",
+        "Socket_MuzzleLeft": "Weapon",
+        "Socket_MuzzleRight": "Weapon",
+        "Socket_EmitterFrontLeft": "Port",
+        "Socket_EmitterRearLeft": "Port",
+        "Socket_EmitterFrontRight": "Starboard",
+        "Socket_EmitterRearRight": "Starboard"
+      }
+    },
+    {
+      "id": "ff.vb.boss_void_harbinger",
+      "file": "boss_void_harbinger.glb",
+      "name": "VOID HARBINGER",
+      "role": "void_harbinger",
+      "mesh_nodes": 6,
+      "rig_node": "VB_boss_void_harbinger_MotionRig",
+      "bones": [
+        "Body",
+        "Port",
+        "Starboard",
+        "Weapon"
+      ],
+      "clips": [
+        "cruise",
+        "hit",
+        "windup",
+        "attack"
+      ],
+      "clip_durations_seconds": {
+        "cruise": 4.2,
+        "hit": 0.36,
+        "windup": 0.96,
+        "attack": 0.94
+      },
+      "sockets": {
+        "Socket_Muzzle": "Weapon",
+        "Socket_MuzzleCenter": "Weapon",
+        "Socket_Core": "Body",
+        "Socket_EngineLeft": "Body",
+        "Socket_EngineRight": "Body",
+        "Socket_MuzzleLeft": "Weapon",
+        "Socket_MuzzleRight": "Weapon",
+        "Socket_CrownLeft": "Port",
+        "Socket_CrownRight": "Starboard"
+      }
+    },
+    {
+      "id": "ff.vb.boss_tempest_core",
+      "file": "boss_tempest_core.glb",
+      "name": "TEMPEST CORE",
+      "role": "tempest_core",
+      "mesh_nodes": 6,
+      "rig_node": "VB_boss_tempest_core_MotionRig",
+      "bones": [
+        "Body",
+        "Port",
+        "Starboard",
+        "Weapon"
+      ],
+      "clips": [
+        "cruise",
+        "hit",
+        "windup",
+        "attack"
+      ],
+      "clip_durations_seconds": {
+        "cruise": 3.2,
+        "hit": 0.32,
+        "windup": 0.88,
+        "attack": 0.82
+      },
+      "sockets": {
+        "Socket_Muzzle": "Weapon",
+        "Socket_MuzzleCenter": "Weapon",
+        "Socket_Core": "Body",
+        "Socket_EngineLeft": "Body",
+        "Socket_EngineRight": "Body",
+        "Socket_MuzzleLeft": "Weapon",
+        "Socket_MuzzleRight": "Weapon",
+        "Socket_SectionFront": "Body",
+        "Socket_SectionRear": "Body",
+        "Socket_SectionLeft": "Body",
+        "Socket_SectionRight": "Body"
+      }
+    },
+    {
+      "id": "ff.vb.tempest_section",
+      "file": "tempest_section.glb",
+      "name": "ORBITAL WEAPON POD",
+      "role": "section",
+      "mesh_nodes": 6,
+      "rig_node": "VB_tempest_section_MotionRig",
+      "bones": [
+        "Body",
+        "Port",
+        "Starboard",
+        "Weapon"
+      ],
+      "clips": [
+        "cruise",
+        "hit",
+        "windup",
+        "attack"
+      ],
+      "clip_durations_seconds": {
+        "cruise": 2.0,
+        "hit": 0.22,
+        "windup": 0.58,
+        "attack": 0.46
+      },
+      "sockets": {
+        "Socket_Muzzle": "Weapon",
+        "Socket_MuzzleCenter": "Weapon",
+        "Socket_Core": "Body",
+        "Socket_EngineLeft": "Body",
+        "Socket_EngineRight": "Body",
+        "Socket_MuzzleLeft": "Weapon",
+        "Socket_MuzzleRight": "Weapon",
+        "Socket_Attach": "Body"
+      }
+    }
+  ]
+}

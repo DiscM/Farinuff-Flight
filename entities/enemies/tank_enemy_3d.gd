@@ -20,6 +20,7 @@ const FIRST_BURST_MIN_SECONDS := 0.5
 const ARMOR_PLATE_COUNT := 3
 const ARMOR_ORBIT_RADIUS_PIXELS := 43.0
 const ARMOR_RADIUS_STEP_PIXELS := 3.0
+const HULL_PRESENTATION_SCALE := 1.75
 const SHOT_SPEED_EVEN_PIXELS := 245.0
 const SHOT_SPEED_ODD_PIXELS := 305.0
 const SHOT_SPEED_VARIANCE_PIXELS := 8.0
@@ -97,16 +98,17 @@ func _configure_movement() -> void:
 	_overload_state = OverloadState.IDLE
 	overload_warning.hide()
 	# A unit torus is stretched through the stable camera basis so its
-	# projected radius stays 64 baseline pixels at every actor heading.
-	var horizontal := _flight_space.screen_motion_to_combat(Vector2(64.0, 0.0)).length()
-	var vertical := _flight_space.screen_motion_to_combat(Vector2(0.0, 64.0)).length()
+	# warning and orbit remain outside the enlarged voxel hull at every heading.
+	var warning_radius := 64.0 * HULL_PRESENTATION_SCALE
+	var horizontal := _flight_space.screen_motion_to_combat(Vector2(warning_radius, 0.0)).length()
+	var vertical := _flight_space.screen_motion_to_combat(Vector2(0.0, warning_radius)).length()
 	overload_warning.global_basis = Basis.IDENTITY.scaled(Vector3(horizontal, 1.0, vertical))
 	_burst_timer = randf_range(FIRST_BURST_MIN_SECONDS, burst_interval)
 
 
 func _configure_armor_plates() -> void:
 	var plates_enabled := generation >= 2
-	var radius := (ARMOR_ORBIT_RADIUS_PIXELS + float(generation - 2) * ARMOR_RADIUS_STEP_PIXELS) * 1.3
+	var radius := (ARMOR_ORBIT_RADIUS_PIXELS + float(generation - 2) * ARMOR_RADIUS_STEP_PIXELS) * 1.3 * HULL_PRESENTATION_SCALE
 	for index in _armor_plates.size():
 		var plate := _armor_plates[index]
 		if not is_instance_valid(plate):

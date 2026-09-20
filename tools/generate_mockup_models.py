@@ -24,8 +24,8 @@ from typing import Iterable, Sequence
 
 
 ROOT = Path(__file__).resolve().parents[1]
-OUTPUT_DIR = ROOT / "assets" / "models" / "mockups"
-PREVIEW_DIR = OUTPUT_DIR / "previews"
+OUTPUT_DIR = ROOT / "assets" / "models" / "ships"
+PREVIEW_DIR = ROOT / "assets" / "models" / "mockups" / "previews"
 TAU = math.tau
 EPSILON = 1.0e-9
 

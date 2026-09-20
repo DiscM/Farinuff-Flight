@@ -9,11 +9,40 @@ var _failures: Array[String] = []
 func _ready() -> void:
 	await super._ready()
 	player.set_physics_process(false)
+	_check_texture_bridge()
 	await _check_material_sharing_and_feedback()
 	for failure in _failures:
 		push_error(failure)
 	print("PIXEL_ENEMY_MATERIAL_SMOKE_PASS" if _failures.is_empty() else "PIXEL_ENEMY_MATERIAL_SMOKE_FAIL")
 	get_tree().quit(0 if _failures.is_empty() else 1)
+
+
+func _check_texture_bridge() -> void:
+	# A non-white atlas and a non-default UV transform catch the old adapter's
+	# color-only conversion without depending on any one enemy's paint design.
+	var image := Image.create(2, 2, false, Image.FORMAT_RGBA8)
+	image.fill(Color(0.2, 0.5, 0.8))
+	var atlas := ImageTexture.create_from_image(image)
+	var source := StandardMaterial3D.new()
+	source.albedo_color = Color(0.8, 0.7, 0.6)
+	source.albedo_texture = atlas
+	source.uv1_scale = Vector3(0.5, 0.75, 1.0)
+	source.uv1_offset = Vector3(0.25, 0.1, 0.0)
+	source.emission_enabled = true
+	source.emission = Color(0.4, 0.7, 1.0)
+	source.emission_texture = atlas
+	for shader in [SurfaceLibrary.ALLOY_SHADER, SurfaceLibrary.PIXEL_SHADER]:
+		var converted := SurfaceLibrary._convert(source, shader)
+		_expect(converted.get_shader_parameter(&"albedo_texture") == atlas, "Both styles retain the authored albedo texture")
+		_expect(converted.get_shader_parameter(&"has_albedo_texture") == true, "Both styles sample the retained texture")
+		_expect(converted.get_shader_parameter(&"base_color") == source.albedo_color, "Texture factors remain authored")
+		_expect(converted.get_shader_parameter(&"uv_scale") == Vector2(.5, .75), "UV scale survives material conversion")
+		_expect(converted.get_shader_parameter(&"uv_offset") == Vector2(.25, .1), "UV offset survives material conversion")
+		_expect(converted.get_shader_parameter(&"emission_texture") == atlas, "Both styles retain authored emission maps")
+		_expect(converted.get_shader_parameter(&"has_emission_texture") == true, "Both styles sample emission maps")
+		var untextured := SurfaceLibrary._convert(StandardMaterial3D.new(), shader)
+		_expect(untextured.get_shader_parameter(&"has_albedo_texture") == false, "Legacy materials preserve their color-only behavior")
+		_expect(untextured.get_shader_parameter(&"albedo_texture") == null, "Legacy hulls never inherit another material's atlas")
 
 
 func _check_material_sharing_and_feedback() -> void:

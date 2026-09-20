@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "evidence": "Deliberately corrupted in-memory copies of delivered basic_enemy.glb; source files unchanged",
+  "status": "pass",
+  "checks": [
+    {
+      "check": "missing_material_tints",
+      "status": "pass",
+      "rejection": "Role/material tints missing; grayscale atlas requires exported base-color factors"
+    },
+    {
+      "check": "missing_uvs",
+      "status": "pass",
+      "rejection": "Missing position, normal, or UV channel"
+    },
+    {
+      "check": "missing_texture",
+      "status": "pass",
+      "rejection": "Material 0 has no base-color texture"
+    },
+    {
+      "check": "nonfinite_geometry",
+      "status": "pass",
+      "rejection": "Accessor contains nonfinite data"
+    },
+    {
+      "check": "degenerate_triangle",
+      "status": "pass",
+      "rejection": "Degenerate triangle found"
+    },
+    {
+      "check": "corrupted_embedded_png",
+      "status": "pass",
+      "rejection": "PNG chunk CRC mismatch"
+    },
+    {
+      "check": "invalid_skin_joint",
+      "status": "pass",
+      "rejection": "Joint index out of range"
+    }
+  ]
+}

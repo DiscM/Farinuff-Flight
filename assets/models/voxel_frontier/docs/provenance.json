@@ -1,0 +1,31 @@
+{
+  "schema_version": 1,
+  "package_id": "farinuff-flight.voxel-frontier",
+  "version": "1.0.0",
+  "title": "Farinuff Flight — Voxel Frontier",
+  "created_for": "Farinuff Flight",
+  "created_date": "2026-09-20",
+  "source_type": "Original geometry and texture artwork authored locally in Blender for this project",
+  "third_party_models": [],
+  "third_party_integration_references": [{"file": "effects/shaders/models/pixel_planet_enemy_3d.gdshader", "reference": "Deep-Fold PixelPlanets NoAtmosphere and GasLayers shaders", "license_spdx": "MIT", "license_file": "effects/shaders/PixelPlanets/LICENSE"}],
+  "paid_generation_provider": null,
+  "license_spdx": "NOASSERTION",
+  "license_note": "No repository-wide license grant was present when the package was authored. This package does not create a new public redistribution license. See RIGHTS.md. Third-party components elsewhere in the game retain their existing licenses.",
+  "exact_user_prompt": "Use [@Blender](plugin://computer-use@openai-bundled?app=org.blenderfoundation.blender) and create a spread of art assets for the game, try and adhere to the style and feel of the game. Please package them together as a professional would. When implementing them into the game, double check that the textures and shaders present are visible on the new assets. I'm thinking voxel enemies and debris would be nice.",
+  "negative_prompt": null,
+  "negative_prompt_note": "No separate negative prompt was supplied. This is a local Blender authoring workflow, not a paid image or mesh generation request.",
+  "style_sources": [
+    "STYLE_REFERENCE.md: Native 3D migration, palette relationships, shape and construction language",
+    "Existing Farinuff Flight runtime enemy silhouettes, materials, and space debris"
+  ],
+  "coordinate_system": {
+    "source": "Blender right-handed: +Z up, +Y forward; standard glTF Y-up conversion maps +Y source forward to -Z engine forward",
+    "runtime": "Godot/glTF right-handed: +Y up, -Z forward",
+    "units": "1 source unit = 1 glTF unit. Engine presentation may apply per-role scale; measurements in validation.json are unscaled GLB scene-space units.",
+    "pivot": "Central hull datum; geometric bounds may be asymmetric. Runtime collision and gameplay bounds remain owned by the game"
+  },
+  "validation_scope": {
+    "static": "GLB 2.0 structure, embedded PNG bytes and decoded pixels, finite positions and normals, finite in-range UVs, indexed triangle topology, nondegenerate geometry and UV triangles, valid tinted material references, rigid skeleton weights, animation keys, scene-space dimensions, no collision/helper/camera/light export, texture use, and SHA-256 package integrity",
+    "runtime": "Runtime material assignment and visual evidence are recorded separately; static GLB validation does not establish rendered appearance or frame-rate performance"
+  }
+}

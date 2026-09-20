@@ -9,6 +9,7 @@ var _picker: OptionButton
 var _fragments: Array[Resource] = []
 
 func _ready() -> void:
+	add_to_group("scalable_ui")
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	theme = preload("res://ui/themes/farinuff_frontend_theme.tres")
 	var shade := ColorRect.new()
@@ -20,9 +21,14 @@ func _ready() -> void:
 	for side in ["left", "right", "top", "bottom"]:
 		margin.add_theme_constant_override("margin_" + side, 28)
 	add_child(margin)
+	var layout := VBoxContainer.new()
+	layout.add_theme_constant_override("separation", 16)
+	margin.add_child(layout)
 	var scroll := ScrollContainer.new()
+	preload("res://ui/shared/menu_briefing.gd").enable_scroll(scroll, "Scroll recovered signal")
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	margin.add_child(scroll)
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	layout.add_child(scroll)
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 18)
 	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -32,10 +38,11 @@ func _ready() -> void:
 	title.add_theme_font_size_override("font_size", 26)
 	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	column.add_child(title)
+	preload("res://ui/shared/menu_briefing.gd").wrap_heading(title)
 	var fragments := ExpeditionManager.get_recovered_fragments()
 	_fragments = fragments
 	var progress := Label.new()
-	progress.text = "%d / 4 fragments found. Take different routes to find them all." % fragments.size()
+	progress.text = "%d / 4 FRAGMENTS" % fragments.size()
 	progress.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	column.add_child(progress)
 	var picker := OptionButton.new()
@@ -52,15 +59,15 @@ func _ready() -> void:
 	column.add_child(_body)
 	picker.item_selected.connect(func(index: int): _display_fragment(fragments[index]))
 	if fragments.is_empty():
-		_body.text = "No fragments recovered yet. Clear a route through the Broken Perimeter or Tempest Reach to recover one."
+		_body.text = "No fragments recovered."
 	else:
 		picker.select(-1)
-		_body.text = "Choose a fragment to read. NEW marks one you have not read yet."
+		_body.text = "Select a fragment."
 	_back_button = Button.new()
-	_back_button.text = "BACK TO ROUTE MAP"
+	_back_button.text = "BACK"
 	_back_button.custom_minimum_size.y = 48
 	_back_button.pressed.connect(_close)
-	column.add_child(_back_button)
+	layout.add_child(_back_button)
 	_back_button.grab_focus()
 
 func _display_fragment(fragment: Resource) -> void:

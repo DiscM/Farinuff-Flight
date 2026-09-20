@@ -17,18 +17,18 @@ const PAGE_TITLES: Array[String] = [
 	"EXPEDITION",
 ]
 const PAGE_TEXT: Array[String] = [
-	"MOVE WITH WASD OR THE ARROW KEYS. ON A GAMEPAD, USE THE LEFT STICK. AIM WITH THE MOUSE OR RIGHT STICK. HOLD FIRE TO KEEP PRESSURE ON.",
-	"BOOST THROUGH ENEMY FIRE TO EVADE AND REFLECT PROJECTILES. REFLECTED SHOTS RETURN AS YOUR GREEN FIRE.",
-	"Collect orbs to fill the meter under the wave counter. Every 12 orb points also gives you a life. A boss arrives every fifth wave.",
-	"Pick up power-ups during combat. Defeat the bosses at Waves 5, 10, and 15 to choose an upgrade for the rest of your run. Spend salvage in the Hangar on permanent upgrades.",
-	"Defeat Tempest Core at Wave 20 to complete the Expedition. Then finish your run or keep fighting in Endless mode.",
+	"Move: WASD, arrows, or left stick. Aim: mouse or right stick. Hold Fire.",
+	"Boost through shots to reflect them. Reflected shots are green.",
+	"Orbs advance the wave. Every 12 orb points restores a life. Bosses arrive every fifth wave.",
+	"Power-ups are temporary. Boss upgrades last this run. Hangar upgrades are permanent.",
+	"Defeat Tempest Core at Wave 20. Finish or continue in Endless.",
 ]
 const PAGE_TIPS: Array[String] = [
-	"TIP // Keep moving. Leave yourself room to dodge.",
-	"TIP // Reflect three shots in one boost to earn an extra boost.",
-	"TIP // Watch the heart meter to see how close you are to another life.",
-	"TIP // Open Ship Upgrades in the pause menu to review your upgrades.",
-	"TIP // Try different routes on later runs to find every signal fragment.",
+	"",
+	"Reflect 3 shots in one boost for an extra boost.",
+	"",
+	"Pause → Ship Upgrades",
+	"Explore both routes to collect all fragments.",
 ]
 
 const CYAN := Color(0.14, 0.93, 1.0)
@@ -57,7 +57,7 @@ func _ready() -> void:
 	InputBindings.bindings_changed.connect(_render_page)
 	InputBindings.device_changed.connect(_render_page)
 	_render_page()
-	_back_button.grab_focus()
+	_next_button.grab_focus()
 
 
 func _build_ui() -> void:
@@ -92,6 +92,7 @@ func _build_ui() -> void:
 	panel.add_child(margin)
 
 	var scroll := ScrollContainer.new()
+	preload("res://ui/shared/menu_briefing.gd").enable_scroll(scroll, "Scroll flight lessons")
 	scroll.custom_minimum_size = Vector2(300, minf(500.0, get_viewport_rect().size.y - 90.0))
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	margin.add_child(scroll)
@@ -123,6 +124,8 @@ func _build_ui() -> void:
 	_title.add_theme_constant_override("outline_size", 5)
 	_title.add_theme_font_size_override("font_size", 28)
 	content.add_child(_title)
+	var briefing := preload("res://ui/shared/menu_briefing.gd").wrap_heading(_title)
+	content.move_child(briefing, 0)
 
 	var rule := ColorRect.new()
 	rule.custom_minimum_size = Vector2(0.0, 2.0)
@@ -135,7 +138,7 @@ func _build_ui() -> void:
 	content.add_child(_page_title)
 
 	_body = Label.new()
-	_body.custom_minimum_size = Vector2(0.0, 146.0)
+	_body.custom_minimum_size = Vector2(0.0, 90.0)
 	_body.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_body.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -148,6 +151,9 @@ func _build_ui() -> void:
 	_tip.add_theme_color_override("font_color", Color(0.55, 0.70, 0.83))
 	_tip.add_theme_font_size_override("font_size", 12)
 	content.add_child(_tip)
+	# Teach the current lesson before offering the optional practice launch.
+	content.move_child(_practice_picker, content.get_child_count() - 1)
+	content.move_child(practice_button, content.get_child_count() - 1)
 
 	var spacer := Control.new()
 	spacer.custom_minimum_size = Vector2(0.0, 10.0)
@@ -218,6 +224,7 @@ func _render_page() -> void:
 	_page_title.text = PAGE_TITLES[_page_index]
 	_body.text = get_page_text(_page_index)
 	_tip.text = PAGE_TIPS[_page_index]
+	_tip.visible = not _tip.text.is_empty()
 	_back_button.disabled = _page_index == 0
 	_next_button.text = "DONE" if _page_index == get_page_count() - 1 else "NEXT"
 	_skip_button.text = "CLOSE" if _page_index == get_page_count() - 1 else "SKIP TUTORIAL"
@@ -233,9 +240,9 @@ func get_page_text(index: int) -> String:
 	if index < 0 or index >= PAGE_TEXT.size():
 		return ""
 	if index == 0:
-		return "Move up: %s · Left: %s · Down: %s · Right: %s.\nAim with the mouse or right stick.\nHold %s to fire. Pause: %s." % [InputBindings.binding_label("move_up"), InputBindings.binding_label("move_left"), InputBindings.binding_label("move_down"), InputBindings.binding_label("move_right"), InputBindings.binding_label("shoot"), InputBindings.binding_label("pause")]
+		return "Up %s · Left %s · Down %s · Right %s\nAim: mouse / right stick\nFire: hold %s · Pause: %s" % [InputBindings.binding_label("move_up"), InputBindings.binding_label("move_left"), InputBindings.binding_label("move_down"), InputBindings.binding_label("move_right"), InputBindings.binding_label("shoot"), InputBindings.binding_label("pause")]
 	if index == 1:
-		return "Boost with %s to reflect enemy shots back at enemies. Cyan diamond shots cannot be reflected, so dodge them." % InputBindings.binding_label("boost")
+		return "Boost: %s → reflect shots.\nDodge cyan diamonds; they cannot be reflected." % InputBindings.binding_label("boost")
 	return PAGE_TEXT[index]
 
 

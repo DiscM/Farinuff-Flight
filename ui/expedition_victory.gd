@@ -86,6 +86,7 @@ func _build_ui() -> void:
 	title.add_theme_color_override("font_color", CYAN)
 	title.add_theme_font_size_override("font_size", 26)
 	content.add_child(title)
+	preload("res://ui/shared/menu_briefing.gd").wrap_heading(title)
 
 	_wave_label = Label.new()
 	_wave_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

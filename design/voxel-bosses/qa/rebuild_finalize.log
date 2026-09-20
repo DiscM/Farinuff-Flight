@@ -1,0 +1,12 @@
+00:00.433  blend            | Read blend: "/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-boss-rebuild-pjwbsa_v/assets/models/voxel_bosses/source/voxel_bosses.blend"
+00:00.457  reports          | WARNING Library file, loading empty scene
+Blender 5.2.1 LTS (hash 9e2066aef7ef built 2026-08-25 01:35:57)
+BlenderMCP: cannot start server in background mode (blender -b) - commands would never execute
+BlenderMCP: run Blender with a GUI, or use a virtual display: xvfb-run -a blender
+BlenderMCP addon registered
+Info: Saved as "voxel_bosses.blend"
+VOXEL_BOSSES_SOURCE_READY /private/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-boss-rebuild-pjwbsa_v/assets/models/voxel_bosses/source/voxel_bosses.blend
+BlenderMCP server stopped
+BlenderMCP addon unregistered
+
+Blender quit

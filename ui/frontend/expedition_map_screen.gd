@@ -11,6 +11,7 @@ var _archives_button: Button
 var _leaving := false
 
 func _ready() -> void:
+	add_to_group("scalable_ui")
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	theme = preload("res://ui/themes/farinuff_frontend_theme.tres")
 	var shade := ColorRect.new()
@@ -22,36 +23,42 @@ func _ready() -> void:
 	for side in ["left", "right", "top", "bottom"]:
 		margin.add_theme_constant_override("margin_" + side, 24)
 	add_child(margin)
+	var layout := VBoxContainer.new()
+	layout.add_theme_constant_override("separation", 12)
+	margin.add_child(layout)
 	var scroll := ScrollContainer.new()
+	preload("res://ui/shared/menu_briefing.gd").enable_scroll(scroll, "Scroll route intelligence")
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.follow_focus = true
-	margin.add_child(scroll)
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	layout.add_child(scroll)
 	var column := VBoxContainer.new()
 	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	column.add_theme_constant_override("separation", 16)
 	scroll.add_child(column)
 	var title := Label.new()
-	title.text = "THE RETURN SIGNAL · ROUTE MAP"
+	title.text = "ROUTE MAP"
 	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	title.add_theme_font_size_override("font_size", 26)
 	column.add_child(title)
-	var instructions := Label.new()
-	instructions.text = "Fight through 20 waves to reach home. Select a sector to see its enemies and boss. Every run starts in the Far Reach. Choose your next route after clearing a sector."
-	instructions.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	column.add_child(instructions)
+	preload("res://ui/shared/menu_briefing.gd").wrap_heading(title)
 	_chart = preload("res://ui/expedition_chart.gd").new()
 	column.add_child(_chart)
 	var legend := Label.new()
-	legend.text = "◇ Available · ✓ Cleared · ◈ Discovered · ▣ Locked\nSelect a sector to see its details. The selected sector has a gold border."
+	legend.text = "◇ Available · ✓ Cleared · ◈ Discovered · ▣ Locked"
 	if ExpeditionManager.get_snapshot().expedition_clear_count > 0:
-		legend.text += "\nENDLESS · Keep fighting after Wave 20. Void Harbinger awaits at Wave 25."
+		legend.text += "\nENDLESS · Wave 21+"
 	legend.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	column.add_child(legend)
 	_launch_button = Button.new()
 	_launch_button.text = "CHOOSE SHIP · START AT WAVE 1"
 	_launch_button.custom_minimum_size.y = 48
 	_launch_button.pressed.connect(_launch)
-	column.add_child(_launch_button)
+	layout.add_child(_launch_button)
+	NeonUI.style_primary(_launch_button)
+	var secondary_actions := HBoxContainer.new()
+	secondary_actions.add_theme_constant_override("separation", 12)
+	layout.add_child(secondary_actions)
 	_archives_button = Button.new()
 	var recovered := ExpeditionManager.get_recovered_fragments().size()
 	_archives_button.text = "ARCHIVES · %d / 4 FRAGMENTS" % recovered
@@ -59,20 +66,16 @@ func _ready() -> void:
 	_archives_button.tooltip_text = "Clear a route to find a signal fragment and unlock the Archives."
 	_archives_button.custom_minimum_size.y = 44
 	_archives_button.pressed.connect(_open_archives)
-	column.add_child(_archives_button)
+	_archives_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_archives_button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	secondary_actions.add_child(_archives_button)
 	var back := Button.new()
 	back.text = "BACK"
 	back.custom_minimum_size.y = 44
 	back.pressed.connect(_close)
-	column.add_child(back)
+	back.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	secondary_actions.add_child(back)
 	_launch_button.grab_focus()
-	column.resized.connect(func():
-		if _launch_button.has_focus():
-			scroll.ensure_control_visible.call_deferred(_launch_button)
-	)
-	await get_tree().process_frame
-	if is_instance_valid(scroll) and _launch_button.has_focus():
-		scroll.ensure_control_visible(_launch_button)
 
 func get_primary_safe_action() -> Control:
 	return _launch_button

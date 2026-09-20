@@ -1,10 +1,10 @@
 [gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://entities/enemies/basic_enemy_3d.gd" id="1_enemy"]
-[ext_resource type="PackedScene" path="res://assets/models/animated/basic_enemy.glb" id="2_model"]
+[ext_resource type="PackedScene" path="res://assets/models/voxel_frontier/meshes/basic_enemy.glb" id="2_model"]
 [ext_resource type="Resource" path="res://entities/enemies/basic_enemy_generation_1.tres" id="3_stats"]
 [sub_resource type="BoxShape3D" id="BoxShape3D_hitbox"]
-size = Vector3(2.998474, 0.500000, 3.190909)
+size = Vector3(5.247329, 0.500000, 5.584091)
 
 [node name="BasicEnemy3D" type="Area3D"]
 editor_description = "Scene-managed Basic Enemy Generations I–IV. Inert until activate(); Y=0 combat root. Enlarged readable hull with an inset, world-aligned contact envelope under the shared 70-degree camera. Generation III charge and Generation IV fragments use wrapper-owned sockets."
@@ -25,32 +25,32 @@ disabled = true
 position = Vector3(0, 0.08, 0)
 
 [node name="BasicHullGLB" parent="Visuals" instance=ExtResource("2_model")]
-scale = Vector3(0.675000, 0.675000, 0.675000)
+scale = Vector3(1.181250, 1.181250, 1.181250)
 
 [node name="Attachments" type="Node3D" parent="."]
 
 [node name="Sockets" type="Node3D" parent="Attachments"]
 
 [node name="MuzzleCenter" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(0.000000, 0.161000, -2.011500)
+position = Vector3(0.000000, 0.221750, -3.520125)
 
 [node name="EngineLeft" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(-0.418500, 0.114500, 1.242000)
+position = Vector3(-0.732375, 0.140375, 2.173500)
 
 [node name="EngineRight" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(0.418500, 0.114500, 1.242000)
+position = Vector3(0.732375, 0.140375, 2.173500)
 
 [node name="Core" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(0.000000, 0.260000, 0.000000)
+position = Vector3(0.000000, 0.395000, 0.000000)
 
 [node name="Death" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(0.000000, 0.260000, 0.000000)
+position = Vector3(0.000000, 0.395000, 0.000000)
 
 [node name="FragmentLeft" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(-0.330000, 0.230000, 0.630000)
+position = Vector3(-0.577500, 0.342500, 1.102500)
 
 [node name="FragmentRight" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(0.330000, 0.230000, 0.630000)
+position = Vector3(0.577500, 0.342500, 1.102500)
 
 [node name="Modules" type="Node3D" parent="Attachments"]
 

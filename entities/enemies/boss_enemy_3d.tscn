@@ -2,12 +2,12 @@
 
 [ext_resource type="Script" path="res://entities/enemies/boss_enemy_3d.gd" id="1"]
 [ext_resource type="Script" path="res://entities/enemies/boss_section_3d.gd" id="2"]
-[ext_resource type="PackedScene" path="res://assets/models/mockups/tempest_section_mockup.glb" id="3"]
-[ext_resource type="PackedScene" path="res://assets/models/animated/boss_assault.glb" id="model0"]
-[ext_resource type="PackedScene" path="res://assets/models/animated/boss_bulwark.glb" id="model1"]
-[ext_resource type="PackedScene" path="res://assets/models/animated/boss_tempest.glb" id="model2"]
-[ext_resource type="PackedScene" path="res://assets/models/animated/boss_void_harbinger.glb" id="model3"]
-[ext_resource type="PackedScene" path="res://assets/models/animated/boss_tempest_core.glb" id="model4"]
+[ext_resource type="PackedScene" path="res://assets/models/voxel_bosses/meshes/tempest_section.glb" id="3"]
+[ext_resource type="PackedScene" path="res://assets/models/voxel_bosses/meshes/boss_assault.glb" id="model0"]
+[ext_resource type="PackedScene" path="res://assets/models/voxel_bosses/meshes/boss_bulwark.glb" id="model1"]
+[ext_resource type="PackedScene" path="res://assets/models/voxel_bosses/meshes/boss_tempest.glb" id="model2"]
+[ext_resource type="PackedScene" path="res://assets/models/voxel_bosses/meshes/boss_void_harbinger.glb" id="model3"]
+[ext_resource type="PackedScene" path="res://assets/models/voxel_bosses/meshes/boss_tempest_core.glb" id="model4"]
 [ext_resource type="Shader" path="res://effects/shaders/native_telegraph_3d.gdshader" id="4_telegraph"]
 [ext_resource type="Script" path="res://systems/boss_flight_orchestrator.gd" id="flight_ai"]
 [ext_resource type="Script" path="res://systems/boss_ai.gd" id="boss_ai"]
@@ -21,12 +21,12 @@
 [ext_resource type="Script" path="res://systems/boss_projectile_patterns.gd" id="patterns"]
 
 [sub_resource type="BoxShape3D" id="Hull"]
-size = Vector3(6.8, 1.0, 6.2)
+size = Vector3(10.88, 1.0, 9.92)
 [sub_resource type="SphereShape3D" id="Pod"]
-radius = 1.6
+radius = 2.56
 [sub_resource type="TorusMesh" id="Warning"]
-inner_radius = 4.8
-outer_radius = 5.05
+inner_radius = 7.68
+outer_radius = 8.08
 rings = 32
 ring_segments = 6
 [sub_resource type="ShaderMaterial" id="WarningMaterial"]
@@ -41,6 +41,7 @@ collision_mask = 0
 monitoring = false
 monitorable = false
 script = ExtResource("1")
+surface_style = 1
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("Hull")
 disabled = true
@@ -58,14 +59,23 @@ script = ExtResource("presentation")
 script = ExtResource("patterns")
 [node name="Visuals" type="Node3D" parent="."]
 [node name="assault" parent="Visuals" instance=ExtResource("model0")]
+scale = Vector3(1.6, 1.6, 1.6)
 [node name="bulwark" parent="Visuals" instance=ExtResource("model1")]
+scale = Vector3(1.6, 1.6, 1.6)
+visible = false
 [node name="tempest" parent="Visuals" instance=ExtResource("model2")]
+scale = Vector3(1.6, 1.6, 1.6)
+visible = false
 [node name="void_harbinger" parent="Visuals" instance=ExtResource("model3")]
+scale = Vector3(1.6, 1.6, 1.6)
+visible = false
 [node name="tempest_core" parent="Visuals" instance=ExtResource("model4")]
+scale = Vector3(1.6, 1.6, 1.6)
+visible = false
 [node name="Attachments" type="Node3D" parent="."]
 [node name="Sockets" type="Node3D" parent="Attachments"]
 [node name="MuzzleCenter" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(0, 0.2, -4)
+position = Vector3(0, 0.32, -6.4)
 [node name="Sections" type="Node3D" parent="Attachments"]
 [node name="Warning" type="MeshInstance3D" parent="Attachments"]
 visible = false
@@ -73,7 +83,7 @@ position = Vector3(0, 0.08, 0)
 mesh = SubResource("Warning")
 material_override = SubResource("WarningMaterial")
 [node name="Left" type="Area3D" parent="Attachments/Sections"]
-position = Vector3(-5.8, 0, 0)
+position = Vector3(-9.28, 0, 0)
 collision_layer = 0
 collision_mask = 0
 monitoring = false
@@ -83,9 +93,9 @@ script = ExtResource("2")
 shape = SubResource("Pod")
 disabled = true
 [node name="Model" parent="Attachments/Sections/Left" instance=ExtResource("3")]
-scale = Vector3(0.4, 0.4, 0.4)
+scale = Vector3(0.64, 0.64, 0.64)
 [node name="Right" type="Area3D" parent="Attachments/Sections"]
-position = Vector3(5.8, 0, 0)
+position = Vector3(9.28, 0, 0)
 collision_layer = 0
 collision_mask = 0
 monitoring = false
@@ -95,4 +105,4 @@ script = ExtResource("2")
 shape = SubResource("Pod")
 disabled = true
 [node name="Model" parent="Attachments/Sections/Right" instance=ExtResource("3")]
-scale = Vector3(0.4, 0.4, 0.4)
+scale = Vector3(0.64, 0.64, 0.64)

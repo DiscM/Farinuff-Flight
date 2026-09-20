@@ -10,10 +10,13 @@ const CatalogIcons := preload("res://ui/catalog_icons.gd")
 var _salvage_label: Label
 var _rows_by_id: Dictionary = {}
 var _wallet_connected: bool = false
+var _close_button: Button
 
 ## Sets up the shop as a process-always full-rect control, builds the UI,
 ## and listens for wallet changes so the balance stays current.
 func _ready() -> void:
+	add_to_group("scalable_ui")
+	theme = preload("res://ui/themes/farinuff_frontend_theme.tres")
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	_build_ui()
@@ -59,6 +62,7 @@ func _build_ui() -> void:
 	title.add_theme_font_size_override("font_size", 28)
 	title.add_theme_color_override("font_color", Color(1.0, 0.8, 0.25))
 	column.add_child(title)
+	preload("res://ui/shared/menu_briefing.gd").wrap_heading(title)
 
 	_salvage_label = Label.new()
 	_salvage_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -67,16 +71,10 @@ func _build_ui() -> void:
 	column.add_child(_salvage_label)
 	_refresh_salvage_label()
 
-	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(400, 360)
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	column.add_child(scroll)
-
 	var list := VBoxContainer.new()
 	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	list.add_theme_constant_override("separation", 8)
-	scroll.add_child(list)
+	column.add_child(list)
 
 	_add_category_header(list, "PERMANENT UPGRADES")
 	for item in MetaProgression.SHOP_ITEMS:
@@ -97,14 +95,6 @@ func _build_ui() -> void:
 	for item in MetaProgression.CONSUMABLE_ITEMS:
 		_add_item_row(list, item)
 
-	var note := Label.new()
-	note.text = "Earn salvage by defeating bosses and finishing runs. Clearing a boss wave for the first time earns a bonus."
-	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	note.add_theme_font_size_override("font_size", 12)
-	note.add_theme_color_override("font_color", Color(0.55, 0.65, 0.8))
-	column.add_child(note)
-
 	var stats := Label.new()
 	stats.text = "TOTAL RUNS: %d · KILLS: %d · BEST WAVE: %d" % [
 		MetaProgression.stat_total_runs,
@@ -117,13 +107,19 @@ func _build_ui() -> void:
 	column.add_child(stats)
 
 	var close_button := Button.new()
+	_close_button = close_button
+	close_button.name = "CloseButton"
 	close_button.text = "CLOSE"
 	close_button.custom_minimum_size = Vector2(180, 44)
 	close_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	close_button.add_theme_font_size_override("font_size", 18)
 	close_button.pressed.connect(_on_close_pressed)
 	column.add_child(close_button)
+	preload("res://ui/shared/menu_briefing.gd").fit_panel(panel, column, [close_button])
 	close_button.grab_focus()
+
+func get_primary_safe_action() -> Control:
+	return _close_button
 
 func _add_category_header(parent: VBoxContainer, text: String) -> void:
 	var header := Label.new()

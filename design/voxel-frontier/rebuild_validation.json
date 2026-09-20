@@ -1,0 +1,236 @@
+{
+  "validated_at_utc": "2026-09-20T20:59:41.805433+00:00",
+  "isolated_root": "/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-rebuild-pzdp1ot3",
+  "live_assets_modified": false,
+  "input_sha256": {
+    "tools/build_voxel_frontier_blender.py": "81b03d2dc7bb5657b8a33c8c56680d04a76795e9b9dcac3a13bdcc372b4ab456",
+    "tools/build_combat_motion_blender.py": "deeaa5462a5058aacbb988d31e7cf8f3df2902d00228bad38f56f31e253f7950",
+    "assets/models/voxel_frontier/textures/voxel_surface_atlas.png": "777a5ed383f898bb065b861a780a3e4ba9f01eae8f1202c75e58ed8109c07768"
+  },
+  "commands": [
+    {
+      "stage": "build",
+      "argv": [
+        "/Applications/Blender.app/Contents/MacOS/Blender",
+        "--background",
+        "--factory-startup",
+        "--python",
+        "/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-rebuild-pzdp1ot3/tools/build_voxel_frontier_blender.py"
+      ],
+      "exit_code": 0,
+      "log": "/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-rebuild-pzdp1ot3/build.log",
+      "python_traceback": false
+    },
+    {
+      "stage": "finalize",
+      "argv": [
+        "/Applications/Blender.app/Contents/MacOS/Blender",
+        "--background",
+        "/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-rebuild-pzdp1ot3/assets/models/voxel_frontier/source/voxel_frontier.blend",
+        "--python",
+        "/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-rebuild-pzdp1ot3/tools/build_voxel_frontier_blender.py",
+        "--",
+        "--finalize-source"
+      ],
+      "exit_code": 0,
+      "log": "/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-rebuild-pzdp1ot3/finalize.log",
+      "python_traceback": false
+    },
+    {
+      "stage": "reopen",
+      "argv": [
+        "/Applications/Blender.app/Contents/MacOS/Blender",
+        "--background",
+        "/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-rebuild-pzdp1ot3/assets/models/voxel_frontier/source/voxel_frontier.blend",
+        "--python",
+        "/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-rebuild-pzdp1ot3/verify_reopened_source.py"
+      ],
+      "exit_code": 0,
+      "log": "/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-rebuild-pzdp1ot3/reopen.log",
+      "python_traceback": false
+    }
+  ],
+  "source_checks": {
+    "scene_count": 12,
+    "scene_names": [
+      "Voxel Frontier | asteroid_cluster",
+      "Voxel Frontier | basic_enemy",
+      "Voxel Frontier | bomber_enemy",
+      "Voxel Frontier | cargo_wreck",
+      "Voxel Frontier | Collection",
+      "Voxel Frontier | engine_wreck",
+      "Voxel Frontier | fast_enemy",
+      "Voxel Frontier | hull_fragment",
+      "Voxel Frontier | relay_fragment",
+      "Voxel Frontier | sniper_enemy",
+      "Voxel Frontier | solar_fragment",
+      "Voxel Frontier | tank_enemy"
+    ],
+    "active_scene": "Voxel Frontier | Collection",
+    "collection_camera": "VF_Studio_Camera",
+    "camera_type": "ORTHO",
+    "packed_atlases": [
+      {
+        "name": "voxel_surface_atlas.png",
+        "packed": true,
+        "size": [
+          256,
+          256
+        ],
+        "filepath": "//../textures/voxel_surface_atlas.png"
+      }
+    ],
+    "source_enemy_clips": {
+      "basic_enemy": [
+        "attack",
+        "cruise",
+        "hit",
+        "windup"
+      ],
+      "bomber_enemy": [
+        "attack",
+        "cruise",
+        "hit",
+        "windup"
+      ],
+      "fast_enemy": [
+        "attack",
+        "cruise",
+        "hit",
+        "windup"
+      ],
+      "sniper_enemy": [
+        "attack",
+        "cruise",
+        "hit",
+        "windup"
+      ],
+      "tank_enemy": [
+        "attack",
+        "cruise",
+        "hit",
+        "windup"
+      ]
+    },
+    "blender_version": "5.2.1 LTS",
+    "passed": true,
+    "portable_texture_path": true
+  },
+  "glbs": [
+    {
+      "id": "asteroid_cluster",
+      "bytes": 78044,
+      "clips": [],
+      "embedded_images": 1,
+      "textured_materials": 4,
+      "materials": 4
+    },
+    {
+      "id": "basic_enemy",
+      "bytes": 204464,
+      "clips": [
+        "attack",
+        "cruise",
+        "hit",
+        "windup"
+      ],
+      "embedded_images": 1,
+      "textured_materials": 5,
+      "materials": 5
+    },
+    {
+      "id": "bomber_enemy",
+      "bytes": 303748,
+      "clips": [
+        "attack",
+        "cruise",
+        "hit",
+        "windup"
+      ],
+      "embedded_images": 1,
+      "textured_materials": 5,
+      "materials": 5
+    },
+    {
+      "id": "cargo_wreck",
+      "bytes": 91456,
+      "clips": [],
+      "embedded_images": 1,
+      "textured_materials": 4,
+      "materials": 4
+    },
+    {
+      "id": "engine_wreck",
+      "bytes": 101268,
+      "clips": [],
+      "embedded_images": 1,
+      "textured_materials": 4,
+      "materials": 4
+    },
+    {
+      "id": "fast_enemy",
+      "bytes": 206036,
+      "clips": [
+        "attack",
+        "cruise",
+        "hit",
+        "windup"
+      ],
+      "embedded_images": 1,
+      "textured_materials": 4,
+      "materials": 4
+    },
+    {
+      "id": "hull_fragment",
+      "bytes": 68236,
+      "clips": [],
+      "embedded_images": 1,
+      "textured_materials": 4,
+      "materials": 4
+    },
+    {
+      "id": "relay_fragment",
+      "bytes": 80732,
+      "clips": [],
+      "embedded_images": 1,
+      "textured_materials": 5,
+      "materials": 5
+    },
+    {
+      "id": "sniper_enemy",
+      "bytes": 206844,
+      "clips": [
+        "attack",
+        "cruise",
+        "hit",
+        "windup"
+      ],
+      "embedded_images": 1,
+      "textured_materials": 5,
+      "materials": 5
+    },
+    {
+      "id": "solar_fragment",
+      "bytes": 74552,
+      "clips": [],
+      "embedded_images": 1,
+      "textured_materials": 5,
+      "materials": 5
+    },
+    {
+      "id": "tank_enemy",
+      "bytes": 358492,
+      "clips": [
+        "attack",
+        "cruise",
+        "hit",
+        "windup"
+      ],
+      "embedded_images": 1,
+      "textured_materials": 5,
+      "materials": 5
+    }
+  ],
+  "passed": true,
+  "summary": "Isolated factory-startup build, source finalization, and reopen passed: 12 scenes; active Collection; packed atlas; presentation camera; 11 textured GLBs; 4 clips in each of 5 enemies."
+}

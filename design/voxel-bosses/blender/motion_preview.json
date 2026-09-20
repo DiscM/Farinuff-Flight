@@ -1,0 +1,57 @@
+{
+  "valid": true,
+  "kind": "Blender source animation preview; not gameplay footage",
+  "resolution": [
+    1050,
+    875
+  ],
+  "sampled_frames": 36,
+  "sampled_fps": 10,
+  "gif_frames_after_hold_compaction": 19,
+  "duration_ms": 3600,
+  "loop": true,
+  "global_palette_colors": 256,
+  "source_unmodified": true,
+  "source_sha256": "c137d86e8fa32b54269ff1fd890e7fd39a53397b5d83927a3e346f1469578160",
+  "motion_pixel_checks": {
+    "assault": {
+      "windup_changed_pixels": 5468,
+      "attack_changed_pixels": 5103,
+      "settled_changed_pixels": 0
+    },
+    "bulwark": {
+      "windup_changed_pixels": 8324,
+      "attack_changed_pixels": 6919,
+      "settled_changed_pixels": 0
+    },
+    "tempest": {
+      "windup_changed_pixels": 11606,
+      "attack_changed_pixels": 10763,
+      "settled_changed_pixels": 0
+    },
+    "void_harbinger": {
+      "windup_changed_pixels": 6216,
+      "attack_changed_pixels": 7048,
+      "settled_changed_pixels": 0
+    },
+    "tempest_core": {
+      "windup_changed_pixels": 6379,
+      "attack_changed_pixels": 5404,
+      "settled_changed_pixels": 0
+    },
+    "section": {
+      "windup_changed_pixels": 1266,
+      "attack_changed_pixels": 1679,
+      "settled_changed_pixels": 0
+    }
+  },
+  "output_sha256": "83a084eddd8ad6301c97e9533c308114a191b1f451a695605ebdb58aecfed274",
+  "output_bytes": 3610521,
+  "renderer": "tools/render_voxel_boss_preview.py",
+  "source_kind": "isolated validated rebuild",
+  "rebuild_validation": "design/voxel-bosses/rebuild_validation.json",
+  "delivered_source_sha256": "c16e4b9323c4f5c4c313a4c58a1a5a20c13818e6a201580fe059231639e63368",
+  "source_equivalence": "The source_sha256 field identifies the isolated rebuilt .blend. Rebuild validation confirms identical GLB geometry, atlas, rig, socket and sampled-animation binary payloads; Blender scene-name suffixes and source bookkeeping differ. The archive manifest hashes the separately delivered .blend.",
+  "source_relative_path": "assets/models/voxel_bosses/source/voxel_bosses.blend",
+  "source_identity_note": "source_sha256 identifies the actual isolated rebuilt .blend used for rendering, not the delivered .blend. Source presentation data can differ between Blender sessions; the rebuild receipt verifies the six exported geometry, texture, rig, socket, and animation binary payloads are identical to the delivered assets."
+}

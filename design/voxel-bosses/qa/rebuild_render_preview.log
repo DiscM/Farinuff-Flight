@@ -1,0 +1,82 @@
+00:00.419  blend            | Read blend: "/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-boss-rebuild-pjwbsa_v/assets/models/voxel_bosses/source/voxel_bosses.blend"
+00:04.556  render           | Saved: '/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-boss-rebuild-pjwbsa_v/motion_frames/frame_000.png'
+BlenderMCP: cannot start server in background mode (blender -b) - commands would never execute
+BlenderMCP: run Blender with a GUI, or use a virtual display: xvfb-run -a blender
+BlenderMCP addon registered
+VOXEL_BOSS_PREVIEW_FRAME 1/36 source_frame=0
+00:08.000  render           | Saved: '/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-boss-rebuild-pjwbsa_v/motion_frames/frame_001.png'
+VOXEL_BOSS_PREVIEW_FRAME 2/36 source_frame=3
+00:10.850  render           | Saved: '/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-boss-rebuild-pjwbsa_v/motion_frames/frame_002.png'
+VOXEL_BOSS_PREVIEW_FRAME 3/36 source_frame=6
+00:13.426  render           | Saved: '/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-boss-rebuild-pjwbsa_v/motion_frames/frame_003.png'
+VOXEL_BOSS_PREVIEW_FRAME 4/36 source_frame=9
+00:16.051  render           | Saved: '/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-boss-rebuild-pjwbsa_v/motion_frames/frame_004.png'
+VOXEL_BOSS_PREVIEW_FRAME 5/36 source_frame=12
+00:17.975  render           | Saved: '/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-boss-rebuild-pjwbsa_v/motion_frames/frame_005.png'
+VOXEL_BOSS_PREVIEW_FRAME 6/36 source_frame=15
+00:19.770  render           | Saved: '/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-boss-rebuild-pjwbsa_v/motion_frames/frame_006.png'
+VOXEL_BOSS_PREVIEW_FRAME 7/36 source_frame=18
+00:21.979  render           | Saved: '/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-boss-rebuild-pjwbsa_v/motion_frames/frame_007.png'
+VOXEL_BOSS_PREVIEW_FRAME 8/36 source_frame=21
+00:23.912  render           | Saved: '/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-boss-rebuild-pjwbsa_v/motion_frames/frame_008.png'
+VOXEL_BOSS_PREVIEW_FRAME 9/36 source_frame=24
+00:25.654  render           | Saved: '/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-boss-rebuild-pjwbsa_v/motion_frames/frame_009.png'
+VOXEL_BOSS_PREVIEW_FRAME 10/36 source_frame=27
+00:27.388  render           | Saved: '/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-boss-rebuild-pjwbsa_v/motion_frames/frame_010.png'
+VOXEL_BOSS_PREVIEW_FRAME 11/36 source_frame=30
+00:29.145  render           | Saved: '/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-boss-rebuild-pjwbsa_v/motion_frames/frame_011.png'
+VOXEL_BOSS_PREVIEW_FRAME 12/36 source_frame=33
+00:31.101  render           | Saved: '/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-boss-rebuild-pjwbsa_v/motion_frames/frame_012.png'
+VOXEL_BOSS_PREVIEW_FRAME 13/36 source_frame=36
+00:33.408  render           | Saved: '/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-boss-rebuild-pjwbsa_v/motion_frames/frame_013.png'
+VOXEL_BOSS_PREVIEW_FRAME 14/36 source_frame=39
+00:35.374  render           | Saved: '/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-boss-rebuild-pjwbsa_v/motion_frames/frame_014.png'
+VOXEL_BOSS_PREVIEW_FRAME 15/36 source_frame=42
+00:37.291  render           | Saved: '/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-boss-rebuild-pjwbsa_v/motion_frames/frame_015.png'
+VOXEL_BOSS_PREVIEW_FRAME 16/36 source_frame=45
+00:39.108  render           | Saved: '/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-boss-rebuild-pjwbsa_v/motion_frames/frame_016.png'
+VOXEL_BOSS_PREVIEW_FRAME 17/36 source_frame=48
+00:40.837  render           | Saved: '/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-boss-rebuild-pjwbsa_v/motion_frames/frame_017.png'
+VOXEL_BOSS_PREVIEW_FRAME 18/36 source_frame=51
+00:42.499  render           | Saved: '/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-boss-rebuild-pjwbsa_v/motion_frames/frame_018.png'
+VOXEL_BOSS_PREVIEW_FRAME 19/36 source_frame=54
+00:44.661  render           | Saved: '/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-boss-rebuild-pjwbsa_v/motion_frames/frame_019.png'
+VOXEL_BOSS_PREVIEW_FRAME 20/36 source_frame=57
+00:47.067  render           | Saved: '/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-boss-rebuild-pjwbsa_v/motion_frames/frame_020.png'
+VOXEL_BOSS_PREVIEW_FRAME 21/36 source_frame=60
+00:49.580  render           | Saved: '/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-boss-rebuild-pjwbsa_v/motion_frames/frame_021.png'
+VOXEL_BOSS_PREVIEW_FRAME 22/36 source_frame=63
+00:51.896  render           | Saved: '/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-boss-rebuild-pjwbsa_v/motion_frames/frame_022.png'
+VOXEL_BOSS_PREVIEW_FRAME 23/36 source_frame=66
+00:54.258  render           | Saved: '/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-boss-rebuild-pjwbsa_v/motion_frames/frame_023.png'
+VOXEL_BOSS_PREVIEW_FRAME 24/36 source_frame=69
+00:57.718  render           | Saved: '/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-boss-rebuild-pjwbsa_v/motion_frames/frame_024.png'
+VOXEL_BOSS_PREVIEW_FRAME 25/36 source_frame=72
+01:02.054  render           | Saved: '/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-boss-rebuild-pjwbsa_v/motion_frames/frame_025.png'
+VOXEL_BOSS_PREVIEW_FRAME 26/36 source_frame=75
+01:06.813  render           | Saved: '/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-boss-rebuild-pjwbsa_v/motion_frames/frame_026.png'
+VOXEL_BOSS_PREVIEW_FRAME 27/36 source_frame=78
+01:11.092  render           | Saved: '/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-boss-rebuild-pjwbsa_v/motion_frames/frame_027.png'
+VOXEL_BOSS_PREVIEW_FRAME 28/36 source_frame=81
+01:14.866  render           | Saved: '/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-boss-rebuild-pjwbsa_v/motion_frames/frame_028.png'
+VOXEL_BOSS_PREVIEW_FRAME 29/36 source_frame=84
+01:18.143  render           | Saved: '/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-boss-rebuild-pjwbsa_v/motion_frames/frame_029.png'
+VOXEL_BOSS_PREVIEW_FRAME 30/36 source_frame=87
+01:21.603  render           | Saved: '/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-boss-rebuild-pjwbsa_v/motion_frames/frame_030.png'
+VOXEL_BOSS_PREVIEW_FRAME 31/36 source_frame=90
+01:25.283  render           | Saved: '/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-boss-rebuild-pjwbsa_v/motion_frames/frame_031.png'
+VOXEL_BOSS_PREVIEW_FRAME 32/36 source_frame=93
+01:28.813  render           | Saved: '/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-boss-rebuild-pjwbsa_v/motion_frames/frame_032.png'
+VOXEL_BOSS_PREVIEW_FRAME 33/36 source_frame=96
+01:32.266  render           | Saved: '/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-boss-rebuild-pjwbsa_v/motion_frames/frame_033.png'
+VOXEL_BOSS_PREVIEW_FRAME 34/36 source_frame=99
+01:35.573  render           | Saved: '/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-boss-rebuild-pjwbsa_v/motion_frames/frame_034.png'
+VOXEL_BOSS_PREVIEW_FRAME 35/36 source_frame=102
+01:39.138  render           | Saved: '/var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-boss-rebuild-pjwbsa_v/motion_frames/frame_035.png'
+VOXEL_BOSS_PREVIEW_FRAME 36/36 source_frame=105
+VOXEL_BOSS_PREVIEW_COMPLETE /var/folders/xj/4c7w7_kd777gy2kl1xtm2zhc0000gn/T/farinuff-voxel-boss-rebuild-pjwbsa_v/motion_frames
+BlenderMCP server stopped
+BlenderMCP addon unregistered
+Blender 5.2.1 LTS (hash 9e2066aef7ef built 2026-08-25 01:35:57)
+
+Blender quit

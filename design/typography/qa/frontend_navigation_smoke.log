@@ -1,0 +1,22 @@
+Godot Engine v4.6.3.stable.official.7d41c59c4 - https://godotengine.org
+
+ERROR: FrontendShell: unknown page id 'profile'
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] show_page (res://ui/frontend/frontend_shell.gd:148)
+       [1] _check_unknown_page_rejected (res://tests/frontend_navigation_smoke.gd:69)
+       [2] _run (res://tests/frontend_navigation_smoke.gd:40)
+       [3] _wait_frames (res://tests/frontend_navigation_smoke.gd:316)
+WARNING: FrontendShell: refusing page change while a modal is open
+     at: push_warning (core/variant/variant_utility.cpp:1034)
+     GDScript backtrace (most recent call first):
+         [0] show_page (res://ui/frontend/frontend_shell.gd:145)
+         [1] _check_modal_exclusive_and_blocking (res://tests/frontend_navigation_smoke.gd:143)
+         [2] _wait_frames (res://tests/frontend_navigation_smoke.gd:316)
+ERROR: FrontendShell: a modal is already open; modals are exclusive
+   at: push_error (core/variant/variant_utility.cpp:1024)
+   GDScript backtrace (most recent call first):
+       [0] show_modal (res://ui/frontend/frontend_shell.gd:187)
+       [1] _check_modal_exclusive_and_blocking (res://tests/frontend_navigation_smoke.gd:148)
+       [2] _wait_frames (res://tests/frontend_navigation_smoke.gd:316)
+FRONTEND_NAVIGATION_SMOKE_PASS

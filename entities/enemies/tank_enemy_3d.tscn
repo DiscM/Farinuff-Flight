@@ -1,12 +1,12 @@
 [gd_scene load_steps=8 format=3]
 
 [ext_resource type="Script" path="res://entities/enemies/tank_enemy_3d.gd" id="1_enemy"]
-[ext_resource type="PackedScene" path="res://assets/models/animated/tank_enemy.glb" id="2_model"]
+[ext_resource type="PackedScene" path="res://assets/models/voxel_frontier/meshes/tank_enemy.glb" id="2_model"]
 [ext_resource type="Resource" path="res://entities/enemies/tank_enemy_generation_1.tres" id="3_stats"]
 [ext_resource type="PackedScene" path="res://entities/enemies/tank_plate_3d.tscn" id="5_plate"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_hitbox"]
-size = Vector3(5.002586, 0.500000, 5.323636)
+size = Vector3(8.754525, 0.500000, 9.316363)
 
 [sub_resource type="StandardMaterial3D" id="Material_overload"]
 shading_mode = 0
@@ -24,7 +24,7 @@ ring_segments = 8
 material = SubResource("Material_overload")
 
 [node name="TankEnemy3D" type="Area3D"]
-editor_description = "Scene-managed Tank Enemy Generations I-IV. Inert until activate(); Y=0 combat root. The box preserves the 48x48 baseline-pixel reference envelope under the shared camera; Generations II-IV add three native orbiting armor plates."
+editor_description = "Scene-managed Tank Enemy Generations I-IV. Inert until activate(); Y=0 combat root. The enlarged voxel hull has a matching inset target envelope; Generations II-IV add three native orbiting armor plates."
 collision_layer = 0
 collision_mask = 0
 monitoring = false
@@ -42,32 +42,32 @@ disabled = true
 position = Vector3(0, 0.08, 0)
 
 [node name="TankHullGLB" parent="Visuals" instance=ExtResource("2_model")]
-scale = Vector3(0.884000, 0.884000, 0.884000)
+scale = Vector3(1.547000, 1.547000, 1.547000)
 
 [node name="Attachments" type="Node3D" parent="."]
 
 [node name="Sockets" type="Node3D" parent="Attachments"]
 
 [node name="MuzzleCenter" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(0.000000, 0.433600, -2.598700)
+position = Vector3(0.000000, 0.698800, -4.547725)
 
 [node name="EngineLeft" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(-2.015000, 0.098200, 2.421900)
+position = Vector3(-3.526250, 0.111850, 4.238325)
 
 [node name="EngineRight" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(2.015000, 0.098200, 2.421900)
+position = Vector3(3.526250, 0.111850, 4.238325)
 
 [node name="ArmorLeft" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(-2.275000, 0.171000, 0.286000)
+position = Vector3(-3.981250, 0.239250, 0.500500)
 
 [node name="ArmorRight" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(2.275000, 0.171000, 0.286000)
+position = Vector3(3.981250, 0.239250, 0.500500)
 
 [node name="Core" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(0.000000, 0.652000, 0.000000)
+position = Vector3(0.000000, 1.081000, 0.000000)
 
 [node name="Death" type="Marker3D" parent="Attachments/Sockets"]
-position = Vector3(0.000000, 0.431000, 0.000000)
+position = Vector3(0.000000, 0.694250, 0.000000)
 
 [node name="Modules" type="Node3D" parent="Attachments"]
 

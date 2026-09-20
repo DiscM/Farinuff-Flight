@@ -1,0 +1,16 @@
+{
+	"capture": "res://design/voxel-salvage/in-game.png",
+	"instances": 19,
+	"practice": true,
+	"surfaces": 83,
+	"textured_surfaces": 83,
+	"variants": {
+		"res://assets/models/voxel_frontier/meshes/asteroid_cluster.glb": 3,
+		"res://assets/models/voxel_frontier/meshes/cargo_wreck.glb": 3,
+		"res://assets/models/voxel_frontier/meshes/engine_wreck.glb": 3,
+		"res://assets/models/voxel_frontier/meshes/hull_fragment.glb": 3,
+		"res://assets/models/voxel_frontier/meshes/relay_fragment.glb": 4,
+		"res://assets/models/voxel_frontier/meshes/solar_fragment.glb": 3
+	},
+	"window": "(2560, 1440)"
+}

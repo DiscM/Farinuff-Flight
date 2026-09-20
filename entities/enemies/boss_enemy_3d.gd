@@ -66,6 +66,7 @@ func activate_generation(space: FlightSpace, origin: Vector3, direction: Vector3
 	phase = 0
 	for index in visuals.get_child_count():
 		visuals.get_child(index).visible = index == variant
+	_sync_motion_sockets()
 	for section in _sections:
 		if variant > 0:
 			section.activate(maxi(8, floori((45.0 + GameManager.current_wave * 3.0) * GameManager.get_enemy_health_multiplier() / 6.0)))
@@ -87,6 +88,23 @@ func activate_generation(space: FlightSpace, origin: Vector3, direction: Vector3
 	if not GameManager.practice_mode:
 		SaveManager.record_boss_encounter(GameManager.current_wave)
 	return true
+
+func _sync_motion_sockets() -> void:
+	# Five imported hulls share one wrapper muzzle. Only the selected visible
+	# hull may supply it; hidden variants must never overwrite its animated pose.
+	for pair in _animated_sockets:
+		if pair[1].is_visible_in_tree():
+			pair[0].global_transform = ShipMotion.socket_transform(pair[1])
+
+func play_motion(clip: StringName, seconds: float = 0.0, hold: bool = false) -> void:
+	super.play_motion(clip, seconds, hold)
+	for section in _sections:
+		section.play_motion(clip, seconds, hold)
+
+func advance_motion(delta: float) -> void:
+	super.advance_motion(delta)
+	for section in _sections:
+		section.advance_motion(delta)
 
 func _advance_movement(delta: float) -> void:
 	if delta <= 0.0:

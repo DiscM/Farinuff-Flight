@@ -1,0 +1,76 @@
+{
+	"passed": true,
+	"renderer": "forward_plus",
+	"styles": [
+		{
+			"assets": [
+				{
+					"asset": "boss_assault",
+					"changed_pixels": 27593,
+					"passed": true
+				},
+				{
+					"asset": "boss_bulwark",
+					"changed_pixels": 29488,
+					"passed": true
+				},
+				{
+					"asset": "boss_tempest",
+					"changed_pixels": 25816,
+					"passed": true
+				},
+				{
+					"asset": "boss_void_harbinger",
+					"changed_pixels": 25889,
+					"passed": true
+				},
+				{
+					"asset": "boss_tempest_core",
+					"changed_pixels": 37017,
+					"passed": true
+				},
+				{
+					"asset": "tempest_section",
+					"changed_pixels": 18561,
+					"passed": true
+				}
+			],
+			"style": "production_pixel_planet"
+		},
+		{
+			"assets": [
+				{
+					"asset": "boss_assault",
+					"changed_pixels": 29537,
+					"passed": true
+				},
+				{
+					"asset": "boss_bulwark",
+					"changed_pixels": 33711,
+					"passed": true
+				},
+				{
+					"asset": "boss_tempest",
+					"changed_pixels": 28501,
+					"passed": true
+				},
+				{
+					"asset": "boss_void_harbinger",
+					"changed_pixels": 29378,
+					"passed": true
+				},
+				{
+					"asset": "boss_tempest_core",
+					"changed_pixels": 41498,
+					"passed": true
+				},
+				{
+					"asset": "tempest_section",
+					"changed_pixels": 20476,
+					"passed": true
+				}
+			],
+			"style": "authored_alloy"
+		}
+	]
+}

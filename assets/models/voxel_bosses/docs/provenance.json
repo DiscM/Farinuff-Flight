@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "package_id": "farinuff-flight.voxel-bosses",
+  "version": "1.0.0",
+  "title": "Farinuff Flight \u2014 Voxel Bosses",
+  "created_for": "Farinuff Flight",
+  "created_date": "2026-09-20",
+  "source_type": "Original voxel geometry and rigid animation authored locally in Blender for this project",
+  "exact_user_prompt": "Could you make new voxel models for the bosses? With animations too?",
+  "negative_prompt": null,
+  "negative_prompt_note": "No separate negative prompt was supplied; local Blender authoring used no paid generation provider.",
+  "style_provenance": {
+    "predecessor": "Farinuff Flight \u2014 Voxel Frontier 1.0.0",
+    "predecessor_archive_sha256": "fcfcbac74a5c44e2b8054ef4e8c0f7d1739633e4bec7cb0cbe3930f27c652f9e",
+    "prior_request_context": "Voxel enemies and debris, game-matched style, professional packaging, and visible runtime textures/shaders.",
+    "shared_original_atlas": "Voxel Frontier grayscale panel atlas; copied into this package so its GLBs/source remain portable",
+    "atlas_sha256": "777a5ed383f898bb065b861a780a3e4ba9f01eae8f1202c75e58ed8109c07768",
+    "visual_direction": "Stepped hard-surface silhouettes, dark structural cores, restrained emission, readable boss palettes and distinct class geometry"
+  },
+  "third_party_models": [],
+  "paid_generation_provider": null,
+  "license_spdx": "NOASSERTION",
+  "license_note": "No repository-wide license grant was present. This package does not grant a new public redistribution license; the project owner controls release terms.",
+  "coordinate_system": {
+    "source": "Blender +Z up, +Y forward",
+    "runtime": "Godot/glTF +Y up, -Z forward",
+    "units": "1 source unit = 1 glTF unit; runtime boss scenes apply their existing presentation scale",
+    "origin": "Central hull datum; geometric bounds may be asymmetric"
+  },
+  "validation_scope": {
+    "static": "Actual GLB geometry, UVs, materials, embedded atlas, named rigid rig, clips, sockets and package digests",
+    "runtime": "Rendered shader/texture visibility and gameplay animation evidence are recorded separately; static file checks do not establish final appearance or performance"
+  },
+  "third_party_integration_references": [
+    {
+      "file": "effects/shaders/models/pixel_planet_enemy_3d.gdshader",
+      "reference": "Deep-Fold PixelPlanets NoAtmosphere and GasLayers shaders",
+      "license_spdx": "MIT",
+      "license_file": "effects/shaders/PixelPlanets/LICENSE"
+    }
+  ]
+}

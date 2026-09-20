@@ -43,7 +43,7 @@ const ALL_UPGRADES: Array[Dictionary] = [
 		"role": "Firepower",
 		"name": "Twin Cannons",
 		"icon": "🔫",
-		"description": "Fire two additional bullets\nwith every shot.",
+		"description": "+2 bullets per shot.",
 		"color": Color(1.0, 0.8, 0.2),
 	},
 	{
@@ -51,7 +51,7 @@ const ALL_UPGRADES: Array[Dictionary] = [
 		"role": "Precision",
 		"name": "Homing Shots",
 		"icon": "🎯",
-		"description": "Bullets home in on\nthe nearest enemy.",
+		"description": "Shots track the nearest enemy.",
 		"color": Color(0.3, 1.0, 0.5),
 	},
 	{
@@ -59,7 +59,7 @@ const ALL_UPGRADES: Array[Dictionary] = [
 		"role": "Support",
 		"name": "Drone Escort",
 		"icon": "🤖",
-		"description": "A drone follows your ship\nand shoots enemies for you.",
+		"description": "Drone escort fires at enemies.",
 		"color": Color(0.4, 0.85, 1.0),
 	},
 	{
@@ -67,7 +67,7 @@ const ALL_UPGRADES: Array[Dictionary] = [
 		"role": "Survival",
 		"name": "Hull Plating",
 		"icon": "🛡️",
-		"description": "Gain 1 extra life.",
+		"description": "+1 life.",
 		"color": Color(0.8, 0.55, 1.0),
 	},
 	{
@@ -75,7 +75,7 @@ const ALL_UPGRADES: Array[Dictionary] = [
 		"role": "Mobility",
 		"name": "Afterburner",
 		"icon": "🚀",
-		"description": "Move 20% faster and\naccelerate 15% faster.",
+		"description": "+20% speed · +15% acceleration",
 		"color": Color(1.0, 0.45, 0.15),
 	},
 	# ── New Wave-10 Upgrades ────────────────────────────────────────────────────
@@ -84,7 +84,7 @@ const ALL_UPGRADES: Array[Dictionary] = [
 		"role": "Coverage",
 		"name": "Spread Shot",
 		"icon": "✦",
-		"description": "Fire three shots in a fan.\nThe Spread power-up widens it to five.",
+		"description": "3-shot fan; 5 with Spread power-up.",
 		"color": Color(1.0, 0.55, 0.9),
 	},
 	{
@@ -92,7 +92,7 @@ const ALL_UPGRADES: Array[Dictionary] = [
 		"role": "Survival",
 		"name": "Shield Burst",
 		"icon": "💥",
-		"description": "Every 10 seconds, release a blast\nthat clears bullets and hits enemies.",
+		"description": "Bullet-clearing blast every 10s. Damages enemies.",
 		"color": Color(0.3, 0.8, 1.0),
 	},
 	{
@@ -100,7 +100,7 @@ const ALL_UPGRADES: Array[Dictionary] = [
 		"role": "Support",
 		"name": "Orb Magnet",
 		"icon": "🧲",
-		"description": "Pull in orbs and power-ups\nfor the rest of this run.",
+		"description": "Attract orbs and power-ups this run.",
 		"color": Color(1.0, 0.75, 0.1),
 	},
 	{
@@ -108,7 +108,7 @@ const ALL_UPGRADES: Array[Dictionary] = [
 		"role": "Firepower",
 		"name": "Overclock",
 		"icon": "⚡",
-		"description": "Fire three times faster for 2.5 seconds\nevery 16 seconds. Works with Rapid Fire.",
+		"description": "3× fire rate for 2.5s every 16s. Stacks with Rapid Fire.",
 		"color": Color(0.9, 1.0, 0.2),
 	},
 	{
@@ -116,7 +116,7 @@ const ALL_UPGRADES: Array[Dictionary] = [
 		"role": "Coverage",
 		"name": "Rear Gunner",
 		"icon": "🔺",
-		"description": "Also fire behind your ship.\nRear shots use your bullet upgrades.",
+		"description": "Rear fire uses your bullet upgrades.",
 		"color": Color(1.0, 0.35, 0.35),
 	},
 ]
@@ -129,7 +129,7 @@ const META_ELITE_UPGRADES: Array[Dictionary] = [
 		"role": "Survival",
 		"name": "Orbital Array",
 		"icon": "🛰️",
-		"description": "Three projectiles orbit your ship,\ndamaging enemies on contact.",
+		"description": "3 orbiting projectiles deal contact damage.",
 		"color": Color(0.4, 0.85, 1.0),
 		"meta_unlock": "meta_orbitals",
 	},
@@ -138,7 +138,7 @@ const META_ELITE_UPGRADES: Array[Dictionary] = [
 		"role": "Precision",
 		"name": "Piercing Rounds",
 		"icon": "🗡️",
-		"description": "Bullets pass through enemies\ninstead of stopping on impact.",
+		"description": "Shots pierce enemies.",
 		"color": Color(1.0, 0.75, 0.1),
 		"meta_unlock": "meta_piercing",
 	},
@@ -147,7 +147,7 @@ const META_ELITE_UPGRADES: Array[Dictionary] = [
 		"role": "Coverage",
 		"name": "Explosive Rounds",
 		"icon": "💣",
-		"description": "Bullets explode on impact,\nalso damaging nearby enemies.",
+		"description": "Explosive shots deal splash damage.",
 		"color": Color(1.0, 0.35, 0.35),
 		"meta_unlock": "meta_explosive",
 	},
