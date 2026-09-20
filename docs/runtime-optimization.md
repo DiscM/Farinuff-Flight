@@ -49,11 +49,12 @@ results do not establish a reduction in total process or GPU memory.
 
 `native_completion_smoke.tscn` covers gameplay, native upgrades, projectile
 reuse, registry cleanup, and all five boss variants. `pooling_smoke.tscn`
-checks idle-parent teardown and stale references. Existing autoload and VFX
-smoke tests and both Python resource-contract checks remain applicable.
+checks idle-parent teardown and stale references. Autoload coverage and the
+resource-reference check also run in CI.
 `resource_cache_smoke.tscn` verifies paused background loading, request
-deduplication, fresh run instances, and the two-resource retention limit.
-These smoke scenes and the preparation benchmark are included in CI.
+deduplication, fresh run instances, and the three-resource retention limit.
+These runtime checks are included in CI; VFX checks and the preparation
+benchmark are available through `tools/run_smoke_tests.py --suite extended`.
 
 These are individual local runs, not hardware-wide performance guarantees.
 Baseline shutdown reports two shader allocations left alive; the rendered

@@ -12,7 +12,7 @@ RUNNER = Path(__file__).resolve().parents[1] / "tools" / "run_smoke_tests.py"
 
 
 class SmokeRunnerTests(unittest.TestCase):
-    def run_fixture(self, body: str, *scenes: str, timeout: str = "5") -> subprocess.CompletedProcess:
+    def run_fixture(self, body: str, *scenes: str, timeout: str = "5", suite: str | None = None) -> subprocess.CompletedProcess:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             engine = root / "godot"
@@ -21,10 +21,11 @@ class SmokeRunnerTests(unittest.TestCase):
             result = subprocess.run(
                 [sys.executable, str(RUNNER), "--godot", str(engine),
                  "--timeout", timeout, "--log-dir", str(root / "logs"),
-                 *(scenes or ("pooling_smoke",))],
+                 *(scenes or (() if suite is not None else ("pooling_smoke",))),
+                 *(["--suite", suite] if suite else [])],
                 text=True, capture_output=True, timeout=10, check=False,
             )
-            self.assertTrue((root / "logs" / f"{scenes[0] if scenes else 'pooling_smoke'}.log").exists())
+            self.assertTrue(any((root / "logs").glob("*.log")))
             return result
 
     def test_success_requires_completion(self) -> None:
@@ -79,11 +80,39 @@ class SmokeRunnerTests(unittest.TestCase):
                     if line.startswith("PROFILE=")]
         self.assertEqual(len(set(profiles)), 2)
 
+    def test_default_suite_covers_production_without_visuals_or_benchmark(self) -> None:
+        result = self.run_fixture(
+            'import pathlib, sys\nprint(pathlib.Path(sys.argv[-1]).stem.upper() + "_PASS")\n',
+            suite="",  # No scene or suite arguments: exercise the CLI default.
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        for scene in ("menu_boot", "frontend_navigation", "native_completion",
+                      "expedition_progression", "autoload", "pooling", "resource_cache",
+                      "audio_settings"):
+            self.assertIn(scene.upper() + "_SMOKE_PASS", result.stdout)
+        self.assertNotIn("RUN_WARMUP_BENCHMARK_PASS", result.stdout)
+        self.assertNotIn("FRONTIER_VISUAL_SMOKE_PASS", result.stdout)
+        self.assertIn("Smoke tests: 8/8 passed", result.stdout)
+
+    def test_extended_suite_runs_real_scene_wrappers_including_benchmark(self) -> None:
+        result = self.run_fixture(
+            'import pathlib, sys\n'
+            'project = pathlib.Path(sys.argv[sys.argv.index("--path") + 1])\n'
+            'assert (project / sys.argv[-1].removeprefix("res://")).is_file()\n'
+            'print(pathlib.Path(sys.argv[-1]).stem.upper() + "_PASS")\n',
+            suite="extended",
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertIn("RUN_WARMUP_BENCHMARK_PASS", result.stdout)
+        self.assertIn("VOXEL_BOSS_MATERIAL_SMOKE_PASS", result.stdout)
+        self.assertIn("MENU_BOOT_SMOKE_PASS", result.stdout)
+
     def test_production_journey_scenes_are_registered(self) -> None:
         result = self.run_fixture(
             'import pathlib, sys\nprint(pathlib.Path(sys.argv[-1]).stem.upper() + "_PASS")\n',
             "frontend_navigation_smoke", "expedition_progression_smoke",
             "menu_boot_smoke", "neon_cabinet_smoke", "background_drift_smoke",
+            suite="extended",
         )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("Smoke tests: 5/5 passed", result.stdout)

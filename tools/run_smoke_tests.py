@@ -15,28 +15,35 @@ import tempfile
 
 from godot_workspace import ROOT, staged_project, user_data_root
 
-SCENES = (
+SMOKE_SCENES = (
+    "autoload_smoke",
+    "menu_boot_smoke",
+    "frontend_navigation_smoke",
+    "native_completion_smoke",
+    "expedition_progression_smoke",
+    "pooling_smoke",
+    "resource_cache_smoke",
+    "audio_settings_smoke",
+)
+
+# Focused regression/visual checks and benchmarks are opt-in, not PR boot gates.
+EXTENDED_SCENES = (
     "dev_commands_smoke",
     "in_house_vfx_smoke",
-    "native_completion_smoke",
     "boss_patterns_smoke",
     "boss_flight_smoke",
     "boss_ai_smoke",
     "frontier_visual_smoke",
     "pixel_enemy_material_smoke",
+    "voxel_boss_material_smoke",
     "combat_motion_smoke",
-    "pooling_smoke",
-    "resource_cache_smoke",
     "run_warmup_benchmark",
-    "autoload_smoke",
-    "frontend_navigation_smoke",
-    "expedition_progression_smoke",
-    "menu_boot_smoke",
     "neon_cabinet_smoke",
     "background_drift_smoke",
-    "audio_settings_smoke",
     "combat_readability_smoke",
 )
+
+SCENES = SMOKE_SCENES + EXTENDED_SCENES
 
 
 @contextmanager
@@ -98,17 +105,19 @@ def main() -> int:
     parser.add_argument("--godot", default=os.environ.get("GODOT_PATH", "godot"))
     parser.add_argument("--timeout", type=float, default=120, help="seconds allowed per scene")
     parser.add_argument("--log-dir", type=Path, default=ROOT / ".godot" / "smoke-logs")
-    parser.add_argument("scenes", nargs="*", help="scene names; defaults to the complete CI suite")
+    parser.add_argument("--suite", choices=("smoke", "extended"), default="smoke",
+                        help="smoke: CI essentials (default); extended: all regression scenes")
+    parser.add_argument("scenes", nargs="*", help="explicit scene names override --suite")
     args = parser.parse_args()
     if args.timeout <= 0:
         parser.error("--timeout must be positive")
     godot = shutil.which(args.godot)
     if godot is None:
         parser.error(f"Godot executable not found: {args.godot}")
-    scenes = args.scenes or SCENES
+    scenes = args.scenes or (SMOKE_SCENES if args.suite == "smoke" else SCENES)
     for scene in scenes:
         if scene not in SCENES:
-            parser.error(f"unknown CI scene: {scene}")
+            parser.error(f"unknown test scene: {scene}")
     args.log_dir.mkdir(parents=True, exist_ok=True)
     failures = [scene for scene in scenes if not run_scene(godot, scene, args.log_dir, args.timeout)]
     print(f"Smoke tests: {len(scenes) - len(failures)}/{len(scenes)} passed", flush=True)
