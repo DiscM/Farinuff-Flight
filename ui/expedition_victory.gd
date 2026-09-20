@@ -74,13 +74,13 @@ func _build_ui() -> void:
 	scroll.add_child(content)
 
 	var eyebrow := Label.new()
-	eyebrow.text = "EXPEDITION // COMPLETE"
+	eyebrow.text = "EXPEDITION COMPLETE"
 	eyebrow.add_theme_color_override("font_color", GREEN)
 	eyebrow.add_theme_font_size_override("font_size", 12)
 	content.add_child(eyebrow)
 
 	var title := Label.new()
-	title.text = "TEMPEST CORE BROKEN"
+	title.text = "TEMPEST CORE DESTROYED"
 	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_color_override("font_color", CYAN)
@@ -112,7 +112,7 @@ func _build_ui() -> void:
 		content.add_child(_ship_preview)
 	else:
 		var preview_fallback := Label.new()
-		preview_fallback.text = "NATIVE SHIP PREVIEW UNAVAILABLE"
+		preview_fallback.text = "SHIP PREVIEW UNAVAILABLE"
 		preview_fallback.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		content.add_child(preview_fallback)
 
@@ -134,12 +134,12 @@ func _build_ui() -> void:
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	content.add_child(spacer)
 
-	_continue_button = _make_button("FOLLOW THE SIGNAL / ENDLESS", YELLOW)
+	_continue_button = _make_button("KEEP FIGHTING · ENDLESS", YELLOW)
 	_continue_button.custom_minimum_size = Vector2(0.0, 52.0)
 	_continue_button.pressed.connect(_on_continue_pressed)
 	layout.add_child(_continue_button)
 
-	_menu_button = _make_button("RETURN HOME / BANK RUN", MAGENTA)
+	_menu_button = _make_button("RETURN HOME", MAGENTA)
 	_menu_button.custom_minimum_size = Vector2(0.0, 44.0)
 	_menu_button.pressed.connect(_on_menu_pressed)
 	layout.add_child(_menu_button)
@@ -186,10 +186,10 @@ func _button_style(fill: Color, border: Color, radius: int, width: int) -> Style
 
 ## Public setup seam so the game scene can provide the exact cleared wave.
 func show_result(final_wave: int) -> void:
-	_wave_label.text = "WAVE %02d  //  EXPEDITION CLEAR" % final_wave
+	_wave_label.text = "WAVE %02d COMPLETE" % final_wave
 	var hull_id := _selected_hull_id()
 	var ship_name := _selected_ship_name()
-	_body_label.text = "%s BREAKS THE FORMATION.\nTHE EXPEDITION IS YOURS." % ship_name
+	_body_label.text = "%s MADE IT THROUGH.\nTHE WAY HOME IS OPEN." % ship_name
 	var frequency := int(SaveManager.get_setting("story_frequency", 0))
 	if frequency != 2:
 		var beat := ExpeditionManager.get_story_beat(&"expedition_victory")
@@ -197,9 +197,9 @@ func show_result(final_wave: int) -> void:
 		if frequency == 0 and not seen and beat != null:
 			_body_label.text += "\n\n" + preload("res://campaign/story_copy.gd").for_beat(beat)
 		else:
-			_body_label.text += "\nMOTH // The homeward relay is open. The signal continues beyond its source."
+			_body_label.text += "\nMOTH // We can go home. Something farther out is still calling."
 		_reveal_presented = true
-	_salvage_label.text = "RUN SALVAGE: %s  ·  BOSS BANKED: %s" % [
+	_salvage_label.text = "SALVAGE SO FAR: %s  ·  FROM BOSSES: %s" % [
 		_format_salvage(GameManager.run_salvage),
 		_format_salvage(GameManager.run_salvage_boss),
 	]
@@ -211,7 +211,7 @@ func show_result(final_wave: int) -> void:
 
 
 func _format_salvage(value: int) -> String:
-	return "SALVAGE %d" % value
+	return "⬡ %d" % value
 
 
 func _selected_hull_id() -> String:
@@ -249,7 +249,7 @@ func _format_loadout(hull_id: String, active_ids: Array[String]) -> String:
 		var name := _safe_text(definition, "name", upgrade_id.replace("_", " ").to_upper())
 		module_names.append(name)
 	var modules_text := "NONE INSTALLED" if module_names.is_empty() else " · ".join(module_names)
-	return "LOADOUT  ·  %s\nNATIVE MODULES  %d/%d  ·  %s" % [
+	return "SHIP  ·  %s\nUPGRADES  %d/%d  ·  %s" % [
 		_selected_ship_name() if hull_id == _selected_hull_id() else FALLBACK_NAME,
 		active_ids.size(),
 		NativeUpgradeCatalog.SUPPORTED_IDS.size(),

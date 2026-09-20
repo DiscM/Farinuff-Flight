@@ -18,8 +18,8 @@ const NATIVE_HULL_IDS: Array[String] = [
 	"ship_bulwark",
 ]
 const FALLBACK_ICON := "◇"
-const FALLBACK_NAME := "UNKNOWN HULL"
-const FALLBACK_DESCRIPTION := "Hull data unavailable."
+const FALLBACK_NAME := "UNKNOWN SHIP"
+const FALLBACK_DESCRIPTION := "Ship details unavailable."
 const FALLBACK_COLOR := Color(0.55, 0.65, 0.82)
 
 var _ship_cards_by_id: Dictionary = {}
@@ -62,7 +62,7 @@ func _build_ui() -> void:
 	panel.add_child(column)
 
 	var title := Label.new()
-	title.text = "LAUNCH BAY ///"
+	title.text = "CHOOSE SHIP ///"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_override("font", NeonUI.HEADING_FONT)
 	title.add_theme_font_size_override("font_size", 26)
@@ -77,7 +77,7 @@ func _build_ui() -> void:
 	for ship in MetaProgression.SHIP_VARIANTS:
 		ships_row.add_child(_make_ship_card(ship))
 	if _ship_cards_by_id.is_empty():
-		ships_row.add_child(_make_catalog_placeholder("No native hull catalog is available."))
+		ships_row.add_child(_make_catalog_placeholder("Ships could not be loaded."))
 
 	_selected_ship_label = Label.new()
 	_selected_ship_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -86,7 +86,7 @@ func _build_ui() -> void:
 	column.add_child(_selected_ship_label)
 	_refresh_selected_ship_label()
 
-	column.add_child(_make_section_label("CHALLENGE MODIFIERS"))
+	column.add_child(_make_section_label("CHALLENGES · HARDER RUNS, MORE SALVAGE"))
 	var modifiers_box := VBoxContainer.new()
 	modifiers_box.add_theme_constant_override("separation", 4)
 	column.add_child(modifiers_box)
@@ -276,10 +276,10 @@ func _refresh_selected_ship_label() -> void:
 	var selected_id := str(MetaProgression.selected_ship)
 	var entry: Dictionary = _ship_cards_by_id.get(selected_id, {})
 	if entry.is_empty():
-		_selected_ship_label.text = "SELECTED HULL: UNAVAILABLE — CHOOSE AN UNLOCKED HULL"
+		_selected_ship_label.text = "CHOOSE AN UNLOCKED SHIP"
 		return
 	var ship: Dictionary = entry["ship"]
-	_selected_ship_label.text = "SELECTED HULL: %s " % _safe_text(ship, "name", FALLBACK_NAME).to_upper()
+	_selected_ship_label.text = "SELECTED SHIP: %s" % _safe_text(ship, "name", FALLBACK_NAME).to_upper()
 
 
 func _refresh_launch_button() -> void:
@@ -289,7 +289,7 @@ func _refresh_launch_button() -> void:
 	var entry: Dictionary = _ship_cards_by_id.get(selected_id, {})
 	var can_launch := not entry.is_empty() and MetaProgression.is_unlocked(selected_id)
 	_launch_button.disabled = not can_launch
-	_launch_button.text = "LAUNCH EXPEDITION >>>" if can_launch else "SELECT AN UNLOCKED HULL"
+	_launch_button.text = "START RUN >>>" if can_launch else "SELECT AN UNLOCKED SHIP"
 
 # --- Modifier toggles ---
 
@@ -302,7 +302,7 @@ func _make_modifier_toggle(modifier: Dictionary) -> Control:
 	var toggle := CheckButton.new()
 	var modifier_id := str(modifier.get("id", ""))
 	row.add_child(CatalogIcons.make(modifier_id, 24, _safe_color(modifier, "color", FALLBACK_COLOR)))
-	toggle.text = _safe_text(modifier, "name", "UNKNOWN MODIFIER")
+	toggle.text = _safe_text(modifier, "name", "UNKNOWN CHALLENGE")
 	toggle.tooltip_text = _safe_text(modifier, "description", FALLBACK_DESCRIPTION)
 	toggle.add_theme_font_size_override("font_size", 14)
 	row.add_child(toggle)
@@ -334,16 +334,16 @@ func _refresh_multiplier_label() -> void:
 	if multiplier > 1.0:
 		_multiplier_label.text = "SALVAGE MULTIPLIER: ×%.2f" % multiplier
 	else:
-		_multiplier_label.text = "SALVAGE MULTIPLIER: ×1.00  ·  NO MODIFIERS"
+		_multiplier_label.text = "SALVAGE MULTIPLIER: ×1.00  ·  NO CHALLENGES"
 
 ## Shows the Hangar field supply that will be consumed by this run
 ## (stockpiled try-again stocks and the drop-pod state), including capacity.
 func _refresh_supply_label() -> void:
 	var stock_capacity := int(MetaProgression.MAX_STOCKPILED_STOCKS)
 	var stock_count := clampi(int(MetaProgression.consumable_stocks), 0, stock_capacity)
-	var pod_state := "ARMED" if MetaProgression.consumable_powerup_armed else "EMPTY"
+	var pod_state := "READY" if MetaProgression.consumable_powerup_armed else "NONE"
 	_supply_label.visible = true
-	_supply_label.text = "FIELD SUPPLY  ·  TRY-AGAIN STOCK %d/%d  ·  DROP POD %s" % [
+	_supply_label.text = "NEXT RUN: %d/%d EXTRA CONTINUES · POWER-UP: %s" % [
 		stock_count,
 		stock_capacity,
 		pod_state,

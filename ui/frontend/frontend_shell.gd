@@ -29,8 +29,8 @@ const PAGE_NAV_ORDER: Array[StringName] = [
 ]
 const PAGE_DISPLAY_NAMES: Dictionary = {
 	&"command_deck": "Play",
-	&"expedition_map": "Expedition Chart",
-	&"launch_bay": "Launch Bay",
+	&"expedition_map": "Route Map",
+	&"launch_bay": "Choose Ship",
 	&"hangar": "Hangar",
 	&"flight_school": "Flight School",
 	&"settings": "Settings",
@@ -51,8 +51,8 @@ const FALLBACK_CYAN := Color(0.17, 0.95, 1.0)
 const FALLBACK_YELLOW := Color(1.0, 0.86, 0.26)
 const FALLBACK_MUTED := Color(0.55, 0.63, 0.78)
 
-const DEFAULT_OBJECTIVE := "Return the signal to the last charted relay"
-const DEFAULT_DETAILS := "Select a page to see its context here."
+const DEFAULT_OBJECTIVE := "Follow the signal home."
+const DEFAULT_DETAILS := "Choose a menu to see help here."
 const NAV_RAIL_WIDTH := 240.0
 const NAV_RAIL_WIDTH_NARROW := 204.0
 const NARROW_BREAKPOINT := 1040.0
@@ -60,9 +60,9 @@ const NARROW_BREAKPOINT := 1040.0
 ## Keyboard / mouse / gamepad labels for the footer prompt bar, indexed as
 ## accept, back, details, tab.
 const PROMPT_LABELS: Dictionary = {
-	&"keyboard": ["ENTER  ACCEPT", "ESC  BACK", "F1  CONTEXT", "[ / ]  SECTIONS"],
-	&"mouse": ["CLICK  ACCEPT", "ESC  BACK", "F1  CONTEXT", "NAVIGATION"],
-	&"gamepad": ["A  ACCEPT", "B  BACK", "Y  DETAIL", "LB/RB  TABS"],
+	&"keyboard": ["ENTER  SELECT", "ESC  BACK", "F1  HELP", "[ / ]  MENUS"],
+	&"mouse": ["CLICK  SELECT", "ESC  BACK", "F1  HELP", "CHOOSE A MENU"],
+	&"gamepad": ["A  SELECT", "B  BACK", "Y  HELP", "LB/RB  MENUS"],
 }
 
 const NAV_MARKER_ACTIVE := Color(1.0, 0.86, 0.26, 1.0)
@@ -306,7 +306,7 @@ func _make_placeholder_page(page_id: StringName) -> Control:
 	box.add_theme_constant_override("separation", 12)
 	margin.add_child(box)
 	var kicker := Label.new()
-	kicker.text = "SECTION"
+	kicker.text = "MENU"
 	kicker.add_theme_font_size_override("font_size", 14)
 	kicker.add_theme_color_override("font_color", themed_color(&"CYAN", FALLBACK_CYAN))
 	box.add_child(kicker)
@@ -320,7 +320,7 @@ func _make_placeholder_page(page_id: StringName) -> Control:
 	title.tooltip_text = "%s could not be opened" % PAGE_DISPLAY_NAMES[page_id]
 	box.add_child(title)
 	var body := Label.new()
-	body.text = "This section could not be opened. Use Back or choose another section."
+	body.text = "This menu could not be opened. Go back and try again."
 	body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	body.add_theme_font_size_override("font_size", 14)
 	body.add_theme_color_override("font_color", FALLBACK_MUTED)
@@ -523,7 +523,7 @@ func _make_nav_entry(
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	button.set_meta(&"frontend_page_id", page_id)
 	button.set_meta(&"is_nav_button", true)
-	button.tooltip_text = "Open the %s page" % PAGE_DISPLAY_NAMES[page_id]
+	button.tooltip_text = "Open %s" % PAGE_DISPLAY_NAMES[page_id]
 	button.pressed.connect(_on_nav_pressed.bind(page_id))
 	button.mouse_entered.connect(_on_gated_mouse_entered.bind(button))
 	row.add_child(button)
@@ -589,7 +589,7 @@ func _refresh_status_rail() -> void:
 	var best_wave := int(save_manager.stat_best_wave) if save_manager != null else 0
 	var objective := str(_current_payload.get("objective_text", DEFAULT_OBJECTIVE))
 	salvage_value.text = "SALVAGE  ⬡ %d" % salvage
-	hull_value.text = "HULL  %s" % _format_hull_name(hull_id)
+	hull_value.text = "SHIP  %s" % _format_hull_name(hull_id)
 	wave_value.text = "BEST WAVE  %d" % best_wave
 	objective_value.text = "OBJECTIVE  %s" % objective
 
@@ -668,7 +668,7 @@ func _update_prompts() -> void:
 
 func _footer_build_label() -> void:
 	var version := str(ProjectSettings.get_setting("application/config/version", "0.5.0"))
-	build_label.text = "BUILD %s  ·  SIGNAL LOCKED" % version
+	build_label.text = "VERSION %s" % version
 
 
 # --- Responsive layout (scaffold) ---------------------------------------------
@@ -767,12 +767,12 @@ func _process(delta: float) -> void:
 func _page_context(page_id: StringName) -> String:
 	return str({
 		&"command_deck": "Follow the Return Signal through four sectors. Defeat Tempest Core at Wave 20, then return home or continue into Endless.",
-		&"expedition_map": "Inspect a relay for its enemy mix and boss. A new Expedition always begins at Wave 1. Route choices happen between cleared sectors.",
-		&"launch_bay": "Choose an owned hull and optional challenge modifiers. Armed supplies are consumed only when the run starts. Each hull changes handling and starting lives.",
-		&"hangar": "Spend banked salvage on systems, hulls, blueprints, and field supplies. Blueprints expand future transformation choices; they do not equip an ability immediately.",
-		&"flight_school": "Practice uses the real flight and projectile systems. It cannot spend supplies or award salvage. Encounter a boss in an Expedition to unlock its practice session.",
-		&"settings": "Settings apply immediately and persist. Story frequency changes presentation only; fragments are still recovered with Story Off.",
-		&"archives": "Read fragments recovered from cleared routes. Explore the other branch on another Expedition to recover the rest of the signal.",
+		&"expedition_map": "Select a sector to see its enemies and boss. Every run starts at Wave 1. Choose your next route after clearing a sector.",
+		&"launch_bay": "Choose a ship and optional challenges. Challenges make the run harder and earn more salvage. Supplies from the Hangar are used when you start a run.",
+		&"hangar": "Spend salvage on permanent upgrades, ships, challenges, and supplies for your next run. Blueprints unlock upgrades you can find as boss rewards.",
+		&"flight_school": "Learn to fly, shoot, and reflect enemy fire. Practice is free and gives no rewards. Meet a boss during a run to unlock practice against it.",
+		&"settings": "Changes are saved automatically. You can turn story messages off and still collect signal fragments.",
+		&"archives": "Read the signal fragments you have found. Take different routes on future runs to find them all.",
 	}.get(page_id, DEFAULT_DETAILS))
 
 
@@ -785,7 +785,7 @@ func return_to_command_deck() -> void:
 func _prepare_context_panel() -> void:
 	details_overlay.mouse_filter = Control.MOUSE_FILTER_STOP
 	_details_close = Button.new()
-	_details_close.text = "CLOSE CONTEXT"
+	_details_close.text = "CLOSE HELP"
 	_details_close.custom_minimum_size.y = 44
 	_details_close.pressed.connect(_close_details)
 	details_overlay.get_node("OverlayBox").add_child(_details_close)

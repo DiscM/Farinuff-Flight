@@ -99,9 +99,9 @@ func _build_ui() -> void:
 	vbox.add_child(spacer)
 
 	# Stat rows
-	_add_stat_row(vbox, "🔥  FIRE RATE", "fire_rate", Color(1.0, 0.75, 0.15))
-	_add_stat_row(vbox, "❤️  HEALTH", "health", Color(1.0, 0.4, 0.55))
-	_add_stat_row(vbox, "🚀  FLIGHT SPEED", "speed", Color(0.3, 0.85, 1.0))
+	_add_stat_row(vbox, "🔥  FIRE RATE LEVEL", "fire_rate", Color(1.0, 0.75, 0.15))
+	_add_stat_row(vbox, "❤️  EXTRA LIVES", "health", Color(1.0, 0.4, 0.55))
+	_add_stat_row(vbox, "🚀  SPEED LEVEL", "speed", Color(0.3, 0.85, 1.0))
 
 	# Spacer
 	var spacer2 := Control.new()
@@ -110,7 +110,7 @@ func _build_ui() -> void:
 
 	# Confirm button
 	confirm_btn = Button.new()
-	confirm_btn.text = "CONFIRM"
+	confirm_btn.text = "APPLY UPGRADES"
 	confirm_btn.custom_minimum_size = Vector2(180 if compact_layout else 200, 46 if compact_layout else 50)
 	confirm_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	NeonUI.style_primary(confirm_btn)
@@ -188,7 +188,7 @@ func _on_plus_pressed(stat_id: String) -> void:
 	if points_remaining == 0:
 		confirm_btn.grab_focus()
 
-## Called when the "CONFIRM" button is pressed. Applies all temporarily
+## Called when the "APPLY UPGRADES" button is pressed. Applies all temporarily
 ## allocated points to GameManager's stat system, emits allocation_done,
 ## and frees the popup (unless in panel_only mode).
 func _on_confirm() -> void:
@@ -214,19 +214,19 @@ func _on_confirm() -> void:
 ## Locks a completed panel while the combined milestone screen waits for the
 ## elite selection. Repeated confirmation cannot apply the allocation again.
 func _show_completed_state() -> void:
-	points_label.text = "ALLOCATION COMPLETE"
+	points_label.text = "UPGRADES APPLIED"
 	points_label.add_theme_color_override("font_color", Color(0.3, 1.0, 0.5))
 	fire_rate_btn.disabled = true
 	health_btn.disabled = true
 	speed_btn.disabled = true
-	confirm_btn.text = "ALLOCATED"
+	confirm_btn.text = "APPLIED"
 	confirm_btn.disabled = true
 
 ## Updates all UI elements: points remaining label, stat level displays
 ## (showing the sum of existing + pending allocations), button disabled
 ## states, and the confirm button (only enabled when all points are spent).
 func _refresh_ui() -> void:
-	points_label.text = "Points remaining: " + str(points_remaining)
+	points_label.text = "Points to spend: " + str(points_remaining)
 
 	var fr_total: int = GameManager.stat_fire_rate_level + alloc_fire_rate
 	var hp_total: int = GameManager.stat_health_level + alloc_health

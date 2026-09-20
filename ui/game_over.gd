@@ -54,12 +54,12 @@ func show_score(final_score: int) -> void:
 		GameManager.run_salvage_wave_bonus,
 	]
 	if GameManager.run_salvage_milestones > 0:
-		breakdown += "\n+ FIRST-CLEAR MILESTONE BONUS ⬡%d" % GameManager.run_salvage_milestones
+		breakdown += "\n+ FIRST-TIME BOSS BONUS ⬡%d" % GameManager.run_salvage_milestones
 	if GameManager.run_salvage_multiplier > 1.0:
-		breakdown += "\n(INCLUDES ×%.2f MODIFIER BONUS)" % GameManager.run_salvage_multiplier
-	breakdown += "\nCOURIERS INTERCEPTED: %d / %d" % [GameManager.run_objectives_completed, GameManager.run_objectives_attempted]
+		breakdown += "\nCHALLENGE MULTIPLIER: ×%.2f" % GameManager.run_salvage_multiplier
+	breakdown += "\nCOURIERS DESTROYED: %d / %d" % [GameManager.run_objectives_completed, GameManager.run_objectives_attempted]
 	salvage_breakdown_label.text = breakdown
-	stats_label.text = "LIFETIME — RUNS: %d · KILLS: %d" % [
+	stats_label.text = "TOTAL RUNS: %d · KILLS: %d" % [
 		MetaProgression.stat_total_runs,
 		MetaProgression.stat_total_kills,
 	]
@@ -109,7 +109,7 @@ func _format_loadout(hull_id: String, active_ids: Array[String]) -> String:
 		var name := _safe_text(definition, "name", upgrade_id.replace("_", " ").to_upper())
 		module_names.append(name)
 	var modules_text := "NONE INSTALLED" if module_names.is_empty() else " · ".join(module_names)
-	return "LOADOUT  ·  %s\nNATIVE MODULES  %d/%d  ·  %s" % [
+	return "SHIP  ·  %s\nUPGRADES  %d/%d  ·  %s" % [
 		hull_name,
 		active_ids.size(),
 		NativeUpgradeCatalog.SUPPORTED_IDS.size(),

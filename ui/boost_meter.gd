@@ -26,10 +26,10 @@ func _process(_delta: float) -> void:
 	for index in int(state.threshold):
 		pips += "◆" if index < int(state.reflections) else "◇"
 	if ready:
-		status.text = "CHAIN  %s  •  %s  %.2fs" % [pips, InputBindings.binding_hint("boost"), float(state.chain_remaining)]
+		status.text = "BOOST AGAIN [%s] · %.2fs" % [InputBindings.binding_hint("boost"), float(state.chain_remaining)]
 		value = float(state.chain_fraction)
 	elif bool(state.boosting):
-		status.text = "FINAL BOOST" if bool(state.chain_followup) else "REFLECT  %s" % pips
+		status.text = "EXTRA BOOST" if bool(state.chain_followup) else "REFLECT  %s" % pips
 		value = float(state.reflections) / float(state.threshold)
 	else:
 		value = float(state.recharge)

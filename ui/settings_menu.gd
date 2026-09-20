@@ -124,14 +124,14 @@ func _build_ui() -> void:
 	)
 	audio.add_child(ui_volume)
 	var story := OptionButton.new()
-	story.add_item("Story: full", 0)
-	story.add_item("Story: brief", 1)
-	story.add_item("Story: off", 2)
+	story.add_item("Story: Full", 0)
+	story.add_item("Story: Short", 1)
+	story.add_item("Story: Off", 2)
 	story.select(clampi(int(SaveManager.get_setting("story_frequency", 0)), 0, 2))
 	story.item_selected.connect(func(index: int): SaveManager.update_setting("story_frequency", index))
 	access.add_child(story)
 	display.add_child(_make_toggle("Screen shake", "screen_shake"))
-	display.add_child(_make_toggle("CRT scanline effect", "crt_effect"))
+	display.add_child(_make_toggle("Retro TV scanlines", "crt_effect"))
 	display.add_child(_make_toggle("Screen distortion", "screen_distortion"))
 	display.add_child(_make_toggle("Fullscreen", "fullscreen", false))
 	display.add_child(_choice("GraphicsQuality", "Graphics quality", "graphics_quality", ["low", "medium", "high"], ["Low", "Medium", "High"]))
@@ -146,12 +146,12 @@ func _build_ui() -> void:
 	window_size.item_selected.connect(func(index: int): SaveManager.update_setting("window_size", WindowLayout.PRESET_IDS[index]))
 	display.add_child(window_size)
 	var window_note := Label.new()
-	window_note.text = "Larger windows show more ship detail. Sizes fit your display; in fullscreen, the choice applies when you return to windowed mode."
+	window_note.text = "Window size takes effect when you leave fullscreen. Large sizes are adjusted to fit your display."
 	window_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	window_note.add_theme_font_size_override("font_size", 14)
 	display.add_child(window_note)
-	access.add_child(_make_toggle("Reduced flashing effects", "reduced_flashing", false))
-	access.add_child(_make_toggle("Reduced menu motion", "reduced_motion", false))
+	access.add_child(_make_toggle("Reduce flashes", "reduced_flashing", false))
+	access.add_child(_make_toggle("Reduce menu motion", "reduced_motion", false))
 	access.add_child(_make_toggle("Hold to confirm ending a run", "hold_to_confirm", false))
 	var text_size := OptionButton.new()
 	for percent: int in [100, 115, 130]:
@@ -170,6 +170,7 @@ func _build_ui() -> void:
 	deadzone_label.text = "Right stick aim deadzone: %d%%" % roundi(float(SaveManager.get_setting("aim_deadzone", 0.4)) * 100)
 	controls.add_child(deadzone_label)
 	var deadzone := HSlider.new()
+	deadzone.tooltip_text = "How far you must move the right stick before aiming changes. Increase this if your aim drifts on its own."
 	deadzone.min_value = 0.15
 	deadzone.max_value = 0.6
 	deadzone.step = 0.05
@@ -181,13 +182,13 @@ func _build_ui() -> void:
 	)
 	controls.add_child(deadzone)
 	_controls_button = Button.new()
-	_controls_button.text = "CUSTOMIZE FLIGHT CONTROLS"
+	_controls_button.text = "CHANGE CONTROLS"
 	_controls_button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_controls_button.pressed.connect(_open_controls)
 	controls.add_child(_controls_button)
 
 	var note := Label.new()
-	note.text = "Preferences and high score are saved automatically."
+	note.text = "Changes are saved automatically."
 	note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	note.add_theme_font_size_override("font_size", 13)
 	note.add_theme_color_override("font_color", Color(0.55, 0.65, 0.8))

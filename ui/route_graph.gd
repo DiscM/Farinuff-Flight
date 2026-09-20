@@ -17,20 +17,20 @@ func _ready() -> void:
 		var reachable: bool = node.id == &"far_reach" if preview_mode else selectable_ids.has(node.id)
 		var known: bool = reachable or snapshot.discovered_node_ids.has(node.id)
 		var cleared := snapshot.cleared_node_ids.has(node.id) and not preview_mode
-		var marker := "✓ CLEARED" if cleared else "◇ REACHABLE" if reachable else "◈ DISCOVERED" if known else "▣ LOCKED"
+		var marker := "✓ CLEARED" if cleared else "◇ AVAILABLE" if reachable else "◈ DISCOVERED" if known else "▣ LOCKED"
 		_states[node.id] = "cleared" if cleared else "reachable" if reachable else "discovered" if known else "locked"
-		button.text = "%s\n%d–%d · %s" % [node.display_name if known else "UNKNOWN RELAY", node.first_wave, node.last_wave, marker]
+		button.text = "%s\n%d–%d · %s" % [node.display_name if known else "UNKNOWN SECTOR", node.first_wave, node.last_wave, marker]
 		button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		button.add_theme_font_size_override("font_size", 13)
 		button.disabled = not known
-		button.tooltip_text = ExpeditionManager.get_route_description(node) if known else "Clear the preceding sector to recover this coordinate."
+		button.tooltip_text = ExpeditionManager.get_route_description(node) if known else "Clear the previous sector to reveal this route."
 		var focus := StyleBoxFlat.new()
 		focus.bg_color = Color(0, 0, 0, 0)
 		focus.border_color = Color.WHITE
 		focus.set_border_width_all(3)
 		button.add_theme_stylebox_override("focus", focus)
 		if snapshot.recovered_fragment_ids.has(node.fragment_beat_id) and not snapshot.seen_story_beat_ids.has(node.fragment_beat_id):
-			button.text += " · NEW SIGNAL"
+			button.text += " · UNREAD FRAGMENT"
 		button.pressed.connect(_select.bind(StringName(node.id)))
 		button.pressed.connect(func(): MenuAudio.play(&"MAP.ROUTE.SELECT"))
 		button.focus_entered.connect(func(): MenuAudio.play(&"UI.NAV.MOVE"))

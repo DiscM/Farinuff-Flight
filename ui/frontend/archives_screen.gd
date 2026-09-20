@@ -28,14 +28,14 @@ func _ready() -> void:
 	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(column)
 	var title := Label.new()
-	title.text = "ARCHIVES · RECOVERED SIGNAL"
+	title.text = "ARCHIVES · SIGNAL FRAGMENTS"
 	title.add_theme_font_size_override("font_size", 26)
 	title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	column.add_child(title)
 	var fragments := ExpeditionManager.get_recovered_fragments()
 	_fragments = fragments
 	var progress := Label.new()
-	progress.text = "%d / 4 fragments recovered. Other routes may carry another part of the signal." % fragments.size()
+	progress.text = "%d / 4 fragments found. Take different routes to find them all." % fragments.size()
 	progress.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	column.add_child(progress)
 	var picker := OptionButton.new()
@@ -55,9 +55,9 @@ func _ready() -> void:
 		_body.text = "No fragments recovered yet. Clear a route through the Broken Perimeter or Tempest Reach to recover one."
 	else:
 		picker.select(-1)
-		_body.text = "Select a recovered fragment to read it. NEW marks unread transmissions."
+		_body.text = "Choose a fragment to read. NEW marks one you have not read yet."
 	_back_button = Button.new()
-	_back_button.text = "BACK TO THE CHART"
+	_back_button.text = "BACK TO ROUTE MAP"
 	_back_button.custom_minimum_size.y = 48
 	_back_button.pressed.connect(_close)
 	column.add_child(_back_button)

@@ -49,7 +49,7 @@ const ALL_UPGRADES: Array[Dictionary] = [
 	{
 		"id": "auto_aim",
 		"role": "Precision",
-		"name": "Auto-Aim Core",
+		"name": "Homing Shots",
 		"icon": "🎯",
 		"description": "Bullets home in on\nthe nearest enemy.",
 		"color": Color(0.3, 1.0, 0.5),
@@ -59,7 +59,7 @@ const ALL_UPGRADES: Array[Dictionary] = [
 		"role": "Support",
 		"name": "Drone Escort",
 		"icon": "🤖",
-		"description": "A combat drone joins you,\nauto-firing at enemies.",
+		"description": "A drone follows your ship\nand shoots enemies for you.",
 		"color": Color(0.4, 0.85, 1.0),
 	},
 	{
@@ -67,7 +67,7 @@ const ALL_UPGRADES: Array[Dictionary] = [
 		"role": "Survival",
 		"name": "Hull Plating",
 		"icon": "🛡️",
-		"description": "Reinforce the hull.\nGain +1 life.",
+		"description": "Gain 1 extra life.",
 		"color": Color(0.8, 0.55, 1.0),
 	},
 	{
@@ -75,7 +75,7 @@ const ALL_UPGRADES: Array[Dictionary] = [
 		"role": "Mobility",
 		"name": "Afterburner",
 		"icon": "🚀",
-		"description": "+20% speed and +15% acceleration.\nSnappier maneuverability.",
+		"description": "Move 20% faster and\naccelerate 15% faster.",
 		"color": Color(1.0, 0.45, 0.15),
 	},
 	# ── New Wave-10 Upgrades ────────────────────────────────────────────────────
@@ -84,7 +84,7 @@ const ALL_UPGRADES: Array[Dictionary] = [
 		"role": "Coverage",
 		"name": "Spread Shot",
 		"icon": "✦",
-		"description": "Permanent 3-way fan. Temporary Spread\nwidens the central fan to 5 shots.",
+		"description": "Fire three shots in a fan.\nThe Spread power-up widens it to five.",
 		"color": Color(1.0, 0.55, 0.9),
 	},
 	{
@@ -92,7 +92,7 @@ const ALL_UPGRADES: Array[Dictionary] = [
 		"role": "Survival",
 		"name": "Shield Burst",
 		"icon": "💥",
-		"description": "Every 10 s, emit a shockwave\nthat clears bullets & damages enemies.",
+		"description": "Every 10 seconds, release a blast\nthat clears bullets and hits enemies.",
 		"color": Color(0.3, 0.8, 1.0),
 	},
 	{
@@ -100,7 +100,7 @@ const ALL_UPGRADES: Array[Dictionary] = [
 		"role": "Support",
 		"name": "Orb Magnet",
 		"icon": "🧲",
-		"description": "Permanently attract XP orbs\nand power-ups (faster pull).",
+		"description": "Pull in orbs and power-ups\nfor the rest of this run.",
 		"color": Color(1.0, 0.75, 0.1),
 	},
 	{
@@ -108,7 +108,7 @@ const ALL_UPGRADES: Array[Dictionary] = [
 		"role": "Firepower",
 		"name": "Overclock",
 		"icon": "⚡",
-		"description": "Triple fire rate for 2.5 s\nevery 16 s. Stacks with Rapid Fire.",
+		"description": "Fire three times faster for 2.5 seconds\nevery 16 seconds. Works with Rapid Fire.",
 		"color": Color(0.9, 1.0, 0.2),
 	},
 	{
@@ -116,7 +116,7 @@ const ALL_UPGRADES: Array[Dictionary] = [
 		"role": "Coverage",
 		"name": "Rear Gunner",
 		"icon": "🔺",
-		"description": "A rear cannon fires backward\neach shot. Inherits all bullet mods.",
+		"description": "Also fire behind your ship.\nRear shots use your bullet upgrades.",
 		"color": Color(1.0, 0.35, 0.35),
 	},
 ]
@@ -147,7 +147,7 @@ const META_ELITE_UPGRADES: Array[Dictionary] = [
 		"role": "Coverage",
 		"name": "Explosive Rounds",
 		"icon": "💣",
-		"description": "Bullets deal area damage\non impact.",
+		"description": "Bullets explode on impact,\nalso damaging nearby enemies.",
 		"color": Color(1.0, 0.35, 0.35),
 		"meta_unlock": "meta_explosive",
 	},

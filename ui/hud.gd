@@ -249,7 +249,7 @@ func _on_boss_died(_points: int) -> void:
 ## Polls the player's power-up timers every frame and keeps one chip per
 ## active effect in the PowerUpPanel. Timed effects (rapid fire, spread shot,
 ## magnet) show a live countdown and a depleting bar; the shield shows a
-## persistent "HELD" chip until it absorbs a hit.
+## persistent "READY" chip until it absorbs a hit.
 func _process(delta: float) -> void:
 	if _wave_progress != null:
 		_wave_progress.max_value = maxi(GameManager.orbs_needed_this_wave, 1)
@@ -310,7 +310,7 @@ func _update_effect_chip(cfg: Dictionary, remaining: float, duration: float) -> 
 		(chip["time"] as Label).text = "%.1fs" % remaining
 		(chip["bar"] as ProgressBar).value = remaining / maxf(duration, 0.01)
 	else:
-		(chip["time"] as Label).text = "HELD"
+		(chip["time"] as Label).text = "READY"
 		(chip["bar"] as ProgressBar).value = 1.0
 
 ## Builds a compact color-coded chip: effect name on top, countdown beneath,
@@ -376,7 +376,7 @@ func _on_power_up_collected(type: int, _pos: Vector3) -> void:
 		return
 	# Show brief indicator
 	var indicator := Label.new()
-	var names := ["SCALE", "RAPID", "SHIELD", "SPREAD", "MAGNET", "NUKE"]
+	var names := ["BIGGER SHOTS", "RAPID", "SHIELD", "SPREAD", "MAGNET", "NUKE"]
 	var colors := [
 		Color(0.2, 0.8, 1.0),
 		Color(1.0, 0.8, 0.0),
