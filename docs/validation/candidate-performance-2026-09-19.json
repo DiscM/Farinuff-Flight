@@ -1,0 +1,919 @@
+{
+  "date_local": "2026-09-19",
+  "slice": "08 — Candidate performance",
+  "status": "engineering implemented; foreground Windows hardware and long-session acceptance open",
+  "scenario": "candidate-pressure-v1",
+  "classification": "background_rendered_diagnostic",
+  "full_protocol_duration": true,
+  "source_commit": "2a0780c3a18d8f007ad10bb1ed1ae0840726c3e9",
+  "dirty_build": true,
+  "artifacts": {
+    "benchmark_package": "builds/production-performance-candidate",
+    "package_sha256": "cd5542855ee18cedf47a7abd4ed5bb900c9eca46d7c54980d86326ffc8da1acf",
+    "runtime_sha256": "5a65c5e1fc81bb7816b03e1be1f902de58c1ff4b71b9a83973665f35d4f4e737",
+    "verified_template_archive_sha256": "3fbe2c0e2dec9d537ab9ec97bcf8da91dcf23357fc51f67092dd068d839290a8",
+    "local_evidence": "builds/production-performance-evidence",
+    "evidence_checksums_sha256": "765b725b65044168c5dd72cbf11fc08bd5ba8313e6c0ce034ccc1a5948ed8f5b",
+    "capture": "design/production-performance/workload.png",
+    "capture_sha256": "14a5f51647b46f3132cee1114d4e3ff942848ef561d539e53c541afb46bc0fc6",
+    "shipping_package": "builds/production-performance-shipping-check",
+    "shipping_entries": 3699,
+    "shipping_benchmark_paths": 0
+  },
+  "metadata": {
+    "config": {
+      "allow_background": true,
+      "capture_path": "design/production-performance/workload.png",
+      "cycles": 3.0,
+      "endless_seconds": 60.0,
+      "external_cleanup_ack": true,
+      "power_state": "AC attached; low power mode off",
+      "quality": "high",
+      "resolution": [
+        1280.0,
+        720.0
+      ],
+      "seconds": 10.0,
+      "seed": 8026.0,
+      "warmup_seconds": 2.0
+    },
+    "cpu": "Apple A18 Pro",
+    "debug_build": false,
+    "display": "macOS",
+    "driver": "metal",
+    "engine": "4.6.3-stable (official)",
+    "engine_hash": "7d41c59c457bd5a245092b4e7eb2d833e3b3f8c3",
+    "frame_cap": 0,
+    "gpu": "Apple A18 Pro (Apple9)",
+    "logical_cpus": 6,
+    "os": "macOS",
+    "os_version": "26.6.2",
+    "physical_memory_bytes": 8589934592,
+    "physics_ticks_per_second": 60,
+    "profile": "farinuff-performance-623a6ed45ed94630896e86a45584eb54",
+    "rendering_method": "forward_plus",
+    "scenario": "candidate-pressure-v1",
+    "upgrades": [
+      "auto_aim",
+      "piercing",
+      "explosive_rounds",
+      "drone_escort",
+      "twin_cannons",
+      "spread_shot_elite",
+      "overclock"
+    ],
+    "vsync": 0,
+    "window_size": [
+      1280,
+      720
+    ]
+  },
+  "stages": [
+    {
+      "cycle": 0,
+      "name": "late_generation",
+      "frames": 966,
+      "wall_seconds": 9.970539,
+      "simulation_seconds": 10.0000000000002,
+      "mean_fps": 96.88543417763071,
+      "p50_ms": 10.164,
+      "p95_ms": 17.323,
+      "p99_ms": 33.296,
+      "max_ms": 59.446,
+      "hitches_over_50_ms": 3,
+      "repeated_hitches_within_30s": true,
+      "meets_frame_targets": false,
+      "peak_projectiles": 98,
+      "peak_enemies": 10,
+      "peak_hazards": 9,
+      "player_shots": 248,
+      "enemy_shots": 157,
+      "unfocused_frames": 966,
+      "boss_attacks": [],
+      "boss_selection_seed": null,
+      "pool_growth": 0
+    },
+    {
+      "cycle": 0,
+      "name": "boss_assault",
+      "frames": 1176,
+      "wall_seconds": 9.990135,
+      "simulation_seconds": 10.0000000000002,
+      "mean_fps": 117.71612695924529,
+      "p50_ms": 7.975,
+      "p95_ms": 14.13,
+      "p99_ms": 24.602,
+      "max_ms": 71.066,
+      "hitches_over_50_ms": 1,
+      "repeated_hitches_within_30s": false,
+      "meets_frame_targets": true,
+      "peak_projectiles": 142,
+      "peak_enemies": 1,
+      "peak_hazards": 6,
+      "player_shots": 321,
+      "enemy_shots": 109,
+      "unfocused_frames": 1176,
+      "boss_attacks": [
+        {
+          "id": "projectile_alternate",
+          "simulation_seconds": 1.63333333333333
+        },
+        {
+          "id": "charge",
+          "simulation_seconds": 7.06666666666665
+        },
+        {
+          "id": "slam",
+          "simulation_seconds": 10.6333333333334
+        }
+      ],
+      "boss_selection_seed": 8027,
+      "pool_growth": 0
+    },
+    {
+      "cycle": 0,
+      "name": "boss_bulwark",
+      "frames": 1172,
+      "wall_seconds": 9.970922,
+      "simulation_seconds": 10.0000000000002,
+      "mean_fps": 117.5417880111789,
+      "p50_ms": 7.606,
+      "p95_ms": 13.905,
+      "p99_ms": 29.421,
+      "max_ms": 181.856,
+      "hitches_over_50_ms": 6,
+      "repeated_hitches_within_30s": true,
+      "meets_frame_targets": false,
+      "peak_projectiles": 148,
+      "peak_enemies": 1,
+      "peak_hazards": 7,
+      "player_shots": 330,
+      "enemy_shots": 116,
+      "unfocused_frames": 1172,
+      "boss_attacks": [
+        {
+          "id": "projectile_alternate",
+          "simulation_seconds": 2.38333333333333
+        },
+        {
+          "id": "charge",
+          "simulation_seconds": 7.81666666666664
+        },
+        {
+          "id": "projectile_alternate",
+          "simulation_seconds": 11.3833333333335
+        }
+      ],
+      "boss_selection_seed": 8028,
+      "pool_growth": 0
+    },
+    {
+      "cycle": 0,
+      "name": "boss_tempest",
+      "frames": 1277,
+      "wall_seconds": 9.983991,
+      "simulation_seconds": 10.0000000000002,
+      "mean_fps": 127.90476273466192,
+      "p50_ms": 7.732,
+      "p95_ms": 11.344,
+      "p99_ms": 15.076,
+      "max_ms": 22.417,
+      "hitches_over_50_ms": 0,
+      "repeated_hitches_within_30s": false,
+      "meets_frame_targets": true,
+      "peak_projectiles": 100,
+      "peak_enemies": 1,
+      "peak_hazards": 7,
+      "player_shots": 240,
+      "enemy_shots": 132,
+      "unfocused_frames": 1277,
+      "boss_attacks": [
+        {
+          "id": "projectile",
+          "simulation_seconds": 2.65
+        },
+        {
+          "id": "projectile_alternate",
+          "simulation_seconds": 7.73333333333331
+        }
+      ],
+      "boss_selection_seed": 8029,
+      "pool_growth": 0
+    },
+    {
+      "cycle": 0,
+      "name": "boss_core",
+      "frames": 860,
+      "wall_seconds": 10.007109,
+      "simulation_seconds": 10.0000000000002,
+      "mean_fps": 85.93890603170206,
+      "p50_ms": 9.323,
+      "p95_ms": 28.885,
+      "p99_ms": 55.248,
+      "max_ms": 149.3,
+      "hitches_over_50_ms": 12,
+      "repeated_hitches_within_30s": true,
+      "meets_frame_targets": false,
+      "peak_projectiles": 118,
+      "peak_enemies": 1,
+      "peak_hazards": 7,
+      "player_shots": 231,
+      "enemy_shots": 120,
+      "unfocused_frames": 860,
+      "boss_attacks": [
+        {
+          "id": "projectile",
+          "simulation_seconds": 3.13333333333333
+        },
+        {
+          "id": "charge",
+          "simulation_seconds": 8.21666666666665
+        },
+        {
+          "id": "projectile_alternate",
+          "simulation_seconds": 11.7666666666668
+        }
+      ],
+      "boss_selection_seed": 8030,
+      "pool_growth": 0
+    },
+    {
+      "cycle": 0,
+      "name": "boss_harbinger",
+      "frames": 1268,
+      "wall_seconds": 10.006935,
+      "simulation_seconds": 10.0000000000002,
+      "mean_fps": 126.71212514121457,
+      "p50_ms": 7.624,
+      "p95_ms": 12.341,
+      "p99_ms": 16.796,
+      "max_ms": 41.756,
+      "hitches_over_50_ms": 0,
+      "repeated_hitches_within_30s": false,
+      "meets_frame_targets": true,
+      "peak_projectiles": 182,
+      "peak_enemies": 1,
+      "peak_hazards": 7,
+      "player_shots": 320,
+      "enemy_shots": 120,
+      "unfocused_frames": 1268,
+      "boss_attacks": [
+        {
+          "id": "projectile_alternate",
+          "simulation_seconds": 2.88333333333333
+        },
+        {
+          "id": "charge",
+          "simulation_seconds": 9.03333333333336
+        }
+      ],
+      "boss_selection_seed": 8031,
+      "pool_growth": 0
+    },
+    {
+      "cycle": 0,
+      "name": "endless",
+      "frames": 5436,
+      "wall_seconds": 59.96437400000001,
+      "simulation_seconds": 60.0166666666644,
+      "mean_fps": 90.65382722080948,
+      "p50_ms": 10.17,
+      "p95_ms": 20.333,
+      "p99_ms": 33.165,
+      "max_ms": 120.859,
+      "hitches_over_50_ms": 16,
+      "repeated_hitches_within_30s": true,
+      "meets_frame_targets": false,
+      "peak_projectiles": 104,
+      "peak_enemies": 10,
+      "peak_hazards": 7,
+      "player_shots": 1752,
+      "enemy_shots": 873,
+      "unfocused_frames": 3093,
+      "boss_attacks": [],
+      "boss_selection_seed": null,
+      "pool_growth": 0
+    },
+    {
+      "cycle": 1,
+      "name": "late_generation",
+      "frames": 1081,
+      "wall_seconds": 9.967922,
+      "simulation_seconds": 10.0000000000002,
+      "mean_fps": 108.44787910659814,
+      "p50_ms": 9.495,
+      "p95_ms": 14.218,
+      "p99_ms": 18.283,
+      "max_ms": 23.677,
+      "hitches_over_50_ms": 0,
+      "repeated_hitches_within_30s": false,
+      "meets_frame_targets": true,
+      "peak_projectiles": 93,
+      "peak_enemies": 10,
+      "peak_hazards": 9,
+      "player_shots": 248,
+      "enemy_shots": 153,
+      "unfocused_frames": 0,
+      "boss_attacks": [],
+      "boss_selection_seed": null,
+      "pool_growth": 0
+    },
+    {
+      "cycle": 1,
+      "name": "boss_assault",
+      "frames": 1208,
+      "wall_seconds": 9.985118,
+      "simulation_seconds": 10.0000000000002,
+      "mean_fps": 120.98004249924738,
+      "p50_ms": 8.341,
+      "p95_ms": 13.017,
+      "p99_ms": 15.326,
+      "max_ms": 20.347,
+      "hitches_over_50_ms": 0,
+      "repeated_hitches_within_30s": false,
+      "meets_frame_targets": true,
+      "peak_projectiles": 146,
+      "peak_enemies": 1,
+      "peak_hazards": 7,
+      "player_shots": 331,
+      "enemy_shots": 121,
+      "unfocused_frames": 0,
+      "boss_attacks": [
+        {
+          "id": "projectile_alternate",
+          "simulation_seconds": 1.63333333333333
+        },
+        {
+          "id": "charge",
+          "simulation_seconds": 7.06666666666665
+        },
+        {
+          "id": "slam",
+          "simulation_seconds": 10.6333333333334
+        }
+      ],
+      "boss_selection_seed": 8027,
+      "pool_growth": 0
+    },
+    {
+      "cycle": 1,
+      "name": "boss_bulwark",
+      "frames": 1309,
+      "wall_seconds": 9.982895000000001,
+      "simulation_seconds": 10.0000000000002,
+      "mean_fps": 131.12428809478612,
+      "p50_ms": 7.694,
+      "p95_ms": 11.604,
+      "p99_ms": 13.964,
+      "max_ms": 20.092,
+      "hitches_over_50_ms": 0,
+      "repeated_hitches_within_30s": false,
+      "meets_frame_targets": true,
+      "peak_projectiles": 152,
+      "peak_enemies": 1,
+      "peak_hazards": 7,
+      "player_shots": 325,
+      "enemy_shots": 140,
+      "unfocused_frames": 0,
+      "boss_attacks": [
+        {
+          "id": "projectile_alternate",
+          "simulation_seconds": 2.36666666666666
+        },
+        {
+          "id": "charge",
+          "simulation_seconds": 7.79999999999998
+        },
+        {
+          "id": "projectile_alternate",
+          "simulation_seconds": 11.3666666666668
+        }
+      ],
+      "boss_selection_seed": 8028,
+      "pool_growth": 0
+    },
+    {
+      "cycle": 1,
+      "name": "boss_tempest",
+      "frames": 1361,
+      "wall_seconds": 10.005021000000001,
+      "simulation_seconds": 10.0000000000002,
+      "mean_fps": 136.03169848419108,
+      "p50_ms": 7.278,
+      "p95_ms": 10.729,
+      "p99_ms": 12.638,
+      "max_ms": 28.058,
+      "hitches_over_50_ms": 0,
+      "repeated_hitches_within_30s": false,
+      "meets_frame_targets": true,
+      "peak_projectiles": 93,
+      "peak_enemies": 1,
+      "peak_hazards": 7,
+      "player_shots": 236,
+      "enemy_shots": 108,
+      "unfocused_frames": 0,
+      "boss_attacks": [
+        {
+          "id": "projectile",
+          "simulation_seconds": 2.65
+        },
+        {
+          "id": "projectile_alternate",
+          "simulation_seconds": 7.73333333333331
+        }
+      ],
+      "boss_selection_seed": 8029,
+      "pool_growth": 0
+    },
+    {
+      "cycle": 1,
+      "name": "boss_core",
+      "frames": 1138,
+      "wall_seconds": 9.992863999999999,
+      "simulation_seconds": 10.0000000000002,
+      "mean_fps": 113.88126567118296,
+      "p50_ms": 8.252,
+      "p95_ms": 14.634,
+      "p99_ms": 30.807,
+      "max_ms": 78.17,
+      "hitches_over_50_ms": 3,
+      "repeated_hitches_within_30s": true,
+      "meets_frame_targets": false,
+      "peak_projectiles": 119,
+      "peak_enemies": 1,
+      "peak_hazards": 7,
+      "player_shots": 95,
+      "enemy_shots": 144,
+      "unfocused_frames": 719,
+      "boss_attacks": [
+        {
+          "id": "projectile",
+          "simulation_seconds": 3.13333333333333
+        },
+        {
+          "id": "charge",
+          "simulation_seconds": 8.21666666666665
+        },
+        {
+          "id": "projectile_alternate",
+          "simulation_seconds": 11.7666666666668
+        }
+      ],
+      "boss_selection_seed": 8030,
+      "pool_growth": 0
+    },
+    {
+      "cycle": 1,
+      "name": "boss_harbinger",
+      "frames": 1040,
+      "wall_seconds": 9.978639999999999,
+      "simulation_seconds": 10.0000000000002,
+      "mean_fps": 104.22261951528465,
+      "p50_ms": 9.029,
+      "p95_ms": 16.723,
+      "p99_ms": 21.816,
+      "max_ms": 69.457,
+      "hitches_over_50_ms": 1,
+      "repeated_hitches_within_30s": false,
+      "meets_frame_targets": false,
+      "peak_projectiles": 178,
+      "peak_enemies": 1,
+      "peak_hazards": 7,
+      "player_shots": 331,
+      "enemy_shots": 108,
+      "unfocused_frames": 1040,
+      "boss_attacks": [
+        {
+          "id": "projectile_alternate",
+          "simulation_seconds": 2.88333333333333
+        },
+        {
+          "id": "charge",
+          "simulation_seconds": 9.03333333333336
+        }
+      ],
+      "boss_selection_seed": 8031,
+      "pool_growth": 0
+    },
+    {
+      "cycle": 1,
+      "name": "endless",
+      "frames": 4909,
+      "wall_seconds": 60.011838000000004,
+      "simulation_seconds": 60.0166666666644,
+      "mean_fps": 81.80052742260618,
+      "p50_ms": 10.772,
+      "p95_ms": 24.799,
+      "p99_ms": 43.864,
+      "max_ms": 105.749,
+      "hitches_over_50_ms": 24,
+      "repeated_hitches_within_30s": true,
+      "meets_frame_targets": false,
+      "peak_projectiles": 119,
+      "peak_enemies": 10,
+      "peak_hazards": 7,
+      "player_shots": 1742,
+      "enemy_shots": 845,
+      "unfocused_frames": 4909,
+      "boss_attacks": [],
+      "boss_selection_seed": null,
+      "pool_growth": 0
+    },
+    {
+      "cycle": 2,
+      "name": "late_generation",
+      "frames": 849,
+      "wall_seconds": 9.947121,
+      "simulation_seconds": 10.0000000000002,
+      "mean_fps": 85.35132929417468,
+      "p50_ms": 10.362,
+      "p95_ms": 24.985,
+      "p99_ms": 43.799,
+      "max_ms": 57.591,
+      "hitches_over_50_ms": 3,
+      "repeated_hitches_within_30s": true,
+      "meets_frame_targets": false,
+      "peak_projectiles": 95,
+      "peak_enemies": 10,
+      "peak_hazards": 8,
+      "player_shots": 248,
+      "enemy_shots": 153,
+      "unfocused_frames": 849,
+      "boss_attacks": [],
+      "boss_selection_seed": null,
+      "pool_growth": 0
+    },
+    {
+      "cycle": 2,
+      "name": "boss_assault",
+      "frames": 1035,
+      "wall_seconds": 9.991125,
+      "simulation_seconds": 10.0000000000002,
+      "mean_fps": 103.59193784483729,
+      "p50_ms": 9.908,
+      "p95_ms": 15.187,
+      "p99_ms": 24.333,
+      "max_ms": 38.359,
+      "hitches_over_50_ms": 0,
+      "repeated_hitches_within_30s": false,
+      "meets_frame_targets": true,
+      "peak_projectiles": 145,
+      "peak_enemies": 1,
+      "peak_hazards": 7,
+      "player_shots": 331,
+      "enemy_shots": 109,
+      "unfocused_frames": 1035,
+      "boss_attacks": [
+        {
+          "id": "projectile_alternate",
+          "simulation_seconds": 1.63333333333333
+        },
+        {
+          "id": "charge",
+          "simulation_seconds": 7.06666666666665
+        },
+        {
+          "id": "slam",
+          "simulation_seconds": 10.6333333333334
+        }
+      ],
+      "boss_selection_seed": 8027,
+      "pool_growth": 0
+    },
+    {
+      "cycle": 2,
+      "name": "boss_bulwark",
+      "frames": 1167,
+      "wall_seconds": 9.982618,
+      "simulation_seconds": 10.0000000000002,
+      "mean_fps": 116.90320114422889,
+      "p50_ms": 8.087,
+      "p95_ms": 13.886,
+      "p99_ms": 23.155,
+      "max_ms": 66.623,
+      "hitches_over_50_ms": 1,
+      "repeated_hitches_within_30s": false,
+      "meets_frame_targets": true,
+      "peak_projectiles": 141,
+      "peak_enemies": 1,
+      "peak_hazards": 7,
+      "player_shots": 325,
+      "enemy_shots": 116,
+      "unfocused_frames": 1167,
+      "boss_attacks": [
+        {
+          "id": "projectile_alternate",
+          "simulation_seconds": 2.36666666666666
+        },
+        {
+          "id": "charge",
+          "simulation_seconds": 7.79999999999998
+        },
+        {
+          "id": "projectile_alternate",
+          "simulation_seconds": 11.3666666666668
+        }
+      ],
+      "boss_selection_seed": 8028,
+      "pool_growth": 0
+    },
+    {
+      "cycle": 2,
+      "name": "boss_tempest",
+      "frames": 928,
+      "wall_seconds": 9.998705,
+      "simulation_seconds": 10.0000000000002,
+      "mean_fps": 92.81201915648076,
+      "p50_ms": 9.868,
+      "p95_ms": 19.244,
+      "p99_ms": 29.595,
+      "max_ms": 41.403,
+      "hitches_over_50_ms": 0,
+      "repeated_hitches_within_30s": false,
+      "meets_frame_targets": false,
+      "peak_projectiles": 95,
+      "peak_enemies": 1,
+      "peak_hazards": 7,
+      "player_shots": 241,
+      "enemy_shots": 120,
+      "unfocused_frames": 928,
+      "boss_attacks": [
+        {
+          "id": "projectile",
+          "simulation_seconds": 2.65
+        },
+        {
+          "id": "projectile_alternate",
+          "simulation_seconds": 7.73333333333331
+        }
+      ],
+      "boss_selection_seed": 8029,
+      "pool_growth": 0
+    },
+    {
+      "cycle": 2,
+      "name": "boss_core",
+      "frames": 1187,
+      "wall_seconds": 9.992540000000002,
+      "simulation_seconds": 10.0000000000002,
+      "mean_fps": 118.78861630776558,
+      "p50_ms": 8.139,
+      "p95_ms": 13.83,
+      "p99_ms": 18.948,
+      "max_ms": 51.057,
+      "hitches_over_50_ms": 1,
+      "repeated_hitches_within_30s": false,
+      "meets_frame_targets": true,
+      "peak_projectiles": 122,
+      "peak_enemies": 1,
+      "peak_hazards": 6,
+      "player_shots": 240,
+      "enemy_shots": 144,
+      "unfocused_frames": 1187,
+      "boss_attacks": [
+        {
+          "id": "projectile",
+          "simulation_seconds": 3.13333333333333
+        },
+        {
+          "id": "charge",
+          "simulation_seconds": 8.21666666666665
+        },
+        {
+          "id": "projectile_alternate",
+          "simulation_seconds": 11.7666666666668
+        }
+      ],
+      "boss_selection_seed": 8030,
+      "pool_growth": 0
+    },
+    {
+      "cycle": 2,
+      "name": "boss_harbinger",
+      "frames": 1256,
+      "wall_seconds": 9.989951999999999,
+      "simulation_seconds": 10.0000000000002,
+      "mean_fps": 125.72632981619932,
+      "p50_ms": 7.625,
+      "p95_ms": 11.277,
+      "p99_ms": 14.434,
+      "max_ms": 94.426,
+      "hitches_over_50_ms": 2,
+      "repeated_hitches_within_30s": true,
+      "meets_frame_targets": false,
+      "peak_projectiles": 58,
+      "peak_enemies": 1,
+      "peak_hazards": 7,
+      "player_shots": 41,
+      "enemy_shots": 112,
+      "unfocused_frames": 118,
+      "boss_attacks": [
+        {
+          "id": "projectile_alternate",
+          "simulation_seconds": 2.88333333333333
+        },
+        {
+          "id": "charge",
+          "simulation_seconds": 9.03333333333336
+        }
+      ],
+      "boss_selection_seed": 8031,
+      "pool_growth": 0
+    },
+    {
+      "cycle": 2,
+      "name": "endless",
+      "frames": 6336,
+      "wall_seconds": 59.996739999999996,
+      "simulation_seconds": 60.0166666666644,
+      "mean_fps": 105.60573791175987,
+      "p50_ms": 9.706,
+      "p95_ms": 14.79,
+      "p99_ms": 18.23,
+      "max_ms": 108.849,
+      "hitches_over_50_ms": 1,
+      "repeated_hitches_within_30s": false,
+      "meets_frame_targets": true,
+      "peak_projectiles": 118,
+      "peak_enemies": 10,
+      "peak_hazards": 7,
+      "player_shots": 1567,
+      "enemy_shots": 909,
+      "unfocused_frames": 609,
+      "boss_attacks": [],
+      "boss_selection_seed": null,
+      "pool_growth": 0
+    }
+  ],
+  "transitions": [
+    {
+      "cycle": 0,
+      "name": "menu",
+      "elapsed_ms": 913.817
+    },
+    {
+      "cycle": 0,
+      "name": "launch",
+      "elapsed_ms": 2154.532
+    },
+    {
+      "cycle": 0,
+      "name": "retry",
+      "elapsed_ms": 621.257
+    },
+    {
+      "cycle": 1,
+      "name": "menu",
+      "elapsed_ms": 85.204
+    },
+    {
+      "cycle": 1,
+      "name": "launch",
+      "elapsed_ms": 756.995
+    },
+    {
+      "cycle": 1,
+      "name": "retry",
+      "elapsed_ms": 1343.422
+    },
+    {
+      "cycle": 2,
+      "name": "menu",
+      "elapsed_ms": 91.398
+    },
+    {
+      "cycle": 2,
+      "name": "launch",
+      "elapsed_ms": 978.062
+    },
+    {
+      "cycle": 2,
+      "name": "retry",
+      "elapsed_ms": 878.374
+    }
+  ],
+  "startup": {
+    "launch_to_metadata_ms": 4771.24483300031,
+    "launch_to_menu_ms": 5678.173958000116,
+    "launch_to_launch_ms": 7865.2049169995735,
+    "launch_to_retry_ms": 143258.3350829991
+  },
+  "cleanup": {
+    "nodes": {
+      "by_cycle": [
+        38,
+        38,
+        38
+      ],
+      "last_minus_first": 0
+    },
+    "objects": {
+      "by_cycle": [
+        2864,
+        2865,
+        2865
+      ],
+      "last_minus_first": 1
+    },
+    "resources": {
+      "by_cycle": [
+        1030,
+        1030,
+        1030
+      ],
+      "last_minus_first": 0
+    },
+    "orphan_nodes": {
+      "by_cycle": [
+        null,
+        null,
+        null
+      ],
+      "last_minus_first": null
+    },
+    "static_bytes": {
+      "by_cycle": [
+        null,
+        null,
+        null
+      ],
+      "last_minus_first": null
+    },
+    "renderer_bytes": {
+      "by_cycle": [
+        259833856,
+        259833856,
+        259702784
+      ],
+      "last_minus_first": -131072
+    },
+    "process_rss_bytes": {
+      "by_cycle": [
+        256983040,
+        241172480,
+        248184832
+      ],
+      "last_minus_first": -8798208
+    }
+  },
+  "rss_peak_bytes": 451198976,
+  "diagnostics": [
+    {
+      "phase": "workload",
+      "message": "WARNING: Image format RGBFloat not supported by hardware, converting to RGBAFloat."
+    },
+    {
+      "phase": "shutdown",
+      "message": "WARNING: 2 RIDs of type \"Texture\" were leaked."
+    },
+    {
+      "phase": "shutdown",
+      "message": "ERROR: Parameter \"RenderingServer::get_singleton()\" is null."
+    },
+    {
+      "phase": "shutdown",
+      "message": "ERROR: 1 RID allocations of type 'N10RendererRD14TextureStorage7TextureE' were leaked at exit."
+    }
+  ],
+  "summary": {
+    "sampled_frames": 36959,
+    "unfocused_frames": 22373,
+    "p95_range_ms": [
+      10.729,
+      28.885
+    ],
+    "hitches_over_50ms": 74,
+    "max_pool_growth_after_warmup": 0,
+    "boss_attack_ids_match_across_cycles": true
+  },
+  "verification": {
+    "existing_smoke_scenes": "20/20",
+    "assisted_expedition_journeys": "24/24",
+    "native_inventory": {
+      "resources": 350,
+      "glbs": 11,
+      "upgrades": 13
+    },
+    "file_only_assertions": 375,
+    "smoke_runner_tests": 8,
+    "release_tool_tests": 8,
+    "performance_tool_tests": 12,
+    "short_headless_workload_stages": "21/21",
+    "review": {
+      "standards": "no remaining actionable findings",
+      "spec": "no remaining actionable findings"
+    }
+  },
+  "investigation": [
+    "Cold nested resource loading stalled in the release runtime; native stack retained at .godot/performance-release-probe-02/sample.txt. Disabling nested dependency workers preserves asynchronous root loads; the final exported workload completes.",
+    "Strict foreground attempts were invalidated by focus-loss pauses. Failure payload at .godot/performance-focus-diagnosis/events.jsonl confirms game active, focus absent, pause overlay present, no reward overlay.",
+    "The final background capture is release integration and cleanup evidence, not a foreground 60 FPS pass. Driver texture conversion and shutdown texture/RID diagnostics remain visible.",
+    "Cleanup nodes/resources were constant; object counts were 2864,2865,2865 and RSS was non-monotonic. Static/orphan counters are unavailable in release. Three cycles do not establish long-session stability."
+  ],
+  "remaining": [
+    "Foreground Windows minimum-spec measurements",
+    "Controlled foreground frame-time investigation and long Endless session",
+    "Ownership of shutdown texture/RID diagnostics",
+    "Physical controllers and cross-aspect gameplay acceptance"
+  ]
+}

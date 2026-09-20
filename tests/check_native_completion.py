@@ -124,7 +124,7 @@ def check_native_entry_and_transitions() -> None:
             ("root-scene allowlist", "const CACHEABLE_SCENES: PackedStringArray"),
             ("bounded menu/run/practice budget", "const MAX_CACHED_SCENES := 3"),
             ("practice scene", 'const PRACTICE_PATH := "res://scenes/flight_practice.tscn"'),
-            ("threaded scene request", 'ResourceLoader.load_threaded_request(path, \"PackedScene\", true)'),
+            ("threaded scene request without nested dependency workers", 'ResourceLoader.load_threaded_request(path, \"PackedScene\", false)'),
             ("asynchronous wait", "func wait_for_scene(path: String) -> PackedScene"),
         ],
     )

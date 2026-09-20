@@ -59,7 +59,10 @@ func prime_scene(path: String) -> bool:
 		set_process(true)
 		return true
 
-	var request_error := ResourceLoader.load_threaded_request(path, "PackedScene", true)
+	# Keep the root request asynchronous, but load its dependencies on that
+	# worker. Nested loader tasks deadlocked the cold 4.6.3 release runtime
+	# between GDScript preloads and Forward+ shader pipeline locks.
+	var request_error := ResourceLoader.load_threaded_request(path, "PackedScene", false)
 	if request_error != OK and request_error != ERR_BUSY:
 		_last_errors[path] = request_error
 		return false

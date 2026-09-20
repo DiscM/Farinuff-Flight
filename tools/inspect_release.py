@@ -13,7 +13,7 @@ import re
 import struct
 
 
-FORBIDDEN_ROOTS = {"design", "docs", "tests", "tools", "prompts", "references", "renders",
+FORBIDDEN_ROOTS = {"benchmarks", "design", "docs", "tests", "tools", "prompts", "references", "renders",
                    "reviews", "shots", "visual-context", "boards", "builds", ".github", ".git"}
 SOURCE_EXTENSIONS = {".blend", ".blend1", ".psd", ".kra", ".aseprite", ".xcf"}
 SHIPPING_AUDIO = set(json.loads(Path(__file__).with_name("shipping_audio.json").read_text()))
@@ -25,6 +25,8 @@ REQUIRED_RESOURCES.update("Planets/" + path for path in (
     "IceWorld/IceWorld.tscn", "LandMasses/LandMasses.tscn", "LavaWorld/LavaWorld.tscn",
     "NoAtmosphere/NoAtmosphere.tscn", "Rivers/Rivers.tscn", "Star/Star.tscn", "BlackHole/BlackHole.tscn",
 ))
+BENCHMARK_RESOURCES = {"benchmarks/candidate_performance.tscn", "benchmarks/candidate_performance.gd",
+                       "benchmarks/performance_sampler.gd"}
 
 
 def read_pack(path: Path) -> list[dict]:
@@ -90,14 +92,20 @@ def read_pack(path: Path) -> list[dict]:
     return records
 
 
-def inspect(records: list[dict]) -> list[str]:
+def inspect(records: list[dict], *, benchmark: bool = False) -> list[str]:
     errors = []
+    benchmark_paths = {name + suffix for name in BENCHMARK_RESOURCES for suffix in ("", ".remap", ".uid")}
+    benchmark_paths.update(name.removesuffix(".gd") + ".gdc" for name in BENCHMARK_RESOURCES if name.endswith(".gd"))
     names = {record["path"] for record in records}
     for name in sorted(REQUIRED - names):
         errors.append(f"Missing required package file: {name}")
     for name in sorted(REQUIRED_RESOURCES):
         if name not in names and name + ".remap" not in names:
             errors.append(f"Missing runtime scene: {name}")
+    if benchmark:
+        for name in sorted(BENCHMARK_RESOURCES):
+            if name not in names and name + ".remap" not in names:
+                errors.append(f"Missing benchmark resource: {name}")
     if len(names) != len(records):
         errors.append("Duplicate package paths")
     for record in records:
@@ -113,7 +121,7 @@ def inspect(records: list[dict]) -> list[str]:
         path = PurePosixPath(name)
         if not path.parts or path.is_absolute() or ".." in path.parts:
             errors.append(f"Unsafe package path: {name}")
-        elif (path.parts[0] in FORBIDDEN_ROOTS or path.parts[0].startswith("mockups")
+        elif ((path.parts[0] in FORBIDDEN_ROOTS and not (benchmark and name in benchmark_paths)) or path.parts[0].startswith("mockups")
               or "mcp_interaction_server" in name or path.suffix in SOURCE_EXTENSIONS
               or any(extension + "-" in path.name for extension in SOURCE_EXTENSIONS)):
             errors.append(f"Development/source-only file in release: {name}")
