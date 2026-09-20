@@ -1,6 +1,5 @@
 extends Native3DGameplay
-## Deterministic native completion coverage. CI runs this scene headlessly; the
-## local verification pass for this change remains file-only.
+## Deterministic gameplay coverage for the shipping native scenes and models.
 const BossScene := preload("res://entities/enemies/boss_enemy_3d.tscn")
 const BossScript := preload("res://entities/enemies/boss_enemy_3d.gd")
 const EnemyScene := preload("res://entities/enemies/basic_enemy_3d.tscn")

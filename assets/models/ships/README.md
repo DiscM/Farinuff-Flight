@@ -61,29 +61,12 @@ units to match the orbiting/destructible section nodes.
 The models use Godot's conventional Y-up space. Their noses face negative Z,
 making them suitable for a camera looking down from positive Y.
 
-## Shader integration studies
+## Retired shader studies
 
-`tests/shader_3d_mockups.tscn` applies an in-engine 3D translation of the
-current visual language without changing any gameplay scenes or the source
-GLBs. The study includes:
-
-- `../mockups/shader_previews/shader_3d_gameplay_mockup.png` — a top-down encounter using
-  the galactic backdrop, glowing projectiles, class outlines, and CRT pass
-- `../mockups/shader_previews/shader_3d_evolution_mockup.png` — Generations I–IV progressing
-  from body emission through circuits, heat veins, and apex interference
-- `../mockups/shader_previews/shader_3d_fleet_mockup.png` — all six authored colorways with
-  Fresnel energy rims and object-space circuit patterns
-
-Open the scene directly for an animated look-development view. To capture a
-specific board at 1280×720:
-
-```sh
-godot --path . --resolution 1280x720 \
-  res://tests/shader_3d_mockups.tscn -- \
-  --shader-mockup-capture gameplay
-```
-
-Replace `gameplay` with `evolution` or `fleet` for the other boards.
+The old showroom and shader-mockup test scenes have been removed. Their
+preview outputs under `assets/models/mockups/` are local design artifacts,
+not dependencies of the smoke tests. Shipping scene resources are validated
+by the project import and native gameplay smoke test.
 
 ## Runtime integration
 
@@ -128,5 +111,4 @@ python3 tools/generate_mockup_models.py
 ```
 
 Pillow is optional; when available, the script also regenerates the labeled
-images in `../mockups/previews/`. `godot_fleet_showroom.png` is captured from the real
-Godot renderer through `tests/mockup_models_preview.tscn`.
+images in `../mockups/previews/`. The former Godot showroom capture scene is retired.

@@ -55,27 +55,52 @@ Expedition runs are intentionally session-scoped: quitting the process or abando
 
 The completion asset source is `tools/generate_native_completion_assets.py`. It generates six original low-poly GLBs in `assets/models/native/`: an orbital sentinel, orbital/piercing/explosive modules, a shock ring, and a muzzle flare. Existing authored boss hulls and butterfly variants supply the rest of the fleet.
 
-Run `python3 tools/check_native_transition.py` for file-only resource and GLB checks. CI retains autoload/VFX smoke coverage and adds `tests/native_completion_smoke.tscn` for native upgrades, projectile recycling, and boss variants. Static checks do not establish engine parsing, visual quality, combat balance, or frame rate. The gameplay screenshots above predate the completion changes.
+Run `python3 tools/check_native_transition.py` for resource-reference and scene-ID checks. Godot import validates the assets themselves; runtime tests exercise the shipping scenes. Static and headless checks do not establish visual quality, combat balance, or frame rate. The gameplay screenshots above predate the completion changes.
 
 ### GitHub smoke tests
 
-CI uses the checksum-pinned Godot 4.6.3 editor and `tools/run_smoke_tests.py` to run all 20 scenes, including frontend navigation, Expedition progression, menu boot, reward installation, backdrop drift, audio controls, and combat readability. Each scene must exit successfully, print its completion marker, and report no GDScript errors. A scene has a 120-second timeout; failures do not skip the remaining scenes, and GitHub retains their logs as the `smoke-test-logs` artifact.
+CI uses the checksum-pinned Godot 4.6.3 editor and an eight-scene smoke suite:
 
-To reproduce CI in a disposable checkout, set `GODOT_PATH` to the Godot 4.6.3 executable and run:
+| Scene | Coverage |
+| --- | --- |
+| `autoload_smoke` | Saves, settings persistence, progression, shared pool and game state |
+| `menu_boot_smoke` | Returning, first-flight and practice-return startup |
+| `frontend_navigation_smoke` | Pages, focus, modals, navigation and launch signals |
+| `native_completion_smoke` | Shipping actors/models, upgrades, projectile reuse and boss variants |
+| `expedition_progression_smoke` | Campaign persistence, rewards and assisted production journeys |
+| `pooling_smoke` | Scene teardown and stale pooled references |
+| `resource_cache_smoke` | Paused loading and menu/run/practice cache reuse |
+| `audio_settings_smoke` | Audio controls and settings application |
+
+Each scene must exit successfully, print its completion marker, and report no GDScript errors. Each has a 120-second timeout; failures do not skip remaining scenes. GitHub retains import and scene logs as `smoke-test-logs`. Python tooling tests run together before installing Godot.
+
+Retired mockup showrooms are removed: their ignored preview outputs are not project dependencies. The source-text migration checker (`tests/check_native_completion.py`) is no longer a CI gate; its implementation-string assertions overlap runtime coverage. The resource checker no longer validates obsolete redesign GLBs or freezes migration-era source patterns.
+
+To reproduce CI in a **disposable checkout**, set `GODOT_PATH` to the Godot 4.6.3 executable and run:
 
 ```sh
 python3 tools/check_native_transition.py
-python3 tests/check_native_completion.py
-python3 tests/test_smoke_runner.py
-python3 tests/test_release_tools.py
+python3 -m unittest discover -s tests -p 'test_*.py'
 cat tests/ci_settings.cfg >> project.godot
-"$GODOT_PATH" --headless --path . --import
-python3 tools/run_smoke_tests.py
+"$GODOT_PATH" --headless --path . --import > import.log 2>&1
+cat import.log
+if grep -Eq '(SCRIPT ERROR|ERROR):' import.log; then exit 1; fi
+printf '\n[gui]\ntheme/custom="res://ui/themes/farinuff_frontend_theme.tres"\n' >> project.godot
+python3 tools/run_smoke_tests.py --suite smoke
 ```
 
-The CI settings serialize asset imports to avoid a Godot font-import crash and disable Blender source imports: runtime scenes use the checked-in GLB exports, so the runner does not need Blender. The workflow checks `import.log` for errors before starting the scenes and includes it in the log artifact. Settings are appended directly because Godot ignores `override.cfg` during editor imports.
+CI serializes asset imports to avoid a Godot font-import crash and disables Blender source imports: runtime scenes use checked-in GLB exports. The shipping theme is restored after its fonts import. Settings are appended directly because Godot ignores `override.cfg` during editor imports.
 
-After resources have been imported, the runner also works directly in a development checkout without appending CI settings. It creates a temporary project and a different disposable user-data directory for each scene, before autoloads start. Player saves and the working `project.godot` remain untouched; temporary profiles are removed after success, failure, or timeout. The runner uses filesystem symlinks (Linux/macOS, or Windows with symlink support). To run one scene, append its name, for example `python3 tools/run_smoke_tests.py dev_commands_smoke`. Local logs are stored in `.godot/smoke-logs/`.
+After importing resources, the runner also works in a development checkout without appending CI settings. It creates a temporary project and a disposable user-data directory for each scene before autoloads start. Player saves and the working `project.godot` remain untouched; temporary profiles are removed after success, failure, or timeout. The runner requires filesystem symlinks (Linux/macOS, or Windows with symlink support). Local logs are stored in `.godot/smoke-logs/`.
+
+The default is the CI smoke suite. Focused boss behavior, VFX, material, motion, layout and backdrop tests remain available locally, along with the warmup benchmark:
+
+```sh
+python3 tools/run_smoke_tests.py --suite extended
+python3 tools/run_smoke_tests.py boss_ai_smoke voxel_boss_material_smoke
+```
+
+`extended` includes all eight smoke scenes plus the focused regressions and benchmark. Explicit scene names override suite selection. Performance evidence should be collected on representative hardware, outside the PR smoke gate.
 
 ### Production release candidates
 
