@@ -2,6 +2,7 @@ extends Node
 ## Persists player preferences and durable progress between sessions.
 
 signal settings_changed
+signal storage_status_changed
 
 const WindowLayout := preload("res://systems/game_window_layout.gd")
 const SAVE_FILE_NAME := "save_data.json"
@@ -15,7 +16,11 @@ const SAVE_BACKUP_PATH := "user://" + SAVE_BACKUP_FILE_NAME
 ## state while keeping active-run state intentionally in memory only.
 ## Version 4 adds encountered boss waves; version 5 separates recovered fragments
 ## from viewed story so Story Off does not prevent archive collection.
-const SAVE_VERSION := 6
+## Version 7 moves all preferences and bindings into a machine-local file.
+const SAVE_VERSION := 7
+const PREFERENCES_PATH := "user://local_settings.json"
+const PREFERENCES_VERSION := 1
+const JsonStore := preload("res://systems/versioned_json_store.gd")
 const LEGACY_SAVE_VERSION := 1
 const DEFAULT_SETTINGS: Dictionary = {
 	"master_volume": 0.8,
@@ -35,6 +40,11 @@ const DEFAULT_SETTINGS: Dictionary = {
 	"menu_text_scale": 1.0,
 	"aim_deadzone": 0.4,
 	"story_frequency": 0,
+	"graphics_quality": "high",
+	"frame_cap": 0,
+	"vsync": true,
+	"hud_scale": 1.0,
+	"toggle_fire": false,
 }
 const DEFAULT_CAMPAIGN_STATE: Dictionary = {
 	"discovered_node_ids": [],
@@ -73,7 +83,10 @@ var campaign_state: Dictionary = DEFAULT_CAMPAIGN_STATE.duplicate(true)
 ## A newer build's save is preserved read-only until a compatible migration
 ## exists. This prevents a settings change from replacing buyer progress.
 var _save_read_only_due_to_future_version := false
+var _legacy_preferences_pending := false
 var _window_layout := WindowLayout.new()
+var _progress_store := JsonStore.new(SAVE_PATH, SAVE_VERSION)
+var _preferences_store := JsonStore.new(PREFERENCES_PATH, PREFERENCES_VERSION)
 
 ## Loads saved data from disk on startup and applies the persisted audio
 ## and control-scheme settings.
@@ -95,11 +108,11 @@ func get_setting(key: String, fallback: Variant = null) -> Variant:
 func update_setting(key: String, value: Variant) -> void:
 	if not DEFAULT_SETTINGS.has(key):
 		return
-	settings[key] = WindowLayout.normalize_preset(value) if key == "window_size" else value
+	settings[key] = _normalize_setting(key, value)
 	_apply_audio_settings()
 	_apply_control_scheme()
 	_apply_display_settings()
-	_save_data()
+	_save_preferences()
 	settings_changed.emit()
 
 ## Records a new high score if it exceeds the current record, then
@@ -156,13 +169,10 @@ func get_campaign_state() -> Dictionary:
 ## in DEFAULT_SETTINGS to avoid stale/invalid entries.
 func _load_data() -> void:
 	var data := _select_load_data()
+	_load_preferences(data)
+	storage_status_changed.emit()
 	if data.is_empty():
 		return
-	var stored_bindings: Variant = data.get("control_bindings", {})
-	if stored_bindings is Dictionary:
-		for action: String in stored_bindings:
-			if stored_bindings[action] is Dictionary:
-				control_bindings[action] = stored_bindings[action].duplicate(true)
 	high_score = maxi(int(data.get("high_score", 0)), 0)
 	var stored_bosses: Variant = data.get("encountered_boss_waves", [])
 	if stored_bosses is Array:
@@ -225,20 +235,77 @@ func _load_data() -> void:
 	campaign_state = _normalize_campaign_state(
 		stored_campaign as Dictionary if stored_campaign is Dictionary else {}
 	)
-	var stored_settings: Variant = data.get("settings", {})
-	if stored_settings is Dictionary:
-		for key in DEFAULT_SETTINGS:
-			if stored_settings.has(key):
-				# Validate against the default's type: a hand-edited save like
-				# "screen_shake": "false" would otherwise coerce the non-empty
-				# string to true, silently inverting the user's intent.
-				var value: Variant = stored_settings[key]
-				if key == "window_size":
-					settings[key] = WindowLayout.normalize_preset(value)
-				elif key == "story_frequency" and (value is int or value is float):
-					settings[key] = clampi(int(value), 0, 2)
-				elif typeof(value) == typeof(DEFAULT_SETTINGS[key]):
-					settings[key] = value
+
+
+func _load_preferences(legacy: Dictionary) -> void:
+	var local := _preferences_store.load_data()
+	# A local file always wins over a copied/roaming legacy progress file.
+	# Corrupt or newer local files must not cause old machine settings to return.
+	var local_exists := FileAccess.file_exists(PREFERENCES_PATH) or FileAccess.file_exists(PREFERENCES_PATH + ".bak")
+	var source := local if local_exists else legacy
+	var stored: Variant = source.get("settings", {})
+	if stored is Dictionary:
+		for key: String in DEFAULT_SETTINGS:
+			if stored.has(key):
+				settings[key] = _normalize_setting(key, stored[key])
+	var bindings: Variant = source.get("control_bindings", {})
+	control_bindings.clear()
+	if bindings is Dictionary:
+		for action: String in bindings:
+			if bindings[action] is Dictionary:
+				control_bindings[action] = bindings[action].duplicate(true)
+	_legacy_preferences_pending = not local_exists and (legacy.has("settings") or legacy.has("control_bindings"))
+	if _legacy_preferences_pending:
+		_save_preferences()
+
+
+func _normalize_setting(key: String, value: Variant) -> Variant:
+	var fallback: Variant = DEFAULT_SETTINGS[key]
+	if key == "window_size":
+		return WindowLayout.normalize_preset(value)
+	if key == "graphics_quality":
+		return value if value is String and value in ["low", "medium", "high"] else fallback
+	if fallback is bool:
+		return value if value is bool else fallback
+	if fallback is float or fallback is int:
+		if not (value is int or value is float) or not is_finite(float(value)):
+			return fallback
+		match key:
+			"menu_text_scale", "hud_scale":
+				return clampf(float(value), 1.0, 1.3)
+			"aim_deadzone":
+				return clampf(float(value), 0.15, 0.6)
+			"story_frequency":
+				return clampi(int(value), 0, 2)
+			"frame_cap":
+				return int(value) if value in [0, 30, 60, 120, 144, 240] else fallback
+			_:
+				return clampf(float(value), 0.0, 1.0)
+	return value if typeof(value) == typeof(fallback) else fallback
+
+
+func _save_preferences() -> bool:
+	var saved := _preferences_store.write_data({"version": PREFERENCES_VERSION, "settings": settings, "control_bindings": control_bindings})
+	if saved:
+		_legacy_preferences_pending = false
+	storage_status_changed.emit()
+	return saved
+
+
+## Called after settlement, and again on retry without awarding the run twice.
+func save_before_quit() -> bool:
+	var preferences_saved := _save_preferences()
+	var progress_saved := _save_data()
+	return preferences_saved and progress_saved
+
+
+func get_storage_notice() -> String:
+	var notices := PackedStringArray()
+	if not _progress_store.last_error.is_empty():
+		notices.append("PROGRESS NOT SAVED · " + _progress_store.last_error)
+	if not _preferences_store.last_error.is_empty():
+		notices.append("SETTINGS NOT SAVED · " + _preferences_store.last_error)
+	return "\n".join(notices)
 
 
 func _normalize_campaign_state(raw_state: Dictionary) -> Dictionary:
@@ -271,53 +338,23 @@ func _non_negative_integer(value: Variant) -> int:
 ## Reads and validates one save candidate. Returning null rather than an empty
 ## dictionary lets the caller distinguish malformed data from a valid payload.
 func _read_save_data(path: String) -> Variant:
-	if not FileAccess.file_exists(path):
-		return null
-	var file := FileAccess.open(path, FileAccess.READ)
-	if file == null:
-		return null
-	var parsed: Variant = JSON.parse_string(file.get_as_text())
-	return parsed if parsed is Dictionary else null
+	return _progress_store.read_candidate(path)
 
 
-## Selects the live save when it is valid, otherwise falls back to the last
-## atomic backup. Unsupported future versions are not loaded from either file.
 func _select_load_data() -> Dictionary:
-	_save_read_only_due_to_future_version = false
-	var primary: Variant = _read_save_data(SAVE_PATH)
-	if primary is Dictionary and _is_supported_save_version(primary as Dictionary):
-		return primary as Dictionary
-	if primary is Dictionary:
-		var primary_version := int((primary as Dictionary).get("version", LEGACY_SAVE_VERSION))
-		if primary_version > SAVE_VERSION:
-			_save_read_only_due_to_future_version = true
-			push_warning(
-				"Save version %d is newer than this build; preserving it read-only." % primary_version
-			)
-			var future_backup: Variant = _read_save_data(SAVE_BACKUP_PATH)
-			if future_backup is Dictionary and _is_supported_save_version(future_backup as Dictionary):
-				push_warning("Using the last compatible backup until the save can be migrated.")
-				return future_backup as Dictionary
-			return {}
-
-	var backup: Variant = _read_save_data(SAVE_BACKUP_PATH)
-	if backup is Dictionary and _is_supported_save_version(backup as Dictionary):
-		push_warning("Primary save was invalid; recovered save_data.json.bak.")
-		return backup as Dictionary
-	return {}
+	var data := _progress_store.load_data()
+	_save_read_only_due_to_future_version = _progress_store.read_only
+	return data
 
 
 func _is_supported_save_version(data: Dictionary) -> bool:
-	# Missing version is the original pre-versioning format and is treated as v1.
-	var version := int(data.get("version", LEGACY_SAVE_VERSION))
-	return version >= LEGACY_SAVE_VERSION and version <= SAVE_VERSION
+	return _progress_store.supports(data)
 
-## Writes the current high score and settings dictionary to the JSON
-## save file, formatted with tabs for readability.
-func _save_data() -> void:
+## Writes durable progress after any pending legacy preference migration.
+func _save_data() -> bool:
 	if _save_read_only_due_to_future_version:
 		push_warning("Save remains read-only because it was created by a newer build.")
-		return
+		return false
 	var payload := {
 		"version": SAVE_VERSION,
 		"encountered_boss_waves": encountered_boss_waves,
@@ -334,49 +371,17 @@ func _save_data() -> void:
 		"stat_best_wave": stat_best_wave,
 		"has_seen_flight_school": has_seen_flight_school,
 		"campaign": campaign_state,
-		"settings": settings,
-		"control_bindings": control_bindings,
 	}
-	var file := FileAccess.open(SAVE_TEMP_PATH, FileAccess.WRITE)
-	if file == null:
-		push_warning("Unable to save player data.")
-		return
-	file.store_string(JSON.stringify(payload, "\t"))
-	file.flush()
-	file.close()
-
-	var directory := DirAccess.open("user://")
-	if directory == null:
-		push_warning("Unable to access the save directory.")
-		return
-
-	# Rotate the known-good live copy before promoting the complete temporary
-	# file. A failed rename never leaves a half-written primary save.
-	if FileAccess.file_exists(SAVE_PATH):
-		var previous: Variant = _read_save_data(SAVE_PATH)
-		if previous is Dictionary and _is_supported_save_version(previous):
-			if FileAccess.file_exists(SAVE_BACKUP_PATH):
-				directory.remove(SAVE_BACKUP_FILE_NAME)
-			var backup_error := directory.rename(SAVE_FILE_NAME, SAVE_BACKUP_FILE_NAME)
-			if backup_error != OK:
-				push_warning("Unable to rotate the previous player save.")
-				directory.remove(SAVE_TEMP_FILE_NAME)
-				return
-		else:
-			# Recovery loaded the backup. Do not replace it with the broken
-			# primary when writing the recovered state back to disk.
-			if directory.remove(SAVE_FILE_NAME) != OK:
-				push_warning("Unable to replace the invalid player save.")
-				directory.remove(SAVE_TEMP_FILE_NAME)
-				return
-
-	var promote_error := directory.rename(SAVE_TEMP_FILE_NAME, SAVE_FILE_NAME)
-	if promote_error != OK:
-		push_warning("Unable to finalize the player save.")
-		# If rotation succeeded but promotion failed, restore the old live copy.
-		if not FileAccess.file_exists(SAVE_PATH) and FileAccess.file_exists(SAVE_BACKUP_PATH):
-			directory.rename(SAVE_BACKUP_FILE_NAME, SAVE_FILE_NAME)
-		directory.remove(SAVE_TEMP_FILE_NAME)
+	# Migrate local preferences successfully before dropping legacy copies from
+	# progression. A failed local write leaves the old progress file untouched.
+	if _legacy_preferences_pending and not _save_preferences():
+		_progress_store.last_error = "Local settings must be saved before older progress can be upgraded. Check free disk space and folder permissions."
+		storage_status_changed.emit()
+		return false
+	var saved := _progress_store.write_data(payload)
+	_save_read_only_due_to_future_version = _progress_store.read_only
+	storage_status_changed.emit()
+	return saved
 
 ## Applies the current master_volume and music_volume settings to their
 ## audio buses. Mutes a bus when its volume is effectively zero, otherwise
@@ -397,6 +402,12 @@ func _apply_bus_volume(bus_name: String, raw_volume: float) -> void:
 
 ## Applies window size/fullscreen only when those preferences actually change.
 func _apply_display_settings() -> void:
+	Engine.max_fps = int(get_setting("frame_cap", 0))
+	var quality := str(get_setting("graphics_quality", "high"))
+	get_tree().root.scaling_3d_scale = 0.75 if quality == "low" else 1.0
+	get_tree().root.msaa_3d = {"low": Viewport.MSAA_DISABLED, "medium": Viewport.MSAA_2X, "high": Viewport.MSAA_4X}[quality]
+	if DisplayServer.get_name() != "headless":
+		DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_ENABLED if bool(get_setting("vsync", true)) else DisplayServer.VSYNC_DISABLED)
 	_window_layout.apply(
 		get_tree().root,
 		bool(settings.get("fullscreen", false)),
@@ -449,4 +460,4 @@ func record_boss_encounter(wave: int) -> void:
 
 func save_control_bindings(bindings: Dictionary) -> void:
 	control_bindings = bindings.duplicate(true)
-	_save_data()
+	_save_preferences()

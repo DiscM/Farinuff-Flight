@@ -23,6 +23,7 @@ func _ready() -> void:
 
 
 func _run() -> void:
+	var disk_snapshot := preload("res://tests/save_file_snapshot.gd").new()
 	var save_path: String = SaveManager.SAVE_PATH
 	var backup_path: String = SaveManager.SAVE_BACKUP_PATH
 	var temp_path: String = SaveManager.SAVE_TEMP_PATH
@@ -64,6 +65,7 @@ func _run() -> void:
 	await ResourceCache.wait_for_scene(ResourceCache.NATIVE_RUN_PATH)
 	await get_tree().process_frame
 
+	disk_snapshot.restore()
 	if _failures.is_empty():
 		print("EXPEDITION_PROGRESSION_SMOKE_PASS")
 		get_tree().quit(0)

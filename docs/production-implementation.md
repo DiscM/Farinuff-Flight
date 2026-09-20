@@ -16,7 +16,7 @@ scope is the Wave-20 Expedition, optional Endless, three hulls, and 13 upgrades.
 | 04 — Combat clarity | M1 | HUD occlusion and bright-backdrop comparison in movement at 720p/1080p | Implemented and captured; fresh-player readability acceptance pending |
 | 05 — Opening presentation | M1 | Art reference, bundled licensed typography/icons, reflection teaching and first-upgrade timing | Implemented; 24 review captures plus practice, local timing tool verified; eight fresh-player sessions and visual approval remain open |
 | 06 — Whole Expedition | M2 | Hull/route/build matrix, boss phases, economy, ending and Endless validation | Assisted matrix and settlement/dossier fixes implemented; natural runs, balance, boss readability, and victory music remain open |
-| 07 — Player trust | M3 | Save fault/rollback tests; local settings separation; graphics/HUD/input/accessibility options | Started: recovery followed by save, interrupted writes, and release guards added; remaining options, Cloud decision and physical-device work queued |
+| 07 — Player trust | M3 | Save fault/rollback tests; local settings separation; graphics/HUD/input/accessibility options | Implemented with save recovery, independent settings, display/HUD/toggle-fire controls and interruption handling; Cloud remains off; exported-package and physical-device acceptance open |
 | 08 — Candidate performance | M3 | Repeatable load scenario and release-package hardware measurements | Queued; Windows minimum-spec hardware required |
 | 09 — Demo and store | M4 | Tested demo policy, representative capture pack, accurate store copy and disclosures | Queued after opening acceptance; Steam account and asset permissions unresolved |
 | 10 — Launch and support | M5 | Candidate promotion/rollback rehearsal, support route and known issues | Queued after release-candidate acceptance; no publication authorized or performed |
@@ -135,12 +135,51 @@ September 16, 2026, same pinned engine and local macOS environment:
   The courier check was corrected to drive timeout processing and assert actor
   cleanup instead of directly cancelling the objective.
 
+### Player trust engineering verification
+
+September 19, 2026, same pinned engine and local macOS environment:
+
+- Progress schema 7 excludes all preferences and bindings. Version-1 local
+  settings migrate before legacy progress is replaced; the two files then save
+  independently with backup, interrupted-write, and future-version protection.
+  Failed migration reports that both settings and progression are unsaved.
+- Added graphics quality, frame cap, VSync, independent combat HUD scale, and
+  optional toggle fire. Loading, focus loss, active controller loss, reward
+  completion, and OS-close confirmation preserve pause and clear held actions.
+  Quit suspends continuation countdowns and defers end-screen focus changes.
+- A failed final save keeps the game open with Retry Save or explicit Quit
+  Without Saving. Both deterministic and live checks verified retry, settlement
+  without duplicate credit, actual quit, and retained score/salvage on reopening.
+- Final full existing suite: **20/20 pass**, including **24/24 assisted journeys**;
+  command used `--timeout 240`, logs in `.godot/player-trust-final-suite/`.
+  An earlier pass caught a motion fixture that pressed fire before observing
+  neutral input; it now follows the production held-button contract. The earlier
+  Expedition run exceeded 120 seconds while live GPU capture was also running.
+  Final testing ran after capture stopped. No smoke scenes were added.
+- Native inventory: **350 resources, 11 GLBs, 13 upgrades**; completion checks
+  **375**, runner tests **8**, and release-tool tests **7**, all pass. Headless
+  import passed without script errors. Existing headless teardown diagnostics
+  remain; Metal exit also logged particle-shader/texture cleanup diagnostics.
+  These are recorded for slice 08, not treated as evidence of memory stability.
+- [Ten staged captures](../design/production-player-trust/README.md) show the
+  largest HUD at four aspect/resolution combinations, large-text settings,
+  quit confirmation, failed-save recovery, and newer-save protection. Captures
+  and geometry checks do not establish cross-aspect combat fairness.
+- [Storage and acceptance protocol](player-trust.md) records the decision to
+  keep Cloud disabled, the remaining exported-package/physical-device checks,
+  and deferred demo/session/localization decisions. [Validation record](validation/player-trust-2026-09-19.json)
+  includes capture hashes and the live reopen result. M3 remains open.
+- Standards and Spec reviews finished without remaining actionable findings
+  after the migration, interruption, quit-retry, and deferred-overlay fixes.
+
 ## Next slice
 
-Continue 07: separate local device settings from durable progression and finish
-the save recovery, graphics, HUD, input, and accessibility work. Run the M1 cohort
-and M2 natural-run protocol alongside engineering, and complete the ending's
-music resolution. Later milestones stay open until their own evidence is recorded.
+08 — Candidate performance: establish a repeatable high-load scenario and record
+frame-time, memory, startup, retry, and transition measurements from an identified
+release package. Use that work to investigate the existing teardown diagnostics.
+Windows minimum-spec measurements and physical-device acceptance remain required.
+Run the M1 cohort and M2 natural-run protocol alongside engineering, and complete
+the ending's music resolution. Milestones stay open until their evidence exists.
 
 ## External decisions and evidence
 
@@ -150,5 +189,6 @@ music resolution. Later milestones stay open until their own evidence is recorde
   remain unresolved in [third-party notices](../THIRD_PARTY_NOTICES.md).
 - Fresh-player cohort, physical controller, Windows hardware, Deck: not available
   from this local macOS session.
-- Keep current saves session-scoped; measure run duration before choosing a
-  suspend/checkpoint schema. Do not enable Cloud while display settings roam.
+- Keep active runs memory-only; measure run duration before choosing a
+  suspend/checkpoint schema. Durable progress is now separate from local settings,
+  but Cloud stays disabled pending conflict, multi-machine, and account testing.

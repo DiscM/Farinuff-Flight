@@ -4,6 +4,8 @@ signal confirmed
 signal canceled
 var title := "End Expedition?"
 var dialog_text := "This run cannot be resumed."
+var confirm_text := "CONFIRM"
+var cancel_text := "CANCEL / KEEP RUN"
 var _confirm: Button
 var _progress: ProgressBar
 var _holding := false
@@ -42,7 +44,7 @@ func _ready() -> void:
 	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	column.add_child(description)
 	_confirm = Button.new()
-	_confirm.text = "HOLD TO CONFIRM · 1 SECOND" if _requires_hold else "CONFIRM"
+	_confirm.text = "HOLD TO " + confirm_text + " · 1 SECOND" if _requires_hold else confirm_text
 	_confirm.custom_minimum_size.y = 48
 	_confirm.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_confirm.button_down.connect(func(): _holding = true; _elapsed = 0.0)
@@ -61,7 +63,7 @@ func _ready() -> void:
 	_progress.visible = _requires_hold
 	column.add_child(_progress)
 	var cancel := Button.new()
-	cancel.text = "CANCEL / KEEP RUN"
+	cancel.text = cancel_text
 	cancel.custom_minimum_size.y = 48
 	cancel.pressed.connect(func(): _finish(false))
 	column.add_child(cancel)

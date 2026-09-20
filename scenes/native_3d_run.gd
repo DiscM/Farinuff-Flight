@@ -16,6 +16,7 @@ var encounters: EncounterDirector
 var _run_overlay: CanvasLayer
 var _interludes := preload("res://systems/run_interlude_coordinator.gd").new()
 var _ended := false
+var _pending_end_screen: Callable
 var _active_campaign_step: Dictionary = {}
 
 
@@ -79,11 +80,15 @@ func _end_run(score: int) -> void:
 
 
 func _show_try_again(score: int) -> void:
+	if is_instance_valid(_exit_confirmation):
+		_pending_end_screen = _show_try_again.bind(score)
+		return
 	_run_overlay = _new_overlay()
 	var popup := TRY_AGAIN.instantiate()
 	_run_overlay.add_child(popup)
 	popup.try_again_accepted.connect(_revive)
 	popup.try_again_declined.connect(_show_game_over.bind(score), CONNECT_DEFERRED)
+	_set_quit_overlay_active(is_instance_valid(_exit_confirmation))
 
 
 func _revive() -> void:
@@ -103,6 +108,9 @@ func _revive() -> void:
 
 
 func _show_game_over(score: int) -> void:
+	if is_instance_valid(_exit_confirmation):
+		_pending_end_screen = _show_game_over.bind(score)
+		return
 	_interludes.clear()
 	GameManager.finalize_run()
 	ExpeditionManager.abandon_expedition()
@@ -123,7 +131,7 @@ func _queue_allocation(points: int) -> void:
 
 
 func _show_next_reward() -> void:
-	if _ended or is_instance_valid(_run_overlay):
+	if _ended or is_instance_valid(_run_overlay) or is_instance_valid(_exit_confirmation):
 		return
 	var step := _interludes.take_next()
 	# Settings can change while an earlier reward owns the screen. Recheck at
@@ -133,7 +141,7 @@ func _show_next_reward() -> void:
 		step = _interludes.take_next()
 	if step.is_empty():
 		hud.show()
-		get_tree().paused = false
+		_resume_gameplay()
 		return
 	var token := int(step.token)
 	match str(step.kind):
@@ -161,6 +169,24 @@ func _show_next_reward() -> void:
 			_show_campaign_step(step)
 		"victory":
 			_show_victory(int(step.wave))
+
+
+func _set_quit_overlay_active(active: bool) -> void:
+	if is_instance_valid(_run_overlay):
+		for panel: Node in _run_overlay.get_children():
+			if panel.has_signal(&"try_again_declined"):
+				panel.set_process(not active)
+
+
+func _resume_after_quit_cancel(_was_paused: bool) -> void:
+	# A reward may finish its closing animation while the quit modal owns pause.
+	# Re-evaluate current overlays/queued rewards instead of restoring a stale bool.
+	if _pending_end_screen.is_valid():
+		var present := _pending_end_screen
+		_pending_end_screen = Callable()
+		present.call()
+	else:
+		_show_next_reward()
 
 
 func _clear_run_overlay() -> void:
