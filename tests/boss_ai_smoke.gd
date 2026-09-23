@@ -25,6 +25,7 @@ func _run() -> void:
 	await _check_states()
 	await _check_interruptions()
 	await _check_damage()
+	await _check_mobility_variety()
 	await _check_repertoire()
 	GameManager.is_game_active = false
 	for failure in _failures:
@@ -121,9 +122,12 @@ func _check_states() -> void:
 	boss._advance_movement(.01)
 	_expect(ai.state == AI.State.INTRO, "Entering radius starts Intro")
 	boss._advance_movement(20.0)
-	_expect(ai.state == AI.State.REPOSITION and _fired == 0, "A long frame cannot skip Intro into an untelegraphed attack")
+	_expect(
+		ai.state in [AI.State.CHASE, AI.State.STRAFE] and _fired == 0,
+		"A long frame cannot skip Intro into an untelegraphed attack"
+	)
 	boss._advance_movement(.01)
-	_expect(ai.state == AI.State.ATTACK and ai.executor.winding_up, "Reposition chooses an eligible attack")
+	_expect(ai.state == AI.State.ATTACK and ai.executor.winding_up, "Mobility states choose an eligible attack")
 	var plan := ai.executor.plan
 	var origin := boss.global_position
 	player.global_position += flight_space.screen_motion_to_combat(Vector2(300, 0))
@@ -150,11 +154,11 @@ func _check_states() -> void:
 	boss._advance_movement(plan.recovery_seconds - .01)
 	_expect(ai.state == AI.State.RECOVERY and _fired == count, "Recovery leaves a full attack-free punish window")
 	boss._advance_movement(.02)
-	_expect(ai.state == AI.State.REPOSITION, "Recovery returns to Reposition")
+	_expect(ai.state in [AI.State.CHASE, AI.State.STRAFE], "Recovery returns to mobility")
 	_expect(boss.stun(), "Stun is a reachable state")
 	_expect(ai.state == AI.State.STUNNED and not boss.stun(), "Stun cooldown prevents repeated stun-lock")
 	boss._advance_movement(ai.profile.stun_duration + .01)
-	_expect(ai.state == AI.State.REPOSITION, "Stun expires into Reposition")
+	_expect(ai.state in [AI.State.CHASE, AI.State.STRAFE], "Stun expires into mobility")
 	# Start another tell, then cross the HP boundary while it is winding up.
 	for attack in ai.profile.attacks:
 		ai.selector.cooldowns[attack.id] = 0.0
@@ -285,7 +289,80 @@ func _check_damage() -> void:
 	boss.queue_free()
 	await _clear_field()
 
+func _check_mobility_variety() -> void:
+	var boss := _spawn()
+	var ai := boss._boss_ai
+	for attack in ai.profile.attacks:
+		ai.selector.cooldowns[attack.id] = 999.0
+	player.global_position = flight_space.screen_motion_to_combat(Vector2(0, 900))
+	boss.global_position = Vector3.ZERO
+	boss._advance_movement(.01)
+	boss._advance_movement(ai.profile.intro_duration + .01)
+	_expect(ai.state == AI.State.CHASE, "A distant player is chased down")
+	var before := flight_space.combat_motion_to_screen(player.global_position - boss.global_position).length()
+	for tick in 120:
+		boss._advance_movement(1.0 / 60.0)
+	var after := flight_space.combat_motion_to_screen(player.global_position - boss.global_position).length()
+	_expect(after < before - 100.0, "Chase closes on a distant player")
+	player.global_position = flight_space.screen_motion_to_combat(Vector2(0, 360))
+	for attack in ai.profile.attacks:
+		ai.selector.cooldowns[attack.id] = 0.0
+	for tick in 30:
+		boss._advance_movement(1.0 / 60.0)
+		if ai.state != AI.State.ATTACK:
+			_expect(ai.state == AI.State.STRAFE, "Close range strafes around the player")
+			break
+	# A committed FEINT that has been walked out of breaks into a dodge.
+	for attack in ai.profile.attacks:
+		ai.selector.cooldowns[attack.id] = 0.0
+	ai._sequence = 3
+	ai._last_style = AI.Plan.Style.COMMIT
+	player.global_position = flight_space.screen_motion_to_combat(Vector2(0, 360))
+	boss.global_position = Vector3.ZERO
+	for tick in 12:
+		boss._advance_movement(1.0 / 60.0)
+		if ai.state == AI.State.ATTACK and ai.executor.plan != null and ai.executor.plan.style == AI.Plan.Style.FEINT:
+			break
+	if ai.state == AI.State.ATTACK and ai.executor.plan != null and ai.executor.plan.style == AI.Plan.Style.FEINT:
+		player.global_position = flight_space.screen_motion_to_combat(Vector2(700, 700))
+		for tick in 60:
+			boss._advance_movement(1.0 / 60.0)
+			if ai.state != AI.State.ATTACK:
+				break
+		_expect(
+			ai.state in [AI.State.DODGE, AI.State.CHASE, AI.State.STRAFE],
+			"A feint the player has already left is abandoned for mobility"
+		)
+	# An incoming Player Projectile forces an explicit dodge state.
+	projectile_manager.fire_player_projectile(
+		boss.global_position + flight_space.screen_motion_to_combat(Vector2(0, -80)),
+		flight_space.input_to_combat_direction(Vector2(0.0, 1.0))
+	)
+	for attack in ai.profile.attacks:
+		ai.selector.cooldowns[attack.id] = 0.0
+	ai._stun_cooldown = 0.0
+	ai.state = AI.State.STRAFE
+	ai.movement.release_hold(&"test")
+	ai.movement.dodge_remaining = 0.0
+	ai.movement._dodge_cooldown = 0.0
+	ai._try_begin_dodge()
+	_expect(ai.state == AI.State.DODGE, "Incoming fire forces a dodge")
+	boss._advance_movement(1.0 / 60.0)
+	var moved := boss.global_position
+	boss._advance_movement(0.2)
+	_expect(boss.global_position != moved, "Dodge keeps the hull flying")
+	_expect(
+		ai.state in [AI.State.DODGE, AI.State.CHASE, AI.State.STRAFE],
+		"Dodge resolves back into mobility"
+	)
+	projectile_manager.clear_player_projectiles()
+	boss._before_finish(BasicEnemy.FinishReason.ESCAPED, boss.global_position)
+	boss.queue_free()
+	await _clear_field()
+
 func _check_repertoire() -> void:
+	var targetings: Array[String] = []
+	var styles: Array[String] = []
 	for variant in 5:
 		var boss := _spawn(variant)
 		var ai := boss._boss_ai
@@ -299,7 +376,6 @@ func _check_repertoire() -> void:
 			var previous_sequence := ai._sequence
 			var starting_sequence := ai._sequence
 			for tick in 4500:
-				# Stationary target exercises closing range after repeated volleys.
 				player.global_position = Vector3.ZERO
 				if tick == 0:
 					boss.global_position = flight_space.screen_motion_to_combat(Vector2(0, -600))
@@ -310,6 +386,8 @@ func _check_repertoire() -> void:
 					_expect(absf(angle_difference(boss.global_rotation.y + boss.visuals.rotation.y, heading)) < 0.02, "Charge keeps facing its committed heading throughout the lane")
 				if ai._sequence != previous_sequence:
 					previous_sequence = ai._sequence
+					if ai.executor.plan == null:
+						continue
 					var attack := ai.executor.plan.definition
 					alternate_seen = alternate_seen or attack.alternate_pattern
 					_expect(attack.minimum_phase <= phase, "Live encounter respects phase unlocks")
@@ -318,6 +396,12 @@ func _check_repertoire() -> void:
 					_expect(streak <= 2, "Live encounter never exceeds two repeats")
 					if not families.has(attack.family):
 						families.append(attack.family)
+					var targeting := String(AI.Plan.Targeting.keys()[ai.executor.plan.targeting])
+					var style := String(AI.Plan.Style.keys()[ai.executor.plan.style])
+					if not targetings.has(targeting):
+						targetings.append(targeting)
+					if not styles.has(style):
+						styles.append(style)
 				if tick % 180 == 0:
 					await _clear_field()
 			_expect(ai._sequence >= starting_sequence + 3, "Encounter continues selecting attacks in every phase")
@@ -326,6 +410,8 @@ func _check_repertoire() -> void:
 		boss._before_finish(BasicEnemy.FinishReason.ESCAPED, boss.global_position)
 		boss.queue_free()
 		await _clear_field()
+	_expect(targetings.size() >= 3, "Encounter uses several targeting behaviors")
+	_expect(styles.size() >= 2, "Encounter uses several attack styles")
 
 func _record_shot(kind: Projectile.Kind, _origin: Vector3, _direction: Vector3, _speed: float) -> void:
 	if kind != Projectile.Kind.ENEMY:

@@ -72,7 +72,7 @@ func _exercise_attack(boss: Boss, alternate: bool) -> String:
 	plan.aim = Vector2.DOWN
 	plan.target_position = player.global_position
 	plan.sequence = 1
-	boss._boss_ai.flight.hold(&"attack")
+	boss._boss_ai.movement.hold(&"attack")
 	boss._boss_ai.executor.begin(plan)
 	boss._boss_ai.executor.advance(plan.warning_seconds - 0.01, player)
 	_expect(_shots.is_empty(), "Entire projectile warning precedes damage")

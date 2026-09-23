@@ -1,13 +1,16 @@
 extends Node
 class_name BossAI
 ## Finite-state combat controller. All decisions are explicit rules; no ML.
-## Health, locomotion, presentation, attack choice and hit detection own their
-## data separately. The actor alone writes its world transform.
+## Mobility states CHASE, STRAFE and DODGE keep the hull moving around the
+## player; ATTACK carries a targeting mode and delivery style chosen at
+## commitment. Health, locomotion, presentation, attack choice and hit
+## detection own their data separately. The actor alone writes its transform.
 const Profile := preload("res://systems/boss_combat_profile.gd")
 const Selector := preload("res://systems/boss_attack_selector.gd")
 const Plan := preload("res://systems/boss_attack_plan.gd")
-const Flight := preload("res://systems/boss_flight_orchestrator.gd")
-enum State { IDLE, INTRO, REPOSITION, ATTACK, RECOVERY, STUNNED, PHASE_TRANSITION, DEAD }
+const Movement := preload("res://systems/boss_movement_brain.gd")
+const Projectile := preload("res://entities/projectiles/projectile_3d.gd")
+enum State { IDLE, INTRO, CHASE, STRAFE, DODGE, ATTACK, RECOVERY, STUNNED, PHASE_TRANSITION, DEAD }
 signal attack_committed(attack_id: StringName)
 signal combat_cancelled
 const PROFILES: Array[Profile] = [
@@ -17,8 +20,12 @@ const PROFILES: Array[Profile] = [
 	preload("res://entities/enemies/ai_profiles/harbinger.tres"),
 	preload("res://entities/enemies/ai_profiles/core.tres"),
 ]
+const PROJECTILE_ALERT_PIXELS := 150.0
+const CHASE_BAND_PIXELS := 180.0
+const RECOVERY_SPEED_SCALE := 0.5
+
 @export var profile_override: Profile
-@onready var flight: Flight = $Flight
+@onready var movement: Movement = $Movement
 @onready var executor: BossAttackExecutor = $AttackExecutor
 @onready var presentation: BossCombatPresentation = $Presentation
 @onready var patterns: BossProjectilePatterns = $ProjectilePatterns
@@ -31,6 +38,7 @@ var target_position := Vector3.ZERO
 var predicted_target := Vector3.ZERO
 var distance := 0.0
 var radial_speed := 0.0
+var lateral_speed := 0.0
 var _space: FlightSpace3D
 var _actor: BasicEnemy3D
 var _enabled := false
@@ -38,16 +46,20 @@ var _lost_time := 0.0
 var _stun_cooldown := 0.0
 var _windup_damage := 0
 var _sequence := 0
+var _last_targeting: Plan.Targeting = Plan.Targeting.LEAD
+var _last_style: Plan.Style = Plan.Style.COMMIT
 
 func configure(space: FlightSpace3D, variant: int) -> void:
 	_space = space
 	_actor = get_parent() as BasicEnemy3D
 	profile = profile_override if profile_override != null else PROFILES[clampi(variant, 0, 4)]
 	selector.configure(profile)
-	flight.configure(space, variant)
+	movement.configure(space, variant)
 	presentation.configure(_actor, space)
 	patterns.configure(space, variant, _actor.get("_sections"))
 	executor.configure(_actor, space, presentation, patterns)
+	if not executor.feint_broken.is_connected(_on_feint_broken):
+		executor.feint_broken.connect(_on_feint_broken)
 	_enabled = true
 	phase = 0
 	_sequence = 0
@@ -55,7 +67,7 @@ func configure(space: FlightSpace3D, variant: int) -> void:
 	_stun_cooldown = 0.0
 	state = State.IDLE
 	state_remaining = 0.0
-	flight.hold(&"idle")
+	movement.hold(&"idle")
 
 func step(delta: float, target: Node3D) -> Vector3:
 	if not _enabled or state == State.DEAD or delta <= 0.0:
@@ -77,40 +89,47 @@ func step(delta: float, target: Node3D) -> Vector3:
 		return Vector3.ZERO
 	var face_target := target_position
 	if state == State.ATTACK and executor.plan != null:
-		# Preserve a heading during charge, rather than facing a fixed point the
-		# hull could pass and then turn back toward halfway through the lane.
 		face_target = _actor.global_position + _space.screen_motion_to_combat(executor.plan.aim * 400.0)
 	presentation.face(delta, face_target, profile.facing_response)
 	match state:
-		State.INTRO, State.RECOVERY, State.STUNNED, State.PHASE_TRANSITION:
+		State.INTRO, State.STUNNED, State.PHASE_TRANSITION:
 			state_remaining = maxf(0.0, state_remaining - delta)
 			if state_remaining <= 0.0:
-				_enter(State.REPOSITION)
-		State.REPOSITION:
-			var attack := selector.choose(distance, radial_speed, phase)
-			var bounds := _space.get_combat_bounds(-Flight.ARENA_INSET)
-			if attack != null and bounds.has_point(Vector2(_actor.global_position.x, _actor.global_position.z)):
-				var plan := Plan.new()
-				plan.configure(attack, profile, phase)
-				plan.target_position = predicted_target
-				plan.aim = _space.combat_motion_to_screen(predicted_target - _actor.global_position).normalized()
-				if plan.aim.is_zero_approx():
-					plan.aim = Vector2.DOWN
-				_sequence += 1
-				plan.sequence = _sequence
-				selector.commit(attack, phase)
-				_enter(State.ATTACK)
-				executor.begin(plan)
-				attack_committed.emit(attack.id)
+				_enter_mobility()
+		State.RECOVERY:
+			state_remaining = maxf(0.0, state_remaining - delta)
+			if state_remaining <= 0.0:
+				_enter_mobility()
 				return Vector3.ZERO
-			var desired := selector.desired_distance(phase, flight.profile.preferred_distance)
-			flight.set_combat_distance(desired)
-			flight.set_intent(Flight.Maneuver.INTERCEPT if distance > desired + 40.0 else -1, 0.0, 1.0, &"combat_range")
-			return flight.steer(delta, _actor.global_position, _actor.velocity, target_position, predicted_target, phase) * delta
+			return movement.steer(
+				delta, _actor.global_position, _actor.velocity,
+				target_position, predicted_target, phase
+			) * delta
+		State.DODGE:
+			state_remaining = maxf(0.0, state_remaining - delta)
+			if state_remaining <= 0.0:
+				_enter_mobility()
+				return Vector3.ZERO
+			return movement.steer(
+				delta, _actor.global_position, _actor.velocity,
+				target_position, predicted_target, phase
+			) * delta
+		State.CHASE, State.STRAFE:
+			if _try_begin_dodge():
+				return Vector3.ZERO
+			_apply_mobility_intent()
+			if _try_commit_attack():
+				return Vector3.ZERO
+			return movement.steer(
+				delta, _actor.global_position, _actor.velocity,
+				target_position, predicted_target, phase
+			) * delta
 		State.ATTACK:
 			var displacement := executor.advance(delta, target)
-			if not executor.active:
-				var recovery := executor.plan.recovery_seconds
+			if not executor.active and state == State.ATTACK:
+				var recovery := 0.1
+				if executor.plan != null:
+					recovery = executor.plan.recovery_seconds
 				_enter(State.RECOVERY, recovery)
 			return displacement
 	return Vector3.ZERO
@@ -123,38 +142,154 @@ func _observe(target: Node3D) -> void:
 	if target is Player3D:
 		speed = target.velocity
 	var screen_speed := _space.combat_motion_to_screen(speed)
-	radial_speed = screen_speed.dot(offset.normalized())
-	# Read visible motion, never button state. Cap lead so boosting/changing
-	# direction can defeat prediction. Once a tell begins this point is frozen.
+	radial_speed = 0.0 if offset.is_zero_approx() else screen_speed.dot(offset.normalized())
+	lateral_speed = 0.0 if offset.is_zero_approx() else screen_speed.dot(offset.normalized().orthogonal())
 	var lead := (screen_speed * profile.prediction_seconds).limit_length(profile.maximum_prediction)
 	predicted_target = target_position + _space.screen_motion_to_combat(lead)
 	var bounds := _space.get_combat_bounds(-40.0)
 	predicted_target.x = clampf(predicted_target.x, bounds.position.x, bounds.end.x)
 	predicted_target.z = clampf(predicted_target.z, bounds.position.y, bounds.end.y)
 
+func _enter_mobility() -> void:
+	if distance > movement.profile.preferred_distance + CHASE_BAND_PIXELS:
+		_enter(State.CHASE)
+	else:
+		_enter(State.STRAFE)
+
+func _apply_mobility_intent() -> void:
+	if state == State.CHASE:
+		movement.mode = Movement.Mode.CHASE
+		movement.reason = &"close_gap"
+	elif state == State.STRAFE:
+		movement.mode = Movement.Mode.STRAFE
+		movement.reason = &"strafe_ring"
+	movement.set_combat_distance(selector.desired_distance(phase, movement.profile.preferred_distance))
+	movement.set_speed_scale(RECOVERY_SPEED_SCALE if state == State.RECOVERY else 1.0)
+
+func _try_begin_dodge() -> bool:
+	if state not in [State.CHASE, State.STRAFE]:
+		return false
+	var threat := _find_incoming_projectile()
+	if threat == null:
+		return false
+	var shot_direction := _space.combat_motion_to_screen(threat.velocity).normalized()
+	var offset := _space.combat_motion_to_screen(_actor.global_position - threat.global_position)
+	var side := signf(shot_direction.cross(offset)) if not is_zero_approx(shot_direction.cross(offset)) else 1.0
+	if movement.request_dodge(shot_direction, side):
+		_enter(State.DODGE, movement.dodge_remaining)
+		return true
+	return false
+
+func _find_incoming_projectile() -> Projectile:
+	var alert_squared := PROJECTILE_ALERT_PIXELS * PROJECTILE_ALERT_PIXELS
+	for node in get_tree().get_nodes_in_group(&"player_projectiles"):
+		var projectile := node as Projectile
+		if projectile == null or not projectile.is_active:
+			continue
+		var offset := _space.combat_motion_to_screen(
+			_actor.global_position - projectile.global_position
+		)
+		if offset.is_zero_approx() or offset.length_squared() > alert_squared:
+			continue
+		var shot_direction := _space.combat_motion_to_screen(projectile.velocity).normalized()
+		if shot_direction.dot(offset.normalized()) <= 0.72:
+			continue
+		return projectile
+	return null
+
+func _try_commit_attack() -> bool:
+	var attack := selector.choose(distance, radial_speed, phase)
+	var bounds := _space.get_combat_bounds(-Movement.ARENA_INSET)
+	if attack == null or not bounds.has_point(Vector2(_actor.global_position.x, _actor.global_position.z)):
+		return false
+	var plan := Plan.new()
+	plan.configure(attack, profile, phase)
+	plan.apply_style(_choose_style(), profile)
+	plan.targeting = _choose_targeting(attack)
+	plan.apply_targeting(plan.targeting)
+	plan.target_position = predicted_target
+	plan.aim = _compute_aim(plan.targeting)
+	_sequence += 1
+	plan.sequence = _sequence
+	selector.commit(attack, phase)
+	_last_targeting = plan.targeting
+	_last_style = plan.style
+	_enter(State.ATTACK)
+	executor.begin(plan)
+	attack_committed.emit(attack.id)
+	return true
+
+func _compute_aim(targeting: Plan.Targeting) -> Vector2:
+	var from := _actor.global_position
+	var toward := predicted_target if targeting == Plan.Targeting.LEAD else target_position
+	var aim := _space.combat_motion_to_screen(toward - from).normalized()
+	return aim if not aim.is_zero_approx() else Vector2.DOWN
+
+func _choose_targeting(attack: BossAttackDefinition) -> Plan.Targeting:
+	if attack.family == BossAttackDefinition.Family.CHARGE:
+		return Plan.Targeting.LEAD
+	if radial_speed < -150.0:
+		return Plan.Targeting.SNAP
+	if absf(lateral_speed) > 220.0:
+		return Plan.Targeting.BRACKET
+	if attack.family == BossAttackDefinition.Family.PROJECTILE and phase >= 1 and _sequence % 2 == 0:
+		return Plan.Targeting.TRACK
+	if attack.family == BossAttackDefinition.Family.SLAM:
+		return Plan.Targeting.SNAP
+	return Plan.Targeting.LEAD
+
+func _choose_style() -> Plan.Style:
+	if phase >= 2:
+		return Plan.Style.SURGE if _sequence % 2 == 0 else Plan.Style.COMMIT
+	if phase >= 1 and _sequence % 3 == 2:
+		return Plan.Style.SURGE
+	return Plan.Style.FEINT if _sequence % 4 == 3 else Plan.Style.COMMIT
+
+func _on_feint_broken() -> void:
+	if state != State.ATTACK or not _enabled:
+		return
+	combat_cancelled.emit()
+	var threat := _find_incoming_projectile()
+	var side := 1.0
+	if threat != null:
+		var shot_direction := _space.combat_motion_to_screen(threat.velocity).normalized()
+		var offset := _space.combat_motion_to_screen(_actor.global_position - threat.global_position)
+		var cross := shot_direction.cross(offset)
+		side = signf(cross) if not is_zero_approx(cross) else 1.0
+	if movement.request_dodge(Vector2.DOWN, side):
+		_enter(State.DODGE, movement.dodge_remaining)
+	else:
+		_enter_mobility()
+
 func _enter(next: State, duration: float = 0.0) -> void:
 	if state == State.DEAD or state == next:
 		return
 	if state == State.ATTACK:
-		# A one-tick slam still needs its release animation to finish during
-		# Recovery. Interruptions, in contrast, cancel the pose immediately.
 		executor.cancel(next != State.RECOVERY)
 	state = next
 	state_remaining = maxf(0.0, duration)
 	_windup_damage = 0
-	if next != State.REPOSITION:
-		flight.hold(StringName(State.keys()[next].to_lower()))
+	match next:
+		State.CHASE, State.STRAFE, State.RECOVERY:
+			movement.release_hold(StringName(State.keys()[next].to_lower()))
+			movement.set_speed_scale(RECOVERY_SPEED_SCALE if next == State.RECOVERY else 1.0)
+		State.DODGE:
+			movement.release_hold(&"dodge")
+		_:
+			movement.hold(StringName(State.keys()[next].to_lower()))
 	if next in [State.IDLE, State.STUNNED, State.PHASE_TRANSITION, State.DEAD]:
 		executor.cancel()
 		combat_cancelled.emit()
+	if next == State.CHASE:
+		movement.mode = Movement.Mode.CHASE
+	elif next == State.STRAFE:
+		movement.mode = Movement.Mode.STRAFE
 
 func begin_phase(next: int) -> void:
 	if not _enabled or state == State.DEAD or next <= phase:
 		return
 	phase = clampi(next, 0, 2)
-	flight.begin_phase(phase)
-	# Keep cooldowns and repetition history across phases. An interruption is
-	# never a shortcut to a third attack from the same family.
+	movement.begin_phase(phase)
 	if state == State.PHASE_TRANSITION:
 		state_remaining = profile.phase_transition_duration
 		combat_cancelled.emit()
@@ -176,16 +311,28 @@ func try_stun(duration: float = -1.0) -> bool:
 	return true
 
 func can_start_arena_pressure() -> bool:
-	return _enabled and profile.enable_arena_pressure and state == State.REPOSITION
+	return _enabled and profile.enable_arena_pressure and state in [State.CHASE, State.STRAFE]
 
 func shutdown() -> void:
 	if _enabled:
 		_enter(State.DEAD)
 	_enabled = false
-	flight.shutdown()
+	movement.shutdown()
 
 func get_debug_state() -> Dictionary:
-	return {"state": State.keys()[state], "phase": phase, "remaining": state_remaining,
-		"distance": distance, "radial_speed": radial_speed, "predicted_target": predicted_target,
-		"attack": selector.last_attack, "consecutive": selector.consecutive,
-		"cooldowns": selector.cooldowns.duplicate(), "windup": executor.winding_up}
+	return {
+		"state": State.keys()[state],
+		"phase": phase,
+		"remaining": state_remaining,
+		"distance": distance,
+		"radial_speed": radial_speed,
+		"lateral_speed": lateral_speed,
+		"predicted_target": predicted_target,
+		"attack": selector.last_attack,
+		"consecutive": selector.consecutive,
+		"cooldowns": selector.cooldowns.duplicate(),
+		"windup": executor.winding_up,
+		"targeting": Plan.Targeting.keys()[_last_targeting],
+		"style": Plan.Style.keys()[_last_style],
+		"movement": movement.get_debug_state(),
+	}

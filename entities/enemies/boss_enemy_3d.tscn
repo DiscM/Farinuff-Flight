@@ -9,7 +9,7 @@
 [ext_resource type="PackedScene" path="res://assets/models/voxel_bosses/meshes/boss_void_harbinger.glb" id="model3"]
 [ext_resource type="PackedScene" path="res://assets/models/voxel_bosses/meshes/boss_tempest_core.glb" id="model4"]
 [ext_resource type="Shader" path="res://effects/shaders/native_telegraph_3d.gdshader" id="4_telegraph"]
-[ext_resource type="Script" path="res://systems/boss_flight_orchestrator.gd" id="flight_ai"]
+[ext_resource type="Script" path="res://systems/boss_movement_brain.gd" id="movement_brain"]
 [ext_resource type="Script" path="res://systems/boss_ai.gd" id="boss_ai"]
 
 [ext_resource type="Script" path="res://systems/boss_health.gd" id="health"]
@@ -47,8 +47,8 @@ shape = SubResource("Hull")
 disabled = true
 [node name="BossAI" type="Node" parent="."]
 script = ExtResource("boss_ai")
-[node name="Flight" type="Node" parent="BossAI"]
-script = ExtResource("flight_ai")
+[node name="Movement" type="Node" parent="BossAI"]
+script = ExtResource("movement_brain")
 [node name="Health" type="Node" parent="."]
 script = ExtResource("health")
 [node name="AttackExecutor" type="Node" parent="BossAI"]

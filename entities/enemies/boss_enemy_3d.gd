@@ -9,7 +9,6 @@ const HEALTH_MULTIPLIER := 1.25
 @onready var _health: BossHealth = $Health
 var _arena_patterns: ArenaPatterns
 var _sections: Array[Section] = []
-var max_health := 60
 var phase := 0
 var variant := 0
 var dev_variant_override := -1
