@@ -1,9 +1,12 @@
 extends Node
 class_name BossAttackExecutor
-## Runs one committed attack. It cannot choose, retarget, or skip its warning.
+## Runs one committed attack. It cannot choose or skip its warning.
+## TRACK targeting may refresh its aim at a capped rate; FEINT style may break
+## into a dodge once the player has already left the committed hit solution.
 const Definition := preload("res://systems/boss_attack_definition.gd")
-const Flight := preload("res://systems/boss_flight_orchestrator.gd")
+const Movement := preload("res://systems/boss_movement_brain.gd")
 signal released(attack_id: StringName)
+signal feint_broken
 var plan: BossAttackPlan
 var winding_up := false
 var active := false
@@ -11,6 +14,7 @@ var elapsed := 0.0
 var _charge_elapsed := 0.0
 var _burst_timer := 0.0
 var _burst_step := 0
+var _track_timer := 0.0
 var _space: FlightSpace3D
 var _actor: BasicEnemy3D
 var _presentation: BossCombatPresentation
@@ -33,6 +37,7 @@ func begin(snapshot: BossAttackPlan) -> void:
 	_charge_elapsed = 0.0
 	_burst_timer = 0.0
 	_burst_step = 0
+	_track_timer = 0.0
 	_hit_victims.clear()
 	winding_up = true
 	active = true
@@ -42,9 +47,7 @@ func begin(snapshot: BossAttackPlan) -> void:
 func _charge_endpoint(snapshot: BossAttackPlan) -> Vector3:
 	var direction := _space.screen_motion_to_combat(snapshot.aim)
 	var distance := snapshot.definition.charge_distance
-	var bounds := _space.get_combat_bounds(-Flight.ARENA_INSET)
-	# Intersect a ray with the arena. Clamping X/Z independently would bend the
-	# advertised lane and let the boss turn after the player had read the tell.
+	var bounds := _space.get_combat_bounds(-Movement.ARENA_INSET)
 	if not is_zero_approx(direction.x):
 		var edge: float = bounds.end.x if direction.x > 0.0 else bounds.position.x
 		distance = minf(distance, maxf(0.0, (edge - snapshot.origin.x) / direction.x))
@@ -59,14 +62,21 @@ func advance(delta: float, target: Node3D) -> Vector3:
 		return Vector3.ZERO
 	if winding_up:
 		elapsed += delta
+		_track_timer -= delta
+		if plan.targeting == BossAttackPlan.Targeting.TRACK and _track_timer <= 0.0:
+			_track_timer = plan.track_refresh_seconds
+			_refresh_track_aim(target)
 		_presentation.progress(clampf(elapsed / plan.warning_seconds, 0.0, 1.0))
+		if plan.style == BossAttackPlan.Style.FEINT and _should_break_feint(target):
+			plan.feint_cancelled = true
+			cancel()
+			feint_broken.emit()
+			return Vector3.ZERO
 		if elapsed >= plan.warning_seconds:
 			winding_up = false
 			_presentation.release()
 			released.emit(plan.definition.id)
 			_actor.charge_released.emit(plan.origin, _space.input_to_combat_direction(plan.aim))
-		# Do not spend a long frame twice across a state boundary. Damage starts
-		# on the next tick, after at least the entire promised reaction window.
 		return Vector3.ZERO
 	match plan.definition.family:
 		Definition.Family.SLAM:
@@ -93,6 +103,45 @@ func advance(delta: float, target: Node3D) -> Vector3:
 			active = _burst_step < count or _patterns.has_pending()
 	return Vector3.ZERO
 
+func _refresh_track_aim(target: Node3D) -> void:
+	if not is_instance_valid(target) or plan == null:
+		return
+	var desired := _space.combat_motion_to_screen(target.global_position - plan.origin).normalized()
+	if desired.is_zero_approx():
+		return
+	plan.aim = desired
+	plan.charge_endpoint = _charge_endpoint(plan)
+	_presentation.telegraph(plan)
+
+
+func _should_break_feint(target: Node3D) -> bool:
+	if plan == null or elapsed < plan.warning_seconds * 0.35:
+		return false
+	var fraction := elapsed / maxf(plan.warning_seconds, 0.001)
+	if fraction < plan.feint_cancel_fraction:
+		return false
+	return not _inside_hit_solution(target)
+
+
+func _inside_hit_solution(target: Node3D) -> bool:
+	if not is_instance_valid(target):
+		return false
+	var offset := _space.combat_motion_to_screen(target.global_position - plan.origin)
+	match plan.definition.family:
+		Definition.Family.SLAM:
+			return offset.length() <= plan.definition.slam_radius
+		Definition.Family.CHARGE:
+			var along := _space.combat_motion_to_screen(plan.charge_endpoint - plan.origin)
+			if along.length_squared() < 0.001:
+				return false
+			var progress := clampf(offset.dot(along) / along.length_squared(), 0.0, 1.0)
+			return offset.distance_to(along * progress) <= plan.definition.charge_half_width * 1.35
+		Definition.Family.PROJECTILE:
+			if plan.aim.is_zero_approx():
+				return false
+			return offset.normalized().dot(plan.aim) > 0.55 and offset.length() <= plan.definition.maximum_range
+	return false
+
 func cancel(reset_motion: bool = true) -> void:
 	active = false
 	winding_up = false
@@ -118,5 +167,5 @@ func _sweep_hit(target: Node3D, start: Vector3, finish: Vector3, half_width: flo
 	var progress := clampf(offset.dot(segment) / segment.length_squared(), 0.0, 1.0) if segment.length_squared() > 0.001 else 0.0
 	if offset.distance_to(segment * progress) > half_width:
 		return false
-	_hit_victims[id] = true # A shield/boost also consumes this attack's single hit.
+	_hit_victims[id] = true
 	return target.receive_damage(finish, Player3D.DamageSource.ENEMY_CONTACT, damage)

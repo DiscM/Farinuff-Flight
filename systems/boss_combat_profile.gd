@@ -31,6 +31,12 @@ const Definition := preload("res://systems/boss_attack_definition.gd")
 ## Nonzero makes weighted choices reproducible. No learned model or input reads.
 @export var selection_seed := 0
 @export var enable_arena_pressure := false
+@export_group("Targeting and attack style")
+## A FEINT breaks into DODGE once its tell has passed this fraction and the
+## player is already outside the committed hit solution.
+@export_range(0.2, 0.9, 0.05) var feint_cancel_fraction := 0.55
+## TRACK retargets its aim at this interval during the tell.
+@export_range(0.05, 0.5, 0.01) var track_refresh_seconds := 0.15
 
 func cooldown_scale(phase: int) -> float:
 	return [1.0, phase_two_cooldown_scale, phase_three_cooldown_scale][clampi(phase, 0, 2)]

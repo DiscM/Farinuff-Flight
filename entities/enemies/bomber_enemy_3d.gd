@@ -1,8 +1,8 @@
 extends BasicEnemy3D
 class_name BomberEnemy3D
-## Native Bomber. Generation I retains the reference's slow forward travel,
-## bounded perpendicular drift, and periodic bomb drops; later generations can
-## request the pooled native mine path without adding a second hazard owner.
+## Native Bomber. Slow forward travel and bounded perpendicular drift become
+## a wide player-relative strafe ring; periodic bomb drops and the pooled
+## native mine path keep their frozen cadence without parking the hull.
 
 signal bomb_dropped
 signal mine_dropped(is_cluster: bool, leaves_plasma: bool)
@@ -17,18 +17,19 @@ const BOMBER_GENERATION_STATS := [
 	preload("res://entities/enemies/bomber_enemy_generation_4.tres"),
 ]
 
-const DRIFT_BOUNDARY_MARGIN_PIXELS := 50.0
 const BOMB_FIRST_DROP_MIN_SECONDS := 0.5
+const BOMB_WINDUP_SECONDS := 0.4
 const BOMB_SPEED_MIN_PIXELS := 300.0
 const BOMB_SPEED_MAX_PIXELS := 400.0
 const MINE_FIRST_DROP_SECONDS := 5.0
+const MINE_DEPLOY_SECONDS := 0.35
+const EVADE_JINK_SECONDS := 0.3
+const STRAFE_RADIUS_PIXELS := 270.0
+const STRAFE_TANGENTIAL_PIXELS := 90.0
 
 @export_range(0.0, 512.0, 1.0) var drift_speed_pixels: float = 120.0
 @export_range(0.1, 10.0, 0.1) var bomb_interval: float = 2.0
 
-var _screen_travel_direction := Vector2.ZERO
-var _screen_perpendicular := Vector2.ZERO
-var _drift_direction := 1.0
 var _drop_timer := 0.0
 var _drop_left := true
 var _mine_timer := MINE_FIRST_DROP_SECONDS
@@ -52,93 +53,112 @@ func configure_hazard_manager(manager: NativeHazardManager) -> void:
 
 
 func _configure_movement() -> void:
-	_screen_travel_direction = _flight_space.combat_motion_to_screen(_heading).normalized()
-	_screen_perpendicular = Vector2(-_screen_travel_direction.y, _screen_travel_direction.x)
-	_drift_direction = -1.0 if randf() < 0.5 else 1.0
+	_configure_strafe(
+		STRAFE_RADIUS_PIXELS,
+		STRAFE_TANGENTIAL_PIXELS,
+		drift_speed_pixels * 0.4
+	)
+	velocity = _flight_space.screen_motion_to_combat(
+		_flight_space.combat_motion_to_screen(_heading).normalized() * _speed_pixels
+	)
+	velocity.y = 0.0
 	_drop_timer = randf_range(BOMB_FIRST_DROP_MIN_SECONDS, bomb_interval)
 	_drop_left = true
 	_mine_timer = MINE_FIRST_DROP_SECONDS
 	_mine_count = 0
 	_route_timer = randf_range(0.65, 1.1)
-	velocity = _flight_space.screen_motion_to_combat(_screen_travel_direction * _speed_pixels)
-	velocity.y = 0.0
+	state = State.TRANSIT
+	state_remaining = 0.0
 
 
 func _advance_movement(delta: float) -> void:
-	if generation >= 2 and _is_inside_combat_view():
+	_observe_player()
+	_evade_cooldown = maxf(0.0, _evade_cooldown - delta)
+	var in_view := _is_inside_combat_view()
+	match state:
+		State.MINE_DEPLOY:
+			_advance_strafe(delta, 0.85)
+			state_remaining = maxf(0.0, state_remaining - delta)
+			if state_remaining <= 0.0:
+				_try_drop_mine()
+				_enter(State.TRANSIT)
+			return
+		State.EVADE:
+			_advance_strafe(delta, 1.1)
+			state_remaining = maxf(0.0, state_remaining - delta)
+			if state_remaining <= 0.0:
+				_enter(State.TRANSIT)
+			return
+		State.WITHDRAW:
+			_integrate_velocity(delta)
+			return
+		_:
+			pass
+	if _tick_engagement(delta):
+		_begin_withdraw()
+		return
+	if generation >= 2 and in_view:
 		_route_timer -= delta
 		if _route_timer <= 0.0:
 			_route_timer = 1.1
 			_choose_interception_lane()
-	var screen_motion := _screen_travel_direction * (_speed_pixels * delta)
-	screen_motion += _screen_perpendicular * (drift_speed_pixels * _drift_direction * delta)
-	var next_position := global_position + _flight_space.screen_motion_to_combat(screen_motion)
-	var bounds := _flight_space.get_combat_bounds()
-	var horizontal_margin := absf(
-		_flight_space.screen_motion_to_combat(Vector2(DRIFT_BOUNDARY_MARGIN_PIXELS, 0.0)).x
-	)
-	var vertical_margin := absf(
-		_flight_space.screen_motion_to_combat(Vector2(0.0, DRIFT_BOUNDARY_MARGIN_PIXELS)).z
-	)
-
-	# The reference bomber bounces only on the axis perpendicular to travel;
-	# its forward component still exits through the matching edge.
-	if absf(_screen_perpendicular.x) > 0.5:
-		var minimum_x := bounds.position.x + horizontal_margin
-		var maximum_x := bounds.end.x - horizontal_margin
-		if next_position.x < minimum_x:
-			next_position.x = minimum_x
-			if _screen_perpendicular.x * _drift_direction < 0.0:
-				_drift_direction *= -1.0
-		elif next_position.x > maximum_x:
-			next_position.x = maximum_x
-			if _screen_perpendicular.x * _drift_direction > 0.0:
-				_drift_direction *= -1.0
-	if absf(_screen_perpendicular.y) > 0.5:
-		var minimum_z := bounds.position.y + vertical_margin
-		var maximum_z := bounds.end.y - vertical_margin
-		if next_position.z < minimum_z:
-			next_position.z = minimum_z
-			if _screen_perpendicular.y * _drift_direction < 0.0:
-				_drift_direction *= -1.0
-		elif next_position.z > maximum_z:
-			next_position.z = maximum_z
-			if _screen_perpendicular.y * _drift_direction > 0.0:
-				_drift_direction *= -1.0
-
-	global_position = next_position
-	global_position.y = 0.0
-	if _is_inside_combat_view():
-		if _drop_timer > 0.4 and _drop_timer - delta <= 0.4:
-			play_motion(&"windup", 0.4, true)
-		_drop_timer -= delta
-		if _drop_timer <= 0.0:
-			_drop_timer = bomb_interval
-			_drop_bomb()
+	_advance_strafe(delta)
+	if not in_view:
+		return
+	if _drop_timer > BOMB_WINDUP_SECONDS and _drop_timer - delta <= BOMB_WINDUP_SECONDS:
+		play_motion(&"windup", BOMB_WINDUP_SECONDS, true)
+	_drop_timer -= delta
+	if _drop_timer <= 0.0:
+		_drop_timer = bomb_interval
+		_drop_bomb()
 	if generation >= 2:
 		_mine_timer -= delta
 		if _mine_timer <= 0.0 and _can_begin_special():
 			_mine_timer = MINE_FIRST_DROP_SECONDS
-			_try_drop_mine()
+			play_motion(&"windup", MINE_DEPLOY_SECONDS, true)
+			_enter(State.MINE_DEPLOY, MINE_DEPLOY_SECONDS)
+			return
+	if generation >= 3 and _evade_cooldown <= 0.0:
+		_evade_scan_timer -= delta
+		if _evade_scan_timer <= 0.0:
+			_evade_scan_timer = EVADE_SCAN_SECONDS
+			if _try_begin_drift_evade():
+				return
+
+
+func _try_begin_drift_evade() -> bool:
+	if state != State.TRANSIT:
+		return false
+	var projectile := _find_incoming_projectile()
+	if projectile == null:
+		return false
+	var shot_direction := _flight_space.combat_motion_to_screen(projectile.velocity).normalized()
+	var ring_direction := Vector2.from_angle(_strafe_angle + PI * 0.5) * _strafe_sign
+	if absf(shot_direction.dot(ring_direction)) < 0.85:
+		_strafe_sign = -_strafe_sign
+	_strafe_angle += _strafe_sign * 0.4
+	_strafe_weave = minf(_strafe_weave * 1.6, drift_speed_pixels * 0.7)
+	_evade_cooldown = EVADE_COOLDOWN_SECONDS
+	play_motion(&"attack", EVADE_JINK_SECONDS)
+	_enter(State.EVADE, EVADE_JINK_SECONDS)
+	return true
 
 
 func _choose_interception_lane() -> void:
-	var player := get_tree().get_first_node_in_group(&"player_craft") as Node3D
-	if player == null:
+	if _observed_player == null:
 		return
-	var player_velocity: Vector3 = player.get("velocity")
-	var target := player.global_position + player_velocity * 0.65
-	var offset := _flight_space.combat_motion_to_screen(target - global_position)
-	var lateral_distance := offset.dot(_screen_perpendicular)
-	# Commit between decisions; a dead band prevents jitter when lanes align.
-	# The original forward travel, boundary bounce and exit behavior stay intact.
+	var offset := _flight_space.combat_motion_to_screen(_predicted_player - global_position)
+	var ring_tangent := Vector2.from_angle(_strafe_angle + PI * 0.5) * _strafe_sign
+	var lateral_distance := offset.dot(ring_tangent)
 	if absf(lateral_distance) > 60.0:
-		_drift_direction = signf(lateral_distance)
+		_strafe_sign = signf(lateral_distance)
+	_strafe_radius = clampf(
+		_strafe_radius - signf(offset.length() - _strafe_radius) * 12.0, 180.0, 360.0
+	)
 
 
 func _is_inside_combat_view() -> bool:
-	var bounds := _flight_space.get_combat_bounds()
-	return bounds.has_point(Vector2(global_position.x, global_position.z))
+	return _inside_view()
 
 
 func _can_begin_special() -> bool:
@@ -146,7 +166,9 @@ func _can_begin_special() -> bool:
 
 
 func _drop_bomb() -> void:
-	var manager := get_tree().get_first_node_in_group(&"native_3d_projectile_manager") as ProjectileManager
+	var manager := get_tree().get_first_node_in_group(
+		&"native_3d_projectile_manager"
+	) as ProjectileManager
 	if manager == null or not manager.is_ready:
 		return
 	var marker_name := "BombBayLeft" if _drop_left else "BombBayRight"
@@ -180,3 +202,11 @@ func _try_drop_mine() -> void:
 		play_motion(&"attack")
 		_mine_count += 1
 		mine_dropped.emit(cluster, leaves_plasma)
+
+
+func get_debug_state() -> Dictionary:
+	var debug := super.get_debug_state()
+	debug["mine_count"] = _mine_count
+	debug["drop_timer"] = _drop_timer
+	debug["drift_weave"] = _strafe_weave
+	return debug

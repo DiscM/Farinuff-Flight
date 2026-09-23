@@ -45,6 +45,7 @@ EXTENDED_SCENES = (
     "pixel_enemy_material_smoke",
     "voxel_boss_material_smoke",
     "combat_motion_smoke",
+    "enemy_fsm_smoke",
     "run_warmup_benchmark",
     "neon_cabinet_smoke",
     "background_drift_smoke",

@@ -42,13 +42,14 @@ func _run() -> void:
 			"basic":
 				enemy._time_alive = 1.0
 				enemy._try_begin_charge()
-				enemy._charge_timer = .001
+				enemy.state_remaining = .001
 				enemy._advance_movement(.01)
 			"fast":
-				enemy._phase_state = FastEnemy3D.PhaseState.WARNING
-				enemy._phase_timer = .001
-				enemy._phase_displacement = Vector3(2,0,0)
-				enemy._update_phase(.01, true)
+				var bounds: Rect2 = enemy._flight_space.get_combat_bounds()
+				enemy.global_position = Vector3(bounds.get_center().x, 0.0, bounds.get_center().y)
+				enemy._enter(BasicEnemy3D.State.PHASE_WINDUP, .001)
+				enemy._phase_displacement = Vector3(2, 0, 0)
+				enemy._advance_movement(.01)
 			"bomber":
 				enemy._drop_bomb()
 			"tank":

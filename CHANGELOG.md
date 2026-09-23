@@ -2,6 +2,11 @@
 
 All notable changes to this project will be documented in this file.
 
+## [revision2] - 2026-09-22
+
+### Removed
+- **Deprecated Boss Flight Orchestrator:** Deleted `systems/boss_flight_orchestrator.gd` and the `BossFlightProfile.Maneuver` enum, `sequence` roster, and the unused `lead_seconds`, `maximum_lead`, `maneuver_seconds`, and `pattern_amplitude` fields, along with their rows in all five `entities/enemies/flight_profiles/*.tres` hulls. `BossMovementBrain`'s CHASE/STRAFE/DODGE states and `BossCombatProfile.prediction_seconds` / `maximum_prediction` fully cover the retired maneuver-sequence path.
+
 ## [revision1] - 2026-09-22
 
 ### Removed
