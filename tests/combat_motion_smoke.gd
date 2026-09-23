@@ -117,7 +117,7 @@ func _check_player() -> void:
 				_expect(module.skeleton.get_bone_pose_rotation(index).is_equal_approx(motion.skeleton.get_bone_pose_rotation(index)), hull_name + " " + id + " stays attached through recoil and boost")
 		for pair in player._motion_sockets[hull_name]:
 			_expect(pair[0].global_transform.is_equal_approx(Motion.socket_transform(pair[1])), hull_name + " moving muzzles/engines remain aligned")
-		player.boost_duration_timer = 0.0
+		player.boost_meter = 0.0
 		player._update_boost(.01)
 		_expect(motion.rest_clip == &"cruise", hull_name + " unfolds when boost ends")
 	player.set_elite_upgrade_enabled("overclock", true)

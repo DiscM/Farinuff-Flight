@@ -7,19 +7,18 @@ const SPEED := 280.0
 const ACCELERATION := 12.0
 const DRAG := 14.0
 
-const BOOST_DURATION := 0.68
-const BOOST_DISTANCE := 340.0
+## Boost is a consumable meter bar. Holding the boost button drains it;
+## letting go (or running dry) ends the boost and the meter refills at rest.
+const BOOST_SPEED := 500.0
+const BOOST_METER_DRAIN_SECONDS := 1.35
+const BOOST_METER_RECHARGE_SECONDS := 2.4
+const BOOST_METER_MIN_START := 0.18
+const BOOST_REFLECT_REFUND := 0.22
+const BOOST_CHAIN_REFLECT_THRESHOLD := 3
+const BOOST_CHAIN_METER_REFILL := 0.45
 const BOOST_STEER_RATE := 10.0
-const BOOST_COOLDOWN := 0.85
 const BOOST_HEADING_MIN_SPEED := 1.0
 const BOOST_DEFLECT_RADIUS := 48.0
-const BOOST_REFLECT_COOLDOWN := 0.70
-const BOOST_REFLECT_COOLDOWN_STEP := 0.05
-const BOOST_REFLECT_COOLDOWN_MIN := 0.55
-const BOOST_CHAIN_REFLECT_THRESHOLD := 3
-const BOOST_CHAIN_WINDOW := 0.24
-# Accept a deliberate press just before recharge or a reflection chain is ready.
-const BOOST_INPUT_BUFFER := 0.12
 const POST_BOOST_SLIDE_DURATION := 0.4
 
 const DRIFT_BONUS_MAX := 2.0

@@ -21,19 +21,19 @@ func _process(_delta: float) -> void:
 	if not is_instance_valid(player) or not is_instance_valid(status):
 		return
 	var state: Dictionary = player.get_boost_state()
-	var ready := bool(state.chain_ready)
+	value = clampf(float(state.meter), 0.0, 1.0)
 	var pips := ""
 	for index in int(state.threshold):
 		pips += "◆" if index < int(state.reflections) else "◇"
-	if ready:
-		status.text = "BOOST AGAIN [%s] · %.2fs" % [InputBindings.binding_hint("boost"), float(state.chain_remaining)]
-		value = float(state.chain_fraction)
-	elif bool(state.boosting):
-		status.text = "EXTRA BOOST" if bool(state.chain_followup) else "REFLECT  %s" % pips
-		value = float(state.reflections) / float(state.threshold)
+	if bool(state.boosting):
+		status.text = "REFLECT  %s" % pips
 	else:
-		value = float(state.recharge)
-		status.text = "BOOST [%s] READY" % InputBindings.binding_hint("boost") if value >= 1.0 else "BOOST RECHARGING"
+		status.text = (
+			"HOLD BOOST [%s]" % InputBindings.binding_hint("boost")
+			if value >= 0.2
+			else "BOOST RECHARGING"
+		)
+	var ready := bool(state.chain_ready)
 	if ready and not _chain_was_ready:
 		AudioManager.play_ui_click()
 	_chain_was_ready = ready

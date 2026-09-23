@@ -105,8 +105,7 @@ func _neutral() -> void:
 	player.reset_action_input()
 	player.shoot_timer.stop()
 	player.is_boosting = false
-	player.boost_cooldown_timer = 0.0
-	player.boost_chain_window_timer = 0.0
+	player.boost_meter = 1.0
 	player.boost_reflected_projectiles = 0
 	player._chain_followup = false
 	player._update_shooting()

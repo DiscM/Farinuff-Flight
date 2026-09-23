@@ -22,7 +22,7 @@ const INITIAL_ZOOM := 220.0
 const MIN_ZOOM := 130.0
 const MAX_ZOOM := 260.0
 const CRUISE_SPEED := FlightTuning.SPEED / 15.0
-const BOOST_SPEED := FlightTuning.BOOST_DISTANCE / FlightTuning.BOOST_DURATION / 15.0
+const BOOST_SPEED := FlightTuning.BOOST_SPEED / 15.0
 const CAMERA_OFFSET := Vector3(150.0, 180.0, 200.0) * 1.4
 
 
@@ -43,10 +43,9 @@ var hud: Control
 var world: Node3D
 var velocity := Vector3.ZERO
 var heading := Vector3.FORWARD
-var boost_remaining := 0.0
-var boost_cooldown := 0.0
+var is_boosting := false
+var _boost_released := true
 var is_docked := false
-var _boost_released := false
 var _menu_open := false
 var _leaving := false
 var _elapsed := 0.0
@@ -333,12 +332,8 @@ func _physics_process(delta: float) -> void:
 	var controls_focused := get_viewport().gui_get_focus_owner() != null
 	if controls_focused:
 		input_direction = Vector2.ZERO
-	if not Input.is_action_pressed("boost"):
-		_boost_released = true
-	var wants_boost := not controls_focused and _boost_released and Input.is_action_just_pressed("boost")
-	if wants_boost:
-		_boost_released = false
-	step_flight(input_direction, wants_boost, delta)
+	var boost_held := not controls_focused and Input.is_action_pressed("boost")
+	step_flight(input_direction, boost_held, delta)
 	_update_visuals(delta)
 	_update_camera(delta)
 	_update_pilot_locator()
@@ -349,23 +344,28 @@ func _physics_process(delta: float) -> void:
 		_refresh_hud()
 
 
-func step_flight(input_direction: Vector2, wants_boost: bool, delta: float) -> void:
+func step_flight(input_direction: Vector2, boost_held: bool, delta: float) -> void:
 	# Camera projection affects heading only; neither zoom nor aspect alters speed.
 	var direction := screen_direction_to_world(input_direction)
-	boost_cooldown = maxf(boost_cooldown - delta, 0.0)
-	if wants_boost and boost_cooldown <= 0.0 and boost_remaining <= 0.0:
-		boost_remaining = FlightTuning.BOOST_DURATION
-		boost_cooldown = FlightTuning.BOOST_DURATION + FlightTuning.BOOST_COOLDOWN
+	# Wayfarer's boost bar is unlimited: hold to fly fast, with no meter and no
+	# recharge. Combat keeps the consumable meter on Player3D.
+	if not Input.is_action_pressed("boost"):
+		_boost_released = true
+	if boost_held and not is_boosting and not _boost_released:
+		boost_held = false
+	if boost_held and not is_boosting:
+		_boost_released = false
+	var boosting := boost_held
+	if boosting and not is_boosting:
 		if not direction.is_zero_approx():
 			heading = direction.normalized()
 		_ribbons.ignite()
 		AudioManager.play_boost()
-	var boosting := boost_remaining > 0.0
+	is_boosting = boosting
 	if boosting:
 		if not direction.is_zero_approx():
 			heading = heading.lerp(direction.normalized(), 1.0 - exp(-FlightTuning.BOOST_STEER_RATE * delta)).normalized()
 		velocity = heading * BOOST_SPEED
-		boost_remaining = maxf(boost_remaining - delta, 0.0)
 	else:
 		var rate: float = FlightTuning.DRAG if direction.is_zero_approx() else FlightTuning.ACCELERATION
 		velocity = velocity.lerp(direction * CRUISE_SPEED, 1.0 - exp(-rate * delta))
@@ -407,7 +407,7 @@ func _update_visuals(delta: float) -> void:
 		_engine_left.global_transform = ShipMotion.socket_transform(_left_authored)
 	if _right_authored != null:
 		_engine_right.global_transform = ShipMotion.socket_transform(_right_authored)
-	_ribbons.advance(delta, velocity.length() / CRUISE_SPEED, boost_remaining > 0.0, true)
+	_ribbons.advance(delta, velocity.length() / CRUISE_SPEED, is_boosting, true)
 	_harbor_visuals.advance(delta, reduced_motion)
 	_dock_material.emission_energy_multiplier = 1.8 if reduced_motion else 1.8 + sin(_elapsed * 1.8) * 0.25
 	_sky_material.set_shader_parameter("u_time", 0.0 if reduced_motion else _elapsed)
@@ -471,7 +471,7 @@ func _refresh_hud() -> void:
 	is_docked = distance <= DOCK_RADIUS
 	hud.set_active_section(_active_section, distance, is_docked)
 	hud.set_flight_status(velocity.length(), player.position.distance_to(Layout.FLIGHT_CENTER))
-	hud.set_boost_state(boost_cooldown <= 0.0, 1.0 - boost_cooldown / (FlightTuning.BOOST_DURATION + FlightTuning.BOOST_COOLDOWN))
+	hud.set_boost_state(true, 1.0)
 	var entries: Array = []
 	for section in Sections.SECTIONS:
 		var entry: Dictionary = section.duplicate()
@@ -537,7 +537,6 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if not _menu_open and event.is_action_pressed("ui_cancel") and get_viewport().gui_get_focus_owner() != null:
 		get_viewport().gui_release_focus()
-		_boost_released = false
 		get_viewport().set_input_as_handled()
 		return
 	if InputBindings.is_pause_event(event) or (_menu_open and event.is_action_pressed("ui_cancel")):
@@ -579,8 +578,8 @@ func _pause_for_interruption() -> void:
 
 
 func _reset_input() -> void:
+	is_boosting = false
 	_boost_released = false
-	boost_remaining = 0.0
 	velocity = Vector3.ZERO
 	if _ribbons != null:
 		_ribbons.reset()
