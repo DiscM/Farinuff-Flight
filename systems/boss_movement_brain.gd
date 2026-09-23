@@ -53,7 +53,7 @@ func configure(space: FlightSpace3D, variant: int) -> void:
 	_phase = 0
 	_waypoint = Vector3.ZERO
 	strafe_clock = 0.0
-	strafe_angle = randf_range(0.0, TAU)
+	strafe_angle = float(_variant) * TAU / 5.0
 	strafe_sign = -1.0 if _variant % 2 == 0 else 1.0
 	dodge_remaining = 0.0
 	_dodge_cooldown = 0.0
@@ -156,6 +156,12 @@ func steer(
 	var desired_velocity := _space.screen_motion_to_combat(steering.limit_length(1.0) * speed)
 	var response := DODGE_STEERING_RESPONSE if mode == Mode.DODGE else profile.steering_response
 	var next_velocity := current_velocity.lerp(desired_velocity, 1.0 - exp(-response * delta))
+	# A blended turn can stall through zero; keep a visible floor so the hull
+	# never reads as parked while a mobility state is active.
+	var floor_speed := speed * 0.4
+	if next_velocity.length() < floor_speed:
+		var fallback := desired_velocity if not desired_velocity.is_zero_approx() else _space.screen_motion_to_combat(steering.limit_length(1.0))
+		next_velocity = fallback.limit_length(maxf(fallback.length(), floor_speed))
 	var movement_bounds := bounds.expand(Vector2(origin.x, origin.z))
 	var next_position := _clamp_point(origin + next_velocity * delta, movement_bounds)
 	next_velocity = (next_position - origin) / delta

@@ -37,9 +37,28 @@ const Definition := preload("res://systems/boss_attack_definition.gd")
 @export_range(0.2, 0.9, 0.05) var feint_cancel_fraction := 0.55
 ## TRACK retargets its aim at this interval during the tell.
 @export_range(0.05, 0.5, 0.01) var track_refresh_seconds := 0.15
+@export_group("Targeting predictor")
+## Travel speed used to solve where a shot meets the target.
+@export_range(50.0, 1200.0, 10.0) var projectile_speed_estimate := 320.0
+## Lead horizon for PREDICT and TRACK intercept solutions.
+@export_range(0.0, 1.5, 0.05) var intercept_seconds := 0.55
+## Hard cap on intercept lead so a boost cannot create an unbounded intercept.
+@export_range(0.0, 400.0, 5.0) var maximum_intercept_pixels := 160.0
+@export_group("Continuous fire")
+## Suppressing shots fired between committed volleys while maneuvering.
+@export var support_fire := true
+@export_range(0.1, 2.0, 0.01) var support_fire_interval := 0.38
+@export_range(50.0, 1200.0, 10.0) var support_fire_speed := 380.0
+@export_group("Projectile fire rate")
+## Burst spacing tightens with each health phase.
+@export_range(0.4, 1.0, 0.05) var phase_two_burst_scale := 0.85
+@export_range(0.4, 1.0, 0.05) var phase_three_burst_scale := 0.7
 
 func cooldown_scale(phase: int) -> float:
 	return [1.0, phase_two_cooldown_scale, phase_three_cooldown_scale][clampi(phase, 0, 2)]
 
 func recovery_scale(phase: int) -> float:
 	return [1.0, phase_two_recovery_scale, phase_three_recovery_scale][clampi(phase, 0, 2)]
+
+func burst_scale(phase: int) -> float:
+	return [1.0, phase_two_burst_scale, phase_three_burst_scale][clampi(phase, 0, 2)]

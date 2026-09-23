@@ -90,6 +90,16 @@ func _exercise_attack(boss: Boss, alternate: bool) -> String:
 		for shot in _shots:
 			var direction := flight_space.combat_motion_to_screen(shot.direction).normalized()
 			_expect(absf(boss._boss_ai.patterns._commander_escape_direction().angle_to(direction)) >= 0.219, "Every Commander layer preserves its sidestep corridor")
+	var pods_live := boss._sections.size() >= 2 and boss._sections[0].is_active and boss._sections[1].is_active
+	if boss.variant == 1 and pods_live:
+		var across: Vector2 = plan.aim.orthogonal()
+		var lateral_span := 0.0
+		for shot in _shots:
+			var shot_origin: Vector3 = shot.origin
+			var offset := flight_space.combat_motion_to_screen(shot_origin - origin)
+			lateral_span = maxf(lateral_span, absf(offset.dot(across)))
+		_expect(_shots.size() >= 14, "Bulwark wall fills a dense lane set")
+		_expect(lateral_span >= 340.0, "Bulwark wall spans a front too wide to strafe clear")
 	var signature: Array[String] = []
 	for shot in _shots:
 		signature.append("%s:%s:%s" % [shot.direction, shot.speed, shot.motion])

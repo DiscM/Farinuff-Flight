@@ -9,6 +9,7 @@ const Profile := preload("res://systems/boss_combat_profile.gd")
 const Selector := preload("res://systems/boss_attack_selector.gd")
 const Plan := preload("res://systems/boss_attack_plan.gd")
 const Movement := preload("res://systems/boss_movement_brain.gd")
+const Predictor := preload("res://systems/boss_targeting_predictor.gd")
 const Projectile := preload("res://entities/projectiles/projectile_3d.gd")
 enum State { IDLE, INTRO, CHASE, STRAFE, DODGE, ATTACK, RECOVERY, STUNNED, PHASE_TRANSITION, DEAD }
 signal attack_committed(attack_id: StringName)
@@ -23,6 +24,8 @@ const PROFILES: Array[Profile] = [
 const PROJECTILE_ALERT_PIXELS := 150.0
 const CHASE_BAND_PIXELS := 180.0
 const RECOVERY_SPEED_SCALE := 0.5
+const ATTACK_WINDUP_SPEED_SCALE := 0.55
+const PRESENTATION_SPEED_SCALE := 0.35
 
 @export var profile_override: Profile
 @onready var movement: Movement = $Movement
@@ -48,6 +51,8 @@ var _windup_damage := 0
 var _sequence := 0
 var _last_targeting: Plan.Targeting = Plan.Targeting.LEAD
 var _last_style: Plan.Style = Plan.Style.COMMIT
+var _predictor := Predictor.new()
+var _support_timer := 0.0
 
 func configure(space: FlightSpace3D, variant: int) -> void:
 	_space = space
@@ -55,9 +60,10 @@ func configure(space: FlightSpace3D, variant: int) -> void:
 	profile = profile_override if profile_override != null else PROFILES[clampi(variant, 0, 4)]
 	selector.configure(profile)
 	movement.configure(space, variant)
+	_predictor.configure(space, profile.projectile_speed_estimate)
 	presentation.configure(_actor, space)
 	patterns.configure(space, variant, _actor.get("_sections"))
-	executor.configure(_actor, space, presentation, patterns)
+	executor.configure(_actor, space, presentation, patterns, _predictor)
 	if not executor.feint_broken.is_connected(_on_feint_broken):
 		executor.feint_broken.connect(_on_feint_broken)
 	_enabled = true
@@ -65,6 +71,7 @@ func configure(space: FlightSpace3D, variant: int) -> void:
 	_sequence = 0
 	_lost_time = 0.0
 	_stun_cooldown = 0.0
+	_support_timer = profile.support_fire_interval
 	state = State.IDLE
 	state_remaining = 0.0
 	movement.hold(&"idle")
@@ -77,7 +84,7 @@ func step(delta: float, target: Node3D) -> Vector3:
 	if not is_instance_valid(target) or target.is_queued_for_deletion():
 		_enter(State.IDLE)
 		return Vector3.ZERO
-	_observe(target)
+	_observe(target, delta)
 	if state == State.IDLE:
 		if distance <= profile.engagement_radius:
 			_enter(State.INTRO, profile.intro_duration)
@@ -96,6 +103,13 @@ func step(delta: float, target: Node3D) -> Vector3:
 			state_remaining = maxf(0.0, state_remaining - delta)
 			if state_remaining <= 0.0:
 				_enter_mobility()
+				return Vector3.ZERO
+			if state == State.STUNNED:
+				return Vector3.ZERO
+			return movement.steer(
+				delta, _actor.global_position, _actor.velocity,
+				target_position, predicted_target, phase
+			) * delta
 		State.RECOVERY:
 			state_remaining = maxf(0.0, state_remaining - delta)
 			if state_remaining <= 0.0:
@@ -120,12 +134,20 @@ func step(delta: float, target: Node3D) -> Vector3:
 			_apply_mobility_intent()
 			if _try_commit_attack():
 				return Vector3.ZERO
+			_advance_support_fire(delta)
 			return movement.steer(
 				delta, _actor.global_position, _actor.velocity,
 				target_position, predicted_target, phase
 			) * delta
 		State.ATTACK:
-			var displacement := executor.advance(delta, target)
+			var displacement := Vector3.ZERO
+			if executor.winding_up:
+				movement.set_speed_scale(ATTACK_WINDUP_SPEED_SCALE)
+				displacement = movement.steer(
+					delta, _actor.global_position, _actor.velocity,
+					target_position, predicted_target, phase
+				) * delta
+			displacement += executor.advance(delta, target)
 			if not executor.active and state == State.ATTACK:
 				var recovery := 0.1
 				if executor.plan != null:
@@ -134,13 +156,15 @@ func step(delta: float, target: Node3D) -> Vector3:
 			return displacement
 	return Vector3.ZERO
 
-func _observe(target: Node3D) -> void:
+func _observe(target: Node3D, delta: float = 0.0) -> void:
 	target_position = target.global_position
 	var offset := _space.combat_motion_to_screen(target_position - _actor.global_position)
 	distance = offset.length()
 	var speed := Vector3.ZERO
 	if target is Player3D:
 		speed = target.velocity
+	if delta > 0.0:
+		_predictor.advance(delta, target_position, speed)
 	var screen_speed := _space.combat_motion_to_screen(speed)
 	radial_speed = 0.0 if offset.is_zero_approx() else screen_speed.dot(offset.normalized())
 	lateral_speed = 0.0 if offset.is_zero_approx() else screen_speed.dot(offset.normalized().orthogonal())
@@ -219,24 +243,49 @@ func _try_commit_attack() -> bool:
 	attack_committed.emit(attack.id)
 	return true
 
+func _advance_support_fire(delta: float) -> void:
+	if not profile.support_fire:
+		return
+	_support_timer = maxf(0.0, _support_timer - delta)
+	if _support_timer > 0.0:
+		return
+	_support_timer = maxf(0.1, profile.support_fire_interval * profile.burst_scale(phase))
+	var muzzle := _actor.get_socket(&"MuzzleCenter") as Marker3D
+	var origin := muzzle.global_position if muzzle != null else _actor.global_position
+	patterns.fire_support(_compute_aim(Plan.Targeting.PREDICT), origin, profile.support_fire_speed)
+
+
 func _compute_aim(targeting: Plan.Targeting) -> Vector2:
 	var from := _actor.global_position
-	var toward := predicted_target if targeting == Plan.Targeting.LEAD else target_position
+	var toward := target_position
+	match targeting:
+		Plan.Targeting.LEAD:
+			toward = _predictor.solve_intercept(
+				from, profile.prediction_seconds, profile.maximum_prediction
+			)
+		Plan.Targeting.PREDICT, Plan.Targeting.TRACK:
+			toward = _predictor.solve_intercept(
+				from, profile.intercept_seconds, profile.maximum_intercept_pixels
+			)
+		_:
+			toward = target_position
 	var aim := _space.combat_motion_to_screen(toward - from).normalized()
 	return aim if not aim.is_zero_approx() else Vector2.DOWN
 
 func _choose_targeting(attack: BossAttackDefinition) -> Plan.Targeting:
 	if attack.family == BossAttackDefinition.Family.CHARGE:
 		return Plan.Targeting.LEAD
+	if attack.family == BossAttackDefinition.Family.PROJECTILE:
+		if phase >= 1 and _sequence % 3 == 2:
+			return Plan.Targeting.TRACK
+		return Plan.Targeting.PREDICT
 	if radial_speed < -150.0:
 		return Plan.Targeting.SNAP
 	if absf(lateral_speed) > 220.0:
 		return Plan.Targeting.BRACKET
-	if attack.family == BossAttackDefinition.Family.PROJECTILE and phase >= 1 and _sequence % 2 == 0:
-		return Plan.Targeting.TRACK
 	if attack.family == BossAttackDefinition.Family.SLAM:
 		return Plan.Targeting.SNAP
-	return Plan.Targeting.LEAD
+	return Plan.Targeting.PREDICT
 
 func _choose_style() -> Plan.Style:
 	if phase >= 2:
@@ -270,9 +319,16 @@ func _enter(next: State, duration: float = 0.0) -> void:
 	state_remaining = maxf(0.0, duration)
 	_windup_damage = 0
 	match next:
-		State.CHASE, State.STRAFE, State.RECOVERY:
+		State.CHASE, State.STRAFE, State.RECOVERY, State.ATTACK, State.INTRO, State.PHASE_TRANSITION:
 			movement.release_hold(StringName(State.keys()[next].to_lower()))
-			movement.set_speed_scale(RECOVERY_SPEED_SCALE if next == State.RECOVERY else 1.0)
+			var scale := 1.0
+			if next == State.RECOVERY:
+				scale = RECOVERY_SPEED_SCALE
+			elif next == State.ATTACK:
+				scale = ATTACK_WINDUP_SPEED_SCALE
+			elif next in [State.INTRO, State.PHASE_TRANSITION]:
+				scale = PRESENTATION_SPEED_SCALE
+			movement.set_speed_scale(scale)
 		State.DODGE:
 			movement.release_hold(&"dodge")
 		_:
@@ -333,6 +389,7 @@ func get_debug_state() -> Dictionary:
 		"cooldowns": selector.cooldowns.duplicate(),
 		"windup": executor.winding_up,
 		"targeting": Plan.Targeting.keys()[_last_targeting],
+		"support_remaining": _support_timer,
 		"style": Plan.Style.keys()[_last_style],
 		"movement": movement.get_debug_state(),
 	}

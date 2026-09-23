@@ -11,6 +11,7 @@ All five boss hulls use the same explicit finite-state machine. Mobility states 
 | `BossAttackSelector` | Eligibility, weighted choice, per-encounter cooldowns and repetition history |
 | `BossAttackDefinition` / `BossCombatProfile` | Inspector-editable attack and encounter tuning |
 | `BossAttackPlan` | Snapshot of aim, target, targeting, style, damage and timing at commitment |
+| `BossTargetingPredictor` | Samples visible target motion and solves a bounded intercept point |
 | `BossAttackExecutor` | Telegraph, release, TRACK re-aim, FEINT break, charge displacement and projectile sequence timing |
 | `BossProjectilePatterns` | Five hulls' projectile formations, escape gaps and delayed echo marks |
 | `BossCombatPresentation` | Facing, existing ship animations, world telegraphs and HUD cues |
@@ -71,6 +72,8 @@ Only one state boundary is processed per tick. A slow frame cannot spend the sam
 
 Chase engages when the player leaves the preferred band by more than 180 pixels. Strafe is the default between attacks. Dodge fires only from Chase or Strafe and never during a committed tell. After two projectile volleys the ring closes toward a legal alternative's ideal range, so the hull cannot deadlock outside every remaining attack.
 
+While chasing or strafing the boss also fires **continuous support shots** — one straight predictor-aimed shot every 0.38 seconds, tightening with each health phase. Support fire never runs during a committed tell, a dodge, or Recovery, so the punish window stays real.
+
 All distances/speeds use the game's baseline screen-pixel conversion, not raw 3D units.
 
 ## Targeting and attack style
@@ -79,10 +82,13 @@ Each committed attack draws one targeting mode and one delivery style from expli
 
 | Targeting | Aim | Counterplay |
 | --- | --- | --- |
-| Lead | Capped velocity prediction locked at the tell | Reverse or brake after the tell starts |
+| Lead | Short-horizon intercept locked at the tell | Reverse or brake after the tell starts |
+| Predict | Full intercept solution with acceleration lead, capped in pixels | Change course after the tell; the cap bounds the lead |
 | Snap | Present position, shorter tell | Keep moving |
-| Track | Refreshes its aim at a capped rate until release | Boost sideways at release |
+| Track | Predict refreshes its aim at a capped rate until release | Boost sideways at release |
 | Bracket | Present position with a widened charge lane, slam radius or burst count | Leave the widened zone entirely |
+
+The predictor samples visible target velocity over a half-second window, estimates acceleration, and iterates shot travel time against the extrapolated position. It reads motion only — never button state — and its lead is hard-capped so a boost cannot create an unbounded intercept.
 
 | Style | Delivery | Counterplay |
 | --- | --- | --- |
@@ -90,7 +96,7 @@ Each committed attack draws one targeting mode and one delivery style from expli
 | Surge | Telegraph ×0.85, recovery ×0.55 | Punish the shortened recovery |
 | Feint | Longer tell that breaks into a Dodge once past its cancel fraction and the player has already left the hit solution | Bait the break, then punish the dodge |
 
-Charge always uses Lead so its lane stays honest. Slam prefers Snap. Projectiles add Track from phase two on alternating volleys. A retreating player draws Lead; a closing player draws Snap; heavy lateral drift draws Bracket. Phase one rarely surges and occasionally feints; phase three alternates Commit and Surge.
+Charge always uses Lead so its lane stays honest. Slam prefers Snap. Projectile volleys aim through Predict, with Track taking every third volley from phase two. A closing player draws Snap; heavy lateral drift draws Bracket. Phase one rarely surges and occasionally feints; phase three alternates Commit and Surge.
 
 ## Phases and attacks
 
@@ -104,23 +110,25 @@ Large hits skip directly to the appropriate phase. Death takes precedence over a
 
 | Attack | Selection range, pixels | Base cooldown | Telegraph | Base recovery | Counterplay |
 | --- | --- | --- | --- | --- | --- |
-| Slam | 0–220 | 5 s | 1.1 s | 1.7 s | Leave the orange 240-pixel radius circle |
-| Charge | 280–1000 | 11 s | 1.3 s | 2 s | Sidestep the fixed lane, then punish the recovery |
-| Projectile | 230–1200 | 5 s | 1.3 s | 1.6 s | Bait the aim, then move through an authored gap |
-| Alternate projectile | 230–1200 | 8 s | 1.5 s | 1.8 s | Read the phase-three formation and staggered speed layers |
+| Slam | 0–280 | 5 s | 1.1 s | 1.7 s | Leave the orange 240-pixel radius circle |
+| Charge | 200–1600 | 11 s | 1.3 s | 2 s | Sidestep the fixed lane, then punish the recovery |
+| Projectile | 140–1800 | 2.2 s | 1.3 s | 1.0 s | Bait the aim, then move through an authored gap |
+| Alternate projectile | 140–1850 | 3.2 s | 1.5 s | 1.1 s | Read the phase-three formation and staggered speed layers |
+
+Iron Bulwark's projectile wall spans 17 lanes over 832 pixels with a single open lane that steps each volley, so a lazy strafe cannot clear it — commit to the breach or use boost. The outermost lanes are boost-breakers and disappear with their weapon pods.
 
 Cooldowns begin with commitment, including interrupted attacks and broken feints. Phase transitions do not refund cooldowns or reset repeat history. Both projectile patterns count as the same attack family: after two projectiles, another projectile is forbidden until slam or charge is committed. If no alternative is currently legal, the hull closes toward an alternative's range or keeps strafing.
 
 Weight combines ideal-distance proximity, signed player radial speed (approaching versus retreating), phase aggression and a penalty for the previous family. Eligibility checks ranges, phase unlock, cooldown and the hard repetition limit before the draw. `selection_seed` makes choices reproducible for testing.
 
-The boss faces and follows visible player motion between attacks. Prediction uses at most 0.25 seconds of current velocity and 100 pixels of lead by default. Aim locks at telegraph start for every targeting mode except Track. A charge follows one straight, bounded segment and cannot turn after its warning. Its hit resolver sweeps the full traveled segment to prevent tunneling on slow frames. Body and pod contact cannot bypass the attack warning.
+The boss faces and follows visible motion between attacks and **never parks to perform one**. Every tell is flown through at reduced speed: the slam circle, charge lane and volley origin ride with the hull along the aim that was locked at telegraph start, so the read promise stays honest while the silhouette keeps moving. A charge follows one straight, bounded segment and cannot turn after its warning. Its hit resolver sweeps the full traveled segment to prevent tunneling on slow frames. Body and pod contact cannot bypass the attack warning. Stun is the one deliberate stop.
 
 Sustained damage during a windup can stun the boss: default threshold is 4% of maximum HP during that one windup. Stun lasts 1.4 seconds with an eight-second cooldown. `boss.stun(duration)` is also available to external abilities. Set `stagger_health_fraction` to zero to disable damage-triggered stagger.
 
 ## Tuning in Godot
 
 1. Open `entities/enemies/boss_enemy_3d.tscn` and select **BossAI**. Assign **Profile Override** for a custom encounter, or edit a resource in `entities/enemies/ai_profiles/`.
-2. The profile exposes engagement/disengagement, prediction, Intro/stun/transition durations, minimum reaction time, HP thresholds, cooldown/recovery multipliers, feint cancel fraction, track refresh interval and attack resources.
+2. The profile exposes engagement/disengagement, prediction, intercept horizon and pixel cap, continuous support-fire interval and speed, projectile fire-rate phase scales, Intro/stun/transition durations, minimum reaction time, HP thresholds, cooldown/recovery multipliers, feint cancel fraction, track refresh interval and attack resources.
 3. Attack resources under `entities/enemies/attacks/` expose ranges, weights, movement bias, cooldown, damage, telegraph/recovery durations, burst count/interval, slam radius, charge speed/distance/width and projectile speed scale. Keep charge's `minimum_phase = 1` and the alternate's `minimum_phase = 2` (zero-based) for the default unlocks.
 4. Select **BossAI/Movement** to assign a flight profile override. `entities/enemies/flight_profiles/` exposes cruise speed, preferred distance, minimum separation, steering response, strafe ring tangential/weave, chase surge and dodge distance/duration. Keep minimum separation below your melee range.
 

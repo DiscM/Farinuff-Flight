@@ -44,6 +44,19 @@ func telegraph(plan: BossAttackPlan) -> void:
 	clear()
 	_actor.play_motion(&"windup", plan.warning_seconds, true)
 	_warning.show()
+	_place_geometry(plan)
+	progress(0.0)
+
+
+## Re-slides the tell with a moving hull without restarting its windup clip.
+func refresh(plan: BossAttackPlan) -> void:
+	if plan == null:
+		return
+	_warning.show()
+	_place_geometry(plan)
+
+
+func _place_geometry(plan: BossAttackPlan) -> void:
 	match plan.definition.family:
 		Definition.Family.SLAM:
 			var radius := plan.definition.slam_radius
@@ -59,7 +72,6 @@ func telegraph(plan: BossAttackPlan) -> void:
 			_lane.show()
 		Definition.Family.PROJECTILE:
 			pass
-	progress(0.0)
 
 func progress(fraction: float) -> void:
 	_lane.set_instance_shader_parameter(&"charge_progress", fraction)

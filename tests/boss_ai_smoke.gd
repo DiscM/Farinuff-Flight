@@ -26,6 +26,8 @@ func _run() -> void:
 	await _check_interruptions()
 	await _check_damage()
 	await _check_mobility_variety()
+	await _check_predictor_and_fire_rate()
+	await _check_continuous_fire()
 	await _check_repertoire()
 	GameManager.is_game_active = false
 	for failure in _failures:
@@ -74,7 +76,7 @@ func _check_selection() -> void:
 		second.commit(replay, 2)
 		selector.advance(60)
 		second.advance(60)
-	_expect(is_equal_approx(tuning.attacks[2].cooldown, 5.0), "Encounter state never mutates shared tuning")
+	_expect(is_equal_approx(tuning.attacks[2].cooldown, 2.2), "Encounter state never mutates shared tuning")
 
 func _check_health() -> void:
 	var health_component := Health.new()
@@ -133,7 +135,11 @@ func _check_states() -> void:
 	player.global_position += flight_space.screen_motion_to_combat(Vector2(300, 0))
 	player.velocity = flight_space.screen_motion_to_combat(Vector2(500, 0))
 	boss._advance_movement(.1)
-	_expect(plan.aim == Vector2.DOWN and boss.global_position == origin, "Windup locks aim and holds the hull while the player changes direction")
+	_expect(plan.aim == Vector2.DOWN, "Windup locks aim while the player changes direction")
+	_expect(boss.global_position != origin, "The hull keeps flying through its tell")
+	boss._advance_movement(.1)
+	_expect(not plan.origin.is_equal_approx(origin), "The tell rides with the hull instead of freezing at commit")
+	_expect(plan.origin.distance_to(boss.global_position) < 30.0, "The tell stays alongside the hull")
 	var elapsed := ai.executor.elapsed
 	var cooldowns := ai.selector.cooldowns.duplicate()
 	GameManager.is_game_active = false
@@ -356,6 +362,93 @@ func _check_mobility_variety() -> void:
 		"Dodge resolves back into mobility"
 	)
 	projectile_manager.clear_player_projectiles()
+	boss._before_finish(BasicEnemy.FinishReason.ESCAPED, boss.global_position)
+	boss.queue_free()
+	await _clear_field()
+
+func _check_predictor_and_fire_rate() -> void:
+	var boss := _spawn()
+	var ai := boss._boss_ai
+	var origin := boss.global_position
+	var crossing := flight_space.screen_motion_to_combat(Vector2(320, 0))
+	ai._predictor.clear()
+	player.global_position = flight_space.screen_motion_to_combat(Vector2(0, 500))
+	for tick in 8:
+		ai._predictor.advance(1.0 / 60.0, player.global_position, crossing)
+		player.global_position += crossing / 60.0
+	var intercept := ai._predictor.solve_intercept(origin, ai.profile.intercept_seconds, ai.profile.maximum_intercept_pixels)
+	var lead := flight_space.combat_motion_to_screen(intercept - player.global_position)
+	_expect(lead.length() > 8.0, "Predictor leads a crossing player")
+	_expect(lead.dot(flight_space.combat_motion_to_screen(crossing)) > 0.0, "Predictor leads along the direction of travel")
+	var capped := ai._predictor.solve_intercept(origin, 5.0, 40.0)
+	var capped_lead := flight_space.combat_motion_to_screen(capped - player.global_position)
+	_expect(capped_lead.length() <= 40.01, "Predictor lead stays inside its pixel cap")
+	var stationary := ai._predictor.solve_intercept(origin, 0.25, 100.0)
+	ai._predictor.clear()
+	ai._predictor.advance(1.0 / 60.0, Vector3.ZERO, Vector3.ZERO)
+	var still := ai._predictor.solve_intercept(Vector3(0, 0, -400), 0.55, 160.0)
+	_expect(
+		flight_space.combat_motion_to_screen(still - Vector3.ZERO).length() < 2.0,
+		"Predictor does not invent lead on a parked target"
+	)
+	var probe := BossAttackPlan.new()
+	probe.configure(ai.profile.attacks[2], ai.profile, 2)
+	_expect(probe.definition.burst_count >= 3, "Projectile volleys carry more shots")
+	_expect(probe.burst_interval_seconds < 0.35, "Phase three tightens burst spacing")
+	probe.apply_targeting(AI.Plan.Targeting.PREDICT)
+	_expect(probe.targeting == AI.Plan.Targeting.PREDICT, "PREDICT is a first-class targeting mode")
+	for attack in ai.profile.attacks:
+		ai.selector.cooldowns[attack.id] = 999.0
+	ai.selector.cooldowns[&"projectile"] = 0.0
+	player.global_position = flight_space.screen_motion_to_combat(Vector2(0, 520))
+	player.velocity = Vector3.ZERO
+	boss.global_position = Vector3.ZERO
+	ai.state = AI.State.STRAFE
+	ai.movement.release_hold(&"test")
+	boss._advance_movement(0.01)
+	_expect(ai.state == AI.State.ATTACK and ai.executor.plan != null, "Projectile attack commits")
+	if ai.state == AI.State.ATTACK and ai.executor.plan != null:
+		var plan := ai.executor.plan
+		_expect(plan.definition.family == Definition.Family.PROJECTILE, "Projectile attack is selectable")
+		_expect(plan.targeting == AI.Plan.Targeting.PREDICT, "Projectile volleys use the targeting predictor")
+		_expect(plan.burst_interval_seconds <= 0.45, "Projectile bursts fire faster")
+		var shots_before := _fired
+		for tick in 300:
+			boss._advance_movement(1.0 / 60.0)
+			if not ai.executor.active and not ai.executor.winding_up:
+				break
+		_expect(_fired - shots_before >= plan.definition.burst_count, "Volley releases its full burst count")
+	projectile_manager.clear_projectiles()
+	boss._before_finish(BasicEnemy.FinishReason.ESCAPED, boss.global_position)
+	boss.queue_free()
+	await _clear_field()
+
+func _check_continuous_fire() -> void:
+	var boss := _spawn()
+	var ai := boss._boss_ai
+	player.global_position = flight_space.screen_motion_to_combat(Vector2(0, 520))
+	player.velocity = Vector3.ZERO
+	boss.global_position = Vector3.ZERO
+	for attack in ai.profile.attacks:
+		ai.selector.cooldowns[attack.id] = 999.0
+	ai.state = AI.State.STRAFE
+	ai.movement.release_hold(&"test")
+	ai._support_timer = 0.0
+	var shots_before := _fired
+	for tick in 120:
+		boss._advance_movement(1.0 / 60.0)
+	_expect(_fired - shots_before >= 3, "Boss fires continuously while maneuvering")
+	# Recovery stays an attack-free punish window.
+	for attack in ai.profile.attacks:
+		ai.selector.cooldowns[attack.id] = 0.0
+	ai._enter(AI.State.RECOVERY, 0.5)
+	ai._support_timer = 0.0
+	shots_before = _fired
+	for tick in 24:
+		boss._advance_movement(1.0 / 60.0)
+	_expect(_fired == shots_before, "Recovery leaves a full attack-free punish window")
+	_expect(ai.state in [AI.State.RECOVERY, AI.State.CHASE, AI.State.STRAFE], "Recovery resolves into mobility")
+	projectile_manager.clear_projectiles()
 	boss._before_finish(BasicEnemy.FinishReason.ESCAPED, boss.global_position)
 	boss.queue_free()
 	await _clear_field()
