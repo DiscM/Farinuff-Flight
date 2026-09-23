@@ -58,10 +58,6 @@ func get_preview_viewport() -> SubViewport:
 	return _preview_viewport
 
 
-func get_hull_id() -> String:
-	return _built_hull_id
-
-
 func _build_3d_preview() -> void:
 	_preview_viewport = SubViewport.new()
 	_preview_viewport.name = "UpgradePreviewViewport"

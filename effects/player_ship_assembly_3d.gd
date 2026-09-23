@@ -182,47 +182,6 @@ func set_active_upgrades(
 	_apply_visibility_and_instance_state()
 
 
-func set_feedback(modulate: Color, flash: float, phase_offset: float) -> void:
-	var clamped_flash := clampf(flash, 0.0, 1.0)
-	if (
-		modulate.is_equal_approx(_runtime_modulate)
-		and is_equal_approx(clamped_flash, _runtime_flash)
-		and is_equal_approx(phase_offset, _phase_offset)
-	):
-		return
-	_runtime_modulate = modulate
-	_runtime_flash = clamped_flash
-	_phase_offset = phase_offset
-	_apply_visibility_and_instance_state()
-
-
-func get_module_root(upgrade_id: String) -> Node3D:
-	return module_roots.get(upgrade_id) as Node3D
-
-
-func get_module_meshes(upgrade_id: String) -> Array[MeshInstance3D]:
-	var meshes: Array[MeshInstance3D] = module_meshes.get(upgrade_id, [])
-	return meshes.duplicate()
-
-
-func get_module_outlines(upgrade_id: String) -> Array[MeshInstance3D]:
-	var outlines: Array[MeshInstance3D] = module_outlines.get(upgrade_id, [])
-	return outlines.duplicate()
-
-
-func get_module_model_path(upgrade_id: String) -> String:
-	return MODULE_PATHS.get(upgrade_id, "")
-
-
-func get_active_attached_ids() -> Array[String]:
-	var active: Array[String] = []
-	for id in ATTACHED_IDS:
-		var root := module_roots.get(id) as Node3D
-		if root != null and root.visible:
-			active.append(id)
-	return active
-
-
 func _style_model(
 	model_root: Node3D,
 	style_id: StringName,

@@ -74,10 +74,6 @@ func get_source_clip_names() -> PackedStringArray:
 	return _source_clip_names.duplicate()
 
 
-func get_active_clip_names() -> PackedStringArray:
-	return get_source_clip_names() if animation_player != null else PackedStringArray()
-
-
 func get_authored_roots() -> Dictionary:
 	var roots := {}
 	if model == null:

@@ -2,6 +2,19 @@
 
 All notable changes to this project will be documented in this file.
 
+## [revision1] - 2026-09-22
+
+### Removed
+- **Retired Asset Review Showrooms:** Removed the 15 `scenes/*_review` showrooms and their two guide scripts. They were never run by CI and were missing from the export `exclude_filter`, so they were shipping inside release builds.
+- **Unused Shared Controls:** Deleted `ui/shared/comms_ticker` and `ui/shared/story_presenter`, along with the throwaway `tests/scratch_shared_controls` and `tests/_themedump` scratch scenes that were their only consumers. Production transmissions already flow through `ui/combat_notice`.
+- **Unwired Signal Channels:** Dropped `SignalBus.combat_notice`, `boss_attack_cue_changed`, and `encounter_warning` together with their emit sites and the `BossCombatPresentation.cue()` call chain that fed them — attack callouts are deliberately not displayed beneath the HUD, so these built strings nobody received. Also removed the emit-only `MetaProgression.unlock_purchased`, `BossAI.state_changed`, `BossFlightOrchestrator.maneuver_changed`, and the `TankPlate3D.destroyed` → `armor_plate_destroyed` no-op chain.
+- **Dead Scripts and Symbols:** Deleted `effects/boss_black_hole.gd`, `ui/main_menu_backdrop.gd`, `ui/main_menu_ship.gd`, and `effects/rendering/ship_render_catalog_3d.gd`, plus 24 unreferenced functions and constants — unused save-manager wrappers, ship-assembly module getters, flight/port tuning constants, and pause-menu texture preloads.
+- **Campaign Speculative Fields:** Removed never-read route and story presentation fields (`description_key`, `threat_tags`, `accent_id`, `discovery_glyph_id`, `completion_glyph_id`, `required_route_tags`, `forbidden_route_tags`) and the four "neutral extension point" multipliers on `SectorEncounterProfile`, along with their authored `.tres` rows and the catalog validation that only guarded them.
+
+### Changed
+- **Boss Hit Resolution:** Inlined the single-caller `BossHitResolver` into `BossAttackExecutor` as `_circle_hit` / `_sweep_hit`.
+- **Enemy Departure Margin:** Replaced the one-use `EnemySpawnTuning` constants with `BasicEnemy3D.EXIT_MARGIN_PIXELS`, documenting why it stays tighter than `FlightSpace3DConfig.despawn_margin_pixels`.
+
 ## [Unreleased] - 2026-09-08
 
 ### Added

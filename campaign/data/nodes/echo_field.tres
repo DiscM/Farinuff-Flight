@@ -6,7 +6,6 @@
 script = ExtResource("1_node")
 id = &"echo_field"
 display_name = "Echo Field"
-description_key = &"campaign.node.echo_field.description"
 sector_index = 3
 first_wave = 11
 last_wave = 15
@@ -17,7 +16,3 @@ encounter_profile_id = &"profile_echo_field"
 briefing_beat_id = &"tempest_reach_briefing"
 debrief_beat_id = &"tempest_reach_debrief"
 fragment_beat_id = &"echo_field_fragment"
-threat_tags = PackedStringArray("formation_pressure", "prediction", "telegraphs")
-accent_id = &"magenta"
-discovery_glyph_id = &"route"
-completion_glyph_id = &"check"

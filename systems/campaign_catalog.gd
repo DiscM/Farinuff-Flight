@@ -162,8 +162,6 @@ func _validate_profiles(
 			errors.append("duplicate route profile name: %s" % profile.route_name)
 		else:
 			route_names.append(profile.route_name)
-		if not profile.multipliers_are_neutral():
-			errors.append("route profile %s must keep neutral MVP multipliers" % profile.id)
 		var archetype_weights := [
 			profile.basic_weight,
 			profile.fast_weight,
@@ -182,9 +180,6 @@ func _validate_profiles(
 				break
 		if total_archetype_weight <= 0.0:
 			errors.append("route profile %s must define a positive archetype weight" % profile.id)
-		for multiplier in [profile.spawn_multiplier, profile.orb_multiplier, profile.pickup_multiplier, profile.threat_budget_multiplier]:
-			if multiplier < SectorEncounterProfileResource.MIN_MULTIPLIER or multiplier > SectorEncounterProfileResource.MAX_MULTIPLIER:
-				errors.append("route profile %s has an out-of-bounds multiplier" % profile.id)
 	if route_names.size() != APPROVED_ROUTE_NAMES.size():
 		errors.append("campaign must contain exactly the four approved route names")
 

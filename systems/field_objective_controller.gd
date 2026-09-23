@@ -42,7 +42,6 @@ func try_start() -> bool:
 	_sealed = false
 	craft.finished.connect(_on_finished)
 	_label.show()
-	SignalBus.combat_notice.emit("OPTIONAL · DESTROY THE COURIER")
 	return true
 
 func _process(delta: float) -> void:

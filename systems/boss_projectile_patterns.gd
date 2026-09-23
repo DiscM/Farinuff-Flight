@@ -257,7 +257,6 @@ func _deploy_storm_orbit(manager: ProjectileManager) -> void:
 			continue
 		var tangent := radial.rotated(rotation_sign * PI * 0.5)
 		_emit_shot(manager, origin, _flight_space.input_to_combat_direction(tangent), 95.0 + _attack_phase * 10.0, motion, SHOT_COLORS[2], 2)
-	SignalBus.combat_notice.emit("STORM REVERSES · WATCH THE GAPS" if reverse else "STORM ORBITS · CROSS OR REFLECT")
 
 func _place_echo_mark(offset_pixels: Vector2 = Vector2.ZERO, mixup: bool = false, aim_offset: float = 0.0, extra_delay: float = 0.0) -> void:
 	if _echo_marks.size() >= 3:
@@ -292,7 +291,6 @@ func _place_echo_mark(offset_pixels: Vector2 = Vector2.ZERO, mixup: bool = false
 	marker.global_transform = Transform3D(Basis(across, Vector3.UP * 0.05, along), mark_position + Vector3.UP * 0.03)
 	_echo_marks.append({"position": mark_position, "marker": marker, "timer": 1.6 + extra_delay, "phase": _attack_phase,
 		"aim": _locked_aim.rotated(aim_offset), "sequence": _burst_step, "mixup": mixup, "damage": _attack_plan.definition.damage, "speed_scale": _attack_plan.definition.projectile_speed_scale})
-	SignalBus.combat_notice.emit("ECHO MARKED · WATCH THE RETURN PATH")
 
 func _update_echo_marks(delta: float) -> void:
 	for index in range(_echo_marks.size() - 1, -1, -1):

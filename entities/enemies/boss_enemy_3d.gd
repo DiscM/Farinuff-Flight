@@ -189,4 +189,3 @@ func _before_finish(reason: FinishReason, _position: Vector3) -> void:
 
 func _on_section_destroyed(_position: Vector3, _section: Section) -> void:
 	AudioManager.play_explosion(true)
-	SignalBus.combat_notice.emit("ARMOR BROKEN · CORE EXPOSED" if variant in [1, 4] and _active_section_count() == 0 else "WEAPON POD DESTROYED · FIRE REDUCED")

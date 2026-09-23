@@ -89,16 +89,8 @@ signal screen_shake(intensity: float, duration: float)
 signal game_over(final_score: int)
 
 
-signal combat_notice(message: String)
-
 ## Native boss phase transition; emitted only for a living boss.
 signal boss_phase_changed(variant: int, phase: int)
 signal boss_phase_presented(phase: int, phase_name: String, projectile_color: Color)
 @warning_ignore("unused_signal")
 signal boss_phase_thresholds_changed(phase_two: float, phase_three: float)
-## A committed attack's counterplay cue; an empty message restores phase identity.
-@warning_ignore("unused_signal")
-signal boss_attack_cue_changed(message: String)
-
-## Encounter telegraph must be visible before its admission delay elapses.
-signal encounter_warning(message: String, seconds: float)

@@ -16,8 +16,6 @@ const PROFILES: Array[Profile] = [
 # Reserve the complete enlarged hull and weapon-pod span, including visual yaw.
 const ARENA_INSET := 160.0
 
-signal maneuver_changed(maneuver: Profile.Maneuver)
-
 @export var profile_override: Profile
 
 var profile: Profile
@@ -179,7 +177,6 @@ func _enter_maneuver(next: Profile.Maneuver, away: Vector2) -> void:
 	_axis = away
 	if _requested >= 0 and not is_zero_approx(_requested_side):
 		_side = _requested_side
-	maneuver_changed.emit(maneuver)
 
 
 func _pattern_steering(origin: Vector3, toward: Vector2, distance: float, radius: float, bounds: Rect2) -> Vector2:

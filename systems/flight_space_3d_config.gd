@@ -19,12 +19,6 @@ func pixels_to_world(pixels: float) -> float:
 	return pixels / pixels_per_world_unit
 
 
-func world_to_pixels(world_units: float) -> float:
-	return world_units * pixels_per_world_unit
-
-
-## Preserves the baseline's vertical Combat Plane span after accounting for
-## foreshortening from the near-top-down camera elevation.
 func get_orthogonal_size() -> float:
 	var elevation_radians := deg_to_rad(camera_elevation_degrees)
 	return pixels_to_world(float(baseline_viewport_size.y)) * sin(elevation_radians)

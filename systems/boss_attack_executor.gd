@@ -2,7 +2,6 @@ extends Node
 class_name BossAttackExecutor
 ## Runs one committed attack. It cannot choose, retarget, or skip its warning.
 const Definition := preload("res://systems/boss_attack_definition.gd")
-const Hits := preload("res://systems/boss_hit_resolver.gd")
 const Flight := preload("res://systems/boss_flight_orchestrator.gd")
 signal released(attack_id: StringName)
 var plan: BossAttackPlan
@@ -16,7 +15,7 @@ var _space: FlightSpace3D
 var _actor: BasicEnemy3D
 var _presentation: BossCombatPresentation
 var _patterns: BossProjectilePatterns
-var _hits := Hits.new()
+var _hit_victims: Dictionary[int, bool] = {}
 
 func configure(actor: BasicEnemy3D, space: FlightSpace3D, presentation: BossCombatPresentation, patterns: BossProjectilePatterns) -> void:
 	_actor = actor
@@ -34,7 +33,7 @@ func begin(snapshot: BossAttackPlan) -> void:
 	_charge_elapsed = 0.0
 	_burst_timer = 0.0
 	_burst_step = 0
-	_hits.reset()
+	_hit_victims.clear()
 	winding_up = true
 	active = true
 	_presentation.telegraph(plan)
@@ -71,7 +70,7 @@ func advance(delta: float, target: Node3D) -> Vector3:
 		return Vector3.ZERO
 	match plan.definition.family:
 		Definition.Family.SLAM:
-			_hits.circle(_space, target, plan.origin, plan.definition.slam_radius, plan.definition.damage)
+			_circle_hit(target, plan.origin, plan.definition.slam_radius, plan.definition.damage)
 			active = false
 		Definition.Family.CHARGE:
 			var length := _space.combat_motion_to_screen(plan.charge_endpoint - plan.origin).length()
@@ -79,7 +78,7 @@ func advance(delta: float, target: Node3D) -> Vector3:
 			_charge_elapsed += delta
 			var progress := clampf(_charge_elapsed / maxf(0.001, duration), 0.0, 1.0)
 			var next := plan.origin.lerp(plan.charge_endpoint, progress)
-			_hits.sweep(_space, target, _actor.global_position, next, plan.definition.charge_half_width, plan.definition.damage)
+			_sweep_hit(target, _actor.global_position, next, plan.definition.charge_half_width, plan.definition.damage)
 			active = progress < 1.0
 			return next - _actor.global_position
 		Definition.Family.PROJECTILE:
@@ -102,3 +101,22 @@ func cancel(reset_motion: bool = true) -> void:
 		_patterns.cancel()
 	if _presentation != null:
 		_presentation.clear(reset_motion)
+
+## One hit per target per attack, including across many frames of a charge.
+func _circle_hit(target: Node3D, center: Vector3, radius: float, damage: int) -> bool:
+	return _sweep_hit(target, center, center, radius, damage)
+
+
+func _sweep_hit(target: Node3D, start: Vector3, finish: Vector3, half_width: float, damage: int) -> bool:
+	if not is_instance_valid(target) or not target.has_method("receive_damage"):
+		return false
+	var id := target.get_instance_id()
+	if _hit_victims.has(id):
+		return false
+	var offset := _space.combat_motion_to_screen(target.global_position - start)
+	var segment := _space.combat_motion_to_screen(finish - start)
+	var progress := clampf(offset.dot(segment) / segment.length_squared(), 0.0, 1.0) if segment.length_squared() > 0.001 else 0.0
+	if offset.distance_to(segment * progress) > half_width:
+		return false
+	_hit_victims[id] = true # A shield/boost also consumes this attack's single hit.
+	return target.receive_damage(finish, Player3D.DamageSource.ENEMY_CONTACT, damage)
