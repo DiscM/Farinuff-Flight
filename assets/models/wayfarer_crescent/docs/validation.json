@@ -1,0 +1,2415 @@
+{
+  "asset_root": "assets/models/wayfarer_crescent",
+  "assets": [
+    {
+      "animations": [
+        {
+          "channels": 1,
+          "duration_seconds": 19.99999936297536,
+          "moving_nodes": [
+            "beacon_direction_finder_tracking_pivot / module"
+          ],
+          "name": "beacon_direction_finder_scan"
+        },
+        {
+          "channels": 4,
+          "duration_seconds": 19.99999936297536,
+          "moving_nodes": [
+            "Relay_01_TrafficMast navigation 1 / flashing lens / module",
+            "Relay_01_TrafficMast navigation 2 / flashing lens / module",
+            "Relay_01_TrafficMast navigation 3 / flashing lens / module",
+            "Relay_01_TrafficMast navigation 4 / flashing lens / module"
+          ],
+          "name": "navigation_lights"
+        },
+        {
+          "channels": 4,
+          "duration_seconds": 19.99999936297536,
+          "moving_nodes": [
+            "Relay_01_TrafficMast RCS 1 / correction exhaust / module",
+            "Relay_01_TrafficMast RCS 2 / correction exhaust / module",
+            "Relay_01_TrafficMast RCS 3 / correction exhaust / module",
+            "Relay_01_TrafficMast RCS 4 / correction exhaust / module"
+          ],
+          "name": "correction_thrusters"
+        }
+      ],
+      "bounds_max_xyz": [
+        5.71999979019165,
+        16.575000762939453,
+        5.440000057220459
+      ],
+      "bounds_min_xyz": [
+        -5.71999979019165,
+        -3.2483749861121183,
+        -5.190000057220459
+      ],
+      "bounds_type": "Rest-pose envelope of transformed local mesh AABBs",
+      "bytes": 392476,
+      "file": "meshes/beacon_relay.glb",
+      "materials": {
+        "bound_textures": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "count": 10,
+        "images": [
+          {
+            "bit_depth": 8,
+            "bytes": 798,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "9f47427f8faebae72053134a3873273440eb873c2fab06e61148bea2a33a31bb",
+            "sha256": "205f5b88c5d1bed499c07e0d380593f30d37a17dc09fdc99c3bcac591f5a9b61",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 808,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "a41efc519559738b33689cdde8fe520bb838d4f8580cc44fcc0d1d7871a1e7b9",
+            "sha256": "b011853a307627b3f18f35f070daaec97758eaa7b81411c84cf2a68e046d7305",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 782,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "8a97247d37cae70a5e1ec7a9f4e1f9dcb11a1028a6f41277abe0cfb8652287a6",
+            "sha256": "b6342a91b26a46d47e4fd65fa6349f032560261636cee15f057e6b7cdd956ee9",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 822,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "ba5f8985d7198bd7fb0cd0a70a469aa28c09f23268d58d610d16e7a4952e0285",
+            "sha256": "faad00f2acc0070773ab26fcd96460231f02b05539fb459e4e1eb2985b7ca77b",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 650,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "2f24ba6ca0e0a2a3e596f3f0fa0b8c2ea862f17e5f678c7df7738490da2597f3",
+            "sha256": "12062764806346d6938b4934725ad8f6f40a3604ab3582753047b9cb9fb908d8",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 573,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "51122ca49013b93ff0cf0314ba42a30ec5f6ba085348017293c1780d1bd42cfe",
+            "sha256": "6b4c95994adf29004240e56680fc5e95e4006d3a32aa51fcad3885e9d78638d6",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 735,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "99a9e4057c99ab5a6f9236deea4ba39797b356ab3e10b62314d27425c238ec3c",
+            "sha256": "1a3fe5c7970ec9c6bb03417e5367c07e92a1a2fe9efc3a915ab6d8ab8d4d1368",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 533,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "fe905e2c6fb0a8e584bb013a14ad3b51dbf02c01fb7c2455a069c46ecaa70fa0",
+            "sha256": "10a323694aad863709e2248a472deefe50d0bcea2a16fa33e0358dbd6afbdc6b",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 632,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "ba579afc489a01fa72d729af3be4adbb4f1e83b99d781880f6831a41a2d7c28f",
+            "sha256": "5c9ce24adde5d2ab28e36a1ce2412ae818f6fd0edd96603c20c9e54132bb8d10",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 606,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "f1dd4ba390886db768e9fad3246fac9e365744d1b5a20251b3972953c4b82ea9",
+            "sha256": "8fd89d8c55a2825629523f4d5eb83ffb90a70c460a65606a3d71326e8f04c8ac",
+            "width": 64
+          }
+        ],
+        "textures": 10
+      },
+      "mesh_instances": 15,
+      "minimum_normal_alignment": 0.9999999627410386,
+      "nodes": 25,
+      "sha256": "b35984e65e936eb8218e74394812fe141c44e9bc81c885d128773c59754f0612",
+      "status": "pass",
+      "surfaces": 41,
+      "triangles": 4748,
+      "unique_mesh_triangles": 4748,
+      "unique_meshes": 15,
+      "vertices": 9192,
+      "warnings": []
+    },
+    {
+      "animations": [
+        {
+          "channels": 1,
+          "duration_seconds": 19.99999936297536,
+          "moving_nodes": [
+            "cargo_arm_east_articulated_forearm / module"
+          ],
+          "name": "cargo_arm_east_handling_cycle"
+        },
+        {
+          "channels": 1,
+          "duration_seconds": 19.99999936297536,
+          "moving_nodes": [
+            "cargo_arm_west_articulated_forearm / module"
+          ],
+          "name": "cargo_arm_west_handling_cycle"
+        },
+        {
+          "channels": 4,
+          "duration_seconds": 19.99999936297536,
+          "moving_nodes": [
+            "Relay_03_OrbitalLogistics navigation 1 / flashing lens / module",
+            "Relay_03_OrbitalLogistics navigation 2 / flashing lens / module",
+            "Relay_03_OrbitalLogistics navigation 3 / flashing lens / module",
+            "Relay_03_OrbitalLogistics navigation 4 / flashing lens / module"
+          ],
+          "name": "navigation_lights"
+        },
+        {
+          "channels": 4,
+          "duration_seconds": 19.99999936297536,
+          "moving_nodes": [
+            "Relay_03_OrbitalLogistics RCS 1 / correction exhaust / module",
+            "Relay_03_OrbitalLogistics RCS 2 / correction exhaust / module",
+            "Relay_03_OrbitalLogistics RCS 3 / correction exhaust / module",
+            "Relay_03_OrbitalLogistics RCS 4 / correction exhaust / module"
+          ],
+          "name": "correction_thrusters"
+        }
+      ],
+      "bounds_max_xyz": [
+        14.720000267028809,
+        11.27500057220459,
+        9.9399995803833
+      ],
+      "bounds_min_xyz": [
+        -14.720000267028809,
+        -3.2116732915392916,
+        -9.6899995803833
+      ],
+      "bounds_type": "Rest-pose envelope of transformed local mesh AABBs",
+      "bytes": 724372,
+      "file": "meshes/cargo_relay.glb",
+      "materials": {
+        "bound_textures": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "count": 10,
+        "images": [
+          {
+            "bit_depth": 8,
+            "bytes": 732,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "8dbcdfdc7d0d849b6416a62641233ee010b7226a478c75f3c24223ee881e764c",
+            "sha256": "32460fe704858718fbfd2b19f9731f10a4ea827dcdf1ea6e2e42f4153ef311c3",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 808,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "a41efc519559738b33689cdde8fe520bb838d4f8580cc44fcc0d1d7871a1e7b9",
+            "sha256": "b011853a307627b3f18f35f070daaec97758eaa7b81411c84cf2a68e046d7305",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 533,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "fe905e2c6fb0a8e584bb013a14ad3b51dbf02c01fb7c2455a069c46ecaa70fa0",
+            "sha256": "10a323694aad863709e2248a472deefe50d0bcea2a16fa33e0358dbd6afbdc6b",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 782,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "8a97247d37cae70a5e1ec7a9f4e1f9dcb11a1028a6f41277abe0cfb8652287a6",
+            "sha256": "b6342a91b26a46d47e4fd65fa6349f032560261636cee15f057e6b7cdd956ee9",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 822,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "ba5f8985d7198bd7fb0cd0a70a469aa28c09f23268d58d610d16e7a4952e0285",
+            "sha256": "faad00f2acc0070773ab26fcd96460231f02b05539fb459e4e1eb2985b7ca77b",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 573,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "51122ca49013b93ff0cf0314ba42a30ec5f6ba085348017293c1780d1bd42cfe",
+            "sha256": "6b4c95994adf29004240e56680fc5e95e4006d3a32aa51fcad3885e9d78638d6",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 735,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "99a9e4057c99ab5a6f9236deea4ba39797b356ab3e10b62314d27425c238ec3c",
+            "sha256": "1a3fe5c7970ec9c6bb03417e5367c07e92a1a2fe9efc3a915ab6d8ab8d4d1368",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 798,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "9f47427f8faebae72053134a3873273440eb873c2fab06e61148bea2a33a31bb",
+            "sha256": "205f5b88c5d1bed499c07e0d380593f30d37a17dc09fdc99c3bcac591f5a9b61",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 632,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "ba579afc489a01fa72d729af3be4adbb4f1e83b99d781880f6831a41a2d7c28f",
+            "sha256": "5c9ce24adde5d2ab28e36a1ce2412ae818f6fd0edd96603c20c9e54132bb8d10",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 606,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "f1dd4ba390886db768e9fad3246fac9e365744d1b5a20251b3972953c4b82ea9",
+            "sha256": "8fd89d8c55a2825629523f4d5eb83ffb90a70c460a65606a3d71326e8f04c8ac",
+            "width": 64
+          }
+        ],
+        "textures": 10
+      },
+      "mesh_instances": 18,
+      "minimum_normal_alignment": 0.999999950186955,
+      "nodes": 31,
+      "sha256": "2558395d31e04d4d62feeafabc886ce9938bf18f11d59ee1232723ff3a6de689",
+      "status": "pass",
+      "surfaces": 60,
+      "triangles": 9228,
+      "unique_mesh_triangles": 9228,
+      "unique_meshes": 18,
+      "vertices": 18240,
+      "warnings": []
+    },
+    {
+      "animations": [
+        {
+          "channels": 4,
+          "duration_seconds": 19.99999936297536,
+          "moving_nodes": [
+            "Relay_04_PortApproach navigation 1 / flashing lens / module",
+            "Relay_04_PortApproach navigation 2 / flashing lens / module",
+            "Relay_04_PortApproach navigation 3 / flashing lens / module",
+            "Relay_04_PortApproach navigation 4 / flashing lens / module"
+          ],
+          "name": "navigation_lights"
+        },
+        {
+          "channels": 4,
+          "duration_seconds": 19.99999936297536,
+          "moving_nodes": [
+            "Relay_04_PortApproach RCS 1 / correction exhaust / module",
+            "Relay_04_PortApproach RCS 2 / correction exhaust / module",
+            "Relay_04_PortApproach RCS 3 / correction exhaust / module",
+            "Relay_04_PortApproach RCS 4 / correction exhaust / module"
+          ],
+          "name": "correction_thrusters"
+        },
+        {
+          "channels": 1,
+          "duration_seconds": 19.99999936297536,
+          "moving_nodes": [
+            "traffic_tracking_dish_tracking_pivot / module"
+          ],
+          "name": "traffic_tracking_dish_scan"
+        }
+      ],
+      "bounds_max_xyz": [
+        6.71999979019165,
+        15.675000190734863,
+        6.440000057220459
+      ],
+      "bounds_min_xyz": [
+        -6.71999979019165,
+        -2.9430016761375697,
+        -6.190000057220459
+      ],
+      "bounds_type": "Rest-pose envelope of transformed local mesh AABBs",
+      "bytes": 416684,
+      "file": "meshes/control_relay.glb",
+      "materials": {
+        "bound_textures": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "count": 10,
+        "images": [
+          {
+            "bit_depth": 8,
+            "bytes": 735,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "99a9e4057c99ab5a6f9236deea4ba39797b356ab3e10b62314d27425c238ec3c",
+            "sha256": "1a3fe5c7970ec9c6bb03417e5367c07e92a1a2fe9efc3a915ab6d8ab8d4d1368",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 808,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "a41efc519559738b33689cdde8fe520bb838d4f8580cc44fcc0d1d7871a1e7b9",
+            "sha256": "b011853a307627b3f18f35f070daaec97758eaa7b81411c84cf2a68e046d7305",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 533,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "fe905e2c6fb0a8e584bb013a14ad3b51dbf02c01fb7c2455a069c46ecaa70fa0",
+            "sha256": "10a323694aad863709e2248a472deefe50d0bcea2a16fa33e0358dbd6afbdc6b",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 822,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "ba5f8985d7198bd7fb0cd0a70a469aa28c09f23268d58d610d16e7a4952e0285",
+            "sha256": "faad00f2acc0070773ab26fcd96460231f02b05539fb459e4e1eb2985b7ca77b",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 573,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "51122ca49013b93ff0cf0314ba42a30ec5f6ba085348017293c1780d1bd42cfe",
+            "sha256": "6b4c95994adf29004240e56680fc5e95e4006d3a32aa51fcad3885e9d78638d6",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 606,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "f1dd4ba390886db768e9fad3246fac9e365744d1b5a20251b3972953c4b82ea9",
+            "sha256": "8fd89d8c55a2825629523f4d5eb83ffb90a70c460a65606a3d71326e8f04c8ac",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 798,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "9f47427f8faebae72053134a3873273440eb873c2fab06e61148bea2a33a31bb",
+            "sha256": "205f5b88c5d1bed499c07e0d380593f30d37a17dc09fdc99c3bcac591f5a9b61",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 632,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "ba579afc489a01fa72d729af3be4adbb4f1e83b99d781880f6831a41a2d7c28f",
+            "sha256": "5c9ce24adde5d2ab28e36a1ce2412ae818f6fd0edd96603c20c9e54132bb8d10",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 782,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "8a97247d37cae70a5e1ec7a9f4e1f9dcb11a1028a6f41277abe0cfb8652287a6",
+            "sha256": "b6342a91b26a46d47e4fd65fa6349f032560261636cee15f057e6b7cdd956ee9",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 650,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "2f24ba6ca0e0a2a3e596f3f0fa0b8c2ea862f17e5f678c7df7738490da2597f3",
+            "sha256": "12062764806346d6938b4934725ad8f6f40a3604ab3582753047b9cb9fb908d8",
+            "width": 64
+          }
+        ],
+        "textures": 10
+      },
+      "mesh_instances": 15,
+      "minimum_normal_alignment": 0.9999999211268279,
+      "nodes": 25,
+      "sha256": "4785fa9c52e2838377fb3b0367959b3864948dfbc27dff1a8297838804adcca9",
+      "status": "pass",
+      "surfaces": 42,
+      "triangles": 5092,
+      "unique_mesh_triangles": 5092,
+      "unique_meshes": 15,
+      "vertices": 9864,
+      "warnings": []
+    },
+    {
+      "animations": [
+        {
+          "channels": 1,
+          "duration_seconds": 19.99999936297536,
+          "moving_nodes": [
+            "Power / coolant pump / rotor / module"
+          ],
+          "name": "cooling_rotors"
+        },
+        {
+          "channels": 1,
+          "duration_seconds": 19.99999936297536,
+          "moving_nodes": [
+            "power_telemetry_tracking_pivot / module"
+          ],
+          "name": "power_telemetry_scan"
+        },
+        {
+          "channels": 4,
+          "duration_seconds": 19.99999936297536,
+          "moving_nodes": [
+            "Relay_02_PowerDistribution navigation 1 / flashing lens / module",
+            "Relay_02_PowerDistribution navigation 2 / flashing lens / module",
+            "Relay_02_PowerDistribution navigation 3 / flashing lens / module",
+            "Relay_02_PowerDistribution navigation 4 / flashing lens / module"
+          ],
+          "name": "navigation_lights"
+        },
+        {
+          "channels": 4,
+          "duration_seconds": 19.99999936297536,
+          "moving_nodes": [
+            "Relay_02_PowerDistribution RCS 1 / correction exhaust / module",
+            "Relay_02_PowerDistribution RCS 2 / correction exhaust / module",
+            "Relay_02_PowerDistribution RCS 3 / correction exhaust / module",
+            "Relay_02_PowerDistribution RCS 4 / correction exhaust / module"
+          ],
+          "name": "correction_thrusters"
+        }
+      ],
+      "bounds_max_xyz": [
+        10.720000267028809,
+        13.875,
+        10.349994659423828
+      ],
+      "bounds_min_xyz": [
+        -10.720000267028809,
+        -2.772363595004684,
+        -8.1899995803833
+      ],
+      "bounds_type": "Rest-pose envelope of transformed local mesh AABBs",
+      "bytes": 615292,
+      "file": "meshes/power_relay.glb",
+      "materials": {
+        "bound_textures": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "count": 10,
+        "images": [
+          {
+            "bit_depth": 8,
+            "bytes": 735,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "99a9e4057c99ab5a6f9236deea4ba39797b356ab3e10b62314d27425c238ec3c",
+            "sha256": "1a3fe5c7970ec9c6bb03417e5367c07e92a1a2fe9efc3a915ab6d8ab8d4d1368",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 822,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "ba5f8985d7198bd7fb0cd0a70a469aa28c09f23268d58d610d16e7a4952e0285",
+            "sha256": "faad00f2acc0070773ab26fcd96460231f02b05539fb459e4e1eb2985b7ca77b",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 808,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "a41efc519559738b33689cdde8fe520bb838d4f8580cc44fcc0d1d7871a1e7b9",
+            "sha256": "b011853a307627b3f18f35f070daaec97758eaa7b81411c84cf2a68e046d7305",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 782,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "8a97247d37cae70a5e1ec7a9f4e1f9dcb11a1028a6f41277abe0cfb8652287a6",
+            "sha256": "b6342a91b26a46d47e4fd65fa6349f032560261636cee15f057e6b7cdd956ee9",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 798,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "9f47427f8faebae72053134a3873273440eb873c2fab06e61148bea2a33a31bb",
+            "sha256": "205f5b88c5d1bed499c07e0d380593f30d37a17dc09fdc99c3bcac591f5a9b61",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 533,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "fe905e2c6fb0a8e584bb013a14ad3b51dbf02c01fb7c2455a069c46ecaa70fa0",
+            "sha256": "10a323694aad863709e2248a472deefe50d0bcea2a16fa33e0358dbd6afbdc6b",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 632,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "ba579afc489a01fa72d729af3be4adbb4f1e83b99d781880f6831a41a2d7c28f",
+            "sha256": "5c9ce24adde5d2ab28e36a1ce2412ae818f6fd0edd96603c20c9e54132bb8d10",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 573,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "51122ca49013b93ff0cf0314ba42a30ec5f6ba085348017293c1780d1bd42cfe",
+            "sha256": "6b4c95994adf29004240e56680fc5e95e4006d3a32aa51fcad3885e9d78638d6",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 606,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "f1dd4ba390886db768e9fad3246fac9e365744d1b5a20251b3972953c4b82ea9",
+            "sha256": "8fd89d8c55a2825629523f4d5eb83ffb90a70c460a65606a3d71326e8f04c8ac",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 650,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "2f24ba6ca0e0a2a3e596f3f0fa0b8c2ea862f17e5f678c7df7738490da2597f3",
+            "sha256": "12062764806346d6938b4934725ad8f6f40a3604ab3582753047b9cb9fb908d8",
+            "width": 64
+          }
+        ],
+        "textures": 10
+      },
+      "mesh_instances": 18,
+      "minimum_normal_alignment": 0.9999999498904006,
+      "nodes": 30,
+      "sha256": "16317c9b779ed6520bc2fcdf1b14ec51db483828c9ec0243cb2cde286654701d",
+      "status": "pass",
+      "surfaces": 50,
+      "triangles": 7784,
+      "unique_mesh_triangles": 7784,
+      "unique_meshes": 18,
+      "vertices": 15296,
+      "warnings": []
+    },
+    {
+      "animations": [
+        {
+          "channels": 4,
+          "duration_seconds": 19.99999936297536,
+          "moving_nodes": [
+            "Relay_05_RefuelRepair navigation 1 / flashing lens / module",
+            "Relay_05_RefuelRepair navigation 2 / flashing lens / module",
+            "Relay_05_RefuelRepair navigation 3 / flashing lens / module",
+            "Relay_05_RefuelRepair navigation 4 / flashing lens / module"
+          ],
+          "name": "navigation_lights"
+        },
+        {
+          "channels": 4,
+          "duration_seconds": 19.99999936297536,
+          "moving_nodes": [
+            "Relay_05_RefuelRepair RCS 1 / correction exhaust / module",
+            "Relay_05_RefuelRepair RCS 2 / correction exhaust / module",
+            "Relay_05_RefuelRepair RCS 3 / correction exhaust / module",
+            "Relay_05_RefuelRepair RCS 4 / correction exhaust / module"
+          ],
+          "name": "correction_thrusters"
+        },
+        {
+          "channels": 1,
+          "duration_seconds": 19.99999936297536,
+          "moving_nodes": [
+            "repair_manipulator_articulated_forearm / module"
+          ],
+          "name": "repair_manipulator_handling_cycle"
+        },
+        {
+          "channels": 1,
+          "duration_seconds": 19.99999936297536,
+          "moving_nodes": [
+            "Service / coolant pump / rotor / module"
+          ],
+          "name": "cooling_rotors"
+        }
+      ],
+      "bounds_max_xyz": [
+        12.720000267028809,
+        12.59000015258789,
+        11.680000305175781
+      ],
+      "bounds_min_xyz": [
+        -12.720000267028809,
+        -3.108800886088119,
+        -10.6899995803833
+      ],
+      "bounds_type": "Rest-pose envelope of transformed local mesh AABBs",
+      "bytes": 682936,
+      "file": "meshes/service_relay.glb",
+      "materials": {
+        "bound_textures": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "count": 10,
+        "images": [
+          {
+            "bit_depth": 8,
+            "bytes": 735,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "99a9e4057c99ab5a6f9236deea4ba39797b356ab3e10b62314d27425c238ec3c",
+            "sha256": "1a3fe5c7970ec9c6bb03417e5367c07e92a1a2fe9efc3a915ab6d8ab8d4d1368",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 808,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "a41efc519559738b33689cdde8fe520bb838d4f8580cc44fcc0d1d7871a1e7b9",
+            "sha256": "b011853a307627b3f18f35f070daaec97758eaa7b81411c84cf2a68e046d7305",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 822,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "ba5f8985d7198bd7fb0cd0a70a469aa28c09f23268d58d610d16e7a4952e0285",
+            "sha256": "faad00f2acc0070773ab26fcd96460231f02b05539fb459e4e1eb2985b7ca77b",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 798,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "9f47427f8faebae72053134a3873273440eb873c2fab06e61148bea2a33a31bb",
+            "sha256": "205f5b88c5d1bed499c07e0d380593f30d37a17dc09fdc99c3bcac591f5a9b61",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 533,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "fe905e2c6fb0a8e584bb013a14ad3b51dbf02c01fb7c2455a069c46ecaa70fa0",
+            "sha256": "10a323694aad863709e2248a472deefe50d0bcea2a16fa33e0358dbd6afbdc6b",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 632,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "ba579afc489a01fa72d729af3be4adbb4f1e83b99d781880f6831a41a2d7c28f",
+            "sha256": "5c9ce24adde5d2ab28e36a1ce2412ae818f6fd0edd96603c20c9e54132bb8d10",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 782,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "8a97247d37cae70a5e1ec7a9f4e1f9dcb11a1028a6f41277abe0cfb8652287a6",
+            "sha256": "b6342a91b26a46d47e4fd65fa6349f032560261636cee15f057e6b7cdd956ee9",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 573,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "51122ca49013b93ff0cf0314ba42a30ec5f6ba085348017293c1780d1bd42cfe",
+            "sha256": "6b4c95994adf29004240e56680fc5e95e4006d3a32aa51fcad3885e9d78638d6",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 732,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "8dbcdfdc7d0d849b6416a62641233ee010b7226a478c75f3c24223ee881e764c",
+            "sha256": "32460fe704858718fbfd2b19f9731f10a4ea827dcdf1ea6e2e42f4153ef311c3",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 606,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "f1dd4ba390886db768e9fad3246fac9e365744d1b5a20251b3972953c4b82ea9",
+            "sha256": "8fd89d8c55a2825629523f4d5eb83ffb90a70c460a65606a3d71326e8f04c8ac",
+            "width": 64
+          }
+        ],
+        "textures": 10
+      },
+      "mesh_instances": 19,
+      "minimum_normal_alignment": 0.9999999393361344,
+      "nodes": 32,
+      "sha256": "ad1fdad602a1b46f738e928db17f85d7ff0d19d0a11a975f183fe715c29b59ac",
+      "status": "pass",
+      "surfaces": 57,
+      "triangles": 8708,
+      "unique_mesh_triangles": 8708,
+      "unique_meshes": 19,
+      "vertices": 17024,
+      "warnings": []
+    },
+    {
+      "animations": [],
+      "bounds_max_xyz": [
+        2.7899999618530273,
+        1.9000000953674316,
+        5.494999885559082
+      ],
+      "bounds_min_xyz": [
+        -2.7899999618530273,
+        -1.7600001096725464,
+        -5.3582000732421875
+      ],
+      "bounds_type": "Rest-pose envelope of transformed local mesh AABBs",
+      "bytes": 418528,
+      "file": "meshes/ship_01_berthedcarrier.glb",
+      "materials": {
+        "bound_textures": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10
+        ],
+        "count": 11,
+        "images": [
+          {
+            "bit_depth": 8,
+            "bytes": 735,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "99a9e4057c99ab5a6f9236deea4ba39797b356ab3e10b62314d27425c238ec3c",
+            "sha256": "1a3fe5c7970ec9c6bb03417e5367c07e92a1a2fe9efc3a915ab6d8ab8d4d1368",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 808,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "a41efc519559738b33689cdde8fe520bb838d4f8580cc44fcc0d1d7871a1e7b9",
+            "sha256": "b011853a307627b3f18f35f070daaec97758eaa7b81411c84cf2a68e046d7305",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 822,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "ba5f8985d7198bd7fb0cd0a70a469aa28c09f23268d58d610d16e7a4952e0285",
+            "sha256": "faad00f2acc0070773ab26fcd96460231f02b05539fb459e4e1eb2985b7ca77b",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 798,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "9f47427f8faebae72053134a3873273440eb873c2fab06e61148bea2a33a31bb",
+            "sha256": "205f5b88c5d1bed499c07e0d380593f30d37a17dc09fdc99c3bcac591f5a9b61",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 573,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "51122ca49013b93ff0cf0314ba42a30ec5f6ba085348017293c1780d1bd42cfe",
+            "sha256": "6b4c95994adf29004240e56680fc5e95e4006d3a32aa51fcad3885e9d78638d6",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 782,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "8a97247d37cae70a5e1ec7a9f4e1f9dcb11a1028a6f41277abe0cfb8652287a6",
+            "sha256": "b6342a91b26a46d47e4fd65fa6349f032560261636cee15f057e6b7cdd956ee9",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 732,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "8dbcdfdc7d0d849b6416a62641233ee010b7226a478c75f3c24223ee881e764c",
+            "sha256": "32460fe704858718fbfd2b19f9731f10a4ea827dcdf1ea6e2e42f4153ef311c3",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 632,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "ba579afc489a01fa72d729af3be4adbb4f1e83b99d781880f6831a41a2d7c28f",
+            "sha256": "5c9ce24adde5d2ab28e36a1ce2412ae818f6fd0edd96603c20c9e54132bb8d10",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 593,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "4def21045304346c702c0e5559fd705d9e257dd3877954701e001f7f6f556e5a",
+            "sha256": "5e45304b913556c0988fd8ab5d4774d715f205304fa95d2c29e6be812f9836f7",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 533,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "fe905e2c6fb0a8e584bb013a14ad3b51dbf02c01fb7c2455a069c46ecaa70fa0",
+            "sha256": "10a323694aad863709e2248a472deefe50d0bcea2a16fa33e0358dbd6afbdc6b",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 606,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "f1dd4ba390886db768e9fad3246fac9e365744d1b5a20251b3972953c4b82ea9",
+            "sha256": "8fd89d8c55a2825629523f4d5eb83ffb90a70c460a65606a3d71326e8f04c8ac",
+            "width": 64
+          }
+        ],
+        "textures": 11
+      },
+      "mesh_instances": 1,
+      "minimum_normal_alignment": 0.9999999353952035,
+      "nodes": 2,
+      "sha256": "e53016ad190db3f3e4e52d9352a259bfb22f30fe33b10c0f8125a0fe10c974bf",
+      "status": "pass",
+      "surfaces": 11,
+      "triangles": 5280,
+      "unique_mesh_triangles": 5280,
+      "unique_meshes": 1,
+      "vertices": 11432,
+      "warnings": []
+    },
+    {
+      "animations": [],
+      "bounds_max_xyz": [
+        1.4206000566482544,
+        0.8049999475479126,
+        1.8000000715255737
+      ],
+      "bounds_min_xyz": [
+        -1.4206000566482544,
+        -0.5600000023841858,
+        -1.9611999988555908
+      ],
+      "bounds_type": "Rest-pose envelope of transformed local mesh AABBs",
+      "bytes": 191428,
+      "file": "meshes/ship_03_arrivalsshuttle.glb",
+      "materials": {
+        "bound_textures": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9
+        ],
+        "count": 10,
+        "images": [
+          {
+            "bit_depth": 8,
+            "bytes": 822,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "ba5f8985d7198bd7fb0cd0a70a469aa28c09f23268d58d610d16e7a4952e0285",
+            "sha256": "faad00f2acc0070773ab26fcd96460231f02b05539fb459e4e1eb2985b7ca77b",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 798,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "9f47427f8faebae72053134a3873273440eb873c2fab06e61148bea2a33a31bb",
+            "sha256": "205f5b88c5d1bed499c07e0d380593f30d37a17dc09fdc99c3bcac591f5a9b61",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 735,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "99a9e4057c99ab5a6f9236deea4ba39797b356ab3e10b62314d27425c238ec3c",
+            "sha256": "1a3fe5c7970ec9c6bb03417e5367c07e92a1a2fe9efc3a915ab6d8ab8d4d1368",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 593,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "4def21045304346c702c0e5559fd705d9e257dd3877954701e001f7f6f556e5a",
+            "sha256": "5e45304b913556c0988fd8ab5d4774d715f205304fa95d2c29e6be812f9836f7",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 732,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "8dbcdfdc7d0d849b6416a62641233ee010b7226a478c75f3c24223ee881e764c",
+            "sha256": "32460fe704858718fbfd2b19f9731f10a4ea827dcdf1ea6e2e42f4153ef311c3",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 808,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "a41efc519559738b33689cdde8fe520bb838d4f8580cc44fcc0d1d7871a1e7b9",
+            "sha256": "b011853a307627b3f18f35f070daaec97758eaa7b81411c84cf2a68e046d7305",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 573,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "51122ca49013b93ff0cf0314ba42a30ec5f6ba085348017293c1780d1bd42cfe",
+            "sha256": "6b4c95994adf29004240e56680fc5e95e4006d3a32aa51fcad3885e9d78638d6",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 782,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "8a97247d37cae70a5e1ec7a9f4e1f9dcb11a1028a6f41277abe0cfb8652287a6",
+            "sha256": "b6342a91b26a46d47e4fd65fa6349f032560261636cee15f057e6b7cdd956ee9",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 533,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "fe905e2c6fb0a8e584bb013a14ad3b51dbf02c01fb7c2455a069c46ecaa70fa0",
+            "sha256": "10a323694aad863709e2248a472deefe50d0bcea2a16fa33e0358dbd6afbdc6b",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 606,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "f1dd4ba390886db768e9fad3246fac9e365744d1b5a20251b3972953c4b82ea9",
+            "sha256": "8fd89d8c55a2825629523f4d5eb83ffb90a70c460a65606a3d71326e8f04c8ac",
+            "width": 64
+          }
+        ],
+        "textures": 10
+      },
+      "mesh_instances": 1,
+      "minimum_normal_alignment": 0.9999999703647939,
+      "nodes": 2,
+      "sha256": "8e0d8e58d217b6d6970a121f3d0ad656751180209a2d95cc80b243314c17d69a",
+      "status": "pass",
+      "surfaces": 10,
+      "triangles": 2136,
+      "unique_mesh_triangles": 2136,
+      "unique_meshes": 1,
+      "vertices": 4992,
+      "warnings": []
+    },
+    {
+      "animations": [],
+      "bounds_max_xyz": [
+        1.5500000715255737,
+        0.9200000166893005,
+        2.5299999713897705
+      ],
+      "bounds_min_xyz": [
+        -1.5500000715255737,
+        -0.6399999856948853,
+        -2.2311999797821045
+      ],
+      "bounds_type": "Rest-pose envelope of transformed local mesh AABBs",
+      "bytes": 213236,
+      "file": "meshes/ship_04_chargingtug.glb",
+      "materials": {
+        "bound_textures": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        "count": 9,
+        "images": [
+          {
+            "bit_depth": 8,
+            "bytes": 732,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "8dbcdfdc7d0d849b6416a62641233ee010b7226a478c75f3c24223ee881e764c",
+            "sha256": "32460fe704858718fbfd2b19f9731f10a4ea827dcdf1ea6e2e42f4153ef311c3",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 822,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "ba5f8985d7198bd7fb0cd0a70a469aa28c09f23268d58d610d16e7a4952e0285",
+            "sha256": "faad00f2acc0070773ab26fcd96460231f02b05539fb459e4e1eb2985b7ca77b",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 735,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "99a9e4057c99ab5a6f9236deea4ba39797b356ab3e10b62314d27425c238ec3c",
+            "sha256": "1a3fe5c7970ec9c6bb03417e5367c07e92a1a2fe9efc3a915ab6d8ab8d4d1368",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 593,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "4def21045304346c702c0e5559fd705d9e257dd3877954701e001f7f6f556e5a",
+            "sha256": "5e45304b913556c0988fd8ab5d4774d715f205304fa95d2c29e6be812f9836f7",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 808,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "a41efc519559738b33689cdde8fe520bb838d4f8580cc44fcc0d1d7871a1e7b9",
+            "sha256": "b011853a307627b3f18f35f070daaec97758eaa7b81411c84cf2a68e046d7305",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 782,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "8a97247d37cae70a5e1ec7a9f4e1f9dcb11a1028a6f41277abe0cfb8652287a6",
+            "sha256": "b6342a91b26a46d47e4fd65fa6349f032560261636cee15f057e6b7cdd956ee9",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 632,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "ba579afc489a01fa72d729af3be4adbb4f1e83b99d781880f6831a41a2d7c28f",
+            "sha256": "5c9ce24adde5d2ab28e36a1ce2412ae818f6fd0edd96603c20c9e54132bb8d10",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 798,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "9f47427f8faebae72053134a3873273440eb873c2fab06e61148bea2a33a31bb",
+            "sha256": "205f5b88c5d1bed499c07e0d380593f30d37a17dc09fdc99c3bcac591f5a9b61",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 533,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "fe905e2c6fb0a8e584bb013a14ad3b51dbf02c01fb7c2455a069c46ecaa70fa0",
+            "sha256": "10a323694aad863709e2248a472deefe50d0bcea2a16fa33e0358dbd6afbdc6b",
+            "width": 64
+          }
+        ],
+        "textures": 9
+      },
+      "mesh_instances": 1,
+      "minimum_normal_alignment": 0.9999999638367117,
+      "nodes": 2,
+      "sha256": "a86c39104f964821850d28836bf3df61a969fb8891294113156534907f720299",
+      "status": "pass",
+      "surfaces": 9,
+      "triangles": 2412,
+      "unique_mesh_triangles": 2412,
+      "unique_meshes": 1,
+      "vertices": 5668,
+      "warnings": []
+    },
+    {
+      "animations": [
+        {
+          "channels": 1,
+          "duration_seconds": 19.99999936297536,
+          "moving_nodes": [
+            "Ship_10_CableInspector_Scanner / module"
+          ],
+          "name": "Ship_10_CableInspector_InspectionSweep"
+        }
+      ],
+      "bounds_max_xyz": [
+        1.1100000143051147,
+        0.7699999809265137,
+        1.3255627155303955
+      ],
+      "bounds_min_xyz": [
+        -1.1100000143051147,
+        -0.5,
+        -1.5
+      ],
+      "bounds_type": "Rest-pose envelope of transformed local mesh AABBs",
+      "bytes": 190640,
+      "file": "meshes/ship_10_cableinspector.glb",
+      "materials": {
+        "bound_textures": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7
+        ],
+        "count": 8,
+        "images": [
+          {
+            "bit_depth": 8,
+            "bytes": 822,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "ba5f8985d7198bd7fb0cd0a70a469aa28c09f23268d58d610d16e7a4952e0285",
+            "sha256": "faad00f2acc0070773ab26fcd96460231f02b05539fb459e4e1eb2985b7ca77b",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 732,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "8dbcdfdc7d0d849b6416a62641233ee010b7226a478c75f3c24223ee881e764c",
+            "sha256": "32460fe704858718fbfd2b19f9731f10a4ea827dcdf1ea6e2e42f4153ef311c3",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 735,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "99a9e4057c99ab5a6f9236deea4ba39797b356ab3e10b62314d27425c238ec3c",
+            "sha256": "1a3fe5c7970ec9c6bb03417e5367c07e92a1a2fe9efc3a915ab6d8ab8d4d1368",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 573,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "51122ca49013b93ff0cf0314ba42a30ec5f6ba085348017293c1780d1bd42cfe",
+            "sha256": "6b4c95994adf29004240e56680fc5e95e4006d3a32aa51fcad3885e9d78638d6",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 533,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "fe905e2c6fb0a8e584bb013a14ad3b51dbf02c01fb7c2455a069c46ecaa70fa0",
+            "sha256": "10a323694aad863709e2248a472deefe50d0bcea2a16fa33e0358dbd6afbdc6b",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 782,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "8a97247d37cae70a5e1ec7a9f4e1f9dcb11a1028a6f41277abe0cfb8652287a6",
+            "sha256": "b6342a91b26a46d47e4fd65fa6349f032560261636cee15f057e6b7cdd956ee9",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 808,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "a41efc519559738b33689cdde8fe520bb838d4f8580cc44fcc0d1d7871a1e7b9",
+            "sha256": "b011853a307627b3f18f35f070daaec97758eaa7b81411c84cf2a68e046d7305",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 798,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "9f47427f8faebae72053134a3873273440eb873c2fab06e61148bea2a33a31bb",
+            "sha256": "205f5b88c5d1bed499c07e0d380593f30d37a17dc09fdc99c3bcac591f5a9b61",
+            "width": 64
+          }
+        ],
+        "textures": 8
+      },
+      "mesh_instances": 2,
+      "minimum_normal_alignment": 0.9999999799213253,
+      "nodes": 4,
+      "sha256": "e19912847bea2961522f7cf3d8ffce8acee0a191a148f1ef50439b1c3e4174f9",
+      "status": "pass",
+      "surfaces": 10,
+      "triangles": 2076,
+      "unique_mesh_triangles": 2076,
+      "unique_meshes": 2,
+      "vertices": 4872,
+      "warnings": []
+    },
+    {
+      "animations": [
+        {
+          "channels": 1,
+          "duration_seconds": 19.99999936297536,
+          "moving_nodes": [
+            "Core / neighborhood traffic scanner / module"
+          ],
+          "name": "neighborhood_traffic_scan"
+        },
+        {
+          "channels": 1,
+          "duration_seconds": 19.99999936297536,
+          "moving_nodes": [
+            "Core / rotating communications crown / module"
+          ],
+          "name": "harbor_machinery"
+        },
+        {
+          "channels": 8,
+          "duration_seconds": 19.99999936297536,
+          "moving_nodes": [
+            "Core navigation 1 / flashing lens / module",
+            "Core navigation 2 / flashing lens / module",
+            "Core navigation 3 / flashing lens / module",
+            "Core navigation 4 / flashing lens / module",
+            "Core navigation 5 / flashing lens / module",
+            "Core navigation 6 / flashing lens / module",
+            "Core navigation 7 / flashing lens / module",
+            "Core navigation 8 / flashing lens / module"
+          ],
+          "name": "navigation_lights"
+        },
+        {
+          "channels": 4,
+          "duration_seconds": 19.99999936297536,
+          "moving_nodes": [
+            "Core RCS 1 / correction exhaust / module",
+            "Core RCS 2 / correction exhaust / module",
+            "Core RCS 3 / correction exhaust / module",
+            "Core RCS 4 / correction exhaust / module"
+          ],
+          "name": "correction_thrusters"
+        }
+      ],
+      "bounds_max_xyz": [
+        36.55599975013729,
+        22.749999165534973,
+        48.36324743258956
+      ],
+      "bounds_min_xyz": [
+        -33.95599984550472,
+        -3.8999998569488525,
+        -41.599998474121094
+      ],
+      "bounds_type": "Rest-pose envelope of transformed local mesh AABBs",
+      "bytes": 5770156,
+      "file": "meshes/wayfarer_core.glb",
+      "materials": {
+        "bound_textures": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "count": 13,
+        "images": [
+          {
+            "bit_depth": 8,
+            "bytes": 735,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "99a9e4057c99ab5a6f9236deea4ba39797b356ab3e10b62314d27425c238ec3c",
+            "sha256": "1a3fe5c7970ec9c6bb03417e5367c07e92a1a2fe9efc3a915ab6d8ab8d4d1368",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 822,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "ba5f8985d7198bd7fb0cd0a70a469aa28c09f23268d58d610d16e7a4952e0285",
+            "sha256": "faad00f2acc0070773ab26fcd96460231f02b05539fb459e4e1eb2985b7ca77b",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 808,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "a41efc519559738b33689cdde8fe520bb838d4f8580cc44fcc0d1d7871a1e7b9",
+            "sha256": "b011853a307627b3f18f35f070daaec97758eaa7b81411c84cf2a68e046d7305",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 632,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "ba579afc489a01fa72d729af3be4adbb4f1e83b99d781880f6831a41a2d7c28f",
+            "sha256": "5c9ce24adde5d2ab28e36a1ce2412ae818f6fd0edd96603c20c9e54132bb8d10",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 782,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "8a97247d37cae70a5e1ec7a9f4e1f9dcb11a1028a6f41277abe0cfb8652287a6",
+            "sha256": "b6342a91b26a46d47e4fd65fa6349f032560261636cee15f057e6b7cdd956ee9",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 798,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "9f47427f8faebae72053134a3873273440eb873c2fab06e61148bea2a33a31bb",
+            "sha256": "205f5b88c5d1bed499c07e0d380593f30d37a17dc09fdc99c3bcac591f5a9b61",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 573,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "51122ca49013b93ff0cf0314ba42a30ec5f6ba085348017293c1780d1bd42cfe",
+            "sha256": "6b4c95994adf29004240e56680fc5e95e4006d3a32aa51fcad3885e9d78638d6",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 606,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "f1dd4ba390886db768e9fad3246fac9e365744d1b5a20251b3972953c4b82ea9",
+            "sha256": "8fd89d8c55a2825629523f4d5eb83ffb90a70c460a65606a3d71326e8f04c8ac",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 533,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "fe905e2c6fb0a8e584bb013a14ad3b51dbf02c01fb7c2455a069c46ecaa70fa0",
+            "sha256": "10a323694aad863709e2248a472deefe50d0bcea2a16fa33e0358dbd6afbdc6b",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 732,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "8dbcdfdc7d0d849b6416a62641233ee010b7226a478c75f3c24223ee881e764c",
+            "sha256": "32460fe704858718fbfd2b19f9731f10a4ea827dcdf1ea6e2e42f4153ef311c3",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 650,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "2f24ba6ca0e0a2a3e596f3f0fa0b8c2ea862f17e5f678c7df7738490da2597f3",
+            "sha256": "12062764806346d6938b4934725ad8f6f40a3604ab3582753047b9cb9fb908d8",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 774,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "9a6a5469d2994825f43c4540ad9dbf258a2260bf4c8d6e26b292bb0c8910a82c",
+            "sha256": "95fbe346167efa3c5c8a0406cb9c8d9562b68020e6f1ec125be7eccff5ace8f7",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 593,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "4def21045304346c702c0e5559fd705d9e257dd3877954701e001f7f6f556e5a",
+            "sha256": "5e45304b913556c0988fd8ab5d4774d715f205304fa95d2c29e6be812f9836f7",
+            "width": 64
+          }
+        ],
+        "textures": 13
+      },
+      "mesh_instances": 34,
+      "minimum_normal_alignment": 0.9999999470020597,
+      "nodes": 51,
+      "sha256": "27a40310399d9597e29da03ddb152768cd59f429162d69fddd2a63c537765de8",
+      "status": "pass",
+      "surfaces": 107,
+      "triangles": 80828,
+      "unique_mesh_triangles": 80828,
+      "unique_meshes": 34,
+      "vertices": 161448,
+      "warnings": []
+    },
+    {
+      "animations": [
+        {
+          "channels": 392,
+          "duration_seconds": 19.99999936297536,
+          "moving_nodes": [
+            "PowerBundle_1 / sleeve 01",
+            "PowerBundle_1 / sleeve 02",
+            "PowerBundle_1 / sleeve 03",
+            "PowerBundle_1 / sleeve 04",
+            "PowerBundle_1 / sleeve 05",
+            "PowerBundle_1 / sleeve 06",
+            "PowerBundle_1 / sleeve 07",
+            "PowerBundle_1 / sleeve 08",
+            "PowerBundle_1 / sleeve 09",
+            "PowerBundle_1 / sleeve 10",
+            "PowerBundle_1 / sleeve 11",
+            "PowerBundle_1 / sleeve 12",
+            "PowerBundle_1 / sleeve 13",
+            "PowerBundle_1 / sleeve 14",
+            "PowerBundle_1 / sleeve 15",
+            "PowerBundle_1 / sleeve 16",
+            "PowerBundle_1 / sleeve 17",
+            "PowerBundle_1 / sleeve 18",
+            "PowerBundle_1 / sleeve 19",
+            "PowerBundle_1 / sleeve 20",
+            "PowerBundle_1 / sleeve 21",
+            "PowerBundle_1 / sleeve 22",
+            "PowerBundle_1 / sleeve 23",
+            "PowerBundle_1 / sleeve 24",
+            "PowerBundle_1 / socket A",
+            "PowerBundle_1 / socket B",
+            "PowerBundle_2 / sleeve 01",
+            "PowerBundle_2 / sleeve 02",
+            "PowerBundle_2 / sleeve 03",
+            "PowerBundle_2 / sleeve 04",
+            "PowerBundle_2 / sleeve 05",
+            "PowerBundle_2 / sleeve 06",
+            "PowerBundle_2 / sleeve 07",
+            "PowerBundle_2 / sleeve 08",
+            "PowerBundle_2 / sleeve 09",
+            "PowerBundle_2 / sleeve 10",
+            "PowerBundle_2 / sleeve 11",
+            "PowerBundle_2 / sleeve 12",
+            "PowerBundle_2 / sleeve 13",
+            "PowerBundle_2 / sleeve 14",
+            "PowerBundle_2 / sleeve 15",
+            "PowerBundle_2 / sleeve 16",
+            "PowerBundle_2 / sleeve 17",
+            "PowerBundle_2 / sleeve 18",
+            "PowerBundle_2 / sleeve 19",
+            "PowerBundle_2 / sleeve 20",
+            "PowerBundle_2 / sleeve 21",
+            "PowerBundle_2 / sleeve 22",
+            "PowerBundle_2 / sleeve 23",
+            "PowerBundle_2 / sleeve 24",
+            "PowerBundle_2 / socket A",
+            "PowerBundle_2 / socket B",
+            "PowerBundle_3 / sleeve 01",
+            "PowerBundle_3 / sleeve 02",
+            "PowerBundle_3 / sleeve 03",
+            "PowerBundle_3 / sleeve 04",
+            "PowerBundle_3 / sleeve 05",
+            "PowerBundle_3 / sleeve 06",
+            "PowerBundle_3 / sleeve 07",
+            "PowerBundle_3 / sleeve 08",
+            "PowerBundle_3 / sleeve 09",
+            "PowerBundle_3 / sleeve 10",
+            "PowerBundle_3 / sleeve 11",
+            "PowerBundle_3 / sleeve 12",
+            "PowerBundle_3 / sleeve 13",
+            "PowerBundle_3 / sleeve 14",
+            "PowerBundle_3 / sleeve 15",
+            "PowerBundle_3 / sleeve 16",
+            "PowerBundle_3 / sleeve 17",
+            "PowerBundle_3 / sleeve 18",
+            "PowerBundle_3 / sleeve 19",
+            "PowerBundle_3 / sleeve 20",
+            "PowerBundle_3 / sleeve 21",
+            "PowerBundle_3 / sleeve 22",
+            "PowerBundle_3 / sleeve 23",
+            "PowerBundle_3 / sleeve 24",
+            "PowerBundle_3 / socket A",
+            "PowerBundle_3 / socket B",
+            "PowerBundle_4 / sleeve 01",
+            "PowerBundle_4 / sleeve 02",
+            "PowerBundle_4 / sleeve 03",
+            "PowerBundle_4 / sleeve 04",
+            "PowerBundle_4 / sleeve 05",
+            "PowerBundle_4 / sleeve 06",
+            "PowerBundle_4 / sleeve 07",
+            "PowerBundle_4 / sleeve 08",
+            "PowerBundle_4 / sleeve 09",
+            "PowerBundle_4 / sleeve 10",
+            "PowerBundle_4 / sleeve 11",
+            "PowerBundle_4 / sleeve 12",
+            "PowerBundle_4 / sleeve 13",
+            "PowerBundle_4 / sleeve 14",
+            "PowerBundle_4 / sleeve 15",
+            "PowerBundle_4 / sleeve 16",
+            "PowerBundle_4 / sleeve 17",
+            "PowerBundle_4 / sleeve 18",
+            "PowerBundle_4 / sleeve 19",
+            "PowerBundle_4 / sleeve 20",
+            "PowerBundle_4 / sleeve 21",
+            "PowerBundle_4 / sleeve 22",
+            "PowerBundle_4 / sleeve 23",
+            "PowerBundle_4 / sleeve 24",
+            "PowerBundle_4 / socket A",
+            "PowerBundle_4 / socket B",
+            "PowerBundle_5 / sleeve 01",
+            "PowerBundle_5 / sleeve 02",
+            "PowerBundle_5 / sleeve 03",
+            "PowerBundle_5 / sleeve 04",
+            "PowerBundle_5 / sleeve 05",
+            "PowerBundle_5 / sleeve 06",
+            "PowerBundle_5 / sleeve 07",
+            "PowerBundle_5 / sleeve 08",
+            "PowerBundle_5 / sleeve 09",
+            "PowerBundle_5 / sleeve 10",
+            "PowerBundle_5 / sleeve 11",
+            "PowerBundle_5 / sleeve 12",
+            "PowerBundle_5 / sleeve 13",
+            "PowerBundle_5 / sleeve 14",
+            "PowerBundle_5 / sleeve 15",
+            "PowerBundle_5 / sleeve 16",
+            "PowerBundle_5 / sleeve 17",
+            "PowerBundle_5 / sleeve 18",
+            "PowerBundle_5 / sleeve 19",
+            "PowerBundle_5 / sleeve 20",
+            "PowerBundle_5 / sleeve 21",
+            "PowerBundle_5 / sleeve 22",
+            "PowerBundle_5 / sleeve 23",
+            "PowerBundle_5 / sleeve 24",
+            "PowerBundle_5 / socket A",
+            "PowerBundle_5 / socket B",
+            "Relay_01_TrafficMast",
+            "Relay_02_PowerDistribution",
+            "Relay_03_OrbitalLogistics",
+            "Relay_04_PortApproach",
+            "Relay_05_RefuelRepair",
+            "Wayfarer_Core"
+          ],
+          "name": "orbital_correction"
+        },
+        {
+          "channels": 1,
+          "duration_seconds": 19.99999936297536,
+          "moving_nodes": [
+            "beacon_direction_finder_tracking_pivot"
+          ],
+          "name": "beacon_direction_finder_scan"
+        },
+        {
+          "channels": 28,
+          "duration_seconds": 19.99999936297536,
+          "moving_nodes": [
+            "Core navigation 1 / flashing lens",
+            "Core navigation 2 / flashing lens",
+            "Core navigation 3 / flashing lens",
+            "Core navigation 4 / flashing lens",
+            "Core navigation 5 / flashing lens",
+            "Core navigation 6 / flashing lens",
+            "Core navigation 7 / flashing lens",
+            "Core navigation 8 / flashing lens",
+            "Relay_01_TrafficMast navigation 1 / flashing lens",
+            "Relay_01_TrafficMast navigation 2 / flashing lens",
+            "Relay_01_TrafficMast navigation 3 / flashing lens",
+            "Relay_01_TrafficMast navigation 4 / flashing lens",
+            "Relay_02_PowerDistribution navigation 1 / flashing lens",
+            "Relay_02_PowerDistribution navigation 2 / flashing lens",
+            "Relay_02_PowerDistribution navigation 3 / flashing lens",
+            "Relay_02_PowerDistribution navigation 4 / flashing lens",
+            "Relay_03_OrbitalLogistics navigation 1 / flashing lens",
+            "Relay_03_OrbitalLogistics navigation 2 / flashing lens",
+            "Relay_03_OrbitalLogistics navigation 3 / flashing lens",
+            "Relay_03_OrbitalLogistics navigation 4 / flashing lens",
+            "Relay_04_PortApproach navigation 1 / flashing lens",
+            "Relay_04_PortApproach navigation 2 / flashing lens",
+            "Relay_04_PortApproach navigation 3 / flashing lens",
+            "Relay_04_PortApproach navigation 4 / flashing lens",
+            "Relay_05_RefuelRepair navigation 1 / flashing lens",
+            "Relay_05_RefuelRepair navigation 2 / flashing lens",
+            "Relay_05_RefuelRepair navigation 3 / flashing lens",
+            "Relay_05_RefuelRepair navigation 4 / flashing lens"
+          ],
+          "name": "navigation_lights"
+        },
+        {
+          "channels": 24,
+          "duration_seconds": 19.99999936297536,
+          "moving_nodes": [
+            "Core RCS 1 / correction exhaust",
+            "Core RCS 2 / correction exhaust",
+            "Core RCS 3 / correction exhaust",
+            "Core RCS 4 / correction exhaust",
+            "Relay_01_TrafficMast RCS 1 / correction exhaust",
+            "Relay_01_TrafficMast RCS 2 / correction exhaust",
+            "Relay_01_TrafficMast RCS 3 / correction exhaust",
+            "Relay_01_TrafficMast RCS 4 / correction exhaust",
+            "Relay_02_PowerDistribution RCS 1 / correction exhaust",
+            "Relay_02_PowerDistribution RCS 2 / correction exhaust",
+            "Relay_02_PowerDistribution RCS 3 / correction exhaust",
+            "Relay_02_PowerDistribution RCS 4 / correction exhaust",
+            "Relay_03_OrbitalLogistics RCS 1 / correction exhaust",
+            "Relay_03_OrbitalLogistics RCS 2 / correction exhaust",
+            "Relay_03_OrbitalLogistics RCS 3 / correction exhaust",
+            "Relay_03_OrbitalLogistics RCS 4 / correction exhaust",
+            "Relay_04_PortApproach RCS 1 / correction exhaust",
+            "Relay_04_PortApproach RCS 2 / correction exhaust",
+            "Relay_04_PortApproach RCS 3 / correction exhaust",
+            "Relay_04_PortApproach RCS 4 / correction exhaust",
+            "Relay_05_RefuelRepair RCS 1 / correction exhaust",
+            "Relay_05_RefuelRepair RCS 2 / correction exhaust",
+            "Relay_05_RefuelRepair RCS 3 / correction exhaust",
+            "Relay_05_RefuelRepair RCS 4 / correction exhaust"
+          ],
+          "name": "correction_thrusters"
+        },
+        {
+          "channels": 2,
+          "duration_seconds": 19.99999936297536,
+          "moving_nodes": [
+            "Power / coolant pump / rotor",
+            "Service / coolant pump / rotor"
+          ],
+          "name": "cooling_rotors"
+        },
+        {
+          "channels": 1,
+          "duration_seconds": 19.99999936297536,
+          "moving_nodes": [
+            "power_telemetry_tracking_pivot"
+          ],
+          "name": "power_telemetry_scan"
+        },
+        {
+          "channels": 1,
+          "duration_seconds": 19.99999936297536,
+          "moving_nodes": [
+            "cargo_arm_east_articulated_forearm"
+          ],
+          "name": "cargo_arm_east_handling_cycle"
+        },
+        {
+          "channels": 1,
+          "duration_seconds": 19.99999936297536,
+          "moving_nodes": [
+            "cargo_arm_west_articulated_forearm"
+          ],
+          "name": "cargo_arm_west_handling_cycle"
+        },
+        {
+          "channels": 1,
+          "duration_seconds": 19.99999936297536,
+          "moving_nodes": [
+            "traffic_tracking_dish_tracking_pivot"
+          ],
+          "name": "traffic_tracking_dish_scan"
+        },
+        {
+          "channels": 1,
+          "duration_seconds": 19.99999936297536,
+          "moving_nodes": [
+            "repair_manipulator_articulated_forearm"
+          ],
+          "name": "repair_manipulator_handling_cycle"
+        },
+        {
+          "channels": 18,
+          "duration_seconds": 19.99999936297536,
+          "moving_nodes": [
+            "Ship_05_ArrivingCarrier",
+            "Ship_06_PassengerArrival",
+            "Ship_07_DepartingCourier",
+            "Ship_08_CargoTug",
+            "Ship_09_RelayTransfer",
+            "Ship_10_CableInspector",
+            "Ship_11_RepairDrone",
+            "Ship_12_StationMaintenance",
+            "Ship_13_PracticeCourier"
+          ],
+          "name": "harbor_traffic"
+        },
+        {
+          "channels": 1,
+          "duration_seconds": 19.99999936297536,
+          "moving_nodes": [
+            "Ship_10_CableInspector_Scanner"
+          ],
+          "name": "Ship_10_CableInspector_InspectionSweep"
+        },
+        {
+          "channels": 1,
+          "duration_seconds": 19.99999936297536,
+          "moving_nodes": [
+            "Ship_11_RepairDrone_Scanner"
+          ],
+          "name": "Ship_11_RepairDrone_InspectionSweep"
+        },
+        {
+          "channels": 1,
+          "duration_seconds": 19.99999936297536,
+          "moving_nodes": [
+            "Ship_12_StationMaintenance_Scanner"
+          ],
+          "name": "Ship_12_StationMaintenance_InspectionSweep"
+        },
+        {
+          "channels": 1,
+          "duration_seconds": 19.99999936297536,
+          "moving_nodes": [
+            "Core / neighborhood traffic scanner"
+          ],
+          "name": "neighborhood_traffic_scan"
+        },
+        {
+          "channels": 1,
+          "duration_seconds": 19.99999936297536,
+          "moving_nodes": [
+            "Core / rotating communications crown"
+          ],
+          "name": "harbor_machinery"
+        }
+      ],
+      "bounds_max_xyz": [
+        73.6839692136423,
+        24.145116720866774,
+        111.96343710488831
+      ],
+      "bounds_min_xyz": [
+        -88.5857692371627,
+        -3.8999998569488525,
+        -76.77557416413703
+      ],
+      "bounds_type": "Rest-pose envelope of transformed local mesh AABBs",
+      "bytes": 14753236,
+      "file": "meshes/wayfarer_crescent.glb",
+      "materials": {
+        "bound_textures": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5,
+          6,
+          7,
+          8,
+          9,
+          10,
+          11,
+          12
+        ],
+        "count": 13,
+        "images": [
+          {
+            "bit_depth": 8,
+            "bytes": 533,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "fe905e2c6fb0a8e584bb013a14ad3b51dbf02c01fb7c2455a069c46ecaa70fa0",
+            "sha256": "10a323694aad863709e2248a472deefe50d0bcea2a16fa33e0358dbd6afbdc6b",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 782,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "8a97247d37cae70a5e1ec7a9f4e1f9dcb11a1028a6f41277abe0cfb8652287a6",
+            "sha256": "b6342a91b26a46d47e4fd65fa6349f032560261636cee15f057e6b7cdd956ee9",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 808,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "a41efc519559738b33689cdde8fe520bb838d4f8580cc44fcc0d1d7871a1e7b9",
+            "sha256": "b011853a307627b3f18f35f070daaec97758eaa7b81411c84cf2a68e046d7305",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 735,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "99a9e4057c99ab5a6f9236deea4ba39797b356ab3e10b62314d27425c238ec3c",
+            "sha256": "1a3fe5c7970ec9c6bb03417e5367c07e92a1a2fe9efc3a915ab6d8ab8d4d1368",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 822,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "ba5f8985d7198bd7fb0cd0a70a469aa28c09f23268d58d610d16e7a4952e0285",
+            "sha256": "faad00f2acc0070773ab26fcd96460231f02b05539fb459e4e1eb2985b7ca77b",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 798,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "9f47427f8faebae72053134a3873273440eb873c2fab06e61148bea2a33a31bb",
+            "sha256": "205f5b88c5d1bed499c07e0d380593f30d37a17dc09fdc99c3bcac591f5a9b61",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 650,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "2f24ba6ca0e0a2a3e596f3f0fa0b8c2ea862f17e5f678c7df7738490da2597f3",
+            "sha256": "12062764806346d6938b4934725ad8f6f40a3604ab3582753047b9cb9fb908d8",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 573,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "51122ca49013b93ff0cf0314ba42a30ec5f6ba085348017293c1780d1bd42cfe",
+            "sha256": "6b4c95994adf29004240e56680fc5e95e4006d3a32aa51fcad3885e9d78638d6",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 632,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "ba579afc489a01fa72d729af3be4adbb4f1e83b99d781880f6831a41a2d7c28f",
+            "sha256": "5c9ce24adde5d2ab28e36a1ce2412ae818f6fd0edd96603c20c9e54132bb8d10",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 606,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "f1dd4ba390886db768e9fad3246fac9e365744d1b5a20251b3972953c4b82ea9",
+            "sha256": "8fd89d8c55a2825629523f4d5eb83ffb90a70c460a65606a3d71326e8f04c8ac",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 732,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "8dbcdfdc7d0d849b6416a62641233ee010b7226a478c75f3c24223ee881e764c",
+            "sha256": "32460fe704858718fbfd2b19f9731f10a4ea827dcdf1ea6e2e42f4153ef311c3",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 593,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "4def21045304346c702c0e5559fd705d9e257dd3877954701e001f7f6f556e5a",
+            "sha256": "5e45304b913556c0988fd8ab5d4774d715f205304fa95d2c29e6be812f9836f7",
+            "width": 64
+          },
+          {
+            "bit_depth": 8,
+            "bytes": 774,
+            "channels": 4,
+            "height": 64,
+            "rgba_pixels_sha256": "9a6a5469d2994825f43c4540ad9dbf258a2260bf4c8d6e26b292bb0c8910a82c",
+            "sha256": "95fbe346167efa3c5c8a0406cb9c8d9562b68020e6f1ec125be7eccff5ace8f7",
+            "width": 64
+          }
+        ],
+        "textures": 13
+      },
+      "mesh_instances": 266,
+      "minimum_normal_alignment": 0.9999999211268279,
+      "nodes": 363,
+      "sha256": "27a31bbe5fa6785c5961527c33a87ff8887cb1b16553c032b61df62597db68d5",
+      "status": "pass",
+      "surfaces": 769,
+      "triangles": 183624,
+      "unique_mesh_triangles": 183624,
+      "unique_meshes": 266,
+      "vertices": 368640,
+      "warnings": []
+    }
+  ],
+  "evidence_type": "Static GLB/PNG/source and manifest validation; no runtime import or visual approval claimed",
+  "full_scene": "meshes/wayfarer_crescent.glb",
+  "manifest_sha256": "53af938d0e7c665f18729323a4bc35649dc13239e4eeeeda05bad171e2d6ea96",
+  "outputs": [
+    {
+      "bytes": 392476,
+      "file": "meshes/beacon_relay.glb",
+      "sha256": "b35984e65e936eb8218e74394812fe141c44e9bc81c885d128773c59754f0612"
+    },
+    {
+      "bytes": 724372,
+      "file": "meshes/cargo_relay.glb",
+      "sha256": "2558395d31e04d4d62feeafabc886ce9938bf18f11d59ee1232723ff3a6de689"
+    },
+    {
+      "bytes": 416684,
+      "file": "meshes/control_relay.glb",
+      "sha256": "4785fa9c52e2838377fb3b0367959b3864948dfbc27dff1a8297838804adcca9"
+    },
+    {
+      "bytes": 615292,
+      "file": "meshes/power_relay.glb",
+      "sha256": "16317c9b779ed6520bc2fcdf1b14ec51db483828c9ec0243cb2cde286654701d"
+    },
+    {
+      "bytes": 682936,
+      "file": "meshes/service_relay.glb",
+      "sha256": "ad1fdad602a1b46f738e928db17f85d7ff0d19d0a11a975f183fe715c29b59ac"
+    },
+    {
+      "bytes": 418528,
+      "file": "meshes/ship_01_berthedcarrier.glb",
+      "sha256": "e53016ad190db3f3e4e52d9352a259bfb22f30fe33b10c0f8125a0fe10c974bf"
+    },
+    {
+      "bytes": 191428,
+      "file": "meshes/ship_03_arrivalsshuttle.glb",
+      "sha256": "8e0d8e58d217b6d6970a121f3d0ad656751180209a2d95cc80b243314c17d69a"
+    },
+    {
+      "bytes": 213236,
+      "file": "meshes/ship_04_chargingtug.glb",
+      "sha256": "a86c39104f964821850d28836bf3df61a969fb8891294113156534907f720299"
+    },
+    {
+      "bytes": 190640,
+      "file": "meshes/ship_10_cableinspector.glb",
+      "sha256": "e19912847bea2961522f7cf3d8ffce8acee0a191a148f1ef50439b1c3e4174f9"
+    },
+    {
+      "bytes": 5770156,
+      "file": "meshes/wayfarer_core.glb",
+      "sha256": "27a40310399d9597e29da03ddb152768cd59f429162d69fddd2a63c537765de8"
+    },
+    {
+      "bytes": 14753236,
+      "file": "meshes/wayfarer_crescent.glb",
+      "sha256": "27a31bbe5fa6785c5961527c33a87ff8887cb1b16553c032b61df62597db68d5"
+    },
+    {
+      "bytes": 632,
+      "file": "textures/amber.png",
+      "sha256": "5c9ce24adde5d2ab28e36a1ce2412ae818f6fd0edd96603c20c9e54132bb8d10"
+    },
+    {
+      "bytes": 798,
+      "file": "textures/armor.png",
+      "sha256": "205f5b88c5d1bed499c07e0d380593f30d37a17dc09fdc99c3bcac591f5a9b61"
+    },
+    {
+      "bytes": 533,
+      "file": "textures/black.png",
+      "sha256": "10a323694aad863709e2248a472deefe50d0bcea2a16fa33e0358dbd6afbdc6b"
+    },
+    {
+      "bytes": 782,
+      "file": "textures/copper.png",
+      "sha256": "b6342a91b26a46d47e4fd65fa6349f032560261636cee15f057e6b7cdd956ee9"
+    },
+    {
+      "bytes": 573,
+      "file": "textures/cyan.png",
+      "sha256": "6b4c95994adf29004240e56680fc5e95e4006d3a32aa51fcad3885e9d78638d6"
+    },
+    {
+      "bytes": 650,
+      "file": "textures/darkglass.png",
+      "sha256": "12062764806346d6938b4934725ad8f6f40a3604ab3582753047b9cb9fb908d8"
+    },
+    {
+      "bytes": 593,
+      "file": "textures/glass.png",
+      "sha256": "5e45304b913556c0988fd8ab5d4774d715f205304fa95d2c29e6be812f9836f7"
+    },
+    {
+      "bytes": 774,
+      "file": "textures/green.png",
+      "sha256": "95fbe346167efa3c5c8a0406cb9c8d9562b68020e6f1ec125be7eccff5ace8f7"
+    },
+    {
+      "bytes": 822,
+      "file": "textures/ivory.png",
+      "sha256": "faad00f2acc0070773ab26fcd96460231f02b05539fb459e4e1eb2985b7ca77b"
+    },
+    {
+      "bytes": 735,
+      "file": "textures/navy.png",
+      "sha256": "1a3fe5c7970ec9c6bb03417e5367c07e92a1a2fe9efc3a915ab6d8ab8d4d1368"
+    },
+    {
+      "bytes": 732,
+      "file": "textures/orange.png",
+      "sha256": "32460fe704858718fbfd2b19f9731f10a4ea827dcdf1ea6e2e42f4153ef311c3"
+    },
+    {
+      "bytes": 606,
+      "file": "textures/red.png",
+      "sha256": "8fd89d8c55a2825629523f4d5eb83ffb90a70c460a65606a3d71326e8f04c8ac"
+    },
+    {
+      "bytes": 808,
+      "file": "textures/steel.png",
+      "sha256": "b011853a307627b3f18f35f070daaec97758eaa7b81411c84cf2a68e046d7305"
+    },
+    {
+      "bytes": 602,
+      "file": "textures/white.png",
+      "sha256": "70b4f5d92d6e65a5c235fcd463b6a5ab1f2312a2aa0478aa9d3a7ec33f26e87a"
+    },
+    {
+      "bytes": 3550910,
+      "file": "source/wayfarer_crescent.blend",
+      "sha256": "4080c0449433c906a670334295a9c0d49ba04b82f1fd14a1ca55edea28e86110"
+    }
+  ],
+  "policy": {
+    "minimum_major_roots": 6,
+    "minimum_ship_roots": 9,
+    "soft_full_scene_bytes": 40000000,
+    "soft_full_scene_triangles": 800000,
+    "strict_glb_bytes": 150000000,
+    "strict_scene_triangles": 1500000
+  },
+  "previews": [
+    {
+      "bytes": 2750542,
+      "file": "design/home-base/blender-crescent/crescent-core-detail.png",
+      "sha256": "5650abf419e864a6c1fc6d6cf6326c3d278b43af5413faa96e0e857f6227739d"
+    },
+    {
+      "bytes": 3815355,
+      "file": "design/home-base/blender-crescent/crescent-harbor-overview.png",
+      "sha256": "6629a402337bc53ecfbbc4fb6510c675bd337bf6806551fbb105a4d877484ffe"
+    },
+    {
+      "bytes": 1971207,
+      "file": "design/home-base/blender-crescent/crescent-service-detail.png",
+      "sha256": "7363fcce0fac39214afa0da358255d928adf1a12453265f116f4cb97f5cd9363"
+    }
+  ],
+  "schema_version": 1,
+  "status": "pass",
+  "textures": [
+    {
+      "bit_depth": 8,
+      "bytes": 632,
+      "channels": 4,
+      "file": "textures/amber.png",
+      "height": 64,
+      "rgba_pixels_sha256": "ba579afc489a01fa72d729af3be4adbb4f1e83b99d781880f6831a41a2d7c28f",
+      "sha256": "5c9ce24adde5d2ab28e36a1ce2412ae818f6fd0edd96603c20c9e54132bb8d10",
+      "width": 64
+    },
+    {
+      "bit_depth": 8,
+      "bytes": 798,
+      "channels": 4,
+      "file": "textures/armor.png",
+      "height": 64,
+      "rgba_pixels_sha256": "9f47427f8faebae72053134a3873273440eb873c2fab06e61148bea2a33a31bb",
+      "sha256": "205f5b88c5d1bed499c07e0d380593f30d37a17dc09fdc99c3bcac591f5a9b61",
+      "width": 64
+    },
+    {
+      "bit_depth": 8,
+      "bytes": 533,
+      "channels": 4,
+      "file": "textures/black.png",
+      "height": 64,
+      "rgba_pixels_sha256": "fe905e2c6fb0a8e584bb013a14ad3b51dbf02c01fb7c2455a069c46ecaa70fa0",
+      "sha256": "10a323694aad863709e2248a472deefe50d0bcea2a16fa33e0358dbd6afbdc6b",
+      "width": 64
+    },
+    {
+      "bit_depth": 8,
+      "bytes": 782,
+      "channels": 4,
+      "file": "textures/copper.png",
+      "height": 64,
+      "rgba_pixels_sha256": "8a97247d37cae70a5e1ec7a9f4e1f9dcb11a1028a6f41277abe0cfb8652287a6",
+      "sha256": "b6342a91b26a46d47e4fd65fa6349f032560261636cee15f057e6b7cdd956ee9",
+      "width": 64
+    },
+    {
+      "bit_depth": 8,
+      "bytes": 573,
+      "channels": 4,
+      "file": "textures/cyan.png",
+      "height": 64,
+      "rgba_pixels_sha256": "51122ca49013b93ff0cf0314ba42a30ec5f6ba085348017293c1780d1bd42cfe",
+      "sha256": "6b4c95994adf29004240e56680fc5e95e4006d3a32aa51fcad3885e9d78638d6",
+      "width": 64
+    },
+    {
+      "bit_depth": 8,
+      "bytes": 650,
+      "channels": 4,
+      "file": "textures/darkglass.png",
+      "height": 64,
+      "rgba_pixels_sha256": "2f24ba6ca0e0a2a3e596f3f0fa0b8c2ea862f17e5f678c7df7738490da2597f3",
+      "sha256": "12062764806346d6938b4934725ad8f6f40a3604ab3582753047b9cb9fb908d8",
+      "width": 64
+    },
+    {
+      "bit_depth": 8,
+      "bytes": 593,
+      "channels": 4,
+      "file": "textures/glass.png",
+      "height": 64,
+      "rgba_pixels_sha256": "4def21045304346c702c0e5559fd705d9e257dd3877954701e001f7f6f556e5a",
+      "sha256": "5e45304b913556c0988fd8ab5d4774d715f205304fa95d2c29e6be812f9836f7",
+      "width": 64
+    },
+    {
+      "bit_depth": 8,
+      "bytes": 774,
+      "channels": 4,
+      "file": "textures/green.png",
+      "height": 64,
+      "rgba_pixels_sha256": "9a6a5469d2994825f43c4540ad9dbf258a2260bf4c8d6e26b292bb0c8910a82c",
+      "sha256": "95fbe346167efa3c5c8a0406cb9c8d9562b68020e6f1ec125be7eccff5ace8f7",
+      "width": 64
+    },
+    {
+      "bit_depth": 8,
+      "bytes": 822,
+      "channels": 4,
+      "file": "textures/ivory.png",
+      "height": 64,
+      "rgba_pixels_sha256": "ba5f8985d7198bd7fb0cd0a70a469aa28c09f23268d58d610d16e7a4952e0285",
+      "sha256": "faad00f2acc0070773ab26fcd96460231f02b05539fb459e4e1eb2985b7ca77b",
+      "width": 64
+    },
+    {
+      "bit_depth": 8,
+      "bytes": 735,
+      "channels": 4,
+      "file": "textures/navy.png",
+      "height": 64,
+      "rgba_pixels_sha256": "99a9e4057c99ab5a6f9236deea4ba39797b356ab3e10b62314d27425c238ec3c",
+      "sha256": "1a3fe5c7970ec9c6bb03417e5367c07e92a1a2fe9efc3a915ab6d8ab8d4d1368",
+      "width": 64
+    },
+    {
+      "bit_depth": 8,
+      "bytes": 732,
+      "channels": 4,
+      "file": "textures/orange.png",
+      "height": 64,
+      "rgba_pixels_sha256": "8dbcdfdc7d0d849b6416a62641233ee010b7226a478c75f3c24223ee881e764c",
+      "sha256": "32460fe704858718fbfd2b19f9731f10a4ea827dcdf1ea6e2e42f4153ef311c3",
+      "width": 64
+    },
+    {
+      "bit_depth": 8,
+      "bytes": 606,
+      "channels": 4,
+      "file": "textures/red.png",
+      "height": 64,
+      "rgba_pixels_sha256": "f1dd4ba390886db768e9fad3246fac9e365744d1b5a20251b3972953c4b82ea9",
+      "sha256": "8fd89d8c55a2825629523f4d5eb83ffb90a70c460a65606a3d71326e8f04c8ac",
+      "width": 64
+    },
+    {
+      "bit_depth": 8,
+      "bytes": 808,
+      "channels": 4,
+      "file": "textures/steel.png",
+      "height": 64,
+      "rgba_pixels_sha256": "a41efc519559738b33689cdde8fe520bb838d4f8580cc44fcc0d1d7871a1e7b9",
+      "sha256": "b011853a307627b3f18f35f070daaec97758eaa7b81411c84cf2a68e046d7305",
+      "width": 64
+    },
+    {
+      "bit_depth": 8,
+      "bytes": 602,
+      "channels": 4,
+      "file": "textures/white.png",
+      "height": 64,
+      "rgba_pixels_sha256": "3d257f93f6f85cc52fb44f88d630a673b7489e6935c4ad3b6e137defaf4f47b8",
+      "sha256": "70b4f5d92d6e65a5c235fcd463b6a5ab1f2312a2aa0478aa9d3a7ec33f26e87a",
+      "width": 64
+    }
+  ],
+  "verified_roots": {
+    "major_roots": [
+      "Wayfarer_Core",
+      "Relay_01_TrafficMast",
+      "Relay_02_PowerDistribution",
+      "Relay_03_OrbitalLogistics",
+      "Relay_04_PortApproach",
+      "Relay_05_RefuelRepair"
+    ],
+    "ship_roots": [
+      "Ship_01_BerthedCarrier",
+      "Ship_02_RefuelingCarrier",
+      "Ship_03_ArrivalsShuttle",
+      "Ship_04_ChargingTug",
+      "Ship_05_ArrivingCarrier",
+      "Ship_06_PassengerArrival",
+      "Ship_07_DepartingCourier",
+      "Ship_08_CargoTug",
+      "Ship_09_RelayTransfer",
+      "Ship_10_CableInspector",
+      "Ship_11_RepairDrone",
+      "Ship_12_StationMaintenance",
+      "Ship_13_PracticeCourier",
+      "Ship_14_RepairCradle"
+    ]
+  },
+  "warnings": []
+}

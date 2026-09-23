@@ -43,6 +43,10 @@ func _ready() -> void:
 	add_to_group("scalable_ui")
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_pick_upgrades()
+	var offered_ids: Array[String] = []
+	for upgrade: Dictionary in chosen_upgrades:
+		offered_ids.append(str(upgrade.id))
+	SignalBus.elite_offers_presented.emit(offered_ids)
 	_build_ui()
 	modulate.a = 1.0
 	position.y = 0.0
@@ -71,7 +75,7 @@ func _pick_upgrades() -> void:
 		seen_ids[upgrade_id] = true
 		pool.append(_normalize_upgrade(raw, upgrade_id))
 	_available_upgrade_count = pool.size()
-	chosen_upgrades = NativeUpgradeCatalog.draft(pool, MAX_CHOICES)
+	chosen_upgrades = NativeUpgradeCatalog.draft(pool, MAX_CHOICES, owned)
 
 
 func _normalize_upgrade(raw: Dictionary, upgrade_id: String) -> Dictionary:
@@ -142,6 +146,14 @@ func _build_ui() -> void:
 	elif chosen_upgrades.is_empty():
 		subtitle.text = "All upgrades installed"
 	confirmation_label = subtitle
+	var loadout := Label.new()
+	loadout.name = "CurrentLoadout"
+	loadout.text = preload("res://systems/build_reference.gd").compact(GameManager.get_owned_elite_ids())
+	loadout.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	loadout.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	loadout.add_theme_font_size_override("font_size", 12)
+	loadout.add_theme_color_override("font_color", Color(0.65, 0.8, 0.87))
+	outer.add_child(loadout)
 
 	# Cards row
 	var cards_row := HBoxContainer.new()
@@ -162,6 +174,17 @@ func _build_ui() -> void:
 		outer.add_child(_install_button)
 		var first := cards_by_id[str(chosen_upgrades[0]["id"])] as PanelContainer
 		(first.get_meta("select_button") as Button).grab_focus.call_deferred()
+
+	if not panel_only:
+		var frame := PanelContainer.new()
+		frame.name = "RewardFrame"
+		frame.add_theme_stylebox_override("panel", preload("res://ui/shared/menu_briefing.gd").frame())
+		add_child(frame)
+		var actions: Array[Control] = []
+		if _install_button != null:
+			actions.append(_install_button)
+		preload("res://ui/shared/menu_briefing.gd").fit_panel(frame, outer, actions)
+		outer.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
 
 
 func _make_empty_state() -> PanelContainer:
@@ -259,6 +282,17 @@ func _make_card(upg: Dictionary) -> PanelContainer:
 	desc_lbl.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	desc_lbl.size_flags_vertical = Control.SIZE_EXPAND_FILL if panel_only else Control.SIZE_FILL
 	inner.add_child(desc_lbl)
+
+	var connection := NativeUpgradeCatalog.connection_text(upgrade_id, GameManager.get_owned_elite_ids())
+	if not connection.is_empty():
+		var link := Label.new()
+		link.name = "BuildConnection"
+		link.text = "WITH YOUR BUILD\n" + connection
+		link.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		link.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		link.add_theme_font_size_override("font_size", 11 if panel_only else 12)
+		link.add_theme_color_override("font_color", NeonUI.GREEN)
+		inner.add_child(link)
 
 	# Spacer
 	var sp := Control.new()

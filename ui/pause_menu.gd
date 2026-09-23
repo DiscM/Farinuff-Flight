@@ -1,6 +1,6 @@
 extends Control
 ## Pause menu — shown when ESC is pressed during gameplay.
-## Allows the player to resume, retry, or return to the main menu.
+## Allows the player to resume, retry, or return to the home port.
 
 signal resumed
 
@@ -10,7 +10,7 @@ const DOCK_TEXTURE := preload("res://assets/Game UI collection FREE version/PNG/
 const BUTTON_BLUE_TEXTURE := preload("res://assets/Game UI collection FREE version/PNG/Button with border/Blue/1x/Asset 8.png")
 const BUTTON_YELLOW_TEXTURE := preload("res://assets/Game UI collection FREE version/PNG/Button with border/Yellow/1x/Asset 8.png")
 const NATIVE_RUN_PATH := "res://scenes/native_3d_run.tscn"
-const MAIN_MENU_PATH := "res://ui/main_menu.tscn"
+const MAIN_MENU_PATH := "res://scenes/home_base.tscn"
 
 var _settings_menu: Node = null
 var _dev_panel: PanelContainer = null
@@ -19,6 +19,7 @@ var _transitioning := false
 var _build_panel: Control
 var _confirmation: Control
 var _briefing: PanelContainer
+var _settings_focus: Dictionary = {}
 
 ## Builds the UI layout and plays the fade-in animation. The scene's full-rect
 ## anchors fill the viewport. Runs in PROCESS_MODE_ALWAYS so it functions while
@@ -157,7 +158,7 @@ func _restart_confirmed() -> void:
 	_transitioning = false
 	get_tree().reload_current_scene()
 
-## Unpauses the game and reuses the resident title scene.
+## Unpauses the game and reuses the resident home port scene.
 func _menu_confirmed() -> void:
 	if _transitioning:
 		return
@@ -170,7 +171,7 @@ func _menu_confirmed() -> void:
 	if menu_scene != null and get_tree().change_scene_to_packed(menu_scene) == OK:
 		return
 	_transitioning = false
-	get_tree().change_scene_to_file("res://ui/main_menu.tscn")
+	get_tree().change_scene_to_file("res://scenes/home_base.tscn")
 
 ## Opens the settings menu as a modal child. Prevents duplicate instances.
 func _on_settings() -> void:
@@ -178,10 +179,12 @@ func _on_settings() -> void:
 		return
 	_settings_menu = SETTINGS_MENU_SCENE.instantiate()
 	_settings_menu.connect("closed", func():
+		preload("res://ui/shared/modal_focus.gd").restore(_settings_focus)
 		_settings_menu = null
 		get_node("LeftDock/MenuButtons/SettingsWrap/Button").grab_focus()
 	)
 	add_child(_settings_menu)
+	_settings_focus = preload("res://ui/shared/modal_focus.gd").suspend_outside(_settings_menu)
 
 # ── Animation ──────────────────────────────────────────────────────────────────
 
@@ -200,19 +203,9 @@ func _animate_in() -> void:
 func _on_build() -> void:
 	if is_instance_valid(_build_panel):
 		return
-	var panel := preload("res://ui/sector_interlude.gd").new()
+	var panel := preload("res://ui/shared/build_reference.gd").new()
 	_build_panel = panel
-	panel.heading = "SHIP UPGRADES"
-	panel.show_route_map = false
-	var lines := PackedStringArray()
-	for upgrade in GameManager.ALL_UPGRADES + GameManager.META_ELITE_UPGRADES:
-		if GameManager.chosen_upgrade_ids.has(str(upgrade.id)):
-			lines.append("%s · %s\n%s" % [upgrade.name, upgrade.get("role", "Utility"), upgrade.description])
-	if lines.is_empty():
-		lines.append("No upgrades installed.")
-	lines.append("Upgrade levels · Fire rate %d · Lives %d · Speed %d" % [GameManager.stat_fire_rate_level, GameManager.stat_health_level, GameManager.stat_speed_level])
-	panel.body = "\n\n".join(lines)
-	panel.resolved.connect(func(_route: StringName):
+	panel.closed.connect(func():
 		panel.queue_free()
 		get_node("LeftDock/MenuButtons/BuildWrap/Button").grab_focus()
 	)

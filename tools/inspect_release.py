@@ -18,7 +18,10 @@ FORBIDDEN_ROOTS = {"benchmarks", "design", "docs", "tests", "tools", "prompts", 
 SOURCE_EXTENSIONS = {".blend", ".blend1", ".psd", ".kra", ".aseprite", ".xcf"}
 SHIPPING_AUDIO = set(json.loads(Path(__file__).with_name("shipping_audio.json").read_text()))
 REQUIRED = {"project.binary", "THIRD_PARTY_NOTICES.md"}
-REQUIRED_RESOURCES = {"ui/main_menu.tscn", "scenes/native_3d_run.tscn", "scenes/flight_practice.tscn"}
+REQUIRED_RESOURCES = {"scenes/home_base.tscn", "ui/main_menu.tscn", "scenes/native_3d_run.tscn", "scenes/flight_practice.tscn"}
+REQUIRED_RESOURCES.update("assets/models/home_base/meshes/" + name for name in (
+    "wayfarer_station.glb", "cargo_tug.glb", "service_drone.glb", "navigation_buoy.glb",
+))
 REQUIRED_RESOURCES.update("Planets/" + path for path in (
     "Asteroids/Asteroid.tscn", "DryTerran/DryTerran.tscn", "Galaxy/Galaxy.tscn",
     "GasPlanet/GasPlanet.tscn", "GasPlanetLayers/GasPlanetLayers.tscn",
@@ -100,7 +103,8 @@ def inspect(records: list[dict], *, benchmark: bool = False) -> list[str]:
     for name in sorted(REQUIRED - names):
         errors.append(f"Missing required package file: {name}")
     for name in sorted(REQUIRED_RESOURCES):
-        if name not in names and name + ".remap" not in names:
+        imported_model = name.endswith(".glb") and name + ".import" in names
+        if name not in names and name + ".remap" not in names and not imported_model:
             errors.append(f"Missing runtime scene: {name}")
     if benchmark:
         for name in sorted(BENCHMARK_RESOURCES):

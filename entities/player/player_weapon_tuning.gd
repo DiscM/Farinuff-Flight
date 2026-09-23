@@ -5,6 +5,8 @@ class_name PlayerWeaponTuning
 
 const BASE_FIRE_INTERVAL := 0.22
 const BASE_DAMAGE := 1
+# A deliberate defensive conversion should have a distinct offensive payoff.
+const REFLECTED_DAMAGE := 2
 const MIN_FIRE_INTERVAL := 0.05
 const MIN_FIRE_RATE_MULTIPLIER := 0.15
 const PROJECTILE_SPEED := 800.0

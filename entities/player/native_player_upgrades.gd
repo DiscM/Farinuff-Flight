@@ -20,11 +20,19 @@ static func available() -> Array[Dictionary]:
 	return upgrades
 
 
-static func draft(pool: Array[Dictionary], count: int = 3) -> Array[Dictionary]:
+static func draft(pool: Array[Dictionary], count: int = 3, owned: Array[String] = []) -> Array[Dictionary]:
 	var remaining: Array[Dictionary] = pool.duplicate()
 	remaining.shuffle()
 	var result: Array[Dictionary] = []
 	var roles: Array[String] = []
+	# Preserve an opportunity to extend the current build, then offer different roles.
+	if count > 0:
+		for index in remaining.size():
+			if not connection_text(str(remaining[index].get("id", "")), owned).is_empty():
+				var connected: Dictionary = remaining.pop_at(index)
+				result.append(connected)
+				roles.append(str(connected.get("role", "Utility")))
+				break
 	while not remaining.is_empty() and result.size() < count:
 		var choice := 0
 		for index in remaining.size():
@@ -35,3 +43,27 @@ static func draft(pool: Array[Dictionary], count: int = 3) -> Array[Dictionary]:
 		roles.append(str(upgrade.get("role", "Utility")))
 		result.append(upgrade)
 	return result
+
+
+# Connections describe existing projectile behavior; they do not grant hidden bonuses.
+const CONNECTIONS := [
+	{"ids": ["twin_cannons", "auto_aim"], "text": "Twin Cannons' side shots also track enemies."},
+	{"ids": ["spread_shot_elite", "auto_aim"], "text": "Every shot in the central fan can track a target."},
+	{"ids": ["rear_gunner", "auto_aim"], "text": "Rear fire can turn toward nearby enemies."},
+	{"ids": ["twin_cannons", "piercing"], "text": "The extra cannon shots pierce enemy lines too."},
+	{"ids": ["spread_shot_elite", "piercing"], "text": "Each ray of the fan can pierce an enemy line."},
+	{"ids": ["rear_gunner", "piercing"], "text": "Piercing extends your rear fire through pursuing ships."},
+	{"ids": ["twin_cannons", "explosive_rounds"], "text": "Side cannons carry the same explosive payload."},
+	{"ids": ["spread_shot_elite", "explosive_rounds"], "text": "Spread the explosive payload across your central fan."},
+	{"ids": ["rear_gunner", "explosive_rounds"], "text": "Rear fire carries explosive rounds into pursuing groups."},
+]
+
+static func connection_text(upgrade_id: String, owned: Array[String]) -> String:
+	for connection: Dictionary in CONNECTIONS:
+		var pair: Array = connection.ids
+		if not pair.has(upgrade_id):
+			continue
+		var partner := str(pair[1] if pair[0] == upgrade_id else pair[0])
+		if owned.has(partner):
+			return str(connection.text)
+	return ""

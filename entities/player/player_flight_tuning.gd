@@ -17,7 +17,9 @@ const BOOST_REFLECT_COOLDOWN := 0.70
 const BOOST_REFLECT_COOLDOWN_STEP := 0.05
 const BOOST_REFLECT_COOLDOWN_MIN := 0.55
 const BOOST_CHAIN_REFLECT_THRESHOLD := 3
-const BOOST_CHAIN_WINDOW := 0.18
+const BOOST_CHAIN_WINDOW := 0.24
+# Accept a deliberate press just before recharge or a reflection chain is ready.
+const BOOST_INPUT_BUFFER := 0.12
 const POST_BOOST_SLIDE_DURATION := 0.4
 
 const DRIFT_BONUS_MAX := 2.0

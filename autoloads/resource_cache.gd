@@ -1,15 +1,18 @@
 extends Node
-## Bounded cache for the menu, Expedition, and practice root scenes.
+## Bounded cache for the home port, Expedition, and practice root scenes.
 ##
 ## ResourceLoader already caches individual resources, but every transition
 ## still has to resolve and instantiate its PackedScene. Keeping only these
 ## explicit root scenes lets menus prime the next transition without turning
 ## this autoload into an unbounded resource registry.
 
-const MAIN_MENU_PATH := "res://ui/main_menu.tscn"
+const HOME_BASE_PATH := "res://scenes/home_base.tscn"
+# Existing transition callers can retain the menu name without caching a
+# second entry: the flyable port is now the game's menu.
+const MAIN_MENU_PATH := HOME_BASE_PATH
 const NATIVE_RUN_PATH := "res://scenes/native_3d_run.tscn"
 const PRACTICE_PATH := "res://scenes/flight_practice.tscn"
-const CACHEABLE_SCENES: PackedStringArray = [MAIN_MENU_PATH, NATIVE_RUN_PATH, PRACTICE_PATH]
+const CACHEABLE_SCENES: PackedStringArray = [HOME_BASE_PATH, NATIVE_RUN_PATH, PRACTICE_PATH]
 const MAX_CACHED_SCENES := 3
 const MAX_PENDING_LOADS := 3
 
@@ -21,7 +24,7 @@ var _last_errors: Dictionary = {}
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	set_process(false)
-	# Autoloads enter the tree before the title screen. Start the run resource
+	# Autoloads enter the tree before the home port. Start the run resource
 	# load at boot, independently of menu, loadout, or launch interactions.
 	prime_scene(NATIVE_RUN_PATH)
 

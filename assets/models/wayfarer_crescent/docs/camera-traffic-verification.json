@@ -1,0 +1,176 @@
+{
+  "passed": true,
+  "source_sha256": "4080c0449433c906a670334295a9c0d49ba04b82f1fd14a1ca55edea28e86110",
+  "sample_frames": 481,
+  "camera": {
+    "width": 160.1750030517578,
+    "height": 90.28045626553622,
+    "name": "Crescent / isometric overview"
+  },
+  "ships": [
+    {
+      "ship": "Ship_05_ArrivingCarrier",
+      "visible_frames": 304,
+      "entry_frames": [
+        468
+      ],
+      "exit_frames": [
+        292
+      ],
+      "hidden_return_visible_frames": [],
+      "max_visible_heading_error_degrees": 1.1314,
+      "mean_visible_heading_error_degrees": 0.0735,
+      "max_visible_step": 0.81938,
+      "median_visible_step": 0.81937,
+      "visible_max_median_step_ratio": 1.00001,
+      "position_loop_closure": 0.0,
+      "nose_loop_closure": 0.0
+    },
+    {
+      "ship": "Ship_06_PassengerArrival",
+      "visible_frames": 292,
+      "entry_frames": [
+        310
+      ],
+      "exit_frames": [
+        122
+      ],
+      "hidden_return_visible_frames": [],
+      "max_visible_heading_error_degrees": 2.1616,
+      "mean_visible_heading_error_degrees": 0.0857,
+      "max_visible_step": 0.80367,
+      "median_visible_step": 0.80366,
+      "visible_max_median_step_ratio": 1.00001,
+      "position_loop_closure": 0.0,
+      "nose_loop_closure": 0.0
+    },
+    {
+      "ship": "Ship_07_DepartingCourier",
+      "visible_frames": 268,
+      "entry_frames": [
+        434
+      ],
+      "exit_frames": [
+        222
+      ],
+      "hidden_return_visible_frames": [],
+      "max_visible_heading_error_degrees": 1.6999,
+      "mean_visible_heading_error_degrees": 0.0978,
+      "max_visible_step": 0.76165,
+      "median_visible_step": 0.76164,
+      "visible_max_median_step_ratio": 1.00001,
+      "position_loop_closure": 0.0,
+      "nose_loop_closure": 0.0
+    },
+    {
+      "ship": "Ship_08_CargoTug",
+      "visible_frames": 267,
+      "entry_frames": [
+        311
+      ],
+      "exit_frames": [
+        98
+      ],
+      "hidden_return_visible_frames": [],
+      "max_visible_heading_error_degrees": 0.3162,
+      "mean_visible_heading_error_degrees": 0.0234,
+      "max_visible_step": 0.62127,
+      "median_visible_step": 0.62126,
+      "visible_max_median_step_ratio": 1.00001,
+      "position_loop_closure": 0.0,
+      "nose_loop_closure": 0.0
+    },
+    {
+      "ship": "Ship_09_RelayTransfer",
+      "visible_frames": 261,
+      "entry_frames": [
+        378
+      ],
+      "exit_frames": [
+        159
+      ],
+      "hidden_return_visible_frames": [],
+      "max_visible_heading_error_degrees": 0.5475,
+      "mean_visible_heading_error_degrees": 0.0474,
+      "max_visible_step": 0.6513,
+      "median_visible_step": 0.6513,
+      "visible_max_median_step_ratio": 1.00001,
+      "position_loop_closure": 0.0,
+      "nose_loop_closure": 0.0
+    },
+    {
+      "ship": "Ship_10_CableInspector",
+      "visible_frames": 260,
+      "entry_frames": [
+        31
+      ],
+      "exit_frames": [
+        291
+      ],
+      "hidden_return_visible_frames": [],
+      "max_visible_heading_error_degrees": 1.9982,
+      "mean_visible_heading_error_degrees": 0.0724,
+      "max_visible_step": 0.65693,
+      "median_visible_step": 0.65692,
+      "visible_max_median_step_ratio": 1.00001,
+      "position_loop_closure": 0.0,
+      "nose_loop_closure": 0.0
+    },
+    {
+      "ship": "Ship_11_RepairDrone",
+      "visible_frames": 272,
+      "entry_frames": [
+        411
+      ],
+      "exit_frames": [
+        203
+      ],
+      "hidden_return_visible_frames": [],
+      "max_visible_heading_error_degrees": 2.4495,
+      "mean_visible_heading_error_degrees": 0.1345,
+      "max_visible_step": 0.89468,
+      "median_visible_step": 0.89466,
+      "visible_max_median_step_ratio": 1.00002,
+      "position_loop_closure": 0.0,
+      "nose_loop_closure": 0.0
+    },
+    {
+      "ship": "Ship_12_StationMaintenance",
+      "visible_frames": 265,
+      "entry_frames": [
+        461
+      ],
+      "exit_frames": [
+        246
+      ],
+      "hidden_return_visible_frames": [],
+      "max_visible_heading_error_degrees": 2.1362,
+      "mean_visible_heading_error_degrees": 0.0847,
+      "max_visible_step": 0.82504,
+      "median_visible_step": 0.82503,
+      "visible_max_median_step_ratio": 1.00001,
+      "position_loop_closure": 0.0,
+      "nose_loop_closure": 0.0
+    },
+    {
+      "ship": "Ship_13_PracticeCourier",
+      "visible_frames": 227,
+      "entry_frames": [
+        346
+      ],
+      "exit_frames": [
+        93
+      ],
+      "hidden_return_visible_frames": [],
+      "max_visible_heading_error_degrees": 0.643,
+      "mean_visible_heading_error_degrees": 0.0738,
+      "max_visible_step": 0.88261,
+      "median_visible_step": 0.8826,
+      "visible_max_median_step_ratio": 1.00001,
+      "position_loop_closure": 0.0,
+      "nose_loop_closure": 0.0
+    }
+  ],
+  "issues": [],
+  "warnings": []
+}

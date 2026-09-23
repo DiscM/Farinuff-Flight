@@ -18,7 +18,7 @@ const PAGE_TITLES: Array[String] = [
 ]
 const PAGE_TEXT: Array[String] = [
 	"Move: WASD, arrows, or left stick. Aim: mouse or right stick. Hold Fire.",
-	"Boost through shots to reflect them. Reflected shots are green.",
+	"Boost through reflectable shots to send them back at double base-shot damage. Green shots are yours; dodge cyan shots.",
 	"Orbs advance the wave. Every 12 orb points restores a life. Bosses arrive every fifth wave.",
 	"Power-ups are temporary. Boss upgrades last this run. Hangar upgrades are permanent.",
 	"Defeat Tempest Core at Wave 20. Finish or continue in Endless.",

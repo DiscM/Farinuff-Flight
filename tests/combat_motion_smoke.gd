@@ -68,6 +68,9 @@ func _run() -> void:
 		enemy.queue_free()
 		await get_tree().process_frame
 	await _check_player()
+	# This short fixture can finish before the boot worker has parsed the run.
+	# Draining that request avoids shutdown-only missing-preload diagnostics.
+	await ResourceCache.wait_for_scene("res://scenes/native_3d_run.tscn")
 	for failure in _failures:
 		push_error(failure)
 	print("COMBAT_MOTION_SMOKE_PASS" if _failures.is_empty() else "COMBAT_MOTION_SMOKE_FAIL")

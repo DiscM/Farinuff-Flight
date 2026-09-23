@@ -145,6 +145,10 @@ func _ready() -> void:
 	player.deflection_requested.connect(projectile_manager.deflect_enemy_projectiles)
 	projectile_manager.deflected_projectile_hit.connect(_on_reflected_projectile_hit)
 	player.boost_started.connect(_on_player_boost_started)
+	player.boost_chained.connect(func():
+		if not GameManager.practice_mode:
+			GameManager.run_insights.chains += 1
+	)
 	player.damage_taken.connect(_on_player_damage_taken)
 	player.shield_absorbed.connect(_on_shield_absorbed)
 	player.nuke_requested.connect(_on_player_nuke_requested)
@@ -194,7 +198,9 @@ func _on_reflected_projectile_hit(target: Area3D, combat_position: Vector3) -> v
 	effect_manager.play_effect(NativeEffect.EffectKind.IMPACT, combat_position)
 	# Enemy fire is a defensive counterattack, independent of weapon upgrades.
 	if target != null and target.has_method("take_damage"):
-		target.take_damage(1)
+		if not GameManager.practice_mode:
+			GameManager.run_insights.counter_hits += 1
+		target.take_damage(WeaponTuning.REFLECTED_DAMAGE)
 
 
 func _on_enemy_projectile_hit(target: Area3D, combat_position: Vector3, damage: int = 1) -> void:
@@ -205,6 +211,8 @@ func _on_enemy_projectile_hit(target: Area3D, combat_position: Vector3, damage: 
 
 
 func _on_enemy_projectile_deflected(_projectile: Area3D, combat_position: Vector3) -> void:
+	if not GameManager.practice_mode:
+		GameManager.run_insights.reflections += 1
 	effect_manager.play_effect(NativeEffect.EffectKind.REFLECT, combat_position, player.boost_direction, 0.85)
 
 
@@ -222,6 +230,8 @@ func _on_player_fired(combat_position: Vector3, direction: Vector3) -> void:
 
 
 func _on_player_boost_started(combat_position: Vector3, direction: Vector3) -> void:
+	if not GameManager.practice_mode:
+		GameManager.run_insights.boosts += 1
 	var boost_socket := player.get_socket(&"Boost")
 	var effect_position := boost_socket.global_position if boost_socket != null else combat_position
 	effect_manager.play_effect(NativeEffect.EffectKind.BOOST, effect_position, direction, 1.0, true)

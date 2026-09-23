@@ -14,6 +14,16 @@ from inspect_release import inspect, read_pack, REQUIRED_RESOURCES, SHIPPING_AUD
 
 
 class ReleaseInspectionTests(unittest.TestCase):
+    def test_shipping_home_port_requires_its_scene_and_dynamic_models(self) -> None:
+        required = REQUIRED_RESOURCES | SHIPPING_AUDIO | {"project.binary", "THIRD_PARTY_NOTICES.md"}
+        records = [{"path": path + ".import" if path.endswith(".glb") else path} for path in required]
+        self.assertEqual(inspect(records), [])
+        records = [r for r in records if r["path"] not in {
+            "scenes/home_base.tscn", "assets/models/home_base/meshes/wayfarer_station.glb.import",
+        }]
+        self.assertIn("Missing runtime scene: scenes/home_base.tscn", inspect(records))
+        self.assertIn("Missing runtime scene: assets/models/home_base/meshes/wayfarer_station.glb", inspect(records))
+
     def test_benchmark_resources_require_explicit_nonshipping_mode(self) -> None:
         records = [{"path": p} for p in REQUIRED_RESOURCES | SHIPPING_AUDIO | BENCHMARK_RESOURCES | {"project.binary", "THIRD_PARTY_NOTICES.md"}]
         self.assertEqual(len(inspect(records)), len(BENCHMARK_RESOURCES))

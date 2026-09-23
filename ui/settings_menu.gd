@@ -8,6 +8,7 @@ var volume_label: Label
 var music_label: Label
 var _controls_layer: CanvasLayer
 var _controls_button: Button
+var _controls_focus: Dictionary = {}
 
 ## Sets up the settings panel as a process-always full-rect control and
 ## builds the UI contents.
@@ -269,11 +270,13 @@ func _open_controls() -> void:
 	add_child(_controls_layer)
 	var controls := preload("res://ui/controls_menu.gd").new()
 	controls.closed.connect(func():
+		preload("res://ui/shared/modal_focus.gd").restore(_controls_focus)
 		_controls_layer.queue_free()
 		_controls_layer = null
 		_controls_button.grab_focus()
 	)
 	_controls_layer.add_child(controls)
+	_controls_focus = preload("res://ui/shared/modal_focus.gd").suspend_outside(controls)
 
 
 func _make_category(tabs: TabContainer, category_name: String) -> VBoxContainer:

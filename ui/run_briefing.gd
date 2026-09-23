@@ -30,8 +30,11 @@ func _refresh_snapshot() -> void:
 	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	column.add_theme_constant_override("separation", 14)
 	scroll.add_child(column)
-	var mode := "PRACTICE" if GameManager.practice_mode else "ENDLESS" if GameManager.expedition_completed else "EXPEDITION"
+	var compass := preload("res://systems/run_compass.gd").snapshot(GameManager.current_wave, GameManager.practice_mode)
+	var mode: String = compass.mode
 	_label(column, "%s / WAVE %02d" % [mode, GameManager.current_wave], 30, NeonUI.WHITE)
+	_label(column, str(compass.heading), 18, NeonUI.YELLOW)
+	_label(column, str(compass.reward), 14, NeonUI.CYAN)
 	if GameManager.boss_active:
 		_label(column, "BOSS ENGAGED", 18, NeonUI.YELLOW)
 	if not GameManager.boss_active:
@@ -63,7 +66,11 @@ func _refresh_snapshot() -> void:
 		if owned.has(str(upgrade.id)):
 			upgrades.append(str(upgrade.name))
 	_label(column, " · ".join(upgrades) if not upgrades.is_empty() else "None installed", 18)
-	_label(column, "System levels · Fire rate %d / Lives %d / Speed %d" % [GameManager.stat_fire_rate_level, GameManager.stat_health_level, GameManager.stat_speed_level], 16)
+	_label(column, preload("res://systems/build_reference.gd").systems_text(), 16)
+	var connections := preload("res://systems/build_reference.gd").connections(owned)
+	if not connections.is_empty():
+		_label(column, "%d ACTIVE CONNECTIONS · Review in Ship Upgrades" % connections.size(), 14, NeonUI.YELLOW)
+	column.add_child(preload("res://ui/shared/flight_record.gd").new())
 	column.add_child(HSeparator.new())
 	_controls = _label(column, "", 16, NeonUI.CYAN)
 	_refresh_controls()

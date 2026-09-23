@@ -68,10 +68,13 @@ func _check_debug_ui() -> void:
 	briefing._refresh_snapshot()
 	_expect(briefing.find_child("WaveProgress", true, false) == null and _briefing_contains(briefing, "BOSS ENGAGED"), "Boss briefing replaces XP progress with the boss objective")
 	GameManager.boss_active = false
-	GameManager.expedition_completed = true
-	briefing._refresh_snapshot()
-	_expect(_briefing_contains(briefing, "ENDLESS / WAVE"), "Completed expeditions show Endless mode")
+	var previous_wave := GameManager.current_wave
+	# The victory flag clears when Endless starts; wave 21 remains authoritative.
+	GameManager.current_wave = GameManager.FINAL_EXPEDITION_WAVE + 1
 	GameManager.expedition_completed = false
+	briefing._refresh_snapshot()
+	_expect(_briefing_contains(briefing, "ENDLESS / WAVE"), "Post-victory waves retain Endless mode after the victory flag clears")
+	GameManager.current_wave = previous_wave
 	GameManager.practice_mode = true
 	briefing._refresh_snapshot()
 	_expect(_briefing_contains(briefing, "PRACTICE / WAVE"), "Practice has its own briefing")

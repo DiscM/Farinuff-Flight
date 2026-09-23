@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "package_id": "farinuff-flight.wayfarer-homeport",
+  "version": "1.0.0",
+  "title": "Farinuff Flight — Wayfarer Homeport",
+  "created_for": "Farinuff Flight",
+  "created_date": "2026-09-22",
+  "source_type": "Original geometry, textures, and rigid animations authored locally in Blender for this project",
+  "third_party_models": [],
+  "third_party_textures": [],
+  "paid_generation_provider": null,
+  "license_spdx": "NOASSERTION",
+  "license_note": "This original commissioned asset delivery does not create a new public redistribution license. Project release terms remain controlled by the project owner. See RIGHTS.md.",
+  "exact_user_prompt": "Improve on the visual aesthetics of the game use [@Blender](plugin://computer-use@openai-bundled?app=org.blenderfoundation.blender) to create more voxel assets to use in the game, give them animations where needed and texture rendering where applicable. I'm thinking a voxel space station that the player can fly around as a home base.",
+  "negative_prompt": null,
+  "negative_prompt_note": "No separate negative prompt was supplied; this is original local Blender authoring, not a paid generation request.",
+  "coordinate_system": {
+    "source": "Blender right-handed, Z up; standard glTF Y-up export",
+    "runtime": "Godot/glTF right-handed, Y up",
+    "units": "One authored source unit is one exported glTF unit. Runtime placement and scaling are owned by the game.",
+    "bounds": "Static delivery measurements use the exported default scene in Godot coordinates; XZ radius and Y height are measured before runtime scale. Animation swept bounds and gameplay collision are separate checks."
+  },
+  "delivery": {
+    "meshes": "../meshes/*.glb",
+    "editable_source": "../source/home_base.blend",
+    "base_color_atlas": "../textures/homeport_atlas.png",
+    "emission_atlas": "../textures/homeport_emission.png",
+    "static_validator": "tools/check_home_base_assets.py"
+  },
+  "validation_scope": {
+    "static": "GLB2 structure, embedded PNG decoding and exact source pixel equivalence, finite vertices/normals/UVs, valid triangle indices, nondegenerate geometry and UV triangles, used material maps, rigid animation key validity, actual transform motion, loop endpoint continuity, scene graph integrity, rest bounds, geometry budgets, editable source signature, and SHA-256 file digests.",
+    "runtime": "Blender and Godot visual review, imported animation playback, material visibility, gameplay interaction, and frame-rate are separate evidence; a passing static report does not establish them."
+  }
+}

@@ -129,6 +129,7 @@ func _build_ui() -> void:
 	_salvage_label.add_theme_color_override("font_color", GREEN)
 	_salvage_label.add_theme_font_size_override("font_size", 13)
 	content.add_child(_salvage_label)
+	content.add_child(preload("res://ui/shared/flight_record.gd").new())
 
 	var spacer := Control.new()
 	spacer.custom_minimum_size = Vector2(0.0, 8.0)

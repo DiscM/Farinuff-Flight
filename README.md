@@ -18,17 +18,31 @@ Combat uses held auto-fire with free aim support. The ship can aim with mouse mo
 
 The default window is 2560 × 1440, fitted to the display when necessary. Settings retains smaller window presets and fullscreen. The combat frame has 25% more width and depth, with larger voxel enemies and bosses for visible armor, reactor, and animation detail during combat. Movement and projectile speeds retain their existing world scale.
 
+The opening introduces enemy roles across successive waves, with precision-fire enemies joining after the first boss. Boost accepts a fresh press up to 120 ms before readiness, and three reflections open a 240 ms post-dash chain window. New sectors give a brief regrouping interval after rewards. Ship-system allocation previews its benefits, supports resetting unconfirmed choices, and prevents spending beyond stat caps. See [the refinement notes](docs/gameplay-refinement.md) for tuning and validation details.
+
 Power-ups appear during active waves and can be collected by contact or shot pickup. Current temporary effects include bullet scale increases, rapid fire, shield, spread shot, magnet, and nuke. These stack with run upgrades to create different weapon profiles across a session.
 
 Progression adds permanent run choices at milestone moments. Every fifth cleared wave grants stat allocation points for fire rate, health, and movement speed. Native boss identities are authored at stable milestones: Assault Commander (Wave 5), Iron Bulwark (Wave 10), Tempest (Wave 15), Tempest Core (Wave 20), then Void Harbinger (Wave 25) as the first Endless revelation. Elite rewards offer up to three unowned upgrades, including homing fire, twin cannons, permanent spread, rear fire, shield bursts, overclock, permanent magnet, hull plating, afterburners, and a drone escort. Unlocked blueprints add orbitals, piercing, and explosive rounds. The cards preview the selected hull with its existing modules and the proposed addition; acquired modules also appear on the native craft. Temporary spread and permanent spread combine into a five-shot central fan.
 
-The first launch opens Flight School, a replayable five-page briefing covering movement, boost reflection, the orb/life economy, build decisions, and the Wave-20 target. Failure uses a try-again flow before final game over. Remaining try-again stocks can continue a run, clear immediate pressure, and return the ship with temporary invincibility. Final game over records score, high score, and highest wave reached.
+The first launch opens the flyable home port and points new pilots toward Flight School, a replayable five-page briefing covering movement, boost reflection, the orb/life economy, build decisions, and the Wave-20 target. Failure uses a try-again flow before final game over. Remaining try-again stocks can continue a run, clear immediate pressure, and return the ship with temporary invincibility. Final game over records score, high score, and highest wave reached.
 
-Runs also earn salvage — a persistent currency banked from boss kills and an end-of-run bonus based on score and waves cleared. Salvage spends in the Hangar on the title screen: tiered ship systems (starting lives, speed, fire rate, extra try-again stocks), elite blueprints that add Orbital Array, Piercing Rounds, and Explosive Rounds to the elite upgrade pool, ship variants, and challenge modifiers.
+Live Flight School previews incoming volleys, tracks completed actions, and keeps its collection targets available until the lesson is finished. Completing practice opens ship selection directly. Keyboard/controller handoff preserves the first deliberate fire or boost, and ending a recoverable run respects the confirmation preference. Dense-combat projectile retention now matches its declared capacity. See the [playability hardening notes](docs/playability-hardening.md) for behavior and verification.
+
+Runs also earn salvage — a persistent currency banked from boss kills and an end-of-run bonus based on score and waves cleared. Salvage spends at the home port’s Hangar: tiered ship systems (starting lives, speed, fire rate, extra try-again stocks), elite blueprints that add Orbital Array, Piercing Rounds, and Explosive Rounds to the elite upgrade pool, ship variants, and challenge modifiers.
 
 Before each run, the launch bay offers a loadout choice: pick an unlocked ship variant (the balanced Swallowtail, the fast-but-fragile Interceptor, or the slow-but-tough Bulwark) and toggle any owned challenge modifiers — faster spawns, armored enemies, no power-ups, and more — each paying a percentage bonus on all salvage earned that run. The game-over screen itemizes where the run's salvage came from.
 
 Expedition runs are intentionally session-scoped: quitting the process or abandoning a run discards its current wave, enemies, projectiles, and in-run build. Saves retain durable progression and campaign discoveries, but an active run cannot be resumed after process exit.
+
+The [cohesion guideline](docs/indie-refinement-guideline.md), informed by [primary-source developer research](docs/indie-cohesion-research.md), now connects combat, build choices, and run feedback. Reflected shots deal double base-shot damage; legal drafts can offer an explained interaction with installed modules; the combat header names the next milestone. Formations leave a short recovery beat, pickups cycle through eligible types, and the continue decision no longer expires. Pause, defeat, and victory share a run-local flight record.
+
+## Wayfarer Home Port
+
+The game starts directly at **Wayfarer / Crescent Harbor**, an original textured voxel spaceport built in Blender. Its main ring and five asymmetric relay islands use twice the source scale while the player keeps its existing size. Fourteen spacecraft populate the port, with nine following approach and departure routes. Lights, machinery, cable articulation and station corrections share a synchronized animation loop. Fly to the six colored sections—**Launch Bay, Hangar, Flight School, Route Map, Archives, and Settings**—and press the displayed interaction button (normally `E` or gamepad `A`) to access each service. Directory selections set waypoints; services require proximity. Close a service to resume flight at the same position.
+
+The old Command Deck is deprecated. Run endings and practice returns lead back to the home port. `ui/main_menu.tscn` remains only as a compatibility redirect. The usual movement and boost controls apply; zoom with the mouse wheel / `−` / `+` or gamepad shoulder buttons.
+
+The home port is a safe free-flight scene. It does not spend supplies, start a run, or change progression. Asset source, authoring instructions, and validation are described in [the home-port notes](docs/wayfarer-home-port.md).
 
 ## Controls
 
@@ -59,18 +73,20 @@ Run `python3 tools/check_native_transition.py` for resource-reference and scene-
 
 ### GitHub smoke tests
 
-CI uses the checksum-pinned Godot 4.6.3 editor and an eight-scene smoke suite:
+CI uses the checksum-pinned Godot 4.6.3 editor and a ten-scene smoke suite:
 
 | Scene | Coverage |
 | --- | --- |
 | `autoload_smoke` | Saves, settings persistence, progression, shared pool and game state |
-| `menu_boot_smoke` | Returning, first-flight and practice-return startup |
+| `menu_boot_smoke` | Flyable home-port startup, practice service returns and legacy redirect |
 | `frontend_navigation_smoke` | Pages, focus, modals, navigation and launch signals |
 | `native_completion_smoke` | Shipping actors/models, upgrades, projectile reuse and boss variants |
 | `expedition_progression_smoke` | Campaign persistence, rewards and assisted production journeys |
 | `pooling_smoke` | Scene teardown and stale pooled references |
 | `resource_cache_smoke` | Paused loading and menu/run/practice cache reuse |
 | `audio_settings_smoke` | Audio controls and settings application |
+| `home_base_smoke` | Station scale, six spatial services, flight, camera, pause, quitting and save isolation |
+| `home_base_ui_smoke` | Home-port routing, service focus, device prompts and enlarged text layout |
 
 Each scene must exit successfully, print its completion marker, and report no GDScript errors. Each has a 120-second timeout; failures do not skip remaining scenes. GitHub retains import and scene logs as `smoke-test-logs`. Python tooling tests run together before installing Godot.
 
@@ -80,6 +96,8 @@ To reproduce CI in a **disposable checkout**, set `GODOT_PATH` to the Godot 4.6.
 
 ```sh
 python3 tools/check_native_transition.py
+python3 tools/check_home_base_assets.py
+python3 tools/check_crescent_harbor.py
 python3 -m unittest discover -s tests -p 'test_*.py'
 cat tests/ci_settings.cfg >> project.godot
 "$GODOT_PATH" --headless --path . --import > import.log 2>&1
@@ -100,7 +118,7 @@ python3 tools/run_smoke_tests.py --suite extended
 python3 tools/run_smoke_tests.py boss_ai_smoke voxel_boss_material_smoke
 ```
 
-`extended` includes all eight smoke scenes plus the focused regressions and benchmark. Explicit scene names override suite selection. Performance evidence should be collected on representative hardware, outside the PR smoke gate.
+`extended` includes all ten smoke scenes plus the focused regressions and benchmark. Explicit scene names override suite selection. Performance evidence should be collected on representative hardware, outside the PR smoke gate.
 
 ### Production release candidates
 

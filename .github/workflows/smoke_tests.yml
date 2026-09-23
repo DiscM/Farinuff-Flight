@@ -21,6 +21,12 @@ jobs:
       - name: Check resource references
         run: python3 tools/check_native_transition.py
 
+      - name: Check home-port asset delivery
+        run: python3 tools/check_home_base_assets.py
+
+      - name: Check Crescent Harbor asset delivery
+        run: python3 tools/check_crescent_harbor.py
+
       - name: Check Python tooling
         run: python3 -m unittest discover -s tests -p 'test_*.py'
 

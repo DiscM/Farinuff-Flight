@@ -17,6 +17,9 @@ func _run() -> void:
 	player.set_dev_god_mode(true)
 	for index in IDS.size():
 		await _check_variant(index)
+	# Do not tear down imported resources while the boot autoload still has a
+	# production-scene load in flight on its background worker.
+	_expect(await ResourceCache.wait_for_scene(ResourceCache.NATIVE_RUN_PATH) != null, "Boot preparation completes before test shutdown")
 	for failure in _failures:
 		push_error(failure)
 	print("VOXEL_BOSS_MATERIAL_SMOKE_PASS" if _failures.is_empty() else "VOXEL_BOSS_MATERIAL_SMOKE_FAIL")

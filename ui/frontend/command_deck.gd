@@ -7,6 +7,7 @@ extends Control
 ## button; the shell focuses it when the page opens.
 
 signal expedition_requested
+signal home_base_requested
 signal open_section(page_id: StringName)
 
 const DEFAULT_OBJECTIVE := "Follow the signal home."
@@ -20,6 +21,7 @@ var _launch_armed := false
 @onready var map_button: Button = %MapButton
 @onready var hangar_button: Button = %HangarButton
 @onready var settings_button: Button = %SettingsButton
+@onready var home_base_button: Button = %HomeBaseButton
 @onready var discovery_label: Label = %DiscoveryLabel
 @onready var version_label: Label = %VersionLabel
 
@@ -30,10 +32,12 @@ func _ready() -> void:
 	map_button.pressed.connect(_on_map_pressed)
 	hangar_button.pressed.connect(_on_hangar_pressed)
 	settings_button.pressed.connect(_on_settings_pressed)
+	home_base_button.pressed.connect(_on_home_base_pressed)
 	launch_button.tooltip_text = "Start a run with your selected ship and challenges."
 	map_button.tooltip_text = "See the sectors and bosses on your route home."
 	hangar_button.tooltip_text = "Choose your ship and optional challenges."
 	settings_button.tooltip_text = "Learn the controls or practice your flight skills."
+	home_base_button.tooltip_text = "Fly around Wayfarer station, visit the hangar, or prepare your next expedition."
 	version_label.text = "BUILD %s  ·  %s  ·  SIGNAL LOCKED" % [_build_version(), MetaProgression.selected_ship.trim_prefix("ship_").to_upper()]
 	_apply_payload(_payload)
 	_arrange_command_deck()
@@ -75,6 +79,14 @@ func _on_launch_pressed() -> void:
 
 func _on_map_pressed() -> void:
 	open_section.emit(&"expedition_map")
+
+
+func _on_home_base_pressed() -> void:
+	if _launch_armed:
+		return
+	_launch_armed = true
+	home_base_button.disabled = true
+	home_base_requested.emit()
 
 
 func _on_hangar_pressed() -> void:

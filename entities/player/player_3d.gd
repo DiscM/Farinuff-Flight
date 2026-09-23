@@ -67,6 +67,7 @@ var boost_distance_remaining_pixels := 0.0
 var boost_reflected_projectiles := 0
 var _chain_followup := false
 var boost_chain_window_timer := 0.0
+var _boost_input_buffer := 0.0
 var post_boost_slide_timer := 0.0
 var drift_speed_bonus := 1.0
 var is_invincible := false
@@ -82,6 +83,7 @@ var _shield_visual_elapsed := 0.0
 # remain shared with the reference Player through PowerUp/SignalBus.
 var bullet_scale_level := 0
 var has_shield := false
+var armor_guard_ready := false
 var has_rapid_fire := false
 var has_spread_shot := false
 var has_magnet := false
@@ -115,7 +117,7 @@ func _init() -> void:
 
 func _ready() -> void:
 	InputBindings.bindings_changed.connect(reset_action_input)
-	InputBindings.device_changed.connect(reset_action_input)
+	InputBindings.device_changed.connect(_on_input_device_changed)
 	for hull_path in ["PlayerHullGLB", "InterceptorHull", "BulwarkHull"]:
 		FrontierMaterials.apply(visuals.get_node(hull_path))
 		var model := visuals.get_node(hull_path) as Node3D
@@ -224,7 +226,7 @@ func _reset_feedback_state() -> void:
 	_ship_visual_elapsed = 0.0
 	_shield_visual_elapsed = 0.0
 	core_glow.visible = true
-	shield_visual.visible = has_shield
+	shield_visual.visible = has_shield or armor_guard_ready
 	shield_visual.set_instance_shader_parameter(&"instance_pulse", 0.0)
 	_update_visual_feedback(0.0)
 
@@ -235,17 +237,27 @@ func _reset_feedback_state() -> void:
 func receive_damage(combat_position: Vector3, source: DamageSource, amount: int = 1) -> bool:
 	if amount <= 0 or not GameManager.is_game_active or is_invincible or dev_god_mode or GameManager.lives <= 0:
 		return false
-	if has_shield:
-		has_shield = false
-		shield_visual.visible = false
+	if has_shield or armor_guard_ready:
+		# Spend the temporary pickup first; reflection armor remains a separate guard.
+		var armor_absorbed := not has_shield
+		if armor_absorbed:
+			armor_guard_ready = false
+			if not GameManager.practice_mode:
+				GameManager.run_insights.armor_saves += 1
+		else:
+			has_shield = false
+		shield_visual.visible = has_shield or armor_guard_ready
 		var shield_position := combat_position
 		shield_position.y = 0.0
 		shield_absorbed.emit(shield_position)
-		_upgrade_visuals.pulse("shield_burst")
+		_upgrade_visuals.pulse("hull_plating" if armor_absorbed else "shield_burst")
 		AudioManager.play_shield()
 		_start_invincibility(DamageTuning.SHIELD_INVULNERABILITY)
 		return false
 	combat_position.y = 0.0
+	if not GameManager.practice_mode:
+		# Capture the cause before game_over listeners build the debrief.
+		GameManager.run_insights.record_damage(int(source))
 	var survives_hit := GameManager.lives > amount or GameManager.practice_mode
 	AudioManager.play_player_hit()
 	# Resolve shield/invulnerability once, while retaining the existing one-life
@@ -283,7 +295,7 @@ func reset_power_up_state() -> void:
 	rapid_fire_remaining = 0.0
 	spread_shot_remaining = 0.0
 	magnet_remaining = 0.0
-	shield_visual.visible = false
+	shield_visual.visible = armor_guard_ready
 	_shield_visual_elapsed = 0.0
 	shield_visual.set_instance_shader_parameter(&"instance_pulse", 0.0)
 
@@ -301,6 +313,7 @@ func get_power_up_status() -> Dictionary:
 	return {
 		"scale": bullet_scale_level,
 		"shield": has_shield,
+		"armor_guard": armor_guard_ready,
 		"rapid": has_rapid_fire,
 		"spread": has_spread_shot,
 		"magnet": has_magnet,
@@ -329,6 +342,11 @@ func is_drone_escort_enabled() -> bool:
 func register_boost_reflection() -> void:
 	if is_boosting:
 		boost_reflected_projectiles += 1
+		# Exactly once per dash, so a guard spent mid-volley cannot refill on shot four.
+		if boost_reflected_projectiles == FlightTuning.BOOST_CHAIN_REFLECT_THRESHOLD and has_elite_upgrade("hull_plating") and not armor_guard_ready:
+			armor_guard_ready = true
+			shield_visual.show()
+			_upgrade_visuals.pulse("hull_plating")
 		if _ribbons != null:
 			_ribbons.reflect()
 
@@ -587,9 +605,13 @@ func _move_boost(input_direction: Vector2, delta: float) -> void:
 
 
 func _update_boost(delta: float) -> void:
+	var accepts_boost_press := not _boost_waiting_for_release
 	if _boost_waiting_for_release:
 		_boost_waiting_for_release = Input.is_action_pressed("boost")
-	var boost_pressed := not _boost_waiting_for_release and Input.is_action_just_pressed("boost")
+	_boost_input_buffer = maxf(0.0, _boost_input_buffer - delta)
+	if accepts_boost_press and Input.is_action_just_pressed("boost"):
+		_boost_input_buffer = FlightTuning.BOOST_INPUT_BUFFER
+	var boost_pressed := _boost_input_buffer > 0.0
 	if is_boosting:
 		boost_duration_timer -= delta
 		deflection_requested.emit(global_position, velocity)
@@ -619,6 +641,7 @@ func _update_boost(delta: float) -> void:
 
 
 func _begin_boost() -> void:
+	_boost_input_buffer = 0.0
 	var is_chain := _has_boost_chain() and (is_boosting or boost_chain_window_timer > 0.0)
 	_chain_followup = is_chain
 	if is_chain:
@@ -782,6 +805,9 @@ func set_elite_upgrade_enabled(
 		"drone_escort":
 			set_drone_escort_enabled(enabled)
 		"hull_plating":
+			if not enabled:
+				armor_guard_ready = false
+				shield_visual.visible = has_shield
 			if enabled and grant_one_time_reward:
 				GameManager.lives += 1
 				SignalBus.lives_changed.emit(GameManager.lives)
@@ -1026,9 +1052,18 @@ func get_boost_state() -> Dictionary:
 
 
 func reset_action_input() -> void:
+	_boost_input_buffer = 0.0
 	_fire_latched = false
 	_fire_waiting_for_release = true
 	_boost_waiting_for_release = true
+
+
+func _on_input_device_changed() -> void:
+	# The event announcing a new device may itself be a deliberate fire/boost
+	# press. Clear old automatic fire, but admit this fresh action immediately.
+	reset_action_input()
+	_fire_waiting_for_release = Input.is_action_pressed("shoot") and not Input.is_action_just_pressed("shoot")
+	_boost_waiting_for_release = Input.is_action_pressed("boost") and not Input.is_action_just_pressed("boost")
 
 
 func _notification(what: int) -> void:

@@ -1,0 +1,342 @@
+{
+  "assets": [
+    {
+      "animations": [
+        {
+          "channels": 2,
+          "duration_seconds": 19.99999936297536,
+          "exported_name": "station_idle",
+          "loop_pose_continuity": "pass",
+          "moving_nodes": [
+            "RadarDish",
+            "ReactorRotor"
+          ],
+          "name": "station_idle"
+        }
+      ],
+      "bounds_max_xyz": [
+        35.5,
+        18.0,
+        37.0
+      ],
+      "bounds_min_xyz": [
+        -35.5,
+        -3.0,
+        -35.0
+      ],
+      "bytes": 5122440,
+      "degenerate_geometry_or_uv_triangles": 0,
+      "dimensions_xyz": [
+        71.0,
+        21.0,
+        72.0
+      ],
+      "embedded_images": [
+        {
+          "bit_depth": 8,
+          "bytes": 2980,
+          "channels": 4,
+          "height": 256,
+          "rgba_pixels_sha256": "7202d7d46b26cd815e248032004c884223407ba27c02d06475329220ab0bff5d",
+          "sha256": "10ad379ecd9eb5a8f1ab46024628d1abb168d110399755356583496cf66a8052",
+          "width": 256
+        },
+        {
+          "bit_depth": 8,
+          "bytes": 54318,
+          "channels": 4,
+          "height": 256,
+          "rgba_pixels_sha256": "d6b72f65a3f58f758b46925d72ec22a32de6676f87609b4fc3660c186371b15d",
+          "sha256": "58a3d4ea8f06a545c1fd5ecee23697da0706602f03c4bc753232498f7bc4fa31",
+          "width": 256
+        }
+      ],
+      "external_buffers_or_images": false,
+      "file": "wayfarer_station.glb",
+      "id": "ff.homeport.station",
+      "materials": [
+        {
+          "base_color_image": 1,
+          "emission_image": 0,
+          "emissive_factor": [
+            1,
+            1,
+            1
+          ],
+          "name": "Homeport | painted alloy + luminous inlays"
+        }
+      ],
+      "mesh_nodes": 3,
+      "required_nodes": [
+        "ReactorRotor",
+        "RadarDish"
+      ],
+      "rest_radius_xz": 39.147158262126766,
+      "sha256": "fe54113be5e9cfa620ac4f951b1affc2271bfd4fe3a0757ad6c8721a945a0078",
+      "status": "pass",
+      "surfaces": 3,
+      "triangles": 66548,
+      "vertices": 133096
+    },
+    {
+      "animations": [
+        {
+          "channels": 1,
+          "duration_seconds": 4.999999839812517,
+          "exported_name": "service_idle",
+          "loop_pose_continuity": "pass",
+          "moving_nodes": [
+            "DroneScanner"
+          ],
+          "name": "service_idle"
+        }
+      ],
+      "bounds_max_xyz": [
+        1.25,
+        1.375,
+        1.25
+      ],
+      "bounds_min_xyz": [
+        -1.25,
+        -0.5,
+        -0.75
+      ],
+      "bytes": 105840,
+      "degenerate_geometry_or_uv_triangles": 0,
+      "dimensions_xyz": [
+        2.5,
+        1.875,
+        2.0
+      ],
+      "embedded_images": [
+        {
+          "bit_depth": 8,
+          "bytes": 2980,
+          "channels": 4,
+          "height": 256,
+          "rgba_pixels_sha256": "7202d7d46b26cd815e248032004c884223407ba27c02d06475329220ab0bff5d",
+          "sha256": "10ad379ecd9eb5a8f1ab46024628d1abb168d110399755356583496cf66a8052",
+          "width": 256
+        },
+        {
+          "bit_depth": 8,
+          "bytes": 54318,
+          "channels": 4,
+          "height": 256,
+          "rgba_pixels_sha256": "d6b72f65a3f58f758b46925d72ec22a32de6676f87609b4fc3660c186371b15d",
+          "sha256": "58a3d4ea8f06a545c1fd5ecee23697da0706602f03c4bc753232498f7bc4fa31",
+          "width": 256
+        }
+      ],
+      "external_buffers_or_images": false,
+      "file": "service_drone.glb",
+      "id": "ff.homeport.service-drone",
+      "materials": [
+        {
+          "base_color_image": 1,
+          "emission_image": 0,
+          "emissive_factor": [
+            1,
+            1,
+            1
+          ],
+          "name": "Homeport | painted alloy + luminous inlays"
+        }
+      ],
+      "mesh_nodes": 2,
+      "required_nodes": [],
+      "rest_radius_xz": 1.7677669529663689,
+      "sha256": "34bb0f5049993676ed664384801efd4361a45ffcddd6096e71ce2b99b8964593",
+      "status": "pass",
+      "surfaces": 2,
+      "triangles": 616,
+      "vertices": 1232
+    },
+    {
+      "animations": [
+        {
+          "channels": 1,
+          "duration_seconds": 4.999999839812517,
+          "exported_name": "service_idle",
+          "loop_pose_continuity": "pass",
+          "moving_nodes": [
+            "TugBeacon"
+          ],
+          "name": "service_idle"
+        }
+      ],
+      "bounds_max_xyz": [
+        1.75,
+        1.75,
+        2.0
+      ],
+      "bounds_min_xyz": [
+        -1.75,
+        -0.5,
+        -2.0
+      ],
+      "bytes": 188416,
+      "degenerate_geometry_or_uv_triangles": 0,
+      "dimensions_xyz": [
+        3.5,
+        2.25,
+        4.0
+      ],
+      "embedded_images": [
+        {
+          "bit_depth": 8,
+          "bytes": 2980,
+          "channels": 4,
+          "height": 256,
+          "rgba_pixels_sha256": "7202d7d46b26cd815e248032004c884223407ba27c02d06475329220ab0bff5d",
+          "sha256": "10ad379ecd9eb5a8f1ab46024628d1abb168d110399755356583496cf66a8052",
+          "width": 256
+        },
+        {
+          "bit_depth": 8,
+          "bytes": 54318,
+          "channels": 4,
+          "height": 256,
+          "rgba_pixels_sha256": "d6b72f65a3f58f758b46925d72ec22a32de6676f87609b4fc3660c186371b15d",
+          "sha256": "58a3d4ea8f06a545c1fd5ecee23697da0706602f03c4bc753232498f7bc4fa31",
+          "width": 256
+        }
+      ],
+      "external_buffers_or_images": false,
+      "file": "cargo_tug.glb",
+      "id": "ff.homeport.cargo-tug",
+      "materials": [
+        {
+          "base_color_image": 1,
+          "emission_image": 0,
+          "emissive_factor": [
+            1,
+            1,
+            1
+          ],
+          "name": "Homeport | painted alloy + luminous inlays"
+        }
+      ],
+      "mesh_nodes": 2,
+      "required_nodes": [],
+      "rest_radius_xz": 2.6575364531836625,
+      "sha256": "d61e7e40a493389dcf278528e826cdc9f75b04e38d8d7361cc4062a35439c29f",
+      "status": "pass",
+      "surfaces": 2,
+      "triangles": 1796,
+      "vertices": 3592
+    },
+    {
+      "animations": [
+        {
+          "channels": 1,
+          "duration_seconds": 4.999999839812517,
+          "exported_name": "service_idle",
+          "loop_pose_continuity": "pass",
+          "moving_nodes": [
+            "BuoyBeacon"
+          ],
+          "name": "service_idle"
+        }
+      ],
+      "bounds_max_xyz": [
+        1.5,
+        1.5,
+        0.75
+      ],
+      "bounds_min_xyz": [
+        -1.5,
+        -1.25,
+        -0.75
+      ],
+      "bytes": 127956,
+      "degenerate_geometry_or_uv_triangles": 0,
+      "dimensions_xyz": [
+        3.0,
+        2.75,
+        1.5
+      ],
+      "embedded_images": [
+        {
+          "bit_depth": 8,
+          "bytes": 2980,
+          "channels": 4,
+          "height": 256,
+          "rgba_pixels_sha256": "7202d7d46b26cd815e248032004c884223407ba27c02d06475329220ab0bff5d",
+          "sha256": "10ad379ecd9eb5a8f1ab46024628d1abb168d110399755356583496cf66a8052",
+          "width": 256
+        },
+        {
+          "bit_depth": 8,
+          "bytes": 54318,
+          "channels": 4,
+          "height": 256,
+          "rgba_pixels_sha256": "d6b72f65a3f58f758b46925d72ec22a32de6676f87609b4fc3660c186371b15d",
+          "sha256": "58a3d4ea8f06a545c1fd5ecee23697da0706602f03c4bc753232498f7bc4fa31",
+          "width": 256
+        }
+      ],
+      "external_buffers_or_images": false,
+      "file": "navigation_buoy.glb",
+      "id": "ff.homeport.navigation-buoy",
+      "materials": [
+        {
+          "base_color_image": 1,
+          "emission_image": 0,
+          "emissive_factor": [
+            1,
+            1,
+            1
+          ],
+          "name": "Homeport | painted alloy + luminous inlays"
+        }
+      ],
+      "mesh_nodes": 2,
+      "required_nodes": [],
+      "rest_radius_xz": 1.6770509831248424,
+      "sha256": "24292f1dc6816ba600e70855badd6cd571041ff3b6d41a87bdeb829d2e458e32",
+      "status": "pass",
+      "surfaces": 2,
+      "triangles": 932,
+      "vertices": 1864
+    }
+  ],
+  "evidence_type": "Static GLB/PNG/source validation; engine rendering and gameplay are separate checks",
+  "package_id": "farinuff-flight.wayfarer-homeport",
+  "policy": {
+    "animation": "Rigid looping clips, valid keys, actual motion, matching endpoint poses",
+    "excluded": "Cameras, lights, skins, collision helpers, external texture/buffer dependencies",
+    "geometry": "Per-asset triangle and rest-bounds budgets in catalog.json",
+    "textures": "Both original embedded PNG atlases, matching decoded source pixels"
+  },
+  "schema_version": 1,
+  "source": {
+    "bytes": 1570306,
+    "file": "source/home_base.blend",
+    "sha256": "cd3def6b31860bc9ecfd7c7b90c34ac32d942993d678163557a47fbfef7d50bf"
+  },
+  "status": "pass",
+  "textures": [
+    {
+      "bit_depth": 8,
+      "bytes": 54318,
+      "channels": 4,
+      "file": "homeport_atlas.png",
+      "height": 256,
+      "rgba_pixels_sha256": "d6b72f65a3f58f758b46925d72ec22a32de6676f87609b4fc3660c186371b15d",
+      "sha256": "58a3d4ea8f06a545c1fd5ecee23697da0706602f03c4bc753232498f7bc4fa31",
+      "width": 256
+    },
+    {
+      "bit_depth": 8,
+      "bytes": 2980,
+      "channels": 4,
+      "file": "homeport_emission.png",
+      "height": 256,
+      "rgba_pixels_sha256": "7202d7d46b26cd815e248032004c884223407ba27c02d06475329220ab0bff5d",
+      "sha256": "10ad379ecd9eb5a8f1ab46024628d1abb168d110399755356583496cf66a8052",
+      "width": 256
+    }
+  ],
+  "total_triangles": 69892
+}

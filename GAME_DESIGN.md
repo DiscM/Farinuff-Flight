@@ -1,5 +1,7 @@
 # Farinuff Flight Design Document
 
+**Current refinement direction:** [Indie cohesion guideline](docs/indie-refinement-guideline.md), with [cited developer research](docs/indie-cohesion-research.md). Use its completion ledger for the September 21 pass; the historical index below is preserved.
+
 This document preserves the design text that existed before the September 10, 2026 gameplay review, then records major additions under separate headers. “Original design” means that preserved document baseline, which already included earlier expansions; it is not a reconstruction of the game's first-ever design.
 
 The original section is historical: its references to the current build, 2D runtime, pending work, and next milestone describe that earlier document. The additions below clarify the reviewed implementation and proposed direction. **Proposed additions are not implemented or approved for implementation.**

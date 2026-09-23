@@ -8,7 +8,7 @@ const ALLOCATION := preload("res://ui/point_allocation_popup.tscn")
 const ELITE_REWARD := preload("res://ui/elite_upgrade_popup.tscn")
 const NativeUpgrades := preload("res://entities/player/native_player_upgrades.gd")
 const VICTORY := preload("res://ui/expedition_victory.tscn")
-const MAIN_MENU_PATH := "res://ui/main_menu.tscn"
+const MAIN_MENU_PATH := "res://scenes/home_base.tscn"
 const NATIVE_RUN_PATH := "res://scenes/native_3d_run.tscn"
 
 var _comms: Node
@@ -250,7 +250,7 @@ func _return_to_menu() -> void:
 	var menu_scene := ResourceCache.get_scene(MAIN_MENU_PATH)
 	if menu_scene != null and get_tree().change_scene_to_packed(menu_scene) == OK:
 		return
-	get_tree().change_scene_to_file("res://ui/main_menu.tscn")
+	get_tree().change_scene_to_file("res://scenes/home_base.tscn")
 
 
 ## Debug-build command surface used by the pause-menu panel. Keeping these

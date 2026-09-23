@@ -1,59 +1,6 @@
-[gd_scene load_steps=5 format=3 uid="uid://i1xv8y2r7bk0g"]
+[gd_scene load_steps=2 format=3 uid="uid://i1xv8y2r7bk0g"]
 
 [ext_resource type="Script" path="res://ui/main_menu.gd" id="1_menu"]
-[ext_resource type="Script" path="res://ui/main_menu_backdrop.gd" id="2_backdrop"]
-[ext_resource type="Shader" path="res://effects/shaders/crt_overlay.gdshader" id="5_crt"]
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_crt"]
-shader = ExtResource("5_crt")
-shader_parameter/scanline_count = 210.0
-shader_parameter/barrel_distortion = 0.05
-
-[node name="MainMenu" type="Control"]
-layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
+[node name="HomePortRedirect" type="Node"]
 script = ExtResource("1_menu")
-
-[node name="Background" type="ColorRect" parent="."]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-color = Color(0.004, 0.008, 0.035, 1)
-
-[node name="Backdrop" type="Control" parent="."]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-script = ExtResource("2_backdrop")
-
-[node name="PlanetStage" type="Control" parent="."]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-
-[node name="CRTOverlay" type="ColorRect" parent="."]
-material = SubResource("ShaderMaterial_crt")
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 2
-color = Color(1, 1, 1, 1)
