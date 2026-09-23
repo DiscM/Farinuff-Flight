@@ -100,6 +100,17 @@ func _check_scene_teardown_reuse() -> void:
 	ObjectPool.prune_stale()
 	ObjectPool.clear_pool(BULLET_SCENE)
 	await get_tree().process_frame
+	var cache_only_parent := Node3D.new()
+	add_child(cache_only_parent)
+	var cache_miss := ObjectPool.acquire(BULLET_SCENE, cache_only_parent, false)
+	_expect(cache_miss == null, "Cache-only acquisition rejects an empty bucket")
+	_expect(cache_only_parent.get_child_count() == 0, "Cache-only miss never instantiates a replacement")
+	var cache_seed := ObjectPool.acquire(BULLET_SCENE, cache_only_parent)
+	ObjectPool.release(cache_seed)
+	var cache_hit := ObjectPool.acquire(BULLET_SCENE, cache_only_parent, false)
+	_expect(cache_hit == cache_seed, "Cache-only acquisition reuses an available node")
+	cache_only_parent.queue_free()
+	await get_tree().process_frame
 	# Keep the local ID read above as a regression guard against an accidental
 	# change that stops release from accepting a live node.
 	_expect(first_id > 0, "Pooled instances expose stable IDs")

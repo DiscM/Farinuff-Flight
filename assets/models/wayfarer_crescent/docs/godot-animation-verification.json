@@ -1,0 +1,105 @@
+{
+  "status": "pass",
+  "engine": "4.6.3.stable.official.7d41c59c4",
+  "adapter": "systems/crescent_harbor_visuals.gd",
+  "asset": "assets/models/wayfarer_crescent/meshes/wayfarer_crescent.glb",
+  "asset_sha256": "27a31bbe5fa6785c5961527c33a87ff8887cb1b16553c032b61df62597db68d5",
+  "raw_glb_timing": {
+    "first_key_seconds": 0.0416666679084301,
+    "last_key_seconds": 20.04166603088379,
+    "samples_per_channel_before_import": 241
+  },
+  "godot_import_timing": {
+    "first_key_seconds": 0.0,
+    "last_key_seconds": 20.04166603088379,
+    "animation_length_seconds": 20.04166603088379,
+    "import_frames_per_second": 30
+  },
+  "merge": {
+    "source_clips": 16,
+    "imported_tracks_per_clip": 475,
+    "unique_tracks": 475,
+    "multi_key_motion_tracks": 474,
+    "immutable_tracks": 1,
+    "conflicting_multi_key_targets": 0,
+    "runtime_seconds": 20.0,
+    "time_transform": "All copied key times are multiplied by 20 / imported_animation_length; no keys are clipped.",
+    "original_resources_mutated": false
+  },
+  "runtime_probes": [
+    "All 16 source clips participate",
+    "Exactly 475 unique property tracks in merged loop",
+    "All 6 station roots, 5 cable bundles and 14 ship roots exposed",
+    "Actual moving ship and station correction move concurrently",
+    "Reduced motion freezes phase",
+    "SceneTree pause freezes phase",
+    "Motion resumes from frozen phase",
+    "Seeking 20 seconds reproduces the time-zero pose",
+    "Independent adapter instances keep separate phases",
+    "Merged animation resource is private; source animation resource stays shared"
+  ],
+  "materials": {
+    "imported_shared_material_roles": 13,
+    "render_mesh_nodes": 266,
+    "surface_partitions": 769,
+    "textures_present": true,
+    "filter": 2,
+    "emission_preserved": {
+      "amber": 3.0,
+      "cyan": 3.6800000667572,
+      "red": 3.87000012397766
+    }
+  },
+  "scope": "Headless import and runtime transform evidence; surface partitions are not measured GPU draw calls; visual/performance verification remains separate.",
+  "source_blend_sha256": "4080c0449433c906a670334295a9c0d49ba04b82f1fd14a1ca55edea28e86110",
+  "rest_filler_review": {
+    "single_key_candidate_disagreements": 0,
+    "retained_immutable_property": "PowerBundle_4/PowerBundle_4 _ sleeve 20: rotation",
+    "imported_animated_property_count": 474,
+    "result": "Pass: every static candidate agrees, and all 474 nonconstant properties are retained exactly once."
+  },
+  "camera_return_review": {
+    "viewport": [
+      1280,
+      720
+    ],
+    "model_scale": 2,
+    "model_offset": [
+      0,
+      -23,
+      0
+    ],
+    "flight_radius": 205,
+    "zoom_samples": [
+      130,
+      220,
+      260
+    ],
+    "settled_viewpoints": 51,
+    "temporal_samples": 400,
+    "frame_seconds": 0.05,
+    "main_camera_directory_offset_fraction": 0.1,
+    "return_turn_findings": "Only the first remote turn of Ship_05_ArrivingCarrier reaches the outermost 20 horizontal pixels at maximum zoom 260 from four southwest perimeter views, at 13.85\u201313.90 seconds. No return loops approach the station. Default zoom 220 only exposes straight departures and approaches at the edges.",
+    "example_screen_x": [
+      1260.472,
+      1273.166
+    ],
+    "example_world_position": [
+      127.5818,
+      36.92962,
+      -313.6936
+    ],
+    "scope": "Center visibility within camera frustum; source route arclength identifies return-turn segments. Does not establish pixel occlusion or exact whole-mesh clipping coverage."
+  },
+  "adapter_sha256": "f86a6934f24404896118190d60a23ace1345673d094cfca14a3f5c003aa3bdb0",
+  "shadow_optimization": {
+    "cable_meshes_casting_disabled": 130,
+    "correction_exhaust_meshes_casting_disabled": 24,
+    "total_meshes_casting_disabled": 154,
+    "structural_and_fleet_meshes_casting_retained": 112,
+    "source_clips_after_change": 16,
+    "merged_tracks_after_change": 475,
+    "geometry_and_materials_unchanged": true,
+    "scope": "Isolated headless scene inspection. Runtime frame-rate comparison remains separate."
+  }
+}

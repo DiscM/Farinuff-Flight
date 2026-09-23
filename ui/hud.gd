@@ -41,6 +41,7 @@ const TIMED_POWER_UPS: Dictionary = {
 	PowerUp.Type.MAGNET: {"key": &"magnet", "label": "MAGNET", "color": Color(0.6, 0.4, 1.0)},
 }
 const SHIELD_TYPE: int = PowerUp.Type.SHIELD
+const ARMOR_CHIP := {"key": &"armor", "label": "ARMOR", "color": Color(0.8, 0.6, 1.0)}
 const SHIELD_CHIP: Dictionary = {"key": &"shield", "label": "SHIELD", "color": Color(0.3, 0.9, 0.5)}
 
 var _effect_chips: Dictionary = {}  # StringName key -> {panel, time, bar}
@@ -50,6 +51,9 @@ var _boss_visibility_meshes: Array[MeshInstance3D] = []
 var _wave_progress: ProgressBar
 var _wave_progress_label: Label
 var _route_label: Label
+var _milestone_label: Label
+var _reflection_hint: Label
+var _reflection_hint_remaining := 0.0
 var _boss_phase_markers: Array[ColorRect] = []
 
 ## Connects all HUD-relevant signals from the SignalBus, hides the boss
@@ -175,6 +179,8 @@ func _on_lives_changed(new_lives: int) -> void:
 ## Updates the persistent top-bar wave label.
 func _on_wave_started(wave_number: int) -> void:
 	wave_label.text = "WAVE %02d / 20" % wave_number if wave_number <= 20 else "ENDLESS / %02d" % wave_number
+	if _milestone_label != null:
+		_milestone_label.text = preload("res://systems/run_compass.gd").snapshot(wave_number, GameManager.practice_mode).compact
 
 func _compact_number(value: int) -> String:
 	if value >= 1000000:
@@ -243,11 +249,18 @@ func _on_boss_died(_points: int) -> void:
 ## magnet) show a live countdown and a depleting bar; the shield shows a
 ## persistent "READY" chip until it absorbs a hit.
 func _process(delta: float) -> void:
+	if _reflection_hint != null and _reflection_hint_remaining > 0.0:
+		_reflection_hint.text = "BOOST [%s] INTO THE VOLLEY · RETURN FIRE" % InputBindings.binding_hint("boost")
+		if GameManager.is_game_active and not get_tree().paused:
+			_reflection_hint_remaining = maxf(0.0, _reflection_hint_remaining - delta)
+		if GameManager.run_insights.reflections > 0 or GameManager.current_wave != 3:
+			_reflection_hint_remaining = 0.0
+		_reflection_hint.visible = _reflection_hint_remaining > 0.0
 	if _wave_progress != null:
 		_wave_progress.max_value = maxi(GameManager.orbs_needed_this_wave, 1)
 		_wave_progress.value = GameManager.orbs_collected_this_wave
 		_wave_progress.visible = not GameManager.boss_active
-		_wave_progress_label.text = "DEFEAT THE BOSS" if GameManager.boss_active else "NEXT WAVE  %d / %d" % [GameManager.orbs_collected_this_wave, GameManager.orbs_needed_this_wave]
+		_wave_progress_label.text = "DEFEAT THE BOSS" if GameManager.boss_active else "ORBS  %d / %d" % [GameManager.orbs_collected_this_wave, GameManager.orbs_needed_this_wave]
 		wave_panel.tooltip_text = _wave_progress_label.text
 	if _route_label != null:
 		var route := ExpeditionManager.get_current_node()
@@ -316,6 +329,10 @@ func _sync_power_up_timers() -> void:
 			_update_effect_chip(cfg, timing.x, timing.y)
 		else:
 			_remove_effect_chip(cfg["key"])
+	if bool(_player.get("armor_guard_ready")):
+		_update_effect_chip(ARMOR_CHIP, -1.0, 1.0)
+	else:
+		_remove_effect_chip(ARMOR_CHIP["key"])
 	# Shield persists until consumed — no countdown.
 	if bool(_player.get("has_shield")):
 		_update_effect_chip(SHIELD_CHIP, -1.0, 1.0)
@@ -491,7 +508,9 @@ func _arrange_cabinet_hud() -> void:
 		label.add_theme_font_size_override("font_size", 14)
 	combo_label.add_theme_font_size_override("font_size", 11)
 	_route_label.hide()
-	_wave_progress_label.hide()
+	_wave_progress_label.show()
+	_wave_progress_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_wave_progress_label.add_theme_font_size_override("font_size", 10)
 	_wave_progress.custom_minimum_size.y = 3
 	(wave_label.get_parent() as VBoxContainer).add_theme_constant_override("separation", 3)
 	lives_panel.get_node("LivesRow/LivesTitle").hide()
@@ -515,6 +534,21 @@ func _arrange_cabinet_hud() -> void:
 	boost_slot.add_theme_constant_override("separation", 3)
 	row.add_child(boost_slot)
 
+	_milestone_label = Label.new()
+	_milestone_label.name = "Milestone"
+	_milestone_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_milestone_label.add_theme_font_size_override("font_size", 11)
+	_milestone_label.add_theme_color_override("font_color", Color(0.65, 0.8, 0.87))
+	_milestone_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	stack.add_child(_milestone_label)
+	_reflection_hint = Label.new()
+	_reflection_hint.name = "ReflectionHint"
+	_reflection_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_reflection_hint.add_theme_font_size_override("font_size", 12)
+	_reflection_hint.add_theme_color_override("font_color", NeonUI.YELLOW)
+	_reflection_hint.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_reflection_hint.hide()
+	stack.add_child(_reflection_hint)
 	left_dock.hide()
 	right_dock.hide()
 	boss_dock.offset_top = 58
@@ -529,6 +563,14 @@ func _arrange_cabinet_hud() -> void:
 	header.minimum_size_changed.connect(_fit_combat_header)
 	get_viewport().size_changed.connect(_fit_combat_header)
 	_fit_combat_header()
+
+
+func show_reflection_hint() -> void:
+	if _reflection_hint == null or GameManager.practice_mode or GameManager.run_insights.reflections > 0:
+		return
+	_reflection_hint.text = "BOOST [%s] INTO THE VOLLEY · RETURN FIRE" % InputBindings.binding_hint("boost")
+	_reflection_hint_remaining = 7.0
+	_reflection_hint.show()
 
 
 func _fit_combat_header() -> void:

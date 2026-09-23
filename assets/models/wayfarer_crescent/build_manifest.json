@@ -1,0 +1,287 @@
+{
+  "schema_version": 1,
+  "full_scene": "meshes/wayfarer_crescent.glb",
+  "blender_version": "5.2.1 LTS",
+  "reference_image": "design/home-base/detail-mockups/asymmetric-layouts/01-crescent-harbor-v2-spacecraft.png",
+  "reference_sha256": "bdd3b0718106101012d606c60bb3e5e77337c33486e2c1b09f77216883c4e7bf",
+  "major_roots": [
+    "Wayfarer_Core",
+    "Relay_01_TrafficMast",
+    "Relay_02_PowerDistribution",
+    "Relay_03_OrbitalLogistics",
+    "Relay_04_PortApproach",
+    "Relay_05_RefuelRepair"
+  ],
+  "ship_roots": [
+    "Ship_01_BerthedCarrier",
+    "Ship_02_RefuelingCarrier",
+    "Ship_03_ArrivalsShuttle",
+    "Ship_04_ChargingTug",
+    "Ship_05_ArrivingCarrier",
+    "Ship_06_PassengerArrival",
+    "Ship_07_DepartingCourier",
+    "Ship_08_CargoTug",
+    "Ship_09_RelayTransfer",
+    "Ship_10_CableInspector",
+    "Ship_11_RepairDrone",
+    "Ship_12_StationMaintenance",
+    "Ship_13_PracticeCourier",
+    "Ship_14_RepairCradle"
+  ],
+  "cable_roots": [
+    "PowerBundle_1",
+    "PowerBundle_2",
+    "PowerBundle_3",
+    "PowerBundle_4",
+    "PowerBundle_5"
+  ],
+  "exports": [
+    {
+      "path": "meshes/wayfarer_crescent.glb",
+      "triangles": 183624,
+      "objects": 363,
+      "bytes": 14753236
+    },
+    {
+      "path": "meshes/wayfarer_core.glb",
+      "triangles": 80828,
+      "objects": 51,
+      "bytes": 5770156
+    },
+    {
+      "path": "meshes/beacon_relay.glb",
+      "triangles": 4748,
+      "objects": 25,
+      "bytes": 392476
+    },
+    {
+      "path": "meshes/power_relay.glb",
+      "triangles": 7784,
+      "objects": 30,
+      "bytes": 615292
+    },
+    {
+      "path": "meshes/cargo_relay.glb",
+      "triangles": 9228,
+      "objects": 31,
+      "bytes": 724372
+    },
+    {
+      "path": "meshes/control_relay.glb",
+      "triangles": 5092,
+      "objects": 25,
+      "bytes": 416684
+    },
+    {
+      "path": "meshes/service_relay.glb",
+      "triangles": 8708,
+      "objects": 32,
+      "bytes": 682936
+    },
+    {
+      "path": "meshes/ship_01_berthedcarrier.glb",
+      "triangles": 5280,
+      "objects": 2,
+      "bytes": 418528
+    },
+    {
+      "path": "meshes/ship_03_arrivalsshuttle.glb",
+      "triangles": 2136,
+      "objects": 2,
+      "bytes": 191428
+    },
+    {
+      "path": "meshes/ship_04_chargingtug.glb",
+      "triangles": 2412,
+      "objects": 2,
+      "bytes": 213236
+    },
+    {
+      "path": "meshes/ship_10_cableinspector.glb",
+      "triangles": 2076,
+      "objects": 4,
+      "bytes": 190640
+    }
+  ],
+  "outputs": [
+    {
+      "path": "meshes/beacon_relay.glb",
+      "sha256": "b35984e65e936eb8218e74394812fe141c44e9bc81c885d128773c59754f0612",
+      "bytes": 392476
+    },
+    {
+      "path": "meshes/cargo_relay.glb",
+      "sha256": "2558395d31e04d4d62feeafabc886ce9938bf18f11d59ee1232723ff3a6de689",
+      "bytes": 724372
+    },
+    {
+      "path": "meshes/control_relay.glb",
+      "sha256": "4785fa9c52e2838377fb3b0367959b3864948dfbc27dff1a8297838804adcca9",
+      "bytes": 416684
+    },
+    {
+      "path": "meshes/power_relay.glb",
+      "sha256": "16317c9b779ed6520bc2fcdf1b14ec51db483828c9ec0243cb2cde286654701d",
+      "bytes": 615292
+    },
+    {
+      "path": "meshes/service_relay.glb",
+      "sha256": "ad1fdad602a1b46f738e928db17f85d7ff0d19d0a11a975f183fe715c29b59ac",
+      "bytes": 682936
+    },
+    {
+      "path": "meshes/ship_01_berthedcarrier.glb",
+      "sha256": "e53016ad190db3f3e4e52d9352a259bfb22f30fe33b10c0f8125a0fe10c974bf",
+      "bytes": 418528
+    },
+    {
+      "path": "meshes/ship_03_arrivalsshuttle.glb",
+      "sha256": "8e0d8e58d217b6d6970a121f3d0ad656751180209a2d95cc80b243314c17d69a",
+      "bytes": 191428
+    },
+    {
+      "path": "meshes/ship_04_chargingtug.glb",
+      "sha256": "a86c39104f964821850d28836bf3df61a969fb8891294113156534907f720299",
+      "bytes": 213236
+    },
+    {
+      "path": "meshes/ship_10_cableinspector.glb",
+      "sha256": "e19912847bea2961522f7cf3d8ffce8acee0a191a148f1ef50439b1c3e4174f9",
+      "bytes": 190640
+    },
+    {
+      "path": "meshes/wayfarer_core.glb",
+      "sha256": "27a40310399d9597e29da03ddb152768cd59f429162d69fddd2a63c537765de8",
+      "bytes": 5770156
+    },
+    {
+      "path": "meshes/wayfarer_crescent.glb",
+      "sha256": "27a31bbe5fa6785c5961527c33a87ff8887cb1b16553c032b61df62597db68d5",
+      "bytes": 14753236
+    },
+    {
+      "path": "textures/amber.png",
+      "sha256": "5c9ce24adde5d2ab28e36a1ce2412ae818f6fd0edd96603c20c9e54132bb8d10",
+      "bytes": 632
+    },
+    {
+      "path": "textures/armor.png",
+      "sha256": "205f5b88c5d1bed499c07e0d380593f30d37a17dc09fdc99c3bcac591f5a9b61",
+      "bytes": 798
+    },
+    {
+      "path": "textures/black.png",
+      "sha256": "10a323694aad863709e2248a472deefe50d0bcea2a16fa33e0358dbd6afbdc6b",
+      "bytes": 533
+    },
+    {
+      "path": "textures/copper.png",
+      "sha256": "b6342a91b26a46d47e4fd65fa6349f032560261636cee15f057e6b7cdd956ee9",
+      "bytes": 782
+    },
+    {
+      "path": "textures/cyan.png",
+      "sha256": "6b4c95994adf29004240e56680fc5e95e4006d3a32aa51fcad3885e9d78638d6",
+      "bytes": 573
+    },
+    {
+      "path": "textures/darkglass.png",
+      "sha256": "12062764806346d6938b4934725ad8f6f40a3604ab3582753047b9cb9fb908d8",
+      "bytes": 650
+    },
+    {
+      "path": "textures/glass.png",
+      "sha256": "5e45304b913556c0988fd8ab5d4774d715f205304fa95d2c29e6be812f9836f7",
+      "bytes": 593
+    },
+    {
+      "path": "textures/green.png",
+      "sha256": "95fbe346167efa3c5c8a0406cb9c8d9562b68020e6f1ec125be7eccff5ace8f7",
+      "bytes": 774
+    },
+    {
+      "path": "textures/ivory.png",
+      "sha256": "faad00f2acc0070773ab26fcd96460231f02b05539fb459e4e1eb2985b7ca77b",
+      "bytes": 822
+    },
+    {
+      "path": "textures/navy.png",
+      "sha256": "1a3fe5c7970ec9c6bb03417e5367c07e92a1a2fe9efc3a915ab6d8ab8d4d1368",
+      "bytes": 735
+    },
+    {
+      "path": "textures/orange.png",
+      "sha256": "32460fe704858718fbfd2b19f9731f10a4ea827dcdf1ea6e2e42f4153ef311c3",
+      "bytes": 732
+    },
+    {
+      "path": "textures/red.png",
+      "sha256": "8fd89d8c55a2825629523f4d5eb83ffb90a70c460a65606a3d71326e8f04c8ac",
+      "bytes": 606
+    },
+    {
+      "path": "textures/steel.png",
+      "sha256": "b011853a307627b3f18f35f070daaec97758eaa7b81411c84cf2a68e046d7305",
+      "bytes": 808
+    },
+    {
+      "path": "textures/white.png",
+      "sha256": "70b4f5d92d6e65a5c235fcd463b6a5ab1f2312a2aa0478aa9d3a7ec33f26e87a",
+      "bytes": 602
+    },
+    {
+      "path": "source/wayfarer_crescent.blend",
+      "sha256": "4080c0449433c906a670334295a9c0d49ba04b82f1fd14a1ca55edea28e86110",
+      "bytes": 3550910
+    }
+  ],
+  "animation": {
+    "fps": 24,
+    "first_frame": 1,
+    "last_frame": 481,
+    "duration_seconds": 20,
+    "clips": [
+      "Ship_10_CableInspector_InspectionSweep",
+      "Ship_11_RepairDrone_InspectionSweep",
+      "Ship_12_StationMaintenance_InspectionSweep",
+      "beacon_direction_finder_scan",
+      "cargo_arm_east_handling_cycle",
+      "cargo_arm_west_handling_cycle",
+      "cooling_rotors",
+      "correction_thrusters",
+      "harbor_machinery",
+      "harbor_traffic",
+      "navigation_lights",
+      "neighborhood_traffic_scan",
+      "orbital_correction",
+      "power_telemetry_scan",
+      "repair_manipulator_handling_cycle",
+      "traffic_tracking_dish_scan"
+    ]
+  },
+  "source_scripts": [
+    "tools/build_crescent_harbor_blender.py",
+    "tools/crescent_harbor/geometry.py",
+    "tools/crescent_harbor/relays.py",
+    "tools/crescent_harbor/fleet.py",
+    "tools/crescent_harbor/detailing.py",
+    "tools/crescent_harbor/animation.py",
+    "tools/crescent_harbor/traffic.py"
+  ],
+  "provenance": "Original local Blender geometry and procedural pixel textures, derived from the user-approved image-generation concept. No third-party mesh or paid generation service.",
+  "engine_integration": "Production home port uses the complete composition through systems/crescent_harbor_visuals.gd; service locations and player clearance use systems/home_port_sections.gd and systems/crescent_harbor_layout.gd.",
+  "previews": [
+    {
+      "path": "design/home-base/blender-crescent/crescent-core-detail.png",
+      "sha256": "5650abf419e864a6c1fc6d6cf6326c3d278b43af5413faa96e0e857f6227739d"
+    },
+    {
+      "path": "design/home-base/blender-crescent/crescent-harbor-overview.png",
+      "sha256": "6629a402337bc53ecfbbc4fb6510c675bd337bf6806551fbb105a4d877484ffe"
+    },
+    {
+      "path": "design/home-base/blender-crescent/crescent-service-detail.png",
+      "sha256": "7363fcce0fac39214afa0da358255d928adf1a12453265f116f4cb97f5cd9363"
+    }
+  ]
+}

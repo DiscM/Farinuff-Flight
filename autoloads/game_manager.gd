@@ -3,6 +3,7 @@ extends Node
 
 # --- State ---
 var return_to_flight_school := false
+var return_to_launch_bay := false
 var practice_mode := false
 var practice_boss_wave := 0
 var run_objectives_completed := 0
@@ -29,6 +30,7 @@ var dev_enemy_generation_override: int = 0
 ## Enemies killed this run — flushed into MetaProgression's lifetime stats
 ## when the run finalizes.
 var run_kills: int = 0
+var run_insights := preload("res://systems/run_insights.gd").new()
 ## True when a pre-loaded drop pod consumable was armed for this run.
 ## The game scene applies a random power-up at spawn, then clears this.
 var pending_start_powerup: bool = false
@@ -67,7 +69,7 @@ const ALL_UPGRADES: Array[Dictionary] = [
 		"role": "Survival",
 		"name": "Hull Plating",
 		"icon": "🛡️",
-		"description": "+1 life.",
+		"description": "+1 life. Reflect 3 shots in one boost to ready a one-hit armor guard.",
 		"color": Color(0.8, 0.55, 1.0),
 	},
 	{
@@ -171,6 +173,7 @@ var orbs_collected_this_wave: int = 0
 # --- Point Allocation ---
 const STAT_BONUS_STEP: float = 0.045
 const STAT_BONUS_CAP: float = 0.45
+const STAT_MAX_LEVEL: int = 10
 
 var allocation_points_per_milestone: int = 3
 var stat_fire_rate_level: int = 0
@@ -225,6 +228,11 @@ func _ready() -> void:
 	SignalBus.boss_died.connect(_on_boss_died)
 	SignalBus.xp_orb_collected.connect(_on_orb_collected)
 
+func _process(delta: float) -> void:
+	if is_game_active and not practice_mode and not get_tree().paused:
+		run_insights.advance(delta)
+
+
 # --- Score & Combo ---
 
 ## Called when an enemy is killed. Increments the combo counter,
@@ -234,6 +242,7 @@ func _on_enemy_killed(points: int, _position: Vector3) -> void:
 	if practice_mode:
 		return
 	combo += 1
+	run_insights.best_combo = maxi(run_insights.best_combo, combo)
 	run_kills += 1
 	var multiplied_points := points * combo
 	score += multiplied_points
@@ -334,21 +343,35 @@ func _on_orb_collected(value: int) -> void:
 
 # --- Point Allocation ---
 
+## Includes pending choices so the UI cannot spend beyond a stat ceiling.
+func can_allocate_stat(stat_name: String, pending: int = 0) -> bool:
+	match stat_name:
+		"fire_rate":
+			return stat_fire_rate_level + pending < STAT_MAX_LEVEL
+		"speed":
+			return stat_speed_level + pending < STAT_MAX_LEVEL
+		"health":
+			return true
+	return false
+
+
 ## Called by the allocation popup when the player invests a point.
 ## Increments the chosen stat level and applies the corresponding bonus.
 ## [param stat_name]: One of "fire_rate", "health", or "speed".
 func apply_stat_point(stat_name: String) -> void:
+	if not can_allocate_stat(stat_name):
+		return
 	match stat_name:
 		"fire_rate":
 			stat_fire_rate_level += 1
-			bonus_fire_rate_pct = minf(bonus_fire_rate_pct + STAT_BONUS_STEP, STAT_BONUS_CAP)
+			bonus_fire_rate_pct = minf(float(stat_fire_rate_level) * STAT_BONUS_STEP, STAT_BONUS_CAP)
 		"health":
 			stat_health_level += 1
 			lives += 1
 			SignalBus.lives_changed.emit(lives)
 		"speed":
 			stat_speed_level += 1
-			bonus_speed_pct = minf(bonus_speed_pct + STAT_BONUS_STEP, STAT_BONUS_CAP)
+			bonus_speed_pct = minf(float(stat_speed_level) * STAT_BONUS_STEP, STAT_BONUS_CAP)
 
 # --- Player hit ---
 
@@ -515,6 +538,7 @@ func finalize_run() -> void:
 ## reviews can keep persistent Hangar consumables intact.
 func start_game(consume_field_supplies: bool = true, practice: bool = false) -> void:
 	practice_mode = practice
+	run_insights = preload("res://systems/run_insights.gd").new()
 	run_objectives_completed = 0
 	run_objectives_attempted = 0
 	score = 0

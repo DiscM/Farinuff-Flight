@@ -19,6 +19,8 @@ SMOKE_SCENES = (
     "autoload_smoke",
     "menu_boot_smoke",
     "frontend_navigation_smoke",
+    "home_base_smoke",
+    "home_base_ui_smoke",
     "native_completion_smoke",
     "expedition_progression_smoke",
     "pooling_smoke",
@@ -28,6 +30,12 @@ SMOKE_SCENES = (
 
 # Focused regression/visual checks and benchmarks are opt-in, not PR boot gates.
 EXTENDED_SCENES = (
+    "input_handoff_smoke",
+    "recovery_decision_smoke",
+    "practice_lesson_smoke",
+    "reflection_mastery_smoke",
+    "cohesion_smoke",
+    "gameplay_refinement_smoke",
     "dev_commands_smoke",
     "in_house_vfx_smoke",
     "boss_patterns_smoke",

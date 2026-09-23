@@ -1,0 +1,21 @@
+{
+  "source": "/Users/steve/Documents/GitHub/Farinuff-Flight/assets/models/wayfarer_crescent/source/wayfarer_crescent.blend",
+  "source_sha256": "4080c0449433c906a670334295a9c0d49ba04b82f1fd14a1ca55edea28e86110",
+  "blender_version": "5.2.1 LTS",
+  "engine": "BLENDER_EEVEE",
+  "resolution": [
+    960,
+    540
+  ],
+  "fps": 8,
+  "authored_fps": 24.0,
+  "source_frame_step": 3,
+  "frame_count": 160,
+  "duration_seconds": 20.0,
+  "camera_scale": 1.0,
+  "mode": "movie",
+  "output": "/Users/steve/Documents/GitHub/Farinuff-Flight/design/home-base/blender-crescent/crescent-motion.mp4",
+  "render_seconds": 135.952,
+  "mean_frame_seconds": 0.85,
+  "movie_bytes": 3030247
+}

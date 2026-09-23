@@ -84,11 +84,10 @@ func _check_reward_quit_overlap() -> void:
 	game._exit_confirmation.get_child(0)._finish(false)
 	var retry := await _overlay(game, &"try_again_accepted")
 	if retry != null:
-		retry._countdown = 0.1
 		game._confirm_window_close()
 		await _tree.create_timer(0.25, true).timeout
-		_expect(is_instance_valid(retry) and not retry._action_taken and retry._countdown > 0.0, "Quit confirmation suspends the pending Try Again countdown")
-		_expect(game._exit_confirmation.is_ancestor_of(_tree.root.gui_get_focus_owner()), "A countdown cannot move focus behind the quit modal")
+		_expect(is_instance_valid(retry) and not retry._action_taken, "Quit confirmation preserves the pending recovery decision")
+		_expect(game._exit_confirmation.is_ancestor_of(_tree.root.gui_get_focus_owner()), "Recovery cannot move focus behind the quit modal")
 		game._exit_confirmation.get_child(0)._finish(false)
 		retry._on_try_again()
 		await _frames(2)
@@ -177,7 +176,7 @@ func _journey(hull: String, routes: Array, full_meta: bool, index: int) -> void:
 	var ending := "return_home" if index % 2 == 0 else "follow_signal"
 	if ending == "return_home":
 		screen._menu_button.pressed.emit()
-		await _until(func(): return _tree.current_scene != null and _tree.current_scene.scene_file_path == "res://ui/main_menu.tscn", "return home")
+		await _until(func(): return _tree.current_scene != null and _tree.current_scene.scene_file_path == "res://scenes/home_base.tscn", "return home")
 		_expect(SaveManager.high_score == GameManager.score and GameManager.score > 0, "Return Home retains the score record")
 	else:
 		screen._continue_button.pressed.emit()

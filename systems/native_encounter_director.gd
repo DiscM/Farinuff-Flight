@@ -20,6 +20,11 @@ const DEV_BOSS_VARIANTS := {
 	&"core": {"index": 4, "wave": GameManager.FINAL_EXPEDITION_WAVE},
 }
 
+# Teach pursuit first, then armor, area denial, and precision fire separately.
+const ARCHETYPE_FIRST_WAVE := {&"basic": 1, &"fast": 2, &"tank": 3, &"bomber": 4, &"sniper": 6}
+const SECTOR_REGROUP_SECONDS := 2.5
+const FORMATION_RECOVERY_SECONDS := 2.2
+
 const INTERCEPTION := preload("res://campaign/data/encounters/interception.tres")
 const ARMORED_ADVANCE := preload("res://campaign/data/encounters/armored_advance.tres")
 const SNIPER_CROSSFIRE := preload("res://campaign/data/encounters/sniper_crossfire.tres")
@@ -32,6 +37,8 @@ const ROUTE_PATTERNS := {
 	&"profile_echo_field": [PREDICTION_NET, SNIPER_CROSSFIRE],
 }
 var _last_pattern_title := ""
+var _opening_reflection_attempted := false
+var _opening_reflection_remaining := 0.0
 var _pattern: Resource
 var _pattern_index := 0
 var _pattern_age := 0.0
@@ -42,6 +49,7 @@ var gameplay: Node
 var threat: Threat
 var _spawn_in := 0.5
 var _pickup_in := 8.0
+var _pickup_rotation := preload("res://systems/pickup_rotation.gd").new()
 var _wave_epoch := 0
 var started := false
 var _pending_boss_wave := 0
@@ -94,20 +102,41 @@ func _physics_process(delta: float) -> void:
 		spawn_pickup()
 	if GameManager.boss_active:
 		return
+	_opening_reflection_remaining = maxf(0.0, _opening_reflection_remaining - delta)
 	_encounter_in -= delta
 	if _pattern != null:
 		_pattern_age += delta
 		if _pattern_age > float(_pattern.maximum_seconds):
-			_pattern = null
-	elif _encounter_in <= 0.0 and GameManager.current_wave >= 3:
+			_finish_pattern()
+	elif _encounter_in <= 0.0 and GameManager.current_wave >= 3 and _opening_reflection_remaining <= 0.0:
 		_begin_pattern()
 	_spawn_in -= delta
 	if _spawn_in <= 0.0:
 		_spawn_in = GameManager.get_spawn_interval()
 		if _pattern != null:
 			_spawn_pattern_member()
+		elif _try_opening_reflection():
+			pass
 		elif not objectives.try_start():
 			spawn_enemy(_pick_kind())
+
+
+func _try_opening_reflection() -> bool:
+	if _opening_reflection_remaining <= 0.0 or threat.needs_light_enemy():
+		return false
+	# Use one normal spawn slot and all ordinary admission/safety rules.
+	var bounds: Rect2 = gameplay.flight_space.get_combat_bounds()
+	var edge := 0 if gameplay.player.global_position.z >= bounds.get_center().y else 1
+	var actor := spawn_enemy(&"tank", edge, 0.5)
+	if actor != null:
+		_opening_reflection_remaining = 0.0
+		actor.connect(&"burst_fired", _on_opening_volley, CONNECT_ONE_SHOT)
+	return true
+
+
+func _on_opening_volley(_shots: int) -> void:
+	if GameManager.is_game_active and GameManager.current_wave == 3 and not GameManager.boss_active:
+		gameplay.hud.show_reflection_hint()
 
 
 func spawn_enemy(kind: StringName, entry_edge: int = -1, lane: float = 0.5) -> Enemy:
@@ -201,7 +230,7 @@ func spawn_pickup() -> void:
 	var bounds: Rect2 = gameplay.flight_space.get_combat_bounds()
 	gameplay.power_up_manager.spawn_power_up(
 		Vector3(randf_range(bounds.position.x + 5, bounds.end.x - 5), 0, bounds.position.y),
-		randi_range(0, 4 if GameManager.boss_active else 5)
+		_pickup_rotation.next(GameManager.boss_active)
 	)
 
 
@@ -214,7 +243,7 @@ func _pick_kind() -> StringName:
 	var profile := ExpeditionManager.get_current_route_profile()
 	var total := 0.0
 	for kind: StringName in weights:
-		if light_only and kind not in [&"basic", &"fast"]:
+		if not is_archetype_available(kind) or (light_only and kind not in [&"basic", &"fast"]):
 			weights[kind] = 0.0
 		elif profile != null:
 			weights[kind] = float(weights[kind]) * float(profile.get(String(kind) + "_weight"))
@@ -227,12 +256,20 @@ func _pick_kind() -> StringName:
 	return &"basic"
 
 
+func is_archetype_available(kind: StringName, wave: int = GameManager.current_wave) -> bool:
+	return wave >= int(ARCHETYPE_FIRST_WAVE.get(kind, 1))
+
+
 func _on_wave_started(wave: int) -> void:
+	_opening_reflection_remaining = 0.0
+	if wave == 3 and not _opening_reflection_attempted and not GameManager.practice_mode:
+		_opening_reflection_attempted = true
+		_opening_reflection_remaining = 8.0
 	_pattern = null
 	_encounter_in = 7.0
 	_wave_epoch += 1
 	threat.set_generation(GameManager.get_enemy_generation(wave))
-	_spawn_in = 0.5
+	_spawn_in = SECTOR_REGROUP_SECONDS if wave > 1 and wave % 5 == 1 else 0.5
 	if started and wave % 5 == 0:
 		_begin_boss.call_deferred(_wave_epoch)
 
@@ -285,7 +322,10 @@ func _begin_pattern() -> void:
 	var candidates: Array = ROUTE_PATTERNS.get(profile.id, [INTERCEPTION]) if profile != null else [INTERCEPTION, ARMORED_ADVANCE]
 	var eligible: Array[Resource] = []
 	for candidate: Resource in candidates:
-		if GameManager.current_wave >= int(candidate.minimum_wave) and str(candidate.title) != _last_pattern_title:
+		var roster_available := true
+		for kind: StringName in candidate.archetypes:
+			roster_available = roster_available and is_archetype_available(kind)
+		if roster_available and GameManager.current_wave >= int(candidate.minimum_wave) and str(candidate.title) != _last_pattern_title:
 			eligible.append(candidate)
 	_pattern = eligible.pick_random() if not eligible.is_empty() else INTERCEPTION
 	_last_pattern_title = str(_pattern.title)
@@ -317,4 +357,10 @@ func _spawn_pattern_member() -> void:
 		return
 	_pattern_index += 1
 	if _pattern_index >= _pattern.archetypes.size():
-		_pattern = null
+		_finish_pattern()
+
+
+func _finish_pattern() -> void:
+	_pattern = null
+	# Existing threats remain live; the spawn stream leaves a collection/positioning beat.
+	_spawn_in = maxf(_spawn_in, FORMATION_RECOVERY_SECONDS)

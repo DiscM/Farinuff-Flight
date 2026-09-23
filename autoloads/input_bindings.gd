@@ -43,10 +43,12 @@ func _ready() -> void:
 
 func _input(event: InputEvent) -> void:
 	var next := family
-	if event is InputEventJoypadButton or (event is InputEventJoypadMotion and absf(event.axis_value) > 0.5):
+	# A release from the previous device must not steal focus or clear the new
+	# device's fire latch. Only intentional active input claims the controls.
+	if (event is InputEventJoypadButton and event.pressed) or (event is InputEventJoypadMotion and absf(event.axis_value) > 0.5):
 		active_gamepad = event.device
 		next = "gamepad"
-	elif event is InputEventKey or event is InputEventMouseButton:
+	elif (event is InputEventKey and event.pressed and not event.echo) or (event is InputEventMouseButton and event.pressed):
 		next = "keyboard"
 	if next != family:
 		family = next

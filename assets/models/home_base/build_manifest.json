@@ -1,0 +1,43 @@
+[
+  {
+    "asset": "wayfarer_station",
+    "bytes": 5122440,
+    "objects": [
+      "WayfarerStation",
+      "RadarDish",
+      "ReactorRotor",
+      "StationHull"
+    ],
+    "triangles": 66548
+  },
+  {
+    "asset": "service_drone",
+    "bytes": 105840,
+    "objects": [
+      "ServiceDrone",
+      "DroneHull",
+      "DroneScanner"
+    ],
+    "triangles": 616
+  },
+  {
+    "asset": "cargo_tug",
+    "bytes": 188416,
+    "objects": [
+      "CargoTug",
+      "TugBeacon",
+      "TugHull"
+    ],
+    "triangles": 1796
+  },
+  {
+    "asset": "navigation_buoy",
+    "bytes": 127956,
+    "objects": [
+      "NavigationBuoy",
+      "BuoyBeacon",
+      "BuoyMast"
+    ],
+    "triangles": 932
+  }
+]

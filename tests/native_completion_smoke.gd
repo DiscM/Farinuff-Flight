@@ -71,8 +71,10 @@ func _run_checks() -> void:
 	await _check_native_registries_and_checkout_reuse()
 	_check_upgrade_contract()
 	await _check_projectile_contract()
+	await _check_enemy_projectile_capacity()
 	await _check_boss_variants()
 	_check_continue_transition()
+	await _check_missing_enemy_projectile_cache()
 	GameManager.current_wave = 1
 	GameManager.is_game_active = false
 	if _failures.is_empty():
@@ -396,6 +398,68 @@ func _wait_for_pool_returns() -> void:
 	# idle frames make this deterministic without a wall-clock sleep.
 	await get_tree().process_frame
 	await get_tree().process_frame
+
+
+func _check_enemy_projectile_capacity() -> void:
+	# Exercise the shipping pool size: a smaller burst never crosses the generic
+	# ObjectPool retention limit and cannot detect a half-discarded warmup.
+	var capacity := projectile_manager.enemy_pool_size
+	var warmed_ids: Dictionary[int, bool] = {}
+	for child in $World3D/PoolRoot3D.get_children():
+		if child is Projectile3D and child.kind == Projectile.Kind.ENEMY:
+			warmed_ids[child.get_instance_id()] = true
+	_expect(warmed_ids.size() == capacity, "Enemy warmup retains every configured projectile")
+	if warmed_ids.size() != capacity:
+		return
+	var spawn_position := flight_space.screen_to_combat_plane(Vector2(300.0, 250.0))
+	var hit_target := Area3D.new()
+	$World3D.add_child(hit_target)
+	var routed_damage: Array[int] = []
+	var record_hit := func(_target: Area3D, _position: Vector3, damage: int) -> void:
+		routed_damage.append(damage)
+	projectile_manager.enemy_projectile_hit.connect(record_hit)
+	for cycle in range(2):
+		var before: Dictionary = projectile_manager.get_metrics()["enemy"]
+		for index in range(capacity + 1):
+			projectile_manager.fire_enemy_projectile(spawn_position, Vector3.FORWARD)
+		var metrics: Dictionary = projectile_manager.get_metrics()["enemy"]
+		_expect(int(metrics.active) == capacity, "Full enemy capacity is usable on cycle %d" % cycle)
+		_expect(int(metrics.rejected_shots) == int(before.rejected_shots) + 1, "Overflow rejects exactly one enemy shot")
+		_expect(int(metrics.pool_growth_after_warmup) == 0, "Saturation never instantiates projectiles during combat")
+		var checkout: Array = projectile_manager._pools[Projectile.Kind.ENEMY].checked_out
+		for shot: Projectile3D in checkout:
+			_expect(warmed_ids.has(shot.get_instance_id()), "Every saturated shot reuses a warmed instance")
+		if not checkout.is_empty():
+			var last := checkout.back() as Projectile3D
+			last.damage = 7
+			last._report_hit(hit_target, spawn_position)
+			_expect(routed_damage.size() == cycle + 1 and routed_damage.back() == 7, "Last pooled shot retains hit routing")
+		projectile_manager.clear_enemy_projectiles()
+		# Cleared shots are still checked out until their deferred return. They
+		# must not be replaced with new allocations during that interval.
+		projectile_manager.fire_enemy_projectile(spawn_position, Vector3.FORWARD)
+		_expect(int(projectile_manager.get_metrics()["enemy"].rejected_shots) == int(before.rejected_shots) + 2, "Pending returns remain unavailable")
+		await _wait_for_pool_returns()
+		metrics = projectile_manager.get_metrics()["enemy"]
+		_expect(int(metrics.active) == 0 and int(metrics.returning) == 0, "All saturated shots complete deferred return")
+		_expect(int(metrics.idle) == capacity, "Full capacity is ready for reuse")
+	projectile_manager.enemy_projectile_hit.disconnect(record_hit)
+	hit_target.queue_free()
+
+
+func _check_missing_enemy_projectile_cache() -> void:
+	# Lost cache entries must degrade to an observed rejection, never a newly
+	# instantiated shot with missing flight-space and damage signal wiring.
+	projectile_manager.clear_enemy_projectiles()
+	await _wait_for_pool_returns()
+	ObjectPool.clear_pool(ProjectileManager.ENEMY_PROJECTILE_SCENE)
+	await _wait_for_pool_returns()
+	var before: Dictionary = projectile_manager.get_metrics()["enemy"]
+	projectile_manager.fire_enemy_projectile(player.global_position, Vector3.FORWARD)
+	var after: Dictionary = projectile_manager.get_metrics()["enemy"]
+	_expect(int(after.active) == 0, "Missing enemy cache cannot create an unwired active projectile")
+	_expect(int(after.rejected_shots) == int(before.rejected_shots) + 1, "Missing cached projectile is reported as a rejected shot")
+	_expect(int(after.pool_growth_after_warmup) == 0, "Missing cache never triggers combat-time allocation")
 
 
 func _check_boss_variants() -> void:

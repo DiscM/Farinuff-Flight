@@ -97,20 +97,16 @@ def check_native_entry_and_transitions() -> None:
     resource_cache = read("autoloads/resource_cache.gd")
 
     require(
-        'run/main_scene="res://ui/main_menu.tscn"' in project,
-        "project main scene must remain the native-capable menu",
+        'run/main_scene="res://scenes/home_base.tscn"' in project,
+        "project must start directly in the flyable home port",
     )
     require_all(
         "ui/main_menu.gd",
         menu,
         [
-            ("native run path", f'const NATIVE_RUN_PATH := "{NATIVE_RUN}"'),
-            ("shared frontend entry", "func _mount_command_deck()"),
-            ("frontend scene", 'preload("res://ui/frontend/frontend_shell.tscn")'),
-            ("frontend launch signal", "_frontend.expedition_requested.connect(_launch_from_frontend)"),
-            ("frontend launch handler", "func _launch_from_frontend()"),
-            ("cache-backed native wait", "await ResourceCache.wait_for_scene(path)"),
-            ("native packed-scene transition", "get_tree().change_scene_to_packed(scene)"),
+            ("legacy path compatibility", 'const HOME_BASE_PATH := "res://scenes/home_base.tscn"'),
+            ("deferred home port redirect", "_enter_home_port.call_deferred()"),
+            ("home port scene transition", "get_tree().change_scene_to_file(HOME_BASE_PATH)"),
         ],
     )
     require(
@@ -122,7 +118,7 @@ def check_native_entry_and_transitions() -> None:
         resource_cache,
         [
             ("root-scene allowlist", "const CACHEABLE_SCENES: PackedStringArray"),
-            ("bounded menu/run/practice budget", "const MAX_CACHED_SCENES := 3"),
+            ("bounded home/run/practice budget", "const MAX_CACHED_SCENES := 3"),
             ("practice scene", 'const PRACTICE_PATH := "res://scenes/flight_practice.tscn"'),
             ("threaded scene request without nested dependency workers", 'ResourceLoader.load_threaded_request(path, \"PackedScene\", false)'),
             ("asynchronous wait", "func wait_for_scene(path: String) -> PackedScene"),
@@ -135,12 +131,11 @@ def check_native_entry_and_transitions() -> None:
             ("retry handler", "func _on_retry_pressed()"),
             ("native retry scene", f'change_scene_to_file("{NATIVE_RUN}")'),
             ("menu handler", "func _on_menu_pressed()"),
-            ("menu return scene", 'change_scene_to_file("res://ui/main_menu.tscn")'),
+            ("home port return scene", 'change_scene_to_file("res://scenes/home_base.tscn")'),
         ],
     )
-    require(exists("ui/main_menu.tscn"), "native menu scene must exist")
-    require('name="LaunchButton" type="Button"' in read("ui/frontend/command_deck.tscn"), "command deck must expose the Expedition launch button")
-    require("launch_button.pressed.connect(_on_launch_pressed)" in read("ui/frontend/command_deck.gd"), "command deck must wire its launch button")
+    require(exists("scenes/home_base.tscn"), "home port scene must exist")
+    require(exists("ui/main_menu.tscn"), "legacy menu bookmarks must retain a redirect")
     require('name="RetryButton" type="Button"' in read("ui/game_over.tscn"), "game over must expose retry")
     require(not (ROOT / "scenes/game.tscn").exists(), "retired 2D gameplay entry must stay absent")
 
@@ -173,7 +168,7 @@ def check_native_entry_and_transitions() -> None:
             ("endless route", "screen.continue_endless.connect(_continue_endless)"),
             ("victory menu route", "screen.return_to_menu.connect(_return_to_menu)"),
             ("continue call", "GameManager.continue_into_endless()"),
-            ("victory menu transition", 'get_tree().change_scene_to_file("res://ui/main_menu.tscn")'),
+            ("victory home transition", 'get_tree().change_scene_to_file("res://scenes/home_base.tscn")'),
         ],
     )
     require_all(

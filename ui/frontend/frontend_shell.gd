@@ -9,7 +9,9 @@ class_name FrontendShell
 
 signal practice_requested(boss_wave: int)
 signal expedition_requested
+signal home_base_requested
 signal open_section(page_id: StringName)
+signal service_closed
 
 ## Production pages share the shell; a missing resource gets a recoverable error page.
 const PAGE_REGISTRY: Dictionary = {
@@ -89,6 +91,9 @@ const NAV_MARKER_IDLE := Color(1.0, 1.0, 1.0, 0.12)
 @onready var build_label: Label = %BuildLabel
 @onready var modal_layer: Control = %ModalLayer
 
+## Standalone navigation is retained for legacy scenes and focused menu tests.
+## The playable home port hosts one service at a time with global navigation off.
+@export var service_mode := false
 @export var initial_page: StringName = &"command_deck"
 var initial_payload: Dictionary = {}
 var _history: Array[Dictionary] = []
@@ -111,6 +116,9 @@ var _nav_buttons: Dictionary = {}
 var _nav_markers: Dictionary = {}
 var _nav_tab_buttons: Dictionary = {}
 var _nav_tab_markers: Dictionary = {}
+var _service_header: PanelContainer
+var _service_title: Label
+var _service_return: Button
 
 
 func _ready() -> void:
@@ -119,6 +127,8 @@ func _ready() -> void:
 	_build_nav()
 	_wrap_horizontal_nav()
 	_prepare_context_panel()
+	if service_mode:
+		_prepare_service_header()
 	SaveManager.settings_changed.connect(_on_settings_changed)
 	_footer_build_label()
 	_last_device = _initial_device()
@@ -144,6 +154,9 @@ func show_page(page_id: StringName, payload: Dictionary = {}, remember: bool = t
 	if has_open_modal():
 		push_warning("FrontendShell: refusing page change while a modal is open")
 		return
+	if service_mode and page_id == &"command_deck":
+		service_closed.emit()
+		return
 	if not PAGE_REGISTRY.has(page_id):
 		push_error("FrontendShell: unknown page id '%s'" % page_id)
 		return
@@ -159,6 +172,11 @@ func show_page(page_id: StringName, payload: Dictionary = {}, remember: bool = t
 		_history.append({"page": _current_page_id, "payload": _current_payload.duplicate(), "focus": controls.find(get_viewport().gui_get_focus_owner())})
 		if _history.size() > 24:
 			_history.pop_front()
+	var external_focus: Control
+	if service_mode:
+		var focused := get_viewport().gui_get_focus_owner()
+		if is_instance_valid(focused) and focused.is_visible_in_tree() and not is_ancestor_of(focused):
+			external_focus = focused
 	_close_details()
 	_remove_current_page()
 	_current_page_id = page_id
@@ -171,7 +189,10 @@ func show_page(page_id: StringName, payload: Dictionary = {}, remember: bool = t
 	_on_page_active(page)
 	_refresh_nav()
 	_refresh_status_rail()
+	_refresh_service_title()
 	_update_drawer(payload)
+	if is_instance_valid(external_focus) and external_focus.is_visible_in_tree():
+		external_focus.grab_focus()
 	call_deferred("_focus_page_primary")
 
 
@@ -218,6 +239,9 @@ func back() -> bool:
 		var previous: Dictionary = _history.pop_back()
 		_restore_focus_index = int(previous.focus)
 		show_page(previous.page, previous.payload, false)
+		return true
+	if service_mode:
+		service_closed.emit()
 		return true
 	if _current_page_id != &"command_deck":
 		show_page(&"command_deck", {}, false)
@@ -283,6 +307,8 @@ func _bind_page(page: Control, payload: Dictionary) -> void:
 		page.setup_payload(payload)
 	if page.has_signal("expedition_requested"):
 		page.connect("expedition_requested", _on_page_expedition_requested)
+	if page.has_signal("home_base_requested"):
+		page.connect("home_base_requested", _on_page_home_base_requested)
 	if page.has_signal("practice_requested"):
 		page.connect("practice_requested", _on_page_practice_requested)
 	if page.has_signal("back_requested"):
@@ -359,6 +385,10 @@ func _on_page_expedition_requested() -> void:
 	expedition_requested.emit()
 
 
+func _on_page_home_base_requested() -> void:
+	home_base_requested.emit()
+
+
 func _on_page_open_section(page_id: StringName) -> void:
 	open_section.emit(page_id)
 	if PAGE_REGISTRY.has(page_id):
@@ -407,6 +437,8 @@ func _restore_invoker_focus(invoker: Control) -> void:
 
 func _suspend_page_focus() -> void:
 	_suspended_focus.clear()
+	if is_instance_valid(_service_return):
+		_suspend_control_focus(_service_return)
 	if not is_instance_valid(_current_page):
 		return
 	_suspend_control_focus(_current_page)
@@ -438,8 +470,14 @@ func _focus_modal_primary() -> void:
 # --- Focus routing ------------------------------------------------------------
 
 func _focus_page_primary() -> void:
-	if not is_instance_valid(_current_page):
+	if _navigation_locked or has_open_modal() or not is_instance_valid(_current_page):
 		return
+	if service_mode:
+		# A station-owned confirmation can be mounted while a recovered page is
+		# still completing its deferred layout. Its modal keeps keyboard focus.
+		var owner := get_viewport().gui_get_focus_owner()
+		if is_instance_valid(owner) and owner.is_visible_in_tree() and not is_ancestor_of(owner):
+			return
 	if _restore_focus_index >= 0:
 		var controls := _current_page.find_children("*", "Control", true, false)
 		var index := _restore_focus_index
@@ -489,6 +527,10 @@ func _on_gated_mouse_entered(control: Control) -> void:
 
 
 func _wire_primary_neighbor(primary: Control) -> void:
+	if service_mode and is_instance_valid(_service_return):
+		primary.focus_neighbor_top = _service_return.get_path()
+		_service_return.focus_neighbor_bottom = primary.get_path()
+		return
 	var active_button := get_nav_button(_current_page_id)
 	if active_button is Control:
 		primary.focus_neighbor_left = active_button.get_path()
@@ -567,7 +609,7 @@ func _refresh_nav() -> void:
 
 
 func _cycle_page(direction: int) -> void:
-	if has_open_modal():
+	if service_mode or has_open_modal():
 		return
 	var index := PAGE_NAV_ORDER.find(_current_page_id)
 	if index < 0:
@@ -664,6 +706,8 @@ func _update_prompts() -> void:
 	back_prompt.text = labels[1]
 	details_prompt.text = labels[2]
 	tab_prompt.text = labels[3]
+	if service_mode:
+		tab_prompt.hide()
 
 
 func _footer_build_label() -> void:
@@ -684,11 +728,57 @@ func _on_viewport_resized() -> void:
 	objective_value.visible = width >= 1100.0
 	wave_value.visible = width >= 800.0
 	build_label.visible = width >= 900.0
-	tab_prompt.visible = width >= 740.0
+	tab_prompt.visible = width >= 740.0 and not service_mode
 	left_nav.hide()
-	top_tabs.show()
+	top_tabs.visible = not service_mode
 	drawer.hide()
 	details_overlay.hide()
+	if service_mode:
+		objective_value.hide()
+		wave_value.visible = width >= 1100.0
+		if is_instance_valid(_service_title):
+			_service_title.visible = width >= 650.0
+		$RootLayout.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		$RootLayout.offset_left = 24.0 if width >= 900.0 else 12.0
+		$RootLayout.offset_right = -$RootLayout.offset_left
+		$RootLayout.offset_top = 20.0
+		$RootLayout.offset_bottom = -20.0
+
+
+func _prepare_service_header() -> void:
+	$Backdrop.color = Color(0.006, 0.013, 0.03, 0.94)
+	_service_header = PanelContainer.new()
+	_service_header.name = "StationServiceHeader"
+	_service_header.custom_minimum_size.y = 60.0
+	$RootLayout.add_child(_service_header)
+	$RootLayout.move_child(_service_header, 0)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 20)
+	_service_header.add_child(row)
+	_service_title = Label.new()
+	_service_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_service_title.add_theme_color_override("font_color", FALLBACK_CYAN)
+	_service_title.add_theme_font_size_override("font_size", 18)
+	row.add_child(_service_title)
+	_service_return = Button.new()
+	_service_return.name = "ReturnToStation"
+	_service_return.text = "RETURN TO STATION"
+	_service_return.custom_minimum_size = Vector2(220.0, 44.0)
+	_service_return.pressed.connect(_return_to_station)
+	row.add_child(_service_return)
+	_bind_hover_focus(_service_header)
+	_refresh_service_title()
+
+
+func _refresh_service_title() -> void:
+	if is_instance_valid(_service_title):
+		_service_title.text = "WAYFARER  /  %s" % str(PAGE_DISPLAY_NAMES.get(_current_page_id, "Station Services")).to_upper()
+
+
+func _return_to_station() -> void:
+	if _navigation_locked or has_open_modal():
+		return
+	service_closed.emit()
 
 
 # --- Shared style conveniences --------------------------------------------------
@@ -730,6 +820,8 @@ func _fit_full_rect(control: Control) -> void:
 
 func set_navigation_locked(locked: bool) -> void:
 	_navigation_locked = locked
+	if is_instance_valid(_service_return):
+		_service_return.disabled = locked
 	if locked:
 		get_viewport().gui_release_focus()
 

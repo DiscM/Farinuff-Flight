@@ -55,6 +55,7 @@ var last_step_usec := 0
 var last_sweep_performed := false
 var _bounds := Rect2()
 var _idle_parent: Node3D
+var _retained_capacity := ObjectPool.MAX_IDLE_PER_SCENE
 var _interaction_range: InteractionRange
 var _flight_space: FlightSpace
 var _return_pending := false
@@ -82,11 +83,13 @@ func _ready() -> void:
 func configure_pool(
 	idle_parent: Node3D,
 	flight_space: FlightSpace,
-	interaction_range: InteractionRange = null
+	interaction_range: InteractionRange = null,
+	retained_capacity: int = ObjectPool.MAX_IDLE_PER_SCENE
 ) -> void:
 	_idle_parent = idle_parent
 	_flight_space = flight_space
 	_interaction_range = interaction_range
+	_retained_capacity = retained_capacity
 
 
 ## Render the shared mesh/material under the transition cover without arming
@@ -418,7 +421,7 @@ func _finish_return() -> void:
 	process_mode = Node.PROCESS_MODE_DISABLED
 	_return_pending = false
 	_impact_pending = false
-	ObjectPool.release(self, _idle_parent)
+	ObjectPool.release(self, _idle_parent, _retained_capacity)
 	returned_to_pool.emit(self)
 
 

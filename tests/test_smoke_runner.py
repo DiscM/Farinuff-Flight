@@ -88,11 +88,11 @@ class SmokeRunnerTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         for scene in ("menu_boot", "frontend_navigation", "native_completion",
                       "expedition_progression", "autoload", "pooling", "resource_cache",
-                      "audio_settings"):
+                      "audio_settings", "home_base", "home_base_ui"):
             self.assertIn(scene.upper() + "_SMOKE_PASS", result.stdout)
         self.assertNotIn("RUN_WARMUP_BENCHMARK_PASS", result.stdout)
         self.assertNotIn("FRONTIER_VISUAL_SMOKE_PASS", result.stdout)
-        self.assertIn("Smoke tests: 8/8 passed", result.stdout)
+        self.assertIn("Smoke tests: 10/10 passed", result.stdout)
 
     def test_extended_suite_runs_real_scene_wrappers_including_benchmark(self) -> None:
         result = self.run_fixture(

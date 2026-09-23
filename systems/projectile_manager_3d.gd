@@ -109,7 +109,7 @@ func warm_projectile_pools() -> bool:
 				_warming = false
 				return false
 			var interaction: InteractionRange = _interaction_range if projectile.kind == Projectile.Kind.ENEMY else null
-			projectile.configure_pool(_idle_parent, _flight_space, interaction)
+			projectile.configure_pool(_idle_parent, _flight_space, interaction, pool.capacity)
 			projectile.hit.connect(_on_projectile_hit.bind(projectile))
 			projectile.returned_to_pool.connect(_on_projectile_returned.bind(pool))
 			projectile.prepare_visual_warmup()
@@ -130,6 +130,11 @@ func warm_projectile_pools() -> bool:
 			budget.reset()
 	await get_tree().process_frame
 	_warming = false
+	# A successful warmup means the actual instances survived retention, not
+	# merely that their IDs were recorded before the deferred return.
+	for projectile in warm_nodes:
+		if not is_instance_valid(projectile) or projectile.is_queued_for_deletion() or projectile.get_parent() != _idle_parent:
+			return false
 	is_ready = true
 	return true
 
@@ -235,11 +240,16 @@ func _fire(
 	if pool.checked_out.size() >= pool.warmed_ids.size():
 		pool.rejected_shots += 1
 		return
-	var projectile := ObjectPool.acquire(pool.scene, _active_parent) as Projectile
+	var projectile := ObjectPool.acquire(pool.scene, _active_parent, false) as Projectile
 	if projectile == null:
+		pool.rejected_shots += 1
 		return
 	if not pool.warmed_ids.has(projectile.get_instance_id()):
-		pool.pool_growth += 1
+		# A different manager or an external cache mutation must never introduce
+		# a projectile without this run's collision and hit/return wiring.
+		ObjectPool.release(projectile, _idle_parent, pool.capacity)
+		pool.rejected_shots += 1
+		return
 	var screen_direction := _flight_space.combat_motion_to_screen(direction).normalized()
 	if screen_direction.is_zero_approx():
 		screen_direction = Vector2.UP if kind == Projectile.Kind.PLAYER else Vector2.DOWN

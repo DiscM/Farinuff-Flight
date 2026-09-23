@@ -38,7 +38,14 @@ asset-loading time; observe those separately.
 Events cover movement of at least 100 baseline pixels, first shot, first reflected
 projectile, first reflected hit on an enemy, wave starts, boss spawns, first boss
 defeat, upgrade offer, first committed installation, defeats, and closing the run.
-The initial record includes version, hull, challenges, and practice status.
+The initial record includes version, hull, challenges, practice status, starting
+lives, and starting speed/fire-rate bonuses. Schema 2 also records each completed
+wave’s active duration, build, boosts, reflections, counter-hits, chains, accepted
+hits, and armor saves; every module offer and installation; and boss duration.
+Defeat and closing records retain the current wave’s partial measurements so
+failed or abandoned runs remain available. Defeat includes the last damage source.
+These detailed events remain in both the raw log and the JSON session summary.
+Armor saves count absorbed damage events, not lives or damage units.
 
 Missing milestones mean **not observed**, not zero seconds or a successful
 completion. Separate practice from Expeditions. Reject assisted sessions and

@@ -11,6 +11,9 @@ func _ready() -> void:
 	player.set_physics_process(false)
 	_check_texture_bridge()
 	await _check_material_sharing_and_feedback()
+	# The boot autoload prepares the production run on a worker. Finish that
+	# request before shutdown tears down resources this focused test does not use.
+	_expect(await ResourceCache.wait_for_scene(ResourceCache.NATIVE_RUN_PATH) != null, "Boot preparation completes before test shutdown")
 	for failure in _failures:
 		push_error(failure)
 	print("PIXEL_ENEMY_MATERIAL_SMOKE_PASS" if _failures.is_empty() else "PIXEL_ENEMY_MATERIAL_SMOKE_FAIL")

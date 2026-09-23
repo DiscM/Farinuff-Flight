@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "package_id": "farinuff-flight.wayfarer-homeport",
+  "version": "1.0.0",
+  "assets": [
+    {
+      "id": "ff.homeport.station",
+      "file": "wayfarer_station.glb",
+      "name": "Wayfarer Homeport",
+      "role": "Fly-around home-base station",
+      "max_triangles": 120000,
+      "max_radius_xz": 40,
+      "max_height": 22,
+      "required_nodes": ["ReactorRotor", "RadarDish"],
+      "loop_clips": ["station_idle"],
+      "moving_nodes": {"station_idle": ["ReactorRotor", "RadarDish"]}
+    },
+    {
+      "id": "ff.homeport.service-drone",
+      "file": "service_drone.glb",
+      "name": "Homeport Service Drone",
+      "role": "Maintenance craft",
+      "max_triangles": 8000,
+      "loop_clips": ["service_idle"]
+    },
+    {
+      "id": "ff.homeport.cargo-tug",
+      "file": "cargo_tug.glb",
+      "name": "Homeport Cargo Tug",
+      "role": "Local freight traffic",
+      "max_triangles": 12000,
+      "loop_clips": ["service_idle"]
+    },
+    {
+      "id": "ff.homeport.navigation-buoy",
+      "file": "navigation_buoy.glb",
+      "name": "Homeport Navigation Buoy",
+      "role": "Approach and perimeter marker",
+      "max_triangles": 6000,
+      "loop_clips": ["service_idle"]
+    }
+  ]
+}

@@ -2,8 +2,8 @@ extends Node
 
 const POOL_KEY_META := "_pool_key"
 const POOL_IDLE_META := "_pool_idle"
-## Maximum idle nodes retained per scene. Boss-wave spikes would otherwise
-## keep hundreds of idle nodes alive for the rest of the run.
+## Default idle limit per scene. Prewarmed managers may supply their declared
+## capacity when returning nodes; all releases retain the global bound below.
 const MAX_IDLE_PER_SCENE := 512
 ## Keep a runaway collection of dynamically loaded scenes from retaining an
 ## unbounded number of idle nodes. The per-scene limit still protects a single
@@ -15,12 +15,15 @@ var _idle_count := 0
 
 ## Returns an active instance of the given scene, reusing a cached node when
 ## one is available. The caller is responsible for configuring the node state.
-func acquire(scene: PackedScene, parent: Node) -> Node:
+## Prewarmed gameplay managers disable creation to reject cache misses safely.
+func acquire(scene: PackedScene, parent: Node, allow_create: bool = true) -> Node:
 	if scene == null or not _is_usable_parent(parent):
 		return null
 	var key := scene.resource_path
 	var node := _take_from_pool(key)
 	if node == null:
+		if not allow_create:
+			return null
 		node = scene.instantiate()
 		if node == null:
 			return null
@@ -29,6 +32,8 @@ func acquire(scene: PackedScene, parent: Node) -> Node:
 		var previous_parent := node.get_parent()
 		if not _is_usable_parent(previous_parent):
 			node.queue_free()
+			if not allow_create:
+				return null
 			node = scene.instantiate()
 			if node == null:
 				return null
@@ -46,7 +51,9 @@ func acquire(scene: PackedScene, parent: Node) -> Node:
 
 ## Returns a node to the pool immediately. A scene-owned idle parent can keep
 ## pooled nodes within that scene's lifetime; the default remains this autoload.
-func release(node: Node, idle_parent: Node = null) -> void:
+## A prewarmed manager can retain its declared capacity instead of the generic
+## per-scene default. The global memory bound still applies to every release.
+func release(node: Node, idle_parent: Node = null, retained_capacity: int = MAX_IDLE_PER_SCENE) -> void:
 	if not is_instance_valid(node) or node.is_queued_for_deletion():
 		return
 	if node.get_meta(POOL_IDLE_META, false):
@@ -64,16 +71,17 @@ func release(node: Node, idle_parent: Node = null) -> void:
 			return
 		parent.remove_child(node)
 	var bucket: Array = _available.get(key, [])
+	var idle_limit := clampi(retained_capacity, 1, MAX_IDLE_TOTAL)
 	# A full bucket can contain weak references whose scene-owned parent was
 	# already torn down. Compact only on pressure so the common release path
 	# stays allocation-free.
-	if bucket.size() >= MAX_IDLE_PER_SCENE:
+	if bucket.size() >= idle_limit:
 		bucket = _compact_bucket(bucket)
 		_store_bucket(key, bucket)
 	if _idle_count >= MAX_IDLE_TOTAL:
 		prune_stale()
 		bucket = _available.get(key, bucket)
-	if bucket.size() >= MAX_IDLE_PER_SCENE or _idle_count >= MAX_IDLE_TOTAL:
+	if bucket.size() >= idle_limit or _idle_count >= MAX_IDLE_TOTAL:
 		_store_bucket(key, bucket)
 		node.queue_free()
 		return

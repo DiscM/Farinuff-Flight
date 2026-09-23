@@ -6,7 +6,7 @@ const SHIP_PREVIEW_SCRIPT := preload("res://entities/player/ship_upgrade_preview
 const FALLBACK_ICON := "✦"
 const FALLBACK_NAME := "YOUR SHIP"
 const NATIVE_RUN_PATH := "res://scenes/native_3d_run.tscn"
-const MAIN_MENU_PATH := "res://ui/main_menu.tscn"
+const MAIN_MENU_PATH := "res://scenes/home_base.tscn"
 
 @onready var score_label: Label = $VBoxContainer/ScoreLabel
 @onready var high_score_label: Label = $VBoxContainer/HighScoreLabel
@@ -29,6 +29,10 @@ func _ready() -> void:
 	$VBoxContainer/RetryButton.pressed.connect(_on_retry_pressed)
 	$VBoxContainer/MenuButton.pressed.connect(_on_menu_pressed)
 	_build_native_preview()
+	var record := preload("res://ui/shared/flight_record.gd").new()
+	record.show_advice = true
+	$VBoxContainer.add_child(record)
+	$VBoxContainer.move_child(record, $VBoxContainer/HighScoreLabel.get_index())
 	var heading := $VBoxContainer.get_child(0) as Label
 	if heading != null:
 		preload("res://ui/shared/menu_briefing.gd").wrap_heading(heading)
@@ -147,7 +151,7 @@ func _on_retry_pressed() -> void:
 	_transitioning = false
 	get_tree().change_scene_to_file("res://scenes/native_3d_run.tscn")
 
-## Unpauses the game and reuses the resident title scene.
+## Unpauses the game and reuses the resident home port scene.
 func _on_menu_pressed() -> void:
 	if _transitioning:
 		return
@@ -157,4 +161,4 @@ func _on_menu_pressed() -> void:
 	if menu_scene != null and get_tree().change_scene_to_packed(menu_scene) == OK:
 		return
 	_transitioning = false
-	get_tree().change_scene_to_file("res://ui/main_menu.tscn")
+	get_tree().change_scene_to_file("res://scenes/home_base.tscn")

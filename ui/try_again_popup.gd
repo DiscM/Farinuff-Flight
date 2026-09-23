@@ -10,6 +10,8 @@ const SHIP_PREVIEW_SCRIPT := preload("res://entities/player/ship_upgrade_preview
 const FALLBACK_ICON := "✦"
 const FALLBACK_NAME := "YOUR SHIP"
 
+var _end_confirmation: Control
+
 ## Builds the try-again UI and plays the entrance animation.
 ## Runs in PROCESS_MODE_ALWAYS so it works while the game is paused.
 func _ready() -> void:
@@ -19,9 +21,9 @@ func _ready() -> void:
 	_build_ui()
 	_animate_in()
 
-## Constructs the try-again popup UI: dark overlay, "YOU DIED" title,
-## remaining stock icons, "TRY AGAIN" and "Give Up" buttons, and a
-## countdown timer label that auto-declines after 10 seconds.
+## Constructs the recovery UI: dark overlay, "SHIP DESTROYED" title,
+## remaining stock icons, Continue and End Run buttons, and
+## an explicit recovery decision without a deadline.
 func _build_ui() -> void:
 	# Dark overlay
 	var bg := ColorRect.new()
@@ -72,6 +74,14 @@ func _build_ui() -> void:
 	loadout_label.add_theme_font_size_override("font_size", 11)
 	vbox.add_child(loadout_label)
 
+	var recovery_tip := Label.new()
+	recovery_tip.text = GameManager.run_insights.next_attempt_tip()
+	recovery_tip.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	recovery_tip.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	recovery_tip.add_theme_font_size_override("font_size", 13)
+	recovery_tip.add_theme_color_override("font_color", NeonUI.WHITE)
+	vbox.add_child(recovery_tip)
+
 	# Separator
 	var sep := HSeparator.new()
 	sep.add_theme_color_override("color", Color(1.0, 0.3, 0.3, 0.4))
@@ -99,6 +109,7 @@ func _build_ui() -> void:
 	# Give Up button
 	var no_btn := Button.new()
 	no_btn.text = "END RUN"
+	no_btn.tooltip_text = "Finish this run and keep earned salvage. Remaining continues will not be used."
 	no_btn.custom_minimum_size = Vector2(200, 44)
 	no_btn.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	no_btn.add_theme_font_size_override("font_size", 17)
@@ -106,15 +117,13 @@ func _build_ui() -> void:
 	no_btn.pressed.connect(_on_give_up)
 	vbox.add_child(no_btn)
 
-	# Countdown timer label
-	var timer_lbl := Label.new()
-	timer_lbl.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	timer_lbl.add_theme_color_override("font_color", Color(0.55, 0.6, 0.75))
-	timer_lbl.add_theme_font_size_override("font_size", 14)
-	timer_lbl.name = "TimerLabel"
-	vbox.add_child(timer_lbl)
-	_start_countdown(timer_lbl)
-	preload("res://ui/shared/result_layout.gd").mount(self, vbox, [yes_btn, no_btn, timer_lbl])
+	var decision_hint := Label.new()
+	decision_hint.text = "Your build stays installed. Take your time."
+	decision_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	decision_hint.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	decision_hint.add_theme_font_size_override("font_size", 13)
+	vbox.add_child(decision_hint)
+	preload("res://ui/shared/result_layout.gd").mount(self, vbox, [yes_btn, no_btn, decision_hint])
 
 ## Returns a string of star emoji icons representing the remaining stock
 ## count, or a dash if none remain.
@@ -125,34 +134,7 @@ func _stock_icons(n: int) -> String:
 		out += "⭐ "
 	return out.strip_edges() if n > 0 else "—"
 
-# ── Countdown ──────────────────────────────────────────────────────────────────
-
-var _countdown: float = 10.0
-var _action_taken: bool = false
-
-## Initializes the 10-second auto-decline countdown and stores a reference
-## to the countdown label for per-frame updates.
-func _start_countdown(lbl: Label) -> void:
-	_countdown = 10.0
-	lbl.text = "Run ends in 10 s…"
-	set_meta("timer_label", lbl)
-
-## Decrements the countdown timer each frame. Triggers auto-decline when
-## the timer reaches 0. Shows a warning indicator and turns the label red
-## in the last 3 seconds.
-func _process(delta: float) -> void:
-	if _action_taken:
-		return
-	_countdown -= delta
-	var lbl := get_meta("timer_label") as Label
-	if lbl == null:
-		return
-	if _countdown <= 0.0:
-		_on_give_up()
-		return
-	lbl.text = "Run ends in %d s…" % int(_countdown) + ("" if _countdown > 3 else "  ⚠")
-	if _countdown <= 3.0:
-		lbl.modulate = Color(1.0, 0.4, 0.3)
+var _action_taken := false
 
 # ── Actions ────────────────────────────────────────────────────────────────────
 
@@ -160,7 +142,9 @@ func _process(delta: float) -> void:
 ## lives to the run's loadout-based starting lives, re-activates the game,
 ## emits try_again_accepted, and closes the popup.
 func _on_try_again() -> void:
-	if _action_taken or GameManager.try_again_stocks <= 0:
+	if _action_taken or is_instance_valid(_end_confirmation):
+		return
+	if GameManager.try_again_stocks <= 0:
 		_on_give_up()
 		return
 	_action_taken = true
@@ -174,9 +158,24 @@ func _on_try_again() -> void:
 	_close_popup()
 
 
-## Called when the player presses "Give Up" or the countdown expires.
-## Emits try_again_declined to proceed to the true game over screen.
+## Keep a recoverable run available until its end is confirmed. This uses the
+## same hold-to-confirm preference as ending a run from the pause menu.
 func _on_give_up() -> void:
+	if _action_taken or is_instance_valid(_end_confirmation):
+		return
+	if GameManager.try_again_stocks <= 0:
+		_decline_recovery()
+		return
+	_end_confirmation = preload("res://ui/shared/run_confirmation.gd").new()
+	_end_confirmation.title = "End this run?"
+	_end_confirmation.dialog_text = "You still have %d continue%s. Keep earned salvage; this run and its installed upgrades cannot be resumed." % [GameManager.try_again_stocks, "" if GameManager.try_again_stocks == 1 else "s"]
+	_end_confirmation.confirm_text = "END RUN"
+	_end_confirmation.cancel_text = "KEEP PLAYING"
+	_end_confirmation.confirmed.connect(_decline_recovery)
+	add_child(_end_confirmation)
+
+
+func _decline_recovery() -> void:
 	if _action_taken:
 		return
 	_action_taken = true
