@@ -635,22 +635,6 @@ func _pool_pressure(active: int, capacity: int) -> float:
 	return clampf(float(active) / float(capacity), 0.0, 1.0)
 
 
-## Snapshot for an external profiler; this is intentionally off the event path.
-func get_presentation_metrics() -> Dictionary:
-	return {
-		"frame_process_ms": _presentation_frame_process_ms,
-		"frame_physics_ms": _presentation_frame_physics_ms,
-		"frame_process_peak_ms": _presentation_frame_process_peak_ms,
-		"frame_physics_peak_ms": _presentation_frame_physics_peak_ms,
-		"effect_active": _presentation_effect_active,
-		"effect_capacity": _presentation_effect_capacity,
-		"effect_pressure": _presentation_effect_pressure,
-		"effect_rejected": _presentation_effect_rejected,
-		"effect_pool_growth": _presentation_effect_pool_growth,
-		"pool_pressure": _presentation_pool_pressure,
-	}
-
-
 func _get_presentation_frame_process_ms() -> float:
 	return _presentation_frame_process_ms
 

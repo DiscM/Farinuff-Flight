@@ -14,8 +14,11 @@ enum FinishReason { DESTROYED, CONTACT, ESCAPED }
 const FlightSpace := preload("res://systems/flight_space_3d.gd")
 const PhysicsLayers := preload("res://systems/native_3d_physics_layers.gd")
 const GenerationStats := preload("res://entities/enemies/enemy_generation_stats.gd")
-const SpawnTuning := preload("res://entities/enemies/enemy_spawn_tuning.gd")
 const NativeHazardManager := preload("res://systems/native_hazard_manager_3d.gd")
+## Edge distance at which a departing craft is considered to have left the
+## Combat Plane. Tighter than FlightSpace3DConfig.despawn_margin_pixels, which
+## bounds pooled projectiles and pickups.
+const EXIT_MARGIN_PIXELS := 80.0
 const SurfaceMaterials := preload("res://effects/rendering/enemy_surface_materials.gd")
 const ShipMotion := preload("res://effects/ship_motion_3d.gd")
 const GENERATION_STATS := [
@@ -299,10 +302,6 @@ func should_drop_xp_orb() -> bool:
 	return _active_stats.guaranteed_orb or randf() < _active_stats.orb_drop_chance
 
 
-func get_generation_stats() -> GenerationStats:
-	return _active_stats
-
-
 func _on_area_entered(area: Area3D) -> void:
 	# Projectile damage is routed once by Native3DGameplay, never also here.
 	if area.is_in_group(&"player_craft"):
@@ -365,7 +364,7 @@ func _release_generation_fragments() -> void:
 
 
 func _refresh_exit_bounds() -> void:
-	_exit_bounds = _flight_space.get_combat_bounds(SpawnTuning.DESPAWN_MARGIN)
+	_exit_bounds = _flight_space.get_combat_bounds(EXIT_MARGIN_PIXELS)
 
 
 func _has_crossed_exit_edge() -> bool:

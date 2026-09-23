@@ -25,8 +25,6 @@ const SHOT_SPEED_EVEN_PIXELS := 245.0
 const SHOT_SPEED_ODD_PIXELS := 305.0
 const SHOT_SPEED_VARIANCE_PIXELS := 8.0
 
-signal armor_plate_destroyed(combat_position: Vector3, remaining_plates: int)
-
 @export_range(1, 16, 1) var bullet_count: int = 8
 @export_range(0.1, 10.0, 0.1) var burst_interval: float = 2.5
 
@@ -61,7 +59,6 @@ func _ready() -> void:
 		if plate == null:
 			continue
 		_armor_plates.append(plate)
-		plate.destroyed.connect(_on_armor_plate_destroyed)
 
 
 func activate_generation(
@@ -119,28 +116,12 @@ func _configure_armor_plates() -> void:
 		plate.configure(self, _flight_space, TAU * float(index) / float(ARMOR_PLATE_COUNT), radius)
 
 
-func get_armor_plates() -> Array[Plate3D]:
-	return _armor_plates
-
-
-func get_active_armor_plate_count() -> int:
-	var active_count := 0
-	for plate in _armor_plates:
-		if is_instance_valid(plate) and plate.is_active:
-			active_count += 1
-	return active_count
-
-
 func _finish(reason: FinishReason) -> void:
 	_cancel_attacks()
 	for plate in _armor_plates:
 		if is_instance_valid(plate):
 			plate.deactivate()
 	super._finish(reason)
-
-
-func _on_armor_plate_destroyed(combat_position: Vector3) -> void:
-	armor_plate_destroyed.emit(combat_position, get_active_armor_plate_count())
 
 
 func _advance_movement(delta: float) -> void:

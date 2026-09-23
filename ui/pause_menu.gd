@@ -6,9 +6,6 @@ signal resumed
 
 const DEV_MENU_SCENE := preload("res://ui/dev_menu.tscn")
 const SETTINGS_MENU_SCENE := preload("res://ui/settings_menu.tscn")
-const DOCK_TEXTURE := preload("res://assets/Game UI collection FREE version/PNG/Borders/Yellow/New folder/Group 4 copy.png")
-const BUTTON_BLUE_TEXTURE := preload("res://assets/Game UI collection FREE version/PNG/Button with border/Blue/1x/Asset 8.png")
-const BUTTON_YELLOW_TEXTURE := preload("res://assets/Game UI collection FREE version/PNG/Button with border/Yellow/1x/Asset 8.png")
 const NATIVE_RUN_PATH := "res://scenes/native_3d_run.tscn"
 const MAIN_MENU_PATH := "res://scenes/home_base.tscn"
 

@@ -7,9 +7,6 @@ extends Node
 @warning_ignore("unused_signal")
 ## Emitted whenever the salvage balance changes. Carries the new total.
 signal salvage_changed(new_total: int)
-@warning_ignore("unused_signal")
-## Emitted when an unlock is purchased. Carries the item id and new level.
-signal unlock_purchased(unlock_id: String, new_level: int)
 
 # --- Hangar systems (tiered) and elite blueprints (single level) ---
 const SHOP_ITEMS: Array[Dictionary] = [
@@ -319,8 +316,8 @@ func can_purchase(item_id: String) -> bool:
 	return cost >= 0 and salvage >= cost
 
 ## Buys the next level of an item: deducts the cost, records the new level,
-## persists, and emits unlock_purchased. Consumables increment their
-## stockpile instead of unlock_levels. Returns false if not allowed.
+## and persists. Consumables increment their stockpile instead of
+## unlock_levels. Returns false if not allowed.
 func purchase(item_id: String) -> bool:
 	if not can_purchase(item_id):
 		return false
@@ -335,7 +332,6 @@ func purchase(item_id: String) -> bool:
 			unlock_levels[item_id] = new_level
 	_persist()
 	salvage_changed.emit(salvage)
-	unlock_purchased.emit(item_id, new_level)
 	return true
 
 # --- Consumables (consumed by GameManager.start_game()) ---

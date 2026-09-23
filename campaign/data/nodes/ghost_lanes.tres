@@ -6,7 +6,6 @@
 script = ExtResource("1_node")
 id = &"ghost_lanes"
 display_name = "Ghost Lanes"
-description_key = &"campaign.node.ghost_lanes.description"
 sector_index = 2
 first_wave = 6
 last_wave = 10
@@ -17,7 +16,3 @@ encounter_profile_id = &"profile_ghost_lanes"
 briefing_beat_id = &"broken_perimeter_briefing"
 debrief_beat_id = &"broken_perimeter_debrief"
 fragment_beat_id = &"ghost_lanes_fragment"
-threat_tags = PackedStringArray("speed", "range", "crossfire")
-accent_id = &"magenta"
-discovery_glyph_id = &"route"
-completion_glyph_id = &"check"

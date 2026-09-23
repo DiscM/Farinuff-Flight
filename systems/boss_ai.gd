@@ -8,7 +8,6 @@ const Selector := preload("res://systems/boss_attack_selector.gd")
 const Plan := preload("res://systems/boss_attack_plan.gd")
 const Flight := preload("res://systems/boss_flight_orchestrator.gd")
 enum State { IDLE, INTRO, REPOSITION, ATTACK, RECOVERY, STUNNED, PHASE_TRANSITION, DEAD }
-signal state_changed(previous: State, current: State)
 signal attack_committed(attack_id: StringName)
 signal combat_cancelled
 const PROFILES: Array[Profile] = [
@@ -57,7 +56,6 @@ func configure(space: FlightSpace3D, variant: int) -> void:
 	state = State.IDLE
 	state_remaining = 0.0
 	flight.hold(&"idle")
-	presentation.cue("")
 
 func step(delta: float, target: Node3D) -> Vector3:
 	if not _enabled or state == State.DEAD or delta <= 0.0:
@@ -137,8 +135,7 @@ func _observe(target: Node3D) -> void:
 func _enter(next: State, duration: float = 0.0) -> void:
 	if state == State.DEAD or state == next:
 		return
-	var previous := state
-	if previous == State.ATTACK:
+	if state == State.ATTACK:
 		# A one-tick slam still needs its release animation to finish during
 		# Recovery. Interruptions, in contrast, cancel the pose immediately.
 		executor.cancel(next != State.RECOVERY)
@@ -147,18 +144,9 @@ func _enter(next: State, duration: float = 0.0) -> void:
 	_windup_damage = 0
 	if next != State.REPOSITION:
 		flight.hold(StringName(State.keys()[next].to_lower()))
-	match next:
-		State.IDLE, State.STUNNED, State.PHASE_TRANSITION, State.DEAD:
-			executor.cancel()
-			combat_cancelled.emit()
-			presentation.cue({State.IDLE: "", State.STUNNED: "STUNNED · ATTACK NOW", State.PHASE_TRANSITION: "PHASE SHIFT · GET READY", State.DEAD: ""}[next])
-		State.INTRO:
-			presentation.cue("TARGET ACQUIRED · GET READY")
-		State.RECOVERY:
-			presentation.cue("RECOVERING · ATTACK NOW")
-		State.REPOSITION:
-			presentation.cue("")
-	state_changed.emit(previous, state)
+	if next in [State.IDLE, State.STUNNED, State.PHASE_TRANSITION, State.DEAD]:
+		executor.cancel()
+		combat_cancelled.emit()
 
 func begin_phase(next: int) -> void:
 	if not _enabled or state == State.DEAD or next <= phase:

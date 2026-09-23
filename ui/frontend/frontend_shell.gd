@@ -55,9 +55,6 @@ const FALLBACK_MUTED := Color(0.55, 0.63, 0.78)
 
 const DEFAULT_OBJECTIVE := "Follow the signal home."
 const DEFAULT_DETAILS := "Choose a menu to see help here."
-const NAV_RAIL_WIDTH := 240.0
-const NAV_RAIL_WIDTH_NARROW := 204.0
-const NARROW_BREAKPOINT := 1040.0
 
 ## Keyboard / mouse / gamepad labels for the footer prompt bar, indexed as
 ## accept, back, details, tab.
@@ -280,13 +277,6 @@ func get_open_modal() -> Node:
 func get_nav_button(page_id: StringName) -> Button:
 	return _nav_tab_buttons.get(page_id) as Button
 
-
-func set_objective(text: String) -> void:
-	_current_payload["objective_text"] = text
-	_refresh_status_rail()
-
-
-# --- Page instantiation and lifecycle -----------------------------------------
 
 func _instantiate_page(page_id: StringName, payload: Dictionary) -> Control:
 	var path := str(PAGE_REGISTRY[page_id])

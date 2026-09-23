@@ -3,8 +3,7 @@ extends Node2D
 
 # Use the project-root alias; Godot excludes nested projects from release packs.
 const BASE_PATH = "res://Planets/"
-# Note: BlackHole is intentionally excluded from the random pool — it is
-# reserved for boss fights (see effects/boss_black_hole.gd).
+# Note: BlackHole is intentionally excluded from the random pool.
 const PLANET_SCENES = [
 	"Asteroids/Asteroid.tscn",
 	"DryTerran/DryTerran.tscn",

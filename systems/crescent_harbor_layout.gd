@@ -4,7 +4,6 @@ extends RefCounted
 ## The pilot flies above the decks; only structures reaching that layer block it.
 
 const STATION_SCALE := 2.0
-const SOURCE_FLIGHT_HEIGHT := 11.5
 const FLIGHT_Y := 0.0
 const MODEL_OFFSET := Vector3(0.0, -23.0, 0.0)
 const FLIGHT_CENTER := Vector3(8.0, 0.0, -20.0)

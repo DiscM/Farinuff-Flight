@@ -51,16 +51,14 @@ func telegraph(plan: BossAttackPlan) -> void:
 			var along := _space.screen_motion_to_combat(Vector2(0, radius * 2.0))
 			_slam.global_transform = Transform3D(Basis(across, Vector3.UP, along), plan.origin + Vector3.UP * 0.06)
 			_slam.show()
-			cue("SLAM · LEAVE THE ORANGE CIRCLE")
 		Definition.Family.CHARGE:
 			var along := plan.charge_endpoint - plan.origin
 			var across := _space.screen_motion_to_combat(plan.aim.orthogonal() * plan.definition.charge_half_width * 2.0)
 			_lane.global_transform = Transform3D(Basis(across, Vector3.UP, along), (plan.origin + plan.charge_endpoint) * 0.5 + Vector3.UP * 0.06)
 			_lane.set_instance_shader_parameter(&"lane_size", Vector2(plan.definition.charge_half_width * 2.0, _space.combat_motion_to_screen(along).length()))
 			_lane.show()
-			cue("CHARGE · SIDESTEP THE ORANGE LANE")
 		Definition.Family.PROJECTILE:
-			cue("CROSS PATTERN · WATCH THE GAPS" if plan.definition.alternate_pattern else "VOLLEY · BAIT, THEN SIDESTEP")
+			pass
 	progress(0.0)
 
 func progress(fraction: float) -> void:
@@ -74,9 +72,6 @@ func release() -> void:
 
 func attack_pulse() -> void:
 	_actor.play_motion(&"attack")
-
-func cue(message: String) -> void:
-	SignalBus.boss_attack_cue_changed.emit(message)
 
 func clear(reset_motion: bool = true) -> void:
 	_lane.hide()

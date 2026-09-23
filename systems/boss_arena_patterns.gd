@@ -109,7 +109,6 @@ func _plan_pattern() -> void:
 						shot_direction = -direction
 					_queue_shot(Vector3(shot_x, 0.0, z), shot_direction, 1.8 + beat * 0.8, row + beat, Shot.Motion.STRAIGHT, _layer_speed(beat))
 			_route(Vector3(bounds.position.x, 0.0, target.z), Vector3(bounds.end.x, 0.0, target.z))
-			SignalBus.combat_notice.emit("CROSSWIND · FIND THE OPEN BAND; WATCH THE CHARGE")
 		1:
 			# Alternating gate rows travel from opposite arena edges. Mines deny
 			# the flanks, but never occupy the marked passage.
@@ -125,7 +124,6 @@ func _plan_pattern() -> void:
 			_route(Vector3(gap_x, 0.0, bounds.position.y), Vector3(gap_x, 0.0, bounds.end.y))
 			for side in [-1.0, 1.0]:
 				_queue_trap(Vector3(clampf(gap_x + side * gap * 2.0, bounds.position.x, bounds.end.x), 0.0, target.z), 2.0)
-			SignalBus.combat_notice.emit("SIEGE CORRIDOR · CROSS THE GATES; AVOID MINED FLANKS")
 		2:
 			# Two distant storm fronts send staggered diagonal ribbons. Their
 			# separation leaves a wide zigzag route between the advancing fronts.
@@ -136,7 +134,6 @@ func _plan_pattern() -> void:
 						var angle := (slot - 3) * 0.14 + (0.35 if front == 0 else -0.35)
 						var direction := (Vector2.DOWN if sequence % 2 == 0 else Vector2.UP).rotated(angle)
 						_queue_shot(center, direction, 1.8 + front * 1.1 + beat * 0.7, slot + beat, Shot.Motion.STRAIGHT, _layer_speed(beat + front))
-			SignalBus.combat_notice.emit("STORM FRONTS · WEAVE BETWEEN THE TWO RIBBONS")
 		3:
 			# A closing box pauses before entering the middle; one entire face
 			# remains absent. Echo marks independently punish camping in that exit.
@@ -153,7 +150,6 @@ func _plan_pattern() -> void:
 						direction = Vector2.RIGHT if side == 2 else Vector2.LEFT
 					_queue_shot(origin, direction, 2.1 + (side * 0.25 if phase > 0 else 0.0), slot, Shot.Motion.STOP_RELEASE, _layer_speed(side))
 			var exits: Array[String] = ["NORTH", "SOUTH", "WEST", "EAST"]
-			SignalBus.combat_notice.emit("CLOSING ECHO BOX · %s SIDE OPEN" % exits[exit_side])
 		4:
 			# Alternating reactor cells ignite in checkerboard order rather than
 			# a screen-covering ring. Delayed flowers overlap the interruptible beam.
@@ -166,7 +162,6 @@ func _plan_pattern() -> void:
 						_queue_shot(center, Vector2.from_angle(slot * TAU / 6.0 + sequence * 0.25), 2.2 + z * 0.4, slot, Shot.Motion.BRAKING, _layer_speed(slot))
 					if x == sequence % 4:
 						_queue_trap(center, 2.0)
-			SignalBus.combat_notice.emit("REACTOR CELLS · MOVE TO AN UNMARKED CELL")
 	# Later phases add a delayed mine at the previous position. Its visible
 	# warning allows repositioning; it never materializes as instant damage.
 	if phase > 0 and variant in [0, 2, 3]:

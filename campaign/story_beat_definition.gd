@@ -11,5 +11,3 @@ class_name StoryBeatDefinition
 @export var blocking: bool = false
 @export var skippable: bool = true
 @export_range(0.0, 10.0, 0.1) var auto_dismiss_seconds: float = 0.0
-@export var required_route_tags: PackedStringArray = PackedStringArray()
-@export var forbidden_route_tags: PackedStringArray = PackedStringArray()

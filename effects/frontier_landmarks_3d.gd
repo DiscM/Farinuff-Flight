@@ -2,22 +2,6 @@ extends Node3D
 ## A bounded drifting scenery field behind actors, held still during boss fights.
 
 const RELAY := preload("res://assets/models/voxel_frontier/meshes/relay_fragment.glb")
-# Legacy collections remain available to their standalone asset reviews.
-const STATION_DEBRIS_SCENES := [
-	preload("res://assets/models/frontier/station_debris/station_ring_section.glb"),
-	preload("res://assets/models/frontier/station_debris/station_habitat_wreck.glb"),
-	preload("res://assets/models/frontier/station_debris/station_solar_wing.glb"),
-	preload("res://assets/models/frontier/station_debris/station_truss.glb"),
-	preload("res://assets/models/frontier/station_debris/station_armor_plate.glb"),
-]
-const SPACE_DEBRIS_SCENES := [
-	preload("res://assets/models/frontier/space_debris/derelict_satellite.glb"),
-	preload("res://assets/models/frontier/space_debris/ruptured_cargo_pod.glb"),
-	preload("res://assets/models/frontier/space_debris/spent_fuel_tank.glb"),
-	preload("res://assets/models/frontier/space_debris/discarded_engine_bell.glb"),
-	preload("res://assets/models/frontier/space_debris/broken_survey_dish.glb"),
-	preload("res://assets/models/frontier/space_debris/faceted_asteroid.glb"),
-]
 const VOXEL_DEBRIS_SCENES := [
 	preload("res://assets/models/voxel_frontier/meshes/relay_fragment.glb"),
 	preload("res://assets/models/voxel_frontier/meshes/solar_fragment.glb"),

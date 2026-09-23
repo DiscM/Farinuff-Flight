@@ -4,8 +4,6 @@ class_name TankPlate3D
 ## The wrapper owns only the plate's visual, collision, and orbit state; the
 ## native projectile manager remains the sole Player Projectile hit router.
 
-signal destroyed(combat_position: Vector3)
-
 const PhysicsLayers := preload("res://systems/native_3d_physics_layers.gd")
 const FlightSpace := preload("res://systems/flight_space_3d.gd")
 
@@ -92,20 +90,14 @@ func _physics_process(delta: float) -> void:
 func take_damage(amount: int) -> void:
 	if not is_active or amount <= 0:
 		return
-	var combat_position := get_combat_position()
 	is_active = false
 	set_physics_process(false)
 	remove_from_group(&"native_3d_enemy_armor")
 	remove_from_group(&"native_3d_tank_armor")
 	hide()
 	# The hit can arrive during a ShapeCast/physics flush. Defer only the
-	# physics mutations; the logical state and public signal change now.
+	# physics mutations; the logical state changes now.
 	_set_collision_active(false)
-	destroyed.emit(combat_position)
-
-
-func get_combat_position() -> Vector3:
-	return Vector3(global_position.x, 0.0, global_position.z)
 
 
 func _update_orbit_transform() -> void:

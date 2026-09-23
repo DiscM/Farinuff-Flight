@@ -6,7 +6,6 @@
 script = ExtResource("1_node")
 id = &"far_reach"
 display_name = "The Far Reach"
-description_key = &"campaign.node.far_reach.description"
 sector_index = 1
 first_wave = 1
 last_wave = 5
@@ -15,7 +14,3 @@ outgoing_node_ids = [&"iron_wake", &"ghost_lanes"]
 boss_variant_id = &"assault"
 briefing_beat_id = &"far_reach_briefing"
 debrief_beat_id = &"far_reach_debrief"
-threat_tags = PackedStringArray("isolation", "first_reflection")
-accent_id = &"cyan"
-discovery_glyph_id = &"relay"
-completion_glyph_id = &"check"

@@ -21,7 +21,6 @@ const SAVE_VERSION := 7
 const PREFERENCES_PATH := "user://local_settings.json"
 const PREFERENCES_VERSION := 1
 const JsonStore := preload("res://systems/versioned_json_store.gd")
-const LEGACY_SAVE_VERSION := 1
 const DEFAULT_SETTINGS: Dictionary = {
 	"master_volume": 0.8,
 	"music_volume": 0.8,
@@ -123,12 +122,6 @@ func record_high_score(value: int) -> void:
 	high_score = value
 	_save_data()
 
-## Clears the saved high score back to 0 and persists the change.
-func reset_high_score() -> void:
-	high_score = 0
-	_save_data()
-
-## Marks the first-run Flight School as complete and persists the flag.
 func mark_flight_school_seen() -> void:
 	if has_seen_flight_school:
 		return
@@ -335,22 +328,12 @@ func _non_negative_integer(value: Variant) -> int:
 	return maxi(int(value), 0) if value is int or value is float else 0
 
 
-## Reads and validates one save candidate. Returning null rather than an empty
-## dictionary lets the caller distinguish malformed data from a valid payload.
-func _read_save_data(path: String) -> Variant:
-	return _progress_store.read_candidate(path)
-
-
 func _select_load_data() -> Dictionary:
 	var data := _progress_store.load_data()
 	_save_read_only_due_to_future_version = _progress_store.read_only
 	return data
 
 
-func _is_supported_save_version(data: Dictionary) -> bool:
-	return _progress_store.supports(data)
-
-## Writes durable progress after any pending legacy preference migration.
 func _save_data() -> bool:
 	if _save_read_only_due_to_future_version:
 		push_warning("Save remains read-only because it was created by a newer build.")

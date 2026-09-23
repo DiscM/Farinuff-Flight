@@ -11,7 +11,6 @@ const DEFLECT := preload("res://assets/Shapeforms Audio Free Sound Effects/Sci F
 const PLAYER_HIT := preload("res://assets/Shapeforms Audio Free Sound Effects/Sci Fi Spacecraft Preview/Impact Asteroid Debris Tail_03.wav")
 const XP_ORB := preload("res://assets/Shapeforms Audio Free Sound Effects/Sci Fi Weapons Cyberpunk Arsenal Preview/AUDIO/UIBeep_Lock On_05.wav")
 const MUSIC_LOOP := preload("res://assets/Shapeforms Audio Free Sound Effects/Dystopia – Ambience and Drone Preview/AUDIO/AMBIENCE_SPACECRAFT_HOLD_LOOP.wav")
-const UI_CLICK := preload("res://assets/Shapeforms Audio Free Sound Effects/Future UI Preview/Audio/FUI Button Beep Clean.wav")
 
 const POOL_SIZE: int = 16
 ## Baseline music loudness before the music_volume setting is applied.
