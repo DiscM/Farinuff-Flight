@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 
 ## [revision2] - 2026-09-22
 
+### Changed
+- **Iron Bulwark Volley Wall:** The siege wall now spans 832 baseline pixels of 17 lanes at 52-pixel spacing (was 420 pixels of 11 lanes at 42) and leaves only a single lane open instead of three. The breach steps between volleys — centered in phase one, alternating ±4 in phase two, and walking −5/−1/+3/+6 in phase three — so parking in one dodge lane no longer works. Outer wings remain pod-gated boost-breakers; losing a pod still drops that side's wing.
+- **Bosses No Longer Stop To Attack:** The hull keeps flying through every tell. Committed attack geometry (slam circle, charge lane, volley origin) rides with the moving hull along its locked aim, and the telegraph re-slides without restarting its windup clip. Intro and phase transitions drift in slowly as well. Stun remains a true stop so the stagger punish still reads.
+- **Continuous Boss Fire:** The boss now lays down suppressive fire between committed volleys — one predictor-aimed shot every 0.38s (tightening with each health phase) while chasing or strafing. Projectile volleys also chain far sooner: cooldowns 4.0s/6.5s to 2.2s/3.2s and recoveries 1.6s/1.8s to 1.0s/1.1s. Recovery remains an attack-free punish window.
+- **Boss Attack Ranges:** Every attack family commits from farther out — slam 0–280, charge 200–1600, projectile 140–1800, and the phase-three alternate 140–1850 baseline pixels (was 0–220 / 280–1000 / 230–1200). Ideal ranges moved outward to match, and the inspector caps on `BossAttackDefinition` raised to 2600 so encounters can be tuned beyond the old ceiling.
+- **Boss Projectile Fire Rate:** Projectile volleys now carry three shots (four on the phase-three alternate) at 0.4s / 0.32s spacing instead of two shots at 0.9s, and burst spacing tightens again at each health phase. Projectile cooldowns dropped to 4.0s / 6.5s so volleys return sooner.
+- **Boss Targeting Predictor:** Added `BossTargetingPredictor`, which samples visible target motion and iterates a bounded intercept solution. The boss ATTACK state now aims projectile volleys through a new `PREDICT` targeting mode (and `TRACK` refreshes through the same solver), leading a crossing player along their travel direction while keeping lead inside a pixel cap.
+
 ### Removed
 - **Deprecated Boss Flight Orchestrator:** Deleted `systems/boss_flight_orchestrator.gd` and the `BossFlightProfile.Maneuver` enum, `sequence` roster, and the unused `lead_seconds`, `maximum_lead`, `maneuver_seconds`, and `pattern_amplitude` fields, along with their rows in all five `entities/enemies/flight_profiles/*.tres` hulls. `BossMovementBrain`'s CHASE/STRAFE/DODGE states and `BossCombatProfile.prediction_seconds` / `maximum_prediction` fully cover the retired maneuver-sequence path.
 

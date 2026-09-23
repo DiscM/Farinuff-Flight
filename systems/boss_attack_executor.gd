@@ -5,6 +5,7 @@ class_name BossAttackExecutor
 ## into a dodge once the player has already left the committed hit solution.
 const Definition := preload("res://systems/boss_attack_definition.gd")
 const Movement := preload("res://systems/boss_movement_brain.gd")
+const Predictor := preload("res://systems/boss_targeting_predictor.gd")
 signal released(attack_id: StringName)
 signal feint_broken
 var plan: BossAttackPlan
@@ -15,15 +16,17 @@ var _charge_elapsed := 0.0
 var _burst_timer := 0.0
 var _burst_step := 0
 var _track_timer := 0.0
+var _predictor: Predictor
 var _space: FlightSpace3D
 var _actor: BasicEnemy3D
 var _presentation: BossCombatPresentation
 var _patterns: BossProjectilePatterns
 var _hit_victims: Dictionary[int, bool] = {}
 
-func configure(actor: BasicEnemy3D, space: FlightSpace3D, presentation: BossCombatPresentation, patterns: BossProjectilePatterns) -> void:
+func configure(actor: BasicEnemy3D, space: FlightSpace3D, presentation: BossCombatPresentation, patterns: BossProjectilePatterns, predictor: Predictor = null) -> void:
 	_actor = actor
 	_space = space
+	_predictor = predictor
 	_presentation = presentation
 	_patterns = patterns
 	cancel()
@@ -62,10 +65,15 @@ func advance(delta: float, target: Node3D) -> Vector3:
 		return Vector3.ZERO
 	if winding_up:
 		elapsed += delta
+		# The hull keeps flying through its tell; the committed geometry rides
+		# along its locked aim so the read promise stays honest.
+		plan.origin = _actor.global_position
+		plan.charge_endpoint = _charge_endpoint(plan)
 		_track_timer -= delta
 		if plan.targeting == BossAttackPlan.Targeting.TRACK and _track_timer <= 0.0:
 			_track_timer = plan.track_refresh_seconds
 			_refresh_track_aim(target)
+		_presentation.refresh(plan)
 		_presentation.progress(clampf(elapsed / plan.warning_seconds, 0.0, 1.0))
 		if plan.style == BossAttackPlan.Style.FEINT and _should_break_feint(target):
 			plan.feint_cancelled = true
@@ -74,6 +82,8 @@ func advance(delta: float, target: Node3D) -> Vector3:
 			return Vector3.ZERO
 		if elapsed >= plan.warning_seconds:
 			winding_up = false
+			plan.origin = _actor.global_position
+			plan.charge_endpoint = _charge_endpoint(plan)
 			_presentation.release()
 			released.emit(plan.definition.id)
 			_actor.charge_released.emit(plan.origin, _space.input_to_combat_direction(plan.aim))
@@ -99,19 +109,26 @@ func advance(delta: float, target: Node3D) -> Vector3:
 				_presentation.attack_pulse()
 				_patterns.fire(plan, _burst_step)
 				_burst_step += 1
-				_burst_timer = plan.definition.burst_interval
+				_burst_timer = plan.burst_interval_seconds
 			active = _burst_step < count or _patterns.has_pending()
 	return Vector3.ZERO
 
 func _refresh_track_aim(target: Node3D) -> void:
-	if not is_instance_valid(target) or plan == null:
+	if plan == null or not is_instance_valid(target):
 		return
-	var desired := _space.combat_motion_to_screen(target.global_position - plan.origin).normalized()
+	var intercept := target.global_position
+	if _predictor != null and _predictor.sample_count() > 0:
+		intercept = _predictor.solve_intercept(
+			plan.origin, plan.intercept_seconds, plan.maximum_intercept_pixels
+		)
+	var desired := _space.combat_motion_to_screen(intercept - plan.origin).normalized()
 	if desired.is_zero_approx():
 		return
-	plan.aim = desired
+	plan.track_aim_toward(desired)
+	if plan.targeting != BossAttackPlan.Targeting.TRACK:
+		return
 	plan.charge_endpoint = _charge_endpoint(plan)
-	_presentation.telegraph(plan)
+	_presentation.refresh(plan)
 
 
 func _should_break_feint(target: Node3D) -> bool:

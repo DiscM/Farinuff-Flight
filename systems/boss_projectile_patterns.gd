@@ -47,6 +47,25 @@ func cancel() -> void:
 	_clear_echo_marks()
 	_attack_plan = null
 
+## Continuous suppressive fire between committed volleys. One straight shot at
+## the predictor's intercept point; volley geometry stays in `_fire_pattern`.
+func fire_support(aim: Vector2, origin: Vector3, speed_pixels: float, damage: int = 1) -> void:
+	var manager := get_tree().get_first_node_in_group(&"native_3d_projectile_manager") as ProjectileManager
+	if manager == null or not manager.is_ready or aim.is_zero_approx():
+		return
+	var direction := _flight_space.input_to_combat_direction(aim.normalized())
+	if direction.is_zero_approx():
+		return
+	manager.fire_telegraphed_enemy_projectile(
+		origin,
+		direction,
+		speed_pixels,
+		Shot.Motion.STRAIGHT,
+		SHOT_COLORS[variant],
+		variant,
+		damage
+	)
+
 func _emit_shot(manager: ProjectileManager, origin: Vector3, direction: Vector3, speed: float, motion: Shot.Motion, tint: Color, style: int, damage: int = -1, speed_scale: float = -1.0) -> void:
 	if damage < 0:
 		damage = _attack_plan.definition.damage
@@ -185,21 +204,30 @@ func _shot_origin_is_clear(origin: Vector3, cushion: float = 90.0) -> bool:
 	var player := get_tree().get_first_node_in_group(&"player_craft") as Node3D
 	return player == null or _flight_space.combat_motion_to_screen(origin - player.global_position).length() >= cushion
 
+## Iron Bulwark masonry: a wide dense wall with one narrow breach. Casual
+## strafing cannot clear it; the breach steps so a parked dodge lane dies.
+const SIEGE_LANE_SPACING_PIXELS := 52.0
+const SIEGE_HALF_LANES := 8
+
 func _fire_siege_wall(manager: ProjectileManager) -> void:
-	var gap := 0 if _attack_phase == 0 else (-2 if _burst_step % 2 == 0 else 2)
+	var gap := 0
+	if _attack_phase == 1:
+		gap = -4 if _burst_step % 2 == 0 else 4
+	elif _attack_phase == 2:
+		gap = [-5, -1, 3, 6][_burst_step % 4]
 	_fire_siege_row(manager, _locked_aim, gap, 165.0, Shot.Motion.STRAIGHT)
 
 func _fire_siege_row(manager: ProjectileManager, aim: Vector2, gap: int, speed: float, motion: Shot.Motion) -> void:
 	var across := aim.orthogonal()
-	for lane in range(-5, 6):
-		if absi(lane - gap) <= 1:
+	for lane in range(-SIEGE_HALF_LANES, SIEGE_HALF_LANES + 1):
+		if lane == gap:
 			continue
-		if absi(lane) >= 4 and not _sections[0 if lane < 0 else 1].is_active:
+		if absi(lane) >= SIEGE_HALF_LANES - 2 and not _sections[0 if lane < 0 else 1].is_active:
 			continue
-		var origin := global_position + _flight_space.screen_motion_to_combat(across * lane * 42.0)
+		var origin := global_position + _flight_space.screen_motion_to_combat(across * lane * SIEGE_LANE_SPACING_PIXELS)
 		if not _shot_origin_is_clear(origin):
 			continue
-		var profile := Shot.Motion.BOOST_BREAKER if absi(lane) == 5 else motion
+		var profile := Shot.Motion.BOOST_BREAKER if absi(lane) == SIEGE_HALF_LANES else motion
 		_emit_shot(manager, origin, _flight_space.input_to_combat_direction(aim), speed, profile, SHOT_COLORS[1], 1)
 
 func _fire_commander_lances(manager: ProjectileManager, origin: Vector3, aim: Vector2, count: int, spacing: float, speed: float, motion: Shot.Motion = Shot.Motion.STRAIGHT, breaker_center: bool = false) -> void:
