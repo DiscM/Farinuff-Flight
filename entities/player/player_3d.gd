@@ -61,13 +61,9 @@ var last_aim_direction := Vector3.FORWARD
 var is_using_free_aim := false
 var is_boosting := false
 var boost_direction := Vector3.FORWARD
-var boost_duration_timer := 0.0
-var boost_cooldown_timer := 0.0
-var boost_distance_remaining_pixels := 0.0
+var boost_meter := 1.0
 var boost_reflected_projectiles := 0
 var _chain_followup := false
-var boost_chain_window_timer := 0.0
-var _boost_input_buffer := 0.0
 var post_boost_slide_timer := 0.0
 var drift_speed_bonus := 1.0
 var is_invincible := false
@@ -99,6 +95,7 @@ var _elite_upgrades: Dictionary[String, bool] = {}
 var dev_god_mode := false
 var _fire_latched := false
 var _fire_waiting_for_release := true
+var _chain_awarded := false
 var _boost_waiting_for_release := true
 var _dev_power_overrides: Dictionary[String, bool] = {}
 var _visual_debug_flags: Dictionary[String, bool] = {
@@ -342,6 +339,7 @@ func is_drone_escort_enabled() -> bool:
 func register_boost_reflection() -> void:
 	if is_boosting:
 		boost_reflected_projectiles += 1
+		boost_meter = minf(1.0, boost_meter + FlightTuning.BOOST_REFLECT_REFUND)
 		# Exactly once per dash, so a guard spent mid-volley cannot refill on shot four.
 		if boost_reflected_projectiles == FlightTuning.BOOST_CHAIN_REFLECT_THRESHOLD and has_elite_upgrade("hull_plating") and not armor_guard_ready:
 			armor_guard_ready = true
@@ -595,65 +593,48 @@ func _move_boost(input_direction: Vector2, delta: float) -> void:
 		var steering_weight := clampf(FlightTuning.BOOST_STEER_RATE * delta, 0.0, 1.0)
 		screen_direction = screen_direction.lerp(input_direction.normalized(), steering_weight).normalized()
 		boost_direction = _flight_space.input_to_combat_direction(screen_direction)
-	var boost_speed := FlightTuning.BOOST_DISTANCE / FlightTuning.BOOST_DURATION
-	var step_distance := minf(boost_speed * delta, boost_distance_remaining_pixels)
-	velocity = _flight_space.screen_motion_to_combat(screen_direction * boost_speed)
+	velocity = _flight_space.screen_motion_to_combat(screen_direction * FlightTuning.BOOST_SPEED)
 	set_combat_position(
-		get_combat_position() + _flight_space.screen_motion_to_combat(screen_direction * step_distance)
+		get_combat_position() + _flight_space.screen_motion_to_combat(
+			screen_direction * FlightTuning.BOOST_SPEED * delta
+		)
 	)
-	boost_distance_remaining_pixels -= step_distance
 
 
 func _update_boost(delta: float) -> void:
-	var accepts_boost_press := not _boost_waiting_for_release
+	var held := Input.is_action_pressed("boost")
 	if _boost_waiting_for_release:
-		_boost_waiting_for_release = Input.is_action_pressed("boost")
-	_boost_input_buffer = maxf(0.0, _boost_input_buffer - delta)
-	if accepts_boost_press and Input.is_action_just_pressed("boost"):
-		_boost_input_buffer = FlightTuning.BOOST_INPUT_BUFFER
-	var boost_pressed := _boost_input_buffer > 0.0
+		if not held:
+			_boost_waiting_for_release = false
+		held = false
 	if is_boosting:
-		boost_duration_timer -= delta
 		deflection_requested.emit(global_position, velocity)
-		if boost_pressed and _has_boost_chain():
-			_begin_boost()
-			return
 		drift_speed_bonus = move_toward(
 			drift_speed_bonus, FlightTuning.DRIFT_BONUS_MAX, FlightTuning.DRIFT_BONUS_RATE * delta
 		)
-		if boost_duration_timer <= 0.0 or boost_distance_remaining_pixels <= 0.0:
-			is_boosting = false
-			get_ship_motion().set_boost(false)
-			boost_distance_remaining_pixels = 0.0
-			if _has_boost_chain():
-				boost_chain_window_timer = FlightTuning.BOOST_CHAIN_WINDOW
-				boost_cooldown_timer = _get_boost_cooldown()
-			else:
-				boost_cooldown_timer = _get_boost_cooldown()
-			post_boost_slide_timer = FlightTuning.POST_BOOST_SLIDE_DURATION
+		boost_meter = maxf(0.0, boost_meter - delta / FlightTuning.BOOST_METER_DRAIN_SECONDS)
+		if not held or boost_meter <= 0.0:
+			_end_boost()
 	else:
-		if boost_chain_window_timer > 0.0:
-			boost_chain_window_timer = maxf(boost_chain_window_timer - delta, 0.0)
 		drift_speed_bonus = move_toward(drift_speed_bonus, 1.0, FlightTuning.DRIFT_DECAY_RATE * delta)
-		boost_cooldown_timer = maxf(boost_cooldown_timer - delta, 0.0)
-		if boost_pressed and (boost_cooldown_timer <= 0.0 or (_has_boost_chain() and boost_chain_window_timer > 0.0)):
+		boost_meter = minf(1.0, boost_meter + delta / FlightTuning.BOOST_METER_RECHARGE_SECONDS)
+		if held and (boost_meter >= FlightTuning.BOOST_METER_MIN_START or _has_boost_chain()):
 			_begin_boost()
 
 
 func _begin_boost() -> void:
-	_boost_input_buffer = 0.0
-	var is_chain := _has_boost_chain() and (is_boosting or boost_chain_window_timer > 0.0)
+	var is_chain := _has_boost_chain()
 	_chain_followup = is_chain
+	_chain_awarded = is_chain
 	if is_chain:
 		boost_chained.emit()
-	is_boosting = true
-	get_ship_motion().set_boost(true)
-	if _ribbons != null:
-		_ribbons.ignite()
-	boost_duration_timer = FlightTuning.BOOST_DURATION
+		boost_meter = minf(1.0, boost_meter + FlightTuning.BOOST_CHAIN_METER_REFILL)
+	if not is_boosting:
+		is_boosting = true
+		get_ship_motion().set_boost(true)
+		if _ribbons != null:
+			_ribbons.ignite()
 	boost_reflected_projectiles = 0
-	boost_chain_window_timer = 0.0
-	boost_distance_remaining_pixels = FlightTuning.BOOST_DISTANCE
 	var screen_velocity := _flight_space.combat_motion_to_screen(velocity)
 	var screen_direction := (
 		screen_velocity.normalized()
@@ -665,19 +646,16 @@ func _begin_boost() -> void:
 	boost_started.emit(get_combat_position(), boost_direction)
 
 
+func _end_boost() -> void:
+	if not is_boosting:
+		return
+	is_boosting = false
+	get_ship_motion().set_boost(false)
+	post_boost_slide_timer = FlightTuning.POST_BOOST_SLIDE_DURATION
+
+
 func _has_boost_chain() -> bool:
 	return not _chain_followup and boost_reflected_projectiles >= FlightTuning.BOOST_CHAIN_REFLECT_THRESHOLD
-
-
-func _get_boost_cooldown() -> float:
-	if _chain_followup or boost_reflected_projectiles <= 0:
-		return FlightTuning.BOOST_COOLDOWN
-	var additional_reflections := boost_reflected_projectiles - 1
-	return maxf(
-		FlightTuning.BOOST_REFLECT_COOLDOWN
-		- float(additional_reflections) * FlightTuning.BOOST_REFLECT_COOLDOWN_STEP,
-		FlightTuning.BOOST_REFLECT_COOLDOWN_MIN
-	)
 
 
 func _update_aiming() -> void:
@@ -1037,22 +1015,21 @@ func prepare_visual_warmup() -> void:
 
 
 func get_boost_state() -> Dictionary:
-	var chain_ready := _has_boost_chain() and (is_boosting or boost_chain_window_timer > 0.0)
-	var remaining := maxf(boost_duration_timer, 0.0) + FlightTuning.BOOST_CHAIN_WINDOW if is_boosting else boost_chain_window_timer
+	var chain_ready := _has_boost_chain()
 	return {
 		"boosting": is_boosting,
+		"meter": boost_meter,
 		"chain_followup": _chain_followup,
 		"chain_ready": chain_ready,
 		"reflections": mini(boost_reflected_projectiles, FlightTuning.BOOST_CHAIN_REFLECT_THRESHOLD) if (is_boosting or chain_ready) and not _chain_followup else 0,
 		"threshold": FlightTuning.BOOST_CHAIN_REFLECT_THRESHOLD,
-		"chain_remaining": remaining if chain_ready else 0.0,
-		"chain_fraction": clampf(remaining / (FlightTuning.BOOST_DURATION + FlightTuning.BOOST_CHAIN_WINDOW), 0.0, 1.0),
-		"recharge": 1.0 - clampf(boost_cooldown_timer / maxf(_get_boost_cooldown(), 0.01), 0.0, 1.0),
+		"chain_remaining": 0.0,
+		"chain_fraction": 0.0,
+		"recharge": boost_meter,
 	}
 
 
 func reset_action_input() -> void:
-	_boost_input_buffer = 0.0
 	_fire_latched = false
 	_fire_waiting_for_release = true
 	_boost_waiting_for_release = true

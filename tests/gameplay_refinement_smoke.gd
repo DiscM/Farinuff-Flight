@@ -48,51 +48,49 @@ func _check_encounters() -> void:
 
 func _check_boost() -> void:
 	player.is_boosting = false
-	player.boost_reflected_projectiles = 0
-	player.boost_chain_window_timer = 0.0
-	player.boost_cooldown_timer = 0.08
-	Input.action_release("boost")
-	player.reset_action_input()
-	player._update_boost(0.01)
-	Input.action_press("boost")
-	player._update_boost(0.01)
-	_expect(not player.is_boosting, "Buffer does not bypass recharge")
-	Input.action_release("boost")
-	await get_tree().process_frame
-	await get_tree().process_frame
-	player._update_boost(0.07)
-	_expect(player.is_boosting, "Press just before recharge is accepted when ready")
-	_expect(is_zero_approx(player._boost_input_buffer), "Boost consumes buffered press once")
-	player.is_boosting = false
-	player.boost_cooldown_timer = 0.4
-	Input.action_press("boost")
-	player._update_boost(0.01)
-	Input.action_release("boost")
-	await get_tree().process_frame
-	await get_tree().process_frame
-	player._update_boost(0.2)
-	player._update_boost(0.3)
-	_expect(not player.is_boosting, "Old press expires instead of firing unexpectedly")
-	player._boost_input_buffer = 0.1
-	player.reset_action_input()
-	_expect(is_zero_approx(player._boost_input_buffer), "Pause/reset discards queued action")
-	player.boost_reflected_projectiles = 0
-	player.boost_chain_window_timer = 0.0
 	player._chain_followup = false
-	player._begin_boost()
-	for i in 3:
-		player.register_boost_reflection()
-	player.boost_duration_timer = 0.001
+	player._chain_awarded = false
+	player.boost_reflected_projectiles = 0
+	player.boost_meter = 0.0
+	Input.action_release("boost")
 	player._update_boost(0.01)
-	_expect(player.get_boost_state().chain_ready, "Three reflections open a follow-up opportunity")
-	player._update_boost(0.20)
-	_expect(player.get_boost_state().chain_ready, "Chain opportunity survives a 200 ms reaction")
+	Input.action_press("boost")
+	player._update_boost(0.01)
+	_expect(not player.is_boosting, "An empty meter cannot start a boost")
+	player.boost_meter = 1.0
+	player._update_boost(0.01)
+	_expect(player.is_boosting, "Holding boost with a full meter starts the boost")
+	var before: float = player.boost_meter
+	player._update_boost(0.2)
+	_expect(player.boost_meter < before, "Holding boost drains the meter bar")
+	Input.action_release("boost")
+	player._update_boost(0.01)
+	_expect(not player.is_boosting, "Letting go of boost ends it")
+	player.boost_meter = 0.35
+	before = player.boost_meter
+	player._update_boost(0.2)
+	_expect(player.boost_meter > before, "The meter recharges while boost is idle")
+	player.boost_meter = 0.4
+	Input.action_press("boost")
+	player._update_boost(0.01)
+	_expect(player.is_boosting, "Holding boost with charge starts the boost")
+	player.boost_meter = 0.5
+	player.boost_reflected_projectiles = 0
+	player._chain_followup = false
+	var meter_before: float = player.boost_meter
+	player.register_boost_reflection()
+	_expect(player.boost_meter > meter_before, "A reflection refunds boost meter")
+	for i in 2:
+		player.register_boost_reflection()
+	_expect(player.get_boost_state().chain_ready, "Three reflections open the chain burst")
 	player._begin_boost()
 	for i in 3:
 		player.register_boost_reflection()
-	_expect(not player._has_boost_chain(), "Buffered controls preserve one-follow-up chain limit")
-	player.is_boosting = false
+	_expect(not player._has_boost_chain(), "One follow-up chain limit is preserved")
+	Input.action_release("boost")
+	player._update_boost(0.01)
 	player.reset_action_input()
+	_expect(not player.is_boosting, "Pause/reset leaves boost idle")
 
 func _check_allocation() -> void:
 	GameManager.stat_fire_rate_level = 9

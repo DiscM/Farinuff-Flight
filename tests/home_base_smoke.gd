@@ -204,7 +204,7 @@ func _check_movement(home: Node) -> void:
 	for zoom in [home.MIN_ZOOM, home.MAX_ZOOM]:
 		home.player.position = home.INITIAL_POSITION + Vector3(-20, 0, 0)
 		home.velocity = Vector3.ZERO
-		home.boost_remaining = 0.0
+		home.is_boosting = false
 		home.camera.size = zoom
 		var start: Vector3 = home.player.position
 		for frame in 60:
@@ -213,12 +213,14 @@ func _check_movement(home: Node) -> void:
 	_expect(distances[0] > 15.0 and is_equal_approx(distances[0], distances[1]), "Cruise stays responsive and independent of camera zoom")
 	home.player.position = home.INITIAL_POSITION + Vector3(-20, 0, 0)
 	home.velocity = Vector3.ZERO
-	home.boost_cooldown = 0.0
+	home.is_boosting = false
 	home.step_flight(Vector2.RIGHT, true, 1.0 / 60.0)
-	_expect(home.boost_remaining > 0.0 and home.velocity.length() > home.CRUISE_SPEED, "Boost accelerates the selected ship")
-	var cooldown: float = home.boost_cooldown
-	home.step_flight(Vector2.RIGHT, true, 1.0 / 60.0)
-	_expect(home.boost_cooldown < cooldown, "Held/repeated boost cannot reset the recharge")
+	_expect(home.is_boosting and home.velocity.length() > home.CRUISE_SPEED, "Holding boost accelerates the selected ship")
+	for frame in 240:
+		home.step_flight(Vector2.RIGHT, true, 1.0 / 60.0)
+	_expect(home.is_boosting, "Wayfarer boost never runs out while held")
+	home.step_flight(Vector2.RIGHT, false, 1.0 / 60.0)
+	_expect(not home.is_boosting, "Letting go of boost ends the unlimited burn")
 	home.adjust_zoom(-1000)
 	_expect(is_equal_approx(home._zoom, home.MIN_ZOOM), "Camera zoom has a useful minimum")
 	home.adjust_zoom(1000)
@@ -232,8 +234,7 @@ func _check_collisions(home: Node) -> void:
 	_expect(home.Layout.is_clear(home.player.position), "Tower sweep starts in the open approach walkway")
 	home.heading = Vector3.FORWARD
 	home.velocity = Vector3.ZERO
-	home.boost_cooldown = 0.0
-	home.boost_remaining = 0.0
+	home.is_boosting = false
 	# A long frame must still stop at the near side, never tunnel to the far side.
 	var screen_toward_tower := Vector2(Vector3.FORWARD.dot(home.screen_direction_to_world(Vector2.RIGHT)), Vector3.FORWARD.dot(home.screen_direction_to_world(Vector2.DOWN)))
 	home.step_flight(screen_toward_tower, true, 1.0)

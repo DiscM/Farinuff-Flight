@@ -160,14 +160,14 @@ func _show_step() -> void:
 	_progress.modulate = NeonUI.GREEN if _step == 4 else Color.WHITE
 	_lesson.text = [
 		"MOVE %s   FIRE %s\nMove around · Hold %s to fire.\nAim with the mouse or right stick." % ["✓" if _moved else "○", "✓" if _fired else "○", InputBindings.binding_hint("shoot")],
-		"BOOST INTO THE INCOMING SHOTS\nMove toward the markers, then press %s.\nHits cannot end practice." % InputBindings.binding_hint("boost"),
-		("CHAIN READY · PRESS %s AGAIN!" % InputBindings.binding_hint("boost") if chain_ready else "REFLECT %d / 3 IN ONE BOOST" % mini(player.boost_reflected_projectiles, 3)) + "\nRelease, then press %s again when ready.\nThe extra boost follows your movement." % InputBindings.binding_hint("boost"),
+		"BOOST INTO THE INCOMING SHOTS\nMove toward the markers, then hold %s.\nHits cannot end practice." % InputBindings.binding_hint("boost"),
+		("CHAIN READY · PRESS %s AGAIN!" % InputBindings.binding_hint("boost") if chain_ready else "REFLECT %d / 3 WHILE BOOSTING" % mini(player.boost_reflected_projectiles, 3)) + "\nReflecting refunds the boost meter.\nThe follow-up press bursts the bar back up.",
 		"CHAIN COMPLETE · COLLECT THE ORBS\nFly through the glowing orbs: %d / 12.\nOrb points advance waves and restore lives." % mini(GameManager.orbs_collected_this_wave, 12),
 		"FLIGHT SCHOOL COMPLETE\nYou can move, reflect, chain, and recover.\nChoose your ship when you are ready.",
 		][_step]
 	_lesson.modulate = NeonUI.YELLOW if chain_ready and _step == 2 else Color.WHITE
 	if _step in [1, 2] and _volley_warning > 0.0 and not chain_ready:
-		_lesson.text = "VOLLEY CHARGING · WAIT FOR THE SHOTS\nThen move into the volley and press %s.\n%s" % [InputBindings.binding_hint("boost"), "Reflect all 3, release, then boost again." if _step == 2 else "Hits cannot end practice."]
+		_lesson.text = "VOLLEY CHARGING · WAIT FOR THE SHOTS\nThen move into the volley and hold %s.\n%s" % [InputBindings.binding_hint("boost"), "Reflect all 3 to refill the meter." if _step == 2 else "Hits cannot end practice."]
 	_launch_button.visible = _step == 4
 
 func _refresh_lesson_bindings() -> void:
