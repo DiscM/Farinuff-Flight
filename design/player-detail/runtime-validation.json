@@ -1,0 +1,55 @@
+{
+	"closeup_camera_size": 7.0,
+	"engine": "4.6.3-stable (official)",
+	"hulls": [
+		{
+			"bones": 4,
+			"capture": "res://design/player-detail/in-game-PlayerHullGLB.png",
+			"clips": [
+				"attack",
+				"boost",
+				"boost_attack",
+				"cruise",
+				"deploy",
+				"hit",
+				"upgrade"
+			],
+			"hull": "PlayerHullGLB",
+			"surfaces": 7,
+			"triangles": 6660
+		},
+		{
+			"bones": 4,
+			"capture": "res://design/player-detail/in-game-InterceptorHull.png",
+			"clips": [
+				"attack",
+				"boost",
+				"boost_attack",
+				"cruise",
+				"deploy",
+				"hit",
+				"upgrade"
+			],
+			"hull": "InterceptorHull",
+			"surfaces": 7,
+			"triangles": 6660
+		},
+		{
+			"bones": 4,
+			"capture": "res://design/player-detail/in-game-BulwarkHull.png",
+			"clips": [
+				"attack",
+				"boost",
+				"boost_attack",
+				"cruise",
+				"deploy",
+				"hit",
+				"upgrade"
+			],
+			"hull": "BulwarkHull",
+			"surfaces": 8,
+			"triangles": 6660
+		}
+	],
+	"player_scale": "(1.0, 1.0, 1.0)"
+}

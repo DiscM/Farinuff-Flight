@@ -1,7 +1,7 @@
 extends Node
 class_name Native3DGameplay
-## Isolated native Player Craft, pooled Projectiles, Basic Enemy lineage,
-## rewards, pooled pickups/hazards, and native feedback.
+## Shared combat runtime and presentation for Expedition, Flight School,
+## harbor combat and focused gameplay checks.
 
 signal gameplay_ready
 signal enemy_rewarded(points: int, combat_position: Vector3, orb_spawned: bool)
@@ -25,6 +25,7 @@ const PowerUpManager := preload("res://systems/power_up_manager_3d.gd")
 const PlayerDrone := preload("res://entities/player/player_drone_3d.gd")
 const DRONE_SCENE := preload("res://entities/player/player_drone_3d.tscn")
 const PresentationSettings := preload("res://effects/rendering/native_3d_presentation_settings.gd")
+const PortPresentation := preload("res://systems/home_port_presentation.gd")
 
 const MONITOR_FRAME_PROCESS_MS := &"native_3d/frame_process_ms"
 const MONITOR_FRAME_PHYSICS_MS := &"native_3d/frame_physics_ms"
@@ -40,6 +41,7 @@ const MONITOR_POOL_PRESSURE := &"native_3d/pool_pressure"
 @onready var hud: CanvasLayer = $HUD
 @onready var player: PlayerCraft = $World3D/Actors3D/Player3D
 @onready var flight_space: FlightSpace = $FlightSpace3D
+@onready var camera_rig: Native3DCameraRig = $World3D/CameraRig3D
 @onready var aim_reticle: Sprite2D = $HUD/AimReticle
 @onready var boost_status: Label = $HUD/BoostStatus
 @onready var projectile_status: Label = $HUD/ProjectileStatus
@@ -52,12 +54,12 @@ const MONITOR_POOL_PRESSURE := &"native_3d/pool_pressure"
 @onready var transition_overlay: CanvasLayer = $TransitionOverlay
 @onready var actors_root: Node3D = $World3D/Actors3D
 
-## Review scenes can leave this disabled to preserve their earlier no-reward
-## contract. Native production gameplay will enable it when its spawner lands.
+## Practice and focused gameplay checks do not bank run rewards or use supplies.
 @export var practice_session := false
 @export var rewards_enabled := false
 @export var consume_field_supplies := false
 @export var presentation_settings: PresentationSettings
+@export var initial_camera_view: Native3DCameraRig.View = Native3DCameraRig.View.ANGLED
 
 var _previous_hdr_2d: bool = false
 var _pause_overlay: CanvasLayer
@@ -93,6 +95,8 @@ func _enter_tree() -> void:
 
 func _ready() -> void:
 	add_to_group(&"native_3d_gameplay")
+	_configure_combat_presentation()
+	camera_rig.set_view_preset(initial_camera_view, 0.0)
 	_previous_auto_accept_quit = get_tree().auto_accept_quit
 	get_tree().auto_accept_quit = false
 	get_window().focus_exited.connect(_pause_for_interruption)
@@ -161,8 +165,7 @@ func _ready() -> void:
 	projectile_manager.enemy_projectile_deflected.connect(_on_enemy_projectile_deflected)
 	power_up_manager.power_up_collected.connect(_on_power_up_collected)
 	hazard_manager.mine_detonated.connect(_on_mine_detonated)
-	# The review controller never consumes Hangar supplies. Its reward policy is
-	# explicit per scene, so projectile and Phase 4 reviews remain no-reward.
+	# Only the Expedition enables supplies and run rewards; practice stays isolated.
 	GameManager.start_game(consume_field_supplies, practice_session)
 	player.configure_flight_space(flight_space)
 	transition_overlay.hide()
@@ -184,6 +187,10 @@ func _ready() -> void:
 	if _interruption_pending:
 		_pause_for_interruption()
 	gameplay_ready.emit()
+
+
+func _configure_combat_presentation() -> void:
+	PortPresentation.build_lighting($World3D/Lighting)
 
 
 func _on_player_projectile_hit(target: Area3D, _combat_position: Vector3) -> void:
@@ -676,10 +683,18 @@ func _get_presentation_pool_pressure() -> float:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if not InputBindings.is_pause_event(event) or event.is_echo():
+	if event.is_echo():
 		return
-	get_viewport().set_input_as_handled()
-	_pause_for_interruption()
+	if InputBindings.is_pause_event(event):
+		get_viewport().set_input_as_handled()
+		_pause_for_interruption()
+	elif _gameplay_prepared and GameManager.is_game_active and not get_tree().paused:
+		if event.is_action_pressed("camera_flip"):
+			get_viewport().set_input_as_handled()
+			camera_rig.flip_horizontal()
+		elif event.is_action_pressed("camera_view"):
+			get_viewport().set_input_as_handled()
+			camera_rig.toggle_view()
 
 
 func _pause_for_interruption() -> void:

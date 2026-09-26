@@ -4,6 +4,13 @@
 
 The previous checklist and its detailed slice/approval history are available in Git history. This guide supersedes their parity, frozen-reference, parallel-runtime, and per-slice approval requirements. The current entry states implementation status; dated entries retain their original validation limits.
 
+## 2026-09-25 — Retired the earlier 3D combat presentation
+
+- Promoted the current home-port angle, 220-unit orthographic zoom, lighting, enlarged actors and flight tuning into the shared `native_3d_gameplay` runtime. Expedition, Flight School and harbor combat now use the same default configuration. Launch and retry continue to use `native_3d_run.tscn`; practice still uses its isolated lesson controller without supplies or banked rewards.
+- Removed the compact-arena camera-fitting and separate boss-follow branches, the obsolete lighting scene/environment, and the duplicate harbor flight configuration. The original 2D combat runtime was already retired. Historical implementations remain available in Git.
+- Updated camera checks to cover fixed zoom and pilot visibility at normal/boss arena edges, and replaced the obsolete compact-arena comparison with current framing checks. Added runtime coverage for Flight School's matching camera, lighting, actor scale and speed. The pool-capacity fixture now spawns at the arena center, since its old fixed screen coordinate projected outside the angled arena in a square window.
+- Validation: resource references and scene IDs passed for 350 source/resources; all ten CI smoke scenes and ten focused combat checks passed in Godot 4.6.3. A live 2560 × 1440 Flight School capture confirmed the current presentation. Existing headless shutdown/resource warnings remain; save-recovery and frontend rejection tests emit their expected diagnostics.
+
 ## 2026-09-06 — Native completion hardening and runtime validation
 
 **Changed**

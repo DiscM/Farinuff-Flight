@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-"""Blender-authored rigid spacecraft animation, preserving the approved meshes.
+"""Blender-authored rigid spacecraft animation and butterfly player detailing.
 
 Run build_all() inside Blender. Original GLBs remain the geometry/palette source;
 four rigid bones add articulation without extra mesh instances or soft bending.
+Player hulls receive the modeled anatomy in detail_butterfly_player_blender.py.
 All distances are authored in Blender (+Y nose, Z up), then exported as Y-up GLB.
 """
 from pathlib import Path
@@ -186,6 +187,21 @@ def build_asset(name, source, role):
         mod = obj.modifiers.new("Rigid articulation","ARMATURE")
         mod.object = rig
         obj.parent = rig
+    if role == "player":
+        # Keep the richer anatomy on the same four rigid bones and mesh so
+        # modules and animated sockets retain their existing attachment contract.
+        import sys
+        if str(ROOT / "tools") not in sys.path:
+            sys.path.insert(0, str(ROOT / "tools"))
+        from detail_butterfly_player_blender import add_detail
+        for obj in meshes:
+            add_detail(obj, name)
+        counts = {b: 0 for b in BONES}
+        for obj in meshes:
+            for vertex in obj.data.vertices:
+                for group in vertex.groups:
+                    if group.weight > 0.999:
+                        counts[obj.vertex_groups[group.group].name] += 1
     # Markers follow the same rigid part; Godot wrappers copy these transforms.
     for obj in objects:
         if obj.type != "EMPTY" or not obj.name.startswith("Socket_"):
@@ -249,7 +265,13 @@ def build_asset(name, source, role):
     scene.frame_set(1)
     scene["source_asset"] = source
     scene["motion_notes"] = "Rigid panels; no mesh stretching. Attack clips are driven by live gameplay events."
-    return dict(asset=name,source=source,role=role,bones=counts,meshes=len(meshes),clips=list(clips(role)))
+    record = dict(asset=name,source=source,role=role,bones=counts,meshes=len(meshes),clips=list(clips(role)))
+    if role == "player":
+        for obj in meshes:
+            obj.data.calc_loop_triangles()
+        record["detail"] = dict(builder="tools/detail_butterfly_player_blender.py",
+                                revision=1, triangles=sum(len(o.data.loop_triangles) for o in meshes))
+    return record
 
 
 def build_all():

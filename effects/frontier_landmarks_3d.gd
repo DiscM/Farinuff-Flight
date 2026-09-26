@@ -28,7 +28,7 @@ var _radii: Array[float] = []
 
 
 func _ready() -> void:
-	_camera = get_node("../CameraRig3D/ShakeOffset/Camera3D") as Camera3D
+	_camera = get_node("../CameraRig3D/ViewPivot3D/ShakeOffset/Camera3D") as Camera3D
 	_relay = RELAY.instantiate() as Node3D
 	add_child(_relay)
 	_relay.rotation_degrees = Vector3(12.0, -28.0, 18.0)
@@ -69,9 +69,11 @@ func _process(delta: float) -> void:
 func _update_positions() -> void:
 	var viewport_size := get_viewport().get_visible_rect().size
 	# Screen anchors follow viewport expansion; depth remains behind every actor.
-	_relay.global_position = _camera.project_position(viewport_size * _relay_anchor, 110.0)
+	# Orbit distance varies with viewport aspect. Keep scenery behind the entire
+	# combat footprint while leaving room for its meshes inside the far clip.
+	_relay.global_position = _camera.project_position(viewport_size * _relay_anchor, _camera.far - 30.0)
 	for index in _debris.size():
-		_debris[index].global_position = _camera.project_position(viewport_size * _anchors[index], 95.0)
+		_debris[index].global_position = _camera.project_position(viewport_size * _anchors[index], _camera.far - 50.0)
 
 
 func _advance_down(anchor_y: float, radius: float, speed: float, delta: float, height: float) -> float:

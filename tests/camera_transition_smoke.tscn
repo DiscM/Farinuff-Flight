@@ -1,0 +1,9 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="PackedScene" path="res://scenes/native_3d_gameplay.tscn" id="1"]
+[ext_resource type="Script" path="res://tests/camera_transition_smoke.gd" id="2"]
+
+[node name="CameraTransitionSmoke" instance=ExtResource("1")]
+script = ExtResource("2")
+practice_session = true
+initial_camera_view = 1

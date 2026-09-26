@@ -3,9 +3,10 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://b8ogs1ijleen2"
-path="res://.godot/imported/boss_void_harbinger_voxel_surface_atlas.png-018a558d5e15988dcbaaeab62b22b2a0.ctex"
+path.s3tc="res://.godot/imported/boss_void_harbinger_voxel_surface_atlas.png-018a558d5e15988dcbaaeab62b22b2a0.s3tc.ctex"
 metadata={
-"vram_texture": false
+"imported_formats": ["s3tc_bptc"],
+"vram_texture": true
 }
 generator_parameters={
 "md5": "621c9f8ab9472f23e67a1dcc9d14ae64"
@@ -14,11 +15,11 @@ generator_parameters={
 [deps]
 
 source_file="res://assets/models/voxel_bosses/meshes/boss_void_harbinger_voxel_surface_atlas.png"
-dest_files=["res://.godot/imported/boss_void_harbinger_voxel_surface_atlas.png-018a558d5e15988dcbaaeab62b22b2a0.ctex"]
+dest_files=["res://.godot/imported/boss_void_harbinger_voxel_surface_atlas.png-018a558d5e15988dcbaaeab62b22b2a0.s3tc.ctex"]
 
 [params]
 
-compress/mode=0
+compress/mode=2
 compress/high_quality=false
 compress/lossy_quality=0.7
 compress/uastc_level=0
@@ -40,4 +41,4 @@ process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
-detect_3d/compress_to=1
+detect_3d/compress_to=0

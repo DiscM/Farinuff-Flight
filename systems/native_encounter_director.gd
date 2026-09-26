@@ -142,7 +142,9 @@ func _on_opening_volley(_shots: int) -> void:
 func spawn_enemy(kind: StringName, entry_edge: int = -1, lane: float = 0.5) -> Enemy:
 	if not started or not GameManager.is_game_active or GameManager.boss_active or not SCENES.has(kind) or kind == &"boss" or not threat.can_spawn(kind):
 		return null
-	var bounds: Rect2 = gameplay.flight_space.get_combat_bounds(60.0)
+	var enemy_scale: float = gameplay.flight_space.configuration.enemy_scale_multiplier
+	var bounds: Rect2 = gameplay.flight_space.get_combat_bounds(60.0 * enemy_scale)
+	var player_clearance := 160.0 * enemy_scale
 	var origin := Vector3.ZERO
 	var direction := Vector3.ZERO
 	for attempt in range(6):
@@ -159,9 +161,9 @@ func spawn_enemy(kind: StringName, entry_edge: int = -1, lane: float = 0.5) -> E
 			3:
 				origin = Vector3(bounds.end.x, 0, lerpf(bounds.position.y + 3, bounds.end.y - 3, lane) if entry_edge >= 0 else randf_range(bounds.position.y + 3, bounds.end.y - 3))
 				direction = Vector3.LEFT
-		if gameplay.flight_space.combat_motion_to_screen(origin - gameplay.player.global_position).length() >= 160.0:
+		if gameplay.flight_space.combat_motion_to_screen(origin - gameplay.player.global_position).length() >= player_clearance:
 			break
-	if gameplay.flight_space.combat_motion_to_screen(origin - gameplay.player.global_position).length() < 160.0:
+	if gameplay.flight_space.combat_motion_to_screen(origin - gameplay.player.global_position).length() < player_clearance:
 		return null
 	var actor := SCENES[kind].instantiate() as Enemy
 	if actor is BomberEnemy3D:

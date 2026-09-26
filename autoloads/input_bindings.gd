@@ -4,8 +4,8 @@ signal bindings_changed
 signal device_changed
 signal active_gamepad_disconnected
 
-const ACTIONS := ["move_left", "move_right", "move_up", "move_down", "shoot", "boost", "pause"]
-const TITLES := ["Move left", "Move right", "Move up", "Move down", "Fire", "Boost / reflect", "Pause"]
+const ACTIONS := ["move_left", "move_right", "move_up", "move_down", "shoot", "boost", "pause", "camera_view", "camera_flip"]
+const TITLES := ["Move left", "Move right", "Move up", "Move down", "Fire", "Boost / reflect", "Pause", "Camera angle", "Rotate camera 90°"]
 var family := "keyboard"
 var active_gamepad := 0
 var _defaults: Dictionary = {}

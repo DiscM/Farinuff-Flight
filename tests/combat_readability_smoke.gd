@@ -11,6 +11,9 @@ func _ready() -> void:
 	_close_pause_menu()
 	player.set_physics_process(false)
 	player.set_dev_god_mode(true)
+	# HUD overlap is deliberate here; the production camera normally reframes
+	# the pilot below the header. Camera follow has its own runtime coverage.
+	camera_rig.set_process(false)
 	_check_window_fit()
 	var projection_reference := await _check_combat_framing()
 	for resolution in [Vector2i(1280, 720), Vector2i(1920, 1080), Vector2i(2560, 1440), Vector2i(1280, 800), Vector2i(1920, 810)]:
@@ -95,37 +98,21 @@ func _projection_snapshot() -> Dictionary:
 
 func _check_combat_framing() -> Dictionary:
 	var rig := $World3D/CameraRig3D as Native3DCameraRig
-	var production := flight_space.configuration
-	var old_configuration := production.duplicate(true) as FlightSpace3DConfig
-	old_configuration.baseline_viewport_size = Vector2i(1280, 720)
 	var was_boss_active := GameManager.boss_active
 	GameManager.boss_active = false
-	flight_space.configuration = old_configuration
-	rig.configure(old_configuration)
-	flight_space.bounds_changed.emit()
-	await get_tree().process_frame
-	await get_tree().process_frame
-	var previous := _projection_snapshot()
-	GameManager.boss_active = true
-	var previous_boss_bounds := flight_space.get_combat_bounds()
-	# Restore the production resource before any assertion or later HUD test.
-	flight_space.configuration = production
-	rig.configure(production)
-	flight_space.bounds_changed.emit()
-	await get_tree().process_frame
-	await get_tree().process_frame
-	var current_boss_bounds := flight_space.get_combat_bounds()
-	GameManager.boss_active = false
 	var current := _projection_snapshot()
-	var previous_view: Rect2 = previous.view
-	var current_view: Rect2 = current.view
-	_expect(current_view.size.distance_to(previous_view.size * 1.25) < 0.001, "The expanded combat frame provides 25 percent more space on each axis")
-	_expect(current_view.get_center().distance_to(previous_view.get_center()) < 0.001, "Expanded combat framing preserves the arena origin")
-	_expect(current_boss_bounds.size.distance_to(previous_boss_bounds.size * 1.25) < 0.001, "The boss arena expands with the normal combat frame")
-	for key in ["movement", "view_margin", "combat_margin", "player_inset"]:
-		_expect(current[key].distance_to(previous[key]) < 0.001, "Expanded framing preserves world-space %s" % key)
+	var normal_bounds := flight_space.get_combat_bounds()
+	_expect(rig.active_camera.projection == Camera3D.PROJECTION_ORTHOGONAL and is_equal_approx(rig.active_camera.size, 220.0), "The shared combat scene uses the current orthographic zoom")
+	_expect(rig.view_preset == Native3DCameraRig.View.ANGLED, "Combat starts at the home-port angle")
+	_expect(is_equal_approx(normal_bounds.size.y, 220.0), "The stable combat arena uses the current 220-unit depth")
+	GameManager.boss_active = true
+	var boss_bounds := flight_space.get_combat_bounds()
+	_expect(boss_bounds.size.is_equal_approx(normal_bounds.size * FlightSpace3D.BOSS_ARENA_SCALE), "Boss encounters expand the stable arena")
+	_expect(boss_bounds.get_center().is_equal_approx(normal_bounds.get_center()), "Boss arenas preserve the combat origin")
+	_expect(is_equal_approx(rig.active_camera.size, 220.0), "Boss arenas do not change the visible ship scale")
 	GameManager.boss_active = was_boss_active
 	flight_space.bounds_changed.emit()
+	await get_tree().process_frame
 	return current
 
 
@@ -162,8 +149,8 @@ func _check_boss_hud_visibility() -> void:
 	var previous_wave := GameManager.current_wave
 	var previous_boss_active := GameManager.boss_active
 	var rig_was_processing := rig.is_processing()
-	# Keep the camera still while placing precise hull-edge fixtures. Ordinary
-	# moving-camera craft occlusion is already exercised at every size above.
+	# Keep the camera still while placing precise hull-edge fixtures. Craft
+	# occlusion is already exercised at every window size above.
 	rig.set_process(false)
 	GameManager.boss_active = true
 	GameManager.current_wave = 15

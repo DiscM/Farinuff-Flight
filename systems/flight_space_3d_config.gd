@@ -1,16 +1,20 @@
 @tool
 extends Resource
 class_name FlightSpace3DConfig
-## Shared scale, framing, and margin configuration for the native Combat Plane.
+## Canonical combat scale for Expedition, Flight School and harbor combat.
 
-const DEFAULT_PIXELS_PER_WORLD_UNIT := 11.0
+const DEFAULT_PIXELS_PER_WORLD_UNIT := 15.0
 
 @export_range(1.0, 64.0, 0.25) var pixels_per_world_unit: float = DEFAULT_PIXELS_PER_WORLD_UNIT
-## Combat framing is deliberately larger than the 1280x720 UI canvas. Keep
-## pixels_per_world_unit fixed so movement and attack tuning retain their speed.
-@export var baseline_viewport_size := Vector2i(1600, 900)
-@export_range(45.0, 89.0, 0.5) var camera_elevation_degrees: float = 70.0
-@export_range(1.0, 200.0, 0.5) var camera_height: float = 52.0
+## Hulls, hitboxes and mounted parts share this scale without changing flight speeds.
+@export_range(0.25, 6.0, 0.25) var enemy_scale_multiplier: float = 3.0
+## Player cruise and boost share a multiplier while retaining their response times.
+@export_range(0.25, 6.0, 0.25) var player_speed_multiplier: float = 3.0
+## The stable top-down projection spans 220 world units vertically. The
+## rendered camera shares the home port's angle and can orbit independently.
+@export var baseline_viewport_size := Vector2i(5867, 3300)
+@export_range(45.0, 90.0, 0.5) var camera_elevation_degrees: float = 90.0
+@export_range(1.0, 512.0, 0.5) var camera_height: float = 252.0
 @export_range(0.0, 512.0, 1.0) var spawn_margin_pixels: float = 80.0
 @export_range(0.0, 512.0, 1.0) var despawn_margin_pixels: float = 140.0
 

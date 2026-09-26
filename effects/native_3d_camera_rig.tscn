@@ -4,26 +4,28 @@
 [ext_resource type="Resource" path="res://systems/flight_space_3d_config.tres" id="2_config"]
 
 [node name="CameraRig3D" type="Node3D"]
-editor_description = "Orthographic native combat framing: 1600x900 combat span is preserved by KEEP_HEIGHT; wider viewports gain horizontal breathing room. The UI retains its independent 1280x720 baseline."
+editor_description = "Current combat camera: home-port angle, fixed 220-unit orthographic view, 90-degree manual orbits and pilot framing. The stable projection camera owns arena bounds and world-space tuning."
 script = ExtResource("1_rig")
 configuration = ExtResource("2_config")
 
 [node name="ProjectionCamera3D" type="Camera3D" parent="."]
 projection = 1
 current = false
-size = 76.88394
+size = 220.0
 near = 0.1
-far = 180.0
+far = 650.0
 keep_aspect = 1
 cull_mask = 1
 
-[node name="ShakeOffset" type="Node3D" parent="."]
+[node name="ViewPivot3D" type="Node3D" parent="."]
 
-[node name="Camera3D" type="Camera3D" parent="ShakeOffset"]
+[node name="ShakeOffset" type="Node3D" parent="ViewPivot3D"]
+
+[node name="Camera3D" type="Camera3D" parent="ViewPivot3D/ShakeOffset"]
 projection = 1
 current = true
-size = 76.88394
+size = 220.0
 near = 0.1
-far = 180.0
+far = 650.0
 keep_aspect = 1
 cull_mask = 1

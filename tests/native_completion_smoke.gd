@@ -411,7 +411,10 @@ func _check_enemy_projectile_capacity() -> void:
 	_expect(warmed_ids.size() == capacity, "Enemy warmup retains every configured projectile")
 	if warmed_ids.size() != capacity:
 		return
-	var spawn_position := flight_space.screen_to_combat_plane(Vector2(300.0, 250.0))
+	# Pool saturation needs a point inside the arena. A fixed screen pixel can
+	# project outside its world bounds with the angled camera or a square window.
+	var arena_center := flight_space.get_combat_bounds().get_center()
+	var spawn_position := Vector3(arena_center.x, 0.0, arena_center.y)
 	var hit_target := Area3D.new()
 	$World3D.add_child(hit_target)
 	var routed_damage: Array[int] = []

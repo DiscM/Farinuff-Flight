@@ -65,14 +65,15 @@ scale_curve = SubResource("ExhaustScale")
 editor_description = "Native Player Craft gameplay root. Root position is always on Y=0; imported-pivot correction belongs under Visuals."
 input_ray_pickable = false
 script = ExtResource("1_player")
-boundary_margin_pixels = 45.184
+boundary_margin_pixels = 63.2576
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 rotation = Vector3(1.570796, 0, 0)
 shape = SubResource("CapsuleShape3D_player")
 
 [node name="Visuals" type="Node3D" parent="."]
-position = Vector3(0, 0.08, 0)
+position = Vector3(0, 0.112, 0)
+scale = Vector3(1.4, 1.4, 1.4)
 
 [node name="PlayerHullGLB" parent="Visuals" instance=ExtResource("2_model")]
 
@@ -96,6 +97,7 @@ gi_mode = 0
 mesh = SubResource("SphereMesh_core_glow")
 
 [node name="Attachments" type="Node3D" parent="."]
+scale = Vector3(1.4, 1.4, 1.4)
 
 [node name="Sockets" type="Node3D" parent="Attachments"]
 

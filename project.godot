@@ -95,6 +95,19 @@ boost={
 ]
 }
 
+camera_view={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"physical_keycode":67)
+, Object(InputEventJoypadButton,"device":-1,"button_index":9)
+]
+}
+camera_flip={
+"deadzone": 0.5,
+"events": [Object(InputEventKey,"physical_keycode":86)
+, Object(InputEventJoypadButton,"device":-1,"button_index":10)
+]
+}
+
 [layer_names]
 
 2d_physics/layer_1="player"

@@ -33,6 +33,8 @@ The actor's physics clock advances the clips. Windups hold until gameplay releas
 
 Rebuild inside Blender with `tools/build_combat_motion_blender.py`. It writes the animated GLBs and their manifest into `assets/models/animated/`. The approved static model sources remain available. The source directory is excluded from Godot import with `.gdignore`.
 
+The three player hulls also run `tools/detail_butterfly_player_blender.py` during this build. Layered wing cells, branching spars, recessed panel seams, vents, concentric eyespot sensors, a framed canopy, segmented abdomen, antenna collars and hollow tail turbines raise each hull from 828 to 6,660 triangles. All detail shares the original mesh, material slots and four rigid bones; the seven socket transforms and seven animation clips are preserved. The source `.blend` includes the detailed models. See [the player detail preview](../player-detail/README.md).
+
 ## Review and validation
 
 Run `res://scenes/combat_motion_review.tscn` for a repeating motion lineup; Space pauses it. The top row is explicitly magnified 2.2× and the player examples 2.8×. `motion-preview.gif` captures one deterministic four-second cycle. `combat-1080p.png` shows the actual gameplay scale with 15 active enemies; `boss-windup.png` shows the Tempest rig in game.

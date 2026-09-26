@@ -10,10 +10,13 @@ const COMBAT_PLANE := Plane(Vector3.UP, 0.0)
 
 @export_node_path("Camera3D") var active_camera_path: NodePath
 @export_node_path("Camera3D") var stable_camera_path: NodePath
+@export_node_path("Node3D") var view_orientation_path: NodePath
 @export var configuration: FlightConfig
+@export var arena_bounds_override := Rect2()
 
 @onready var active_camera: Camera3D = get_node_or_null(active_camera_path) as Camera3D
 @onready var stable_camera: Camera3D = get_node_or_null(stable_camera_path) as Camera3D
+@onready var view_orientation: Node3D = get_node_or_null(view_orientation_path) as Node3D
 
 
 func _ready() -> void:
@@ -74,14 +77,48 @@ func combat_motion_to_screen(combat_motion: Vector3) -> Vector2:
 
 
 func _screen_motion_basis() -> Basis:
-	var camera_right := stable_camera.global_basis.x
+	return _plane_motion_basis(stable_camera.global_basis, stable_camera.size)
+
+
+## Rendered-view coordinates for player controls, aiming and HUD distances.
+## Shake is excluded so feedback never steers the craft or controller aim.
+func view_motion_to_combat(view_motion: Vector2) -> Vector3:
+	return _view_motion_basis() * Vector3(view_motion.x, 0.0, view_motion.y)
+
+
+func combat_motion_to_view(combat_motion: Vector3) -> Vector2:
+	var motion := _view_motion_basis().inverse() * combat_motion
+	return Vector2(motion.x, motion.z)
+
+
+## The camera chooses direction; the stable combat metric chooses speed.
+## View framing/zoom cannot accelerate movement or change analog magnitude.
+func view_input_to_combat_motion(view_input: Vector2) -> Vector3:
+	var motion := view_motion_to_combat(view_input)
+	var tuning_length := combat_motion_to_screen(motion).length()
+	return motion * (view_input.length() / tuning_length) if tuning_length > 0.000001 else Vector3.ZERO
+
+
+func combat_motion_to_view_input(combat_motion: Vector3) -> Vector2:
+	return combat_motion_to_view(combat_motion).normalized() * combat_motion_to_screen(combat_motion).length()
+
+
+func _view_motion_basis() -> Basis:
+	if active_camera == null or configuration == null:
+		return Basis.IDENTITY
+	var orientation := view_orientation.global_basis if view_orientation != null else active_camera.global_basis
+	return _plane_motion_basis(orientation, active_camera.size)
+
+
+func _plane_motion_basis(orientation: Basis, orthogonal_size: float) -> Basis:
+	var camera_right := orientation.x
 	camera_right.y = 0.0
 	camera_right = camera_right.normalized()
-	var camera_down := stable_camera.global_basis.z
+	var camera_down := -orientation.y
 	camera_down.y = 0.0
 	camera_down = camera_down.normalized()
-	var units_per_pixel := stable_camera.size / float(configuration.baseline_viewport_size.y)
-	var foreshortening := absf(stable_camera.global_basis.y.dot(camera_down))
+	var units_per_pixel := orthogonal_size / float(configuration.baseline_viewport_size.y)
+	var foreshortening := absf(orientation.y.dot(camera_down))
 	return Basis(
 		camera_right * units_per_pixel,
 		Vector3.UP,
@@ -100,6 +137,9 @@ func combat_to_screen(combat_position: Vector3) -> Vector2:
 ## margin expands the rectangle for off-plane spawning and despawning. Scale
 ## that margin with viewport height so its world-space distance stays fixed.
 func get_combat_bounds(baseline_margin_pixels: float = 0.0) -> Rect2:
+	if arena_bounds_override.has_area():
+		var world_margin := configuration.pixels_to_world(baseline_margin_pixels)
+		return arena_bounds_override.grow(world_margin)
 	var bounds := get_view_bounds()
 	if GameManager.boss_active:
 		bounds = Rect2(bounds.get_center() - bounds.size * BOSS_ARENA_SCALE * 0.5, bounds.size * BOSS_ARENA_SCALE)

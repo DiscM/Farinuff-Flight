@@ -1,6 +1,7 @@
 extends Node3D
 ## A peaceful, non-banking flight space. Deliberately owns no combat managers.
 
+const PortPresentation := preload("res://systems/home_port_presentation.gd")
 const FlightTuning := preload("res://entities/player/player_flight_tuning.gd")
 const ShipMotion := preload("res://effects/ship_motion_3d.gd")
 const ShipMaterials := preload("res://effects/rendering/frontier_ship_materials.gd")
@@ -18,12 +19,12 @@ const DOCK_POSITION := Layout.DOCK_POSITION
 const DOCK_RADIUS := Sections.INTERACTION_RADIUS
 const FLIGHT_RADIUS := Layout.FLIGHT_RADIUS
 const INITIAL_POSITION := Layout.INITIAL_POSITION
-const INITIAL_ZOOM := 220.0
-const MIN_ZOOM := 130.0
-const MAX_ZOOM := 260.0
+const INITIAL_ZOOM := PortPresentation.INITIAL_ZOOM
+const MIN_ZOOM := PortPresentation.MIN_ZOOM
+const MAX_ZOOM := PortPresentation.MAX_ZOOM
 const CRUISE_SPEED := FlightTuning.SPEED / 15.0
 const BOOST_SPEED := FlightTuning.BOOST_SPEED / 15.0
-const CAMERA_OFFSET := Vector3(150.0, 180.0, 200.0) * 1.4
+const CAMERA_OFFSET := PortPresentation.CAMERA_OFFSET
 
 
 class PilotLocator extends Node2D:
@@ -106,82 +107,7 @@ func _ready() -> void:
 
 
 func _build_environment() -> void:
-	var background := CanvasLayer.new()
-	background.name = "DeepSpace"
-	background.layer = -10
-	background.process_mode = Node.PROCESS_MODE_PAUSABLE
-	add_child(background)
-	var field := ColorRect.new()
-	field.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	field.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_sky_material = ShaderMaterial.new()
-	_sky_material.shader = preload("res://effects/shaders/galactic_starfield.gdshader")
-	_sky_material.set_shader_parameter("space_color", Color("030911"))
-	_sky_material.set_shader_parameter("nebula_blue", Color("163a48"))
-	_sky_material.set_shader_parameter("nebula_violet", Color("26243f"))
-	_sky_material.set_shader_parameter("nebula_pink", Color("425061"))
-	_sky_material.set_shader_parameter("nebula_strength", 0.28)
-	_sky_material.set_shader_parameter("star_brightness", 0.72)
-	_sky_material.set_shader_parameter("drift_speed", 0.004)
-	field.material = _sky_material
-	background.add_child(field)
-	var environment := Environment.new()
-	environment.background_mode = Environment.BG_CANVAS
-	environment.background_canvas_max_layer = -1
-	environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	environment.ambient_light_color = Color("9bacbd")
-	environment.ambient_light_energy = 0.65
-	environment.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	environment.glow_enabled = true
-	environment.glow_normalized = true
-	environment.glow_intensity = 0.32
-	environment.glow_strength = 0.75
-	environment.glow_hdr_threshold = 1.5
-	var environment_node := WorldEnvironment.new()
-	environment_node.environment = environment
-	world.add_child(environment_node)
-	var key := DirectionalLight3D.new()
-	key.name = "WarmStarlight"
-	key.rotation_degrees = Vector3(-48, -32, 0)
-	key.light_color = Color("ffe5b8")
-	key.light_energy = 1.8
-	key.shadow_enabled = true
-	key.directional_shadow_max_distance = 600.0
-	key.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
-	world.add_child(key)
-	var fill := DirectionalLight3D.new()
-	fill.name = "BlueNebulaFill"
-	fill.rotation_degrees = Vector3(-24, 145, 0)
-	fill.light_color = Color("83c5ed")
-	fill.light_energy = 0.75
-	world.add_child(fill)
-	_build_distant_stars()
-
-
-func _build_distant_stars() -> void:
-	# One draw surface provides subtle world-space parallax below the flyable plane.
-	var material := _emissive_material(Color("98bbc9"), 0.8)
-	material.vertex_color_use_as_albedo = true
-	var cube := BoxMesh.new()
-	cube.size = Vector3.ONE
-	cube.material = material
-	var mesh := MultiMesh.new()
-	mesh.transform_format = MultiMesh.TRANSFORM_3D
-	mesh.use_colors = true
-	mesh.mesh = cube
-	mesh.instance_count = 380
-	var random := RandomNumberGenerator.new()
-	random.seed = 42217
-	for index in mesh.instance_count:
-		var size := random.randf_range(0.08, 0.27)
-		var point := Vector3(random.randf_range(-240.0, 240.0), random.randf_range(-65.0, -26.0), random.randf_range(-230.0, 230.0))
-		mesh.set_instance_transform(index, Transform3D(Basis.IDENTITY.scaled(Vector3.ONE * size), point))
-		mesh.set_instance_color(index, Color.WHITE.lerp(Color("59879a"), random.randf()))
-	var stars := MultiMeshInstance3D.new()
-	stars.name = "ParallaxStars"
-	stars.multimesh = mesh
-	stars.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	world.add_child(stars)
+	_sky_material = PortPresentation.build_environment(self, world)
 
 
 func _build_station() -> void:
@@ -227,14 +153,9 @@ func _build_player() -> void:
 func _build_camera() -> void:
 	camera = Camera3D.new()
 	camera.name = "HarborCamera"
-	camera.projection = Camera3D.PROJECTION_ORTHOGONAL
-	camera.size = _zoom
-	camera.near = 0.1
-	camera.far = 650.0
 	world.add_child(camera)
 	_camera_target = _overview_target() + (player.position - Layout.FLIGHT_CENTER) * _camera_follow_factor()
-	camera.position = _camera_target + CAMERA_OFFSET
-	camera.look_at(_camera_target)
+	PortPresentation.configure_camera(camera, _camera_target, _zoom)
 	camera.make_current()
 
 
@@ -433,23 +354,15 @@ func _camera_follow_factor() -> float:
 func _overview_target() -> Vector3:
 	# Reserve the right-hand directory column while keeping the model large.
 	var aspect := get_viewport().get_visible_rect().size.aspect()
-	return Layout.CAMERA_TARGET + Vector3(0.8, 0.0, -0.6) * (_zoom * aspect * 0.10)
+	return PortPresentation.overview_target(aspect, _zoom)
 
 
 func _keep_pilot_in_frame() -> void:
 	# Close zoom and narrow windows need a little more follow at the perimeter.
 	# Keep the intended station framing everywhere else, including the arrival view.
-	var viewport_size := get_viewport().get_visible_rect().size
-	var safe := Rect2(viewport_size * Vector2(0.055, 0.18), viewport_size * Vector2(0.89, 0.60))
-	var projected := camera.unproject_position(player.global_position)
-	var clamped := projected.clamp(safe.position, safe.end)
-	if projected.is_equal_approx(clamped):
-		return
-	var target_point: Variant = Plane(Vector3.UP, 0.0).intersects_ray(camera.project_ray_origin(clamped), camera.project_ray_normal(clamped))
-	if target_point is Vector3:
-		var correction: Vector3 = player.global_position - target_point
-		_camera_target += correction
-		camera.position += correction
+	var correction := PortPresentation.pilot_frame_correction(camera, player.global_position)
+	_camera_target += correction
+	camera.position += correction
 
 
 func _update_pilot_locator() -> void:

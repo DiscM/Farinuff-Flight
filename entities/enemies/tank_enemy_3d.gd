@@ -115,7 +115,7 @@ func _configure_movement() -> void:
 	_brace_cooldown = 0.0
 	_braced = false
 	overload_warning.hide()
-	var warning_radius := 64.0 * HULL_PRESENTATION_SCALE
+	var warning_radius := 64.0 * HULL_PRESENTATION_SCALE * combat_scale
 	var horizontal := _flight_space.screen_motion_to_combat(Vector2(warning_radius, 0.0)).length()
 	var vertical := _flight_space.screen_motion_to_combat(Vector2(0.0, warning_radius)).length()
 	overload_warning.global_basis = Basis.IDENTITY.scaled(Vector3(horizontal, 1.0, vertical))

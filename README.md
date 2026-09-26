@@ -16,7 +16,7 @@ Farinuff Flight uses a taught finite Expedition followed by optional Endless pla
 
 Combat uses held auto-fire with free aim support. The ship can aim with mouse movement or controller right stick input, while keyboard movement keeps the ship inside the visible playfield. Boosting adds a short high-speed dash, post-boost drift, native particle bursts, projectile deflection, and chain potential after multiple reflected shots.
 
-The default window is 2560 × 1440, fitted to the display when necessary. Settings retains smaller window presets and fullscreen. The combat frame has 25% more width and depth, with larger voxel enemies and bosses for visible armor, reactor, and animation detail during combat. Movement and projectile speeds retain their existing world scale.
+The default window is 2560 × 1440, fitted to the display when necessary. Settings retains smaller window presets and fullscreen. The wide combat frame features larger voxel enemies and bosses for visible armor, reactor, and animation detail. Player cruise and boost run at 3× their reference speed to cover the larger arena; enemy and projectile speeds retain their existing world scale.
 
 The opening introduces enemy roles across successive waves, with precision-fire enemies joining after the first boss. Boost accepts a fresh press up to 120 ms before readiness, and three reflections open a 240 ms post-dash chain window. New sectors give a brief regrouping interval after rewards. Ship-system allocation previews its benefits, supports resetting unconfirmed choices, and prevents spending beyond stat caps. See [the refinement notes](docs/gameplay-refinement.md) for tuning and validation details.
 
@@ -51,7 +51,11 @@ The home port is a safe free-flight scene. It does not spend supplies, start a r
 - Boost: `Shift`, gamepad `B` / left trigger
 - Pause: `Escape`
 - Free aim: mouse movement or gamepad right stick
+- Camera angle: `C` or gamepad left bumper switches between the home-port angle and overhead view
+- Camera orbit: `V` or gamepad right bumper smoothly rotates 90° per press; four presses complete a full circle
 - Alt controls (Settings toggle): shoot with `Left Mouse Button`, boost with `Space`
+
+Normal runs use the **space battlefield** with the home port's camera angle, 220-unit orthographic zoom, warm starlight and cool fill light. The player model and its attachments are enlarged 40% for visibility relative to projectiles, with the original gameplay hitbox. Enemies and bosses are enlarged 3× for hull detail at this zoom, including their hitboxes, weapon mounts, armor plates and boss pods. The view centers on the combat arena, with the usual scenery, enemy waves, bosses and rewards. The camera keeps the pilot in frame near the edges. Camera changes are manual and can be remapped in Controls. Movement, boost steering and aiming follow the visible view through each 90° orbit. Transitions pause with gameplay, and Reduced Motion applies the selected view immediately. `scenes/harbor_combat.tscn` remains available as a separate harbor combat level.
 
 ## Tech Stack
 
@@ -66,6 +70,8 @@ The home port is a safe free-flight scene. It does not spend supplies, start a r
 
 
 ## Native assets and checks
+
+The earlier compact 3D combat setup is deprecated and its camera-fitting branches and separate lighting resources have been removed. `scenes/native_3d_gameplay.tscn` is the shared current runtime for Expedition, Flight School and the harbor combat variant. All use `systems/flight_space_3d_config.tres` and the home-port presentation; practice teaches the same camera, actor scale and flight speed as a normal run. `scenes/native_3d_run.tscn` remains the launch/retry entry and owns encounters and rewards. The shared scene is a combat sandbox when opened directly, not an alternate old level.
 
 The completion asset source is `tools/generate_native_completion_assets.py`. It generates six original low-poly GLBs in `assets/models/native/`: an orbital sentinel, orbital/piercing/explosive modules, a shock ring, and a muzzle flare. Existing authored boss hulls and butterfly variants supply the rest of the fleet.
 

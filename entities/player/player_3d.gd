@@ -59,6 +59,8 @@ var _movement_bounds := Rect2()
 var velocity := Vector3.ZERO
 var last_aim_direction := Vector3.FORWARD
 var is_using_free_aim := false
+## Optional level geometry, expressed on the same world-space combat plane.
+var flight_constraint: Callable
 var is_boosting := false
 var boost_direction := Vector3.FORWARD
 var boost_meter := 1.0
@@ -69,6 +71,7 @@ var drift_speed_bonus := 1.0
 var is_invincible := false
 var _invincibility_visual_elapsed := 0.0
 var _ship_visual_elapsed := 0.0
+var _flight_speed_scale := 1.0
 var _ribbons: EngineRibbons
 var _hull_motions: Dictionary[String, ShipMotion] = {}
 var _motion_sockets: Dictionary[String, Array] = {}
@@ -154,6 +157,7 @@ func configure_flight_space(value: FlightSpace) -> void:
 	$Visuals/InterceptorHull.visible = selected_hull == "ship_interceptor"
 	$Visuals/BulwarkHull.visible = selected_hull == "ship_bulwark"
 	_flight_space = value
+	_flight_speed_scale = value.configuration.player_speed_multiplier
 	if not _flight_space.bounds_changed.is_connected(_refresh_movement_bounds):
 		_flight_space.bounds_changed.connect(_refresh_movement_bounds)
 	for flag in VISUAL_DEBUG_FLAGS:
@@ -190,7 +194,7 @@ func _physics_process(delta: float) -> void:
 func _update_visual_feedback(delta: float) -> void:
 	_ship_visual_elapsed += delta
 	var flight_power := 1.0 if GameManager.is_game_active else 0.22
-	var base_speed := _flight_space.configuration.pixels_to_world(speed_pixels) if _flight_space != null else 1.0
+	var base_speed := _flight_space.configuration.pixels_to_world(speed_pixels * _flight_speed_scale) if _flight_space != null else 1.0
 	var speed_fraction := velocity.length() / maxf(base_speed, 0.1)
 	var engine_power := flight_power * (2.2 if is_boosting else 0.6 + minf(speed_fraction, 1.0) * 0.7)
 	if _ribbons != null:
@@ -457,13 +461,13 @@ func _get_fire_directions() -> Array[Vector3]:
 	var temporary_spread := has_spread_shot or get_dev_power_override("spread_shot")
 	if (not temporary_spread and not has_elite_upgrade("spread_shot_elite")) or _flight_space == null:
 		return directions
-	var screen_direction := _flight_space.combat_motion_to_screen(last_aim_direction).normalized()
+	var screen_direction := _flight_space.combat_motion_to_view(last_aim_direction).normalized()
 	var angles: Array[float] = [-deg_to_rad(15.0), deg_to_rad(15.0)]
 	if temporary_spread and has_elite_upgrade("spread_shot_elite"):
 		angles.append_array([-deg_to_rad(30.0), deg_to_rad(30.0)])
 	for spread_angle in angles:
 		var spread_screen_direction := screen_direction.rotated(spread_angle)
-		directions.append(_flight_space.input_to_combat_direction(spread_screen_direction))
+		directions.append(_flight_space.view_motion_to_combat(spread_screen_direction).normalized())
 	return directions
 
 
@@ -552,13 +556,13 @@ func _update_movement(input_direction: Vector2, delta: float) -> void:
 	if is_boosting:
 		_move_boost(input_direction, delta)
 		return
-	var effective_speed := speed_pixels * (
+	var effective_speed := speed_pixels * _flight_speed_scale * (
 		1.0 + GameManager.bonus_speed_pct + GameManager.meta_speed_pct + GameManager.ship_speed_pct
 	) * drift_speed_bonus * (1.2 if has_elite_upgrade("afterburner") else 1.0)
 	var current_acceleration := acceleration
 	var current_drag := drag
 	if post_boost_slide_timer > 0.0:
-		var screen_velocity := _flight_space.combat_motion_to_screen(velocity)
+		var screen_velocity := _flight_space.combat_motion_to_view_input(velocity) / _flight_speed_scale
 		var speed_ratio := clampf(
 			screen_velocity.length() / (speed_pixels * FlightTuning.DRIFT_SPEED_RATIO), 0.0, 1.0
 		)
@@ -580,25 +584,30 @@ func _update_movement(input_direction: Vector2, delta: float) -> void:
 	if has_elite_upgrade("afterburner"):
 		current_acceleration *= 1.15
 	if not input_direction.is_zero_approx():
-		var target_velocity := _flight_space.screen_motion_to_combat(input_direction * effective_speed)
+		var target_velocity := _flight_space.view_input_to_combat_motion(input_direction * effective_speed)
 		velocity = velocity.lerp(target_velocity, current_acceleration * delta)
 	else:
 		velocity = velocity.lerp(Vector3.ZERO, current_drag * delta)
-	set_combat_position(get_combat_position() + velocity * delta)
+	_advance_flight(velocity * delta)
 
 
 func _move_boost(input_direction: Vector2, delta: float) -> void:
-	var screen_direction := _flight_space.combat_motion_to_screen(boost_direction).normalized()
+	var screen_direction := _flight_space.combat_motion_to_view(boost_direction).normalized()
 	if not input_direction.is_zero_approx():
 		var steering_weight := clampf(FlightTuning.BOOST_STEER_RATE * delta, 0.0, 1.0)
 		screen_direction = screen_direction.lerp(input_direction.normalized(), steering_weight).normalized()
-		boost_direction = _flight_space.input_to_combat_direction(screen_direction)
-	velocity = _flight_space.screen_motion_to_combat(screen_direction * FlightTuning.BOOST_SPEED)
-	set_combat_position(
-		get_combat_position() + _flight_space.screen_motion_to_combat(
-			screen_direction * FlightTuning.BOOST_SPEED * delta
-		)
-	)
+		boost_direction = _flight_space.view_motion_to_combat(screen_direction).normalized()
+	velocity = _flight_space.view_input_to_combat_motion(screen_direction * FlightTuning.BOOST_SPEED * _flight_speed_scale)
+	_advance_flight(velocity * delta)
+
+
+func _advance_flight(displacement: Vector3) -> void:
+	# Harbor geometry needs the same short swept steps as home-port flight.
+	var steps := maxi(1, ceili(displacement.length())) if flight_constraint.is_valid() else 1
+	for step in steps:
+		set_combat_position(get_combat_position() + displacement / float(steps))
+		if flight_constraint.is_valid():
+			_clamp_to_flight_bounds()
 
 
 func _update_boost(delta: float) -> void:
@@ -635,13 +644,13 @@ func _begin_boost() -> void:
 		if _ribbons != null:
 			_ribbons.ignite()
 	boost_reflected_projectiles = 0
-	var screen_velocity := _flight_space.combat_motion_to_screen(velocity)
+	var screen_velocity := _flight_space.combat_motion_to_view_input(velocity) / _flight_speed_scale
 	var screen_direction := (
 		screen_velocity.normalized()
 		if screen_velocity.length() > FlightTuning.BOOST_HEADING_MIN_SPEED
 		else Vector2.UP
 	)
-	boost_direction = _flight_space.input_to_combat_direction(screen_direction)
+	boost_direction = _flight_space.view_motion_to_combat(screen_direction).normalized()
 	AudioManager.play_boost()
 	boost_started.emit(get_combat_position(), boost_direction)
 
@@ -666,7 +675,7 @@ func _update_aiming() -> void:
 			Input.get_joy_axis(InputBindings.active_gamepad, JOY_AXIS_RIGHT_Y)
 		)
 	if stick_direction.length() > clampf(float(SaveManager.get_setting("aim_deadzone", 0.4)), 0.15, 0.6):
-		last_aim_direction = _flight_space.input_to_combat_direction(stick_direction)
+		last_aim_direction = _flight_space.view_motion_to_combat(stick_direction).normalized()
 		is_using_free_aim = true
 	var mouse_position := get_viewport().get_mouse_position()
 	var player_screen_position := _flight_space.combat_to_screen(get_combat_position())
@@ -687,8 +696,8 @@ func _update_aiming() -> void:
 func get_aim_reticle_combat_position() -> Vector3:
 	if _flight_space == null:
 		return get_combat_position()
-	var screen_direction := _flight_space.combat_motion_to_screen(last_aim_direction).normalized()
-	return get_combat_position() + _flight_space.screen_motion_to_combat(
+	var screen_direction := _flight_space.combat_motion_to_view(last_aim_direction).normalized()
+	return get_combat_position() + _flight_space.view_motion_to_combat(
 		screen_direction * FlightTuning.AIM_RETICLE_DISTANCE
 	)
 
@@ -700,6 +709,9 @@ func _refresh_movement_bounds() -> void:
 
 func _clamp_to_flight_bounds() -> void:
 	var combat_position := get_combat_position()
+	if flight_constraint.is_valid():
+		set_combat_position(flight_constraint.call(combat_position))
+		return
 	combat_position.x = clampf(combat_position.x, _movement_bounds.position.x, _movement_bounds.end.x)
 	combat_position.z = clampf(combat_position.z, _movement_bounds.position.y, _movement_bounds.end.y)
 	set_combat_position(combat_position)

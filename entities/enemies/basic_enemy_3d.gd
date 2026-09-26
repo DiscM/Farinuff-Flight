@@ -84,7 +84,11 @@ const DEFAULT_STRAFE_WEAVE_PIXELS := 34.0
 
 @onready var collision_shape: CollisionShape3D = $CollisionShape3D
 @onready var visuals: Node3D = $Visuals
+@onready var attachments: Node3D = $Attachments
 @onready var sockets: Node3D = $Attachments/Sockets
+@onready var _authored_visual_transform: Transform3D = visuals.transform
+@onready var _authored_attachment_transform: Transform3D = attachments.transform
+@onready var _authored_collision_scale: Vector3 = collision_shape.scale
 
 var archetype_id: StringName = &"basic"
 var is_active := false
@@ -93,6 +97,7 @@ var max_health: int = 0
 var velocity := Vector3.ZERO
 var state: State = State.TRANSIT
 var state_remaining := 0.0
+var combat_scale := 1.0
 
 var _flight_space: FlightSpace
 var _active_stats: GenerationStats
@@ -165,6 +170,11 @@ func activate_generation(
 	if direction.is_zero_approx():
 		return false
 	_flight_space = flight_space
+	combat_scale = flight_space.configuration.enemy_scale_multiplier
+	var presentation_scale := Vector3.ONE * combat_scale
+	visuals.transform = _authored_visual_transform.scaled(presentation_scale)
+	attachments.transform = _authored_attachment_transform.scaled(presentation_scale)
+	collision_shape.scale = _authored_collision_scale
 	_heading = direction.normalized()
 	combat_position.y = 0.0
 	global_position = combat_position
@@ -184,6 +194,8 @@ func activate_generation(
 	_strafe_tangential = DEFAULT_STRAFE_TANGENTIAL_PIXELS
 	_strafe_weave = DEFAULT_STRAFE_WEAVE_PIXELS
 	_configure_movement()
+	# Archetypes configure generation-specific envelopes; enlarge the final shape.
+	collision_shape.scale *= combat_scale
 	health = roundi(float(_active_stats.max_health) * GameManager.get_enemy_health_multiplier())
 	health = roundi(float(health) * GameManager.get_late_game_health_multiplier())
 	max_health = health
@@ -653,7 +665,7 @@ func _release_generation_fragments() -> void:
 
 
 func _refresh_exit_bounds() -> void:
-	_exit_bounds = _flight_space.get_combat_bounds(EXIT_MARGIN_PIXELS)
+	_exit_bounds = _flight_space.get_combat_bounds(EXIT_MARGIN_PIXELS * combat_scale)
 
 
 func _has_crossed_exit_edge() -> bool:

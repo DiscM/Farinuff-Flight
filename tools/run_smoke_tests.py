@@ -50,6 +50,8 @@ EXTENDED_SCENES = (
     "neon_cabinet_smoke",
     "background_drift_smoke",
     "combat_readability_smoke",
+    "camera_transition_smoke",
+    "harbor_combat_smoke",
 )
 
 SCENES = SMOKE_SCENES + EXTENDED_SCENES

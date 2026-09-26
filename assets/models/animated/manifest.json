@@ -97,10 +97,10 @@
       "source": "redesign/player_butterfly.glb",
       "role": "player",
       "bones": {
-        "Body": 218,
-        "Port": 385,
-        "Starboard": 385,
-        "Weapon": 290
+        "Body": 544,
+        "Port": 1697,
+        "Starboard": 1697,
+        "Weapon": 594
       },
       "meshes": 1,
       "clips": [
@@ -111,17 +111,22 @@
         "boost_attack",
         "upgrade",
         "deploy"
-      ]
+      ],
+      "detail": {
+        "builder": "tools/detail_butterfly_player_blender.py",
+        "revision": 1,
+        "triangles": 6660
+      }
     },
     {
       "asset": "player_butterfly_morpho",
       "source": "redesign/player_butterfly_morpho.glb",
       "role": "player",
       "bones": {
-        "Body": 218,
-        "Port": 385,
-        "Starboard": 385,
-        "Weapon": 290
+        "Body": 544,
+        "Port": 1697,
+        "Starboard": 1697,
+        "Weapon": 594
       },
       "meshes": 1,
       "clips": [
@@ -132,17 +137,22 @@
         "boost_attack",
         "upgrade",
         "deploy"
-      ]
+      ],
+      "detail": {
+        "builder": "tools/detail_butterfly_player_blender.py",
+        "revision": 1,
+        "triangles": 6660
+      }
     },
     {
       "asset": "player_butterfly_monarch",
       "source": "redesign/player_butterfly_monarch.glb",
       "role": "player",
       "bones": {
-        "Body": 218,
-        "Port": 385,
-        "Starboard": 385,
-        "Weapon": 290
+        "Body": 544,
+        "Port": 1697,
+        "Starboard": 1697,
+        "Weapon": 594
       },
       "meshes": 1,
       "clips": [
@@ -153,7 +163,12 @@
         "boost_attack",
         "upgrade",
         "deploy"
-      ]
+      ],
+      "detail": {
+        "builder": "tools/detail_butterfly_player_blender.py",
+        "revision": 1,
+        "triangles": 6660
+      }
     },
     {
       "asset": "bf_elite_twin_cannons",
