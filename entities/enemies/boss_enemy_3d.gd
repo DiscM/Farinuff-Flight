@@ -89,6 +89,7 @@ func activate_generation(space: FlightSpace, origin: Vector3, direction: Vector3
 	return true
 
 func _sync_motion_sockets() -> void:
+	_flight_motion.sync_sockets()
 	# Five imported hulls share one wrapper muzzle. Only the selected visible
 	# hull may supply it; hidden variants must never overwrite its animated pose.
 	for pair in _animated_sockets:

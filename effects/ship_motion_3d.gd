@@ -8,6 +8,7 @@ var model_root: Node3D
 var skeleton: Skeleton3D
 var current_clip: StringName = &"cruise"
 var rest_clip: StringName = &"cruise"
+var blend_seconds := 0.045
 var _remaining := 0.0
 var _hold := false
 var _clips: Dictionary[StringName, StringName] = {}
@@ -35,7 +36,7 @@ func reset() -> void:
 	play(&"cruise", 0.0, false, 0.0)
 
 
-func play(clip: StringName, seconds: float = 0.0, hold: bool = false, blend: float = 0.045) -> void:
+func play(clip: StringName, seconds: float = 0.0, hold: bool = false, blend: float = -1.0) -> void:
 	if animation_player == null or not _clips.has(clip):
 		return
 	# Damage never masks a telegraphed release; shader hit feedback still runs.
@@ -46,7 +47,7 @@ func play(clip: StringName, seconds: float = 0.0, hold: bool = false, blend: flo
 	var length := animation_player.get_animation(_clips[clip]).length
 	_remaining = seconds if seconds > 0.0 else length
 	var rate := length / seconds if seconds > 0.0 else 1.0
-	animation_player.play(_clips[clip], blend, rate)
+	animation_player.play(_clips[clip], blend_seconds if blend < 0.0 else blend, rate)
 	# Explicit restart makes repeated volleys responsive instead of queuing.
 	animation_player.seek(0.0, true)
 	_update_bones()

@@ -123,14 +123,13 @@ func step(delta: float, target: Node3D) -> Vector3:
 			state_remaining = maxf(0.0, state_remaining - delta)
 			if state_remaining <= 0.0:
 				_enter_mobility()
-				return Vector3.ZERO
 			return movement.steer(
 				delta, _actor.global_position, _actor.velocity,
 				target_position, predicted_target, phase
 			) * delta
 		State.CHASE, State.STRAFE:
 			if _try_begin_dodge():
-				return Vector3.ZERO
+				return _actor.velocity * delta
 			_apply_mobility_intent()
 			if _try_commit_attack():
 				return Vector3.ZERO
@@ -340,6 +339,10 @@ func _enter(next: State, duration: float = 0.0) -> void:
 		movement.mode = Movement.Mode.CHASE
 	elif next == State.STRAFE:
 		movement.mode = Movement.Mode.STRAFE
+	if next == State.DODGE:
+		_actor._flight_motion.play(_actor.FlightMotion.Maneuver.BANK_REVERSAL, movement.dodge_side, duration)
+	elif next == State.RECOVERY:
+		_actor._flight_motion.play(_actor.FlightMotion.Maneuver.PITCH_RECOVERY, 1.0, duration)
 
 func begin_phase(next: int) -> void:
 	if not _enabled or state == State.DEAD or next <= phase:

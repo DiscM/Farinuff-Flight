@@ -10,6 +10,7 @@ signal player_projectile_hit(target: Area3D, combat_position: Vector3)
 signal enemy_projectile_hit(target: Area3D, combat_position: Vector3, damage: int)
 signal enemy_projectile_deflected(projectile: Area3D, combat_position: Vector3)
 signal deflected_projectile_hit(target: Area3D, combat_position: Vector3)
+signal player_projectile_reflected(target: Area3D, combat_position: Vector3)
 
 const Projectile := preload("res://entities/projectiles/projectile_3d.gd")
 const PLAYER_PROJECTILE_SCENE := preload("res://entities/projectiles/player_projectile_3d.tscn")
@@ -58,6 +59,8 @@ var _player: PlayerCraft
 var _combat_bounds := Rect2()
 var _interaction_range := InteractionRange.new()
 var _homing_targets_provider := Callable()
+var _pending_reflections := 0
+var _reflection_epoch := 0
 var _pools: Array[PoolState] = [
 	PoolState.new(PLAYER_PROJECTILE_SCENE),
 	PoolState.new(ENEMY_PROJECTILE_SCENE),
@@ -176,6 +179,9 @@ func clear_enemy_projectiles() -> void:
 
 
 func _clear_pool(kind: Projectile.Kind) -> void:
+	if kind == Projectile.Kind.ENEMY:
+		_reflection_epoch += 1
+		_pending_reflections = 0
 	# despawn() only schedules the return, so the checkout array remains stable
 	# while this pass disables every currently checked-out projectile.
 	for projectile in _pools[kind].checked_out:
@@ -237,7 +243,8 @@ func _fire(
 	var pool := _pools[kind]
 	# Saturation is bounded and observable; never instantiate to cover a node
 	# that is still waiting for its deferred return.
-	if pool.checked_out.size() >= pool.warmed_ids.size():
+	var reserved := _pending_reflections if kind == Projectile.Kind.ENEMY else 0
+	if pool.checked_out.size() + reserved >= pool.warmed_ids.size():
 		pool.rejected_shots += 1
 		return
 	var projectile := ObjectPool.acquire(pool.scene, _active_parent, false) as Projectile
@@ -304,6 +311,8 @@ func _on_projectile_hit(
 	):
 		return
 	if projectile.kind == Projectile.Kind.PLAYER:
+		if _try_enemy_reflection(target, combat_position, projectile):
+			return
 		player_projectile_hit.emit(target, combat_position)
 		if projectile.explosive:
 			explosion_requested.emit(combat_position, target)
@@ -312,6 +321,35 @@ func _on_projectile_hit(
 		deflected_projectile_hit.emit(target, combat_position)
 	else:
 		enemy_projectile_hit.emit(target, combat_position, projectile.damage)
+
+
+func _try_enemy_reflection(target: Area3D, impact: Vector3, incoming: Projectile) -> bool:
+	if not is_instance_valid(target) or not target.has_method("can_reflect_projectile") or not target.can_reflect_projectile():
+		return false
+	var pool := _pools[Projectile.Kind.ENEMY]
+	# If the bounded pool is full, the original shot hits normally. Reserve a
+	# slot before deferring so other volleys cannot steal the reflected shot.
+	if pool.checked_out.size() + _pending_reflections >= pool.warmed_ids.size():
+		return false
+	var direction := -incoming.velocity
+	var speed := clampf(_flight_space.combat_motion_to_screen(direction).length() * 0.65, 320.0, 520.0)
+	_pending_reflections += 1
+	_release_enemy_reflection.call_deferred(impact, direction, speed, _reflection_epoch)
+	target.consume_reflection()
+	# Consume piercing/explosive shots too, before their usual hit side effects.
+	# A fresh hostile payload keeps faction, upgrades and pool ownership clean.
+	incoming.despawn()
+	player_projectile_reflected.emit(target, impact)
+	return true
+
+
+func _release_enemy_reflection(impact: Vector3, direction: Vector3, speed: float, epoch: int) -> void:
+	if epoch != _reflection_epoch:
+		return
+	_pending_reflections -= 1
+	# Area overlap callbacks run while physics queries are flushing. Acquire
+	# and arm the replacement only after the flush, through the ordinary pool.
+	_fire(Projectile.Kind.ENEMY, impact, direction, speed, 1.0, Projectile.Motion.STRAIGHT, Color(1.0, 0.72, 0.15))
 
 
 func _on_projectile_returned(projectile: Area3D, pool: PoolState) -> void:

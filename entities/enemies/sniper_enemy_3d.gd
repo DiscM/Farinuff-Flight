@@ -20,7 +20,7 @@ const SHOT_SPEED_MAX_PIXELS := 500.0
 const AIM_TELEGRAPH_SECONDS := 0.5
 const HOLD_BREAK_DISTANCE_PIXELS := 260.0
 const HOLD_BREAK_DISTANCE_HURT_PIXELS := 330.0
-const REPOSITION_SECONDS := 0.45
+const REPOSITION_SECONDS := 1.2
 const STRAFE_RADIUS_PIXELS := 330.0
 const STRAFE_TANGENTIAL_PIXELS := 105.0
 const STRAFE_WEAVE_PIXELS := 48.0
@@ -43,6 +43,7 @@ var _bracket_shot := false
 var _locked_direction := Vector3.ZERO
 var _ordinary_shots := 0
 var _rail_used := false
+var _rail: EnemyRailBeam3D
 var _visible_time := 0.0
 var _shoot_timer := 0.0
 var _has_withdrawn := false
@@ -54,6 +55,31 @@ func _get_generation_stats() -> GenerationStats:
 
 func _is_basic_lineage() -> bool:
 	return false
+
+
+func _supports_maneuver(action: Tactics.Action) -> bool:
+	return generation >= 3 and action == Tactics.Action.KNIFE_EDGE
+
+
+func _maneuver_entry_state() -> State:
+	return State.HOLD
+
+
+func _exit_state(next: State) -> void:
+	if state == State.AIM:
+		_hide_aim_warning()
+	if state == State.RAIL_AIM:
+		_cancel_rail_warning()
+	super._exit_state(next)
+
+
+func _on_state_entered(previous: State) -> void:
+	super._on_state_entered(previous)
+	if state == State.AIM:
+		aim_warning.show()
+		var muzzle := get_socket(&"MuzzleCenter") as Marker3D
+		if muzzle != null:
+			_update_warning(muzzle)
 
 
 func engagement_seconds() -> float:
@@ -71,6 +97,7 @@ func _configure_movement() -> void:
 	_locked_direction = Vector3.ZERO
 	_ordinary_shots = 0
 	_rail_used = false
+	_rail = null
 	_visible_time = 0.0
 	_hide_aim_warning()
 	aim_warning.material_override = aim_material_gen2 if generation == 2 else aim_material_later
@@ -89,7 +116,8 @@ func _configure_movement() -> void:
 
 
 func _advance_movement(delta: float) -> void:
-	_observe_player()
+	if _advance_combat_state(delta):
+		return
 	if _inside_view():
 		_visible_time += delta
 	match state:
@@ -99,20 +127,22 @@ func _advance_movement(delta: float) -> void:
 				_enter(State.HOLD)
 			return
 		State.HOLD:
-			_advance_strafe(delta, 1.0)
+			_advance_strafe(delta, 1.0, false)
 			if _tick_engagement(delta):
 				_begin_sniper_withdraw()
 				return
 			if _should_break_hold():
 				_begin_reposition()
 				return
+			if _try_begin_tactical_maneuver():
+				return
 			_update_aim_and_fire(delta)
 			return
 		State.AIM:
-			_advance_strafe(delta, 0.9)
+			_advance_strafe(delta, 0.9, false)
 			var muzzle := get_socket(&"MuzzleCenter") as Marker3D
 			if muzzle != null:
-				_face_target(muzzle)
+				_face_target(muzzle, delta)
 				_update_warning(muzzle)
 			state_remaining = maxf(0.0, state_remaining - delta)
 			if state_remaining <= 0.0:
@@ -120,15 +150,23 @@ func _advance_movement(delta: float) -> void:
 					_fire_locked_shot(muzzle, true)
 				_enter(State.HOLD)
 			return
+		State.RAIL_AIM:
+			_advance_strafe(delta, 0.9)
+			# The pooled beam owns its release and hit window. The FSM stays
+			# committed until that release instead of starting another maneuver.
+			if not is_instance_valid(_rail) or _rail._source != self or not _rail.is_active or _rail.fired:
+				_enter(State.HOLD)
+			else:
+				state_remaining = maxf(0.0, _rail.remaining_time)
+			return
 		State.REPOSITION:
-			_advance_strafe(delta, 1.1)
-			state_remaining = maxf(0.0, state_remaining - delta)
+			_advance_maneuver_path(delta)
 			if state_remaining <= 0.0:
 				play_motion(&"cruise")
 				_enter(State.HOLD)
 			return
 		State.WITHDRAW:
-			_integrate_velocity(delta)
+			_advance_velocity(_withdraw_velocity, delta)
 			return
 		_:
 			_advance_strafe(delta, 1.0)
@@ -157,6 +195,10 @@ func _begin_reposition() -> void:
 	)
 	_strafe_angle += _strafe_sign * 0.7
 	_strafe_sign = -_strafe_sign
+	var away := _flight_space.combat_motion_to_screen(global_position - _observed_player.global_position).normalized()
+	var tangent := Vector2(-away.y, away.x) * _strafe_sign
+	var range_gain := clampf(_strafe_radius - _player_distance_pixels + 200.0, 280.0, 560.0)
+	_start_maneuver_path(_flight_space.screen_motion_to_combat(away * range_gain + tangent * 210.0), REPOSITION_SECONDS)
 	_enter(State.REPOSITION, REPOSITION_SECONDS)
 
 
@@ -170,7 +212,7 @@ func _update_aim_and_fire(delta: float) -> void:
 	var muzzle := get_socket(&"MuzzleCenter") as Marker3D
 	if player == null or muzzle == null:
 		return
-	_face_target(muzzle)
+	_face_target(muzzle, delta)
 	_shoot_timer -= delta
 	if _shoot_timer > 0.0:
 		return
@@ -178,7 +220,7 @@ func _update_aim_and_fire(delta: float) -> void:
 	_begin_aimed_shot(player, muzzle)
 
 
-func _face_target(muzzle: Marker3D) -> void:
+func _face_target(muzzle: Marker3D, delta: float) -> void:
 	if _observed_player == null:
 		return
 	var aim_direction := _observed_player.global_position - muzzle.global_position
@@ -186,7 +228,7 @@ func _face_target(muzzle: Marker3D) -> void:
 	if aim_direction.is_zero_approx():
 		return
 	var normalized_direction := aim_direction.normalized()
-	rotation.y = atan2(-normalized_direction.x, -normalized_direction.z)
+	_update_facing(normalized_direction, delta)
 	collision_shape.global_rotation = Vector3.ZERO
 
 
@@ -197,12 +239,12 @@ func _begin_aimed_shot(player: Node3D, muzzle: Marker3D) -> void:
 		var hazards := get_tree().get_first_node_in_group(
 			&"native_3d_hazard_manager"
 		) as NativeHazardManager
-		if hazards != null and hazards.spawn_rail_beam(
-			muzzle.global_position, player.global_position - muzzle.global_position, self
-		) != null:
-			_rail_used = true
-			play_motion(&"windup", 0.9, true)
-			return
+		if hazards != null:
+			_rail = hazards.spawn_rail_beam(muzzle.global_position, player.global_position - muzzle.global_position, self)
+			if _rail != null:
+				_rail_used = true
+				_enter(State.RAIL_AIM, _rail.remaining_time)
+				return
 	var target := player.global_position
 	if generation >= 2 and _ordinary_shots % 3 != 0:
 		target = _predicted_player
@@ -210,9 +252,6 @@ func _begin_aimed_shot(player: Node3D, muzzle: Marker3D) -> void:
 	_locked_direction.y = 0.0
 	_locked_direction = _locked_direction.normalized()
 	if generation >= 2 and can_special:
-		play_motion(&"windup", AIM_TELEGRAPH_SECONDS, true)
-		aim_warning.show()
-		_update_warning(muzzle)
 		_enter(State.AIM, AIM_TELEGRAPH_SECONDS)
 	else:
 		_fire_locked_shot(muzzle)
@@ -285,7 +324,14 @@ func _fire_locked_shot(muzzle: Marker3D, telegraphed: bool = false) -> void:
 
 func _finish(reason: FinishReason) -> void:
 	_hide_aim_warning()
+	_cancel_rail_warning()
 	super._finish(reason)
+
+
+func _cancel_rail_warning() -> void:
+	if is_instance_valid(_rail) and _rail._source == self and _rail.is_active and not _rail.fired:
+		_rail.despawn()
+	_rail = null
 
 
 func get_attack_status() -> Dictionary:
@@ -293,6 +339,6 @@ func get_attack_status() -> Dictionary:
 	debug["ordinary_shots"] = _ordinary_shots
 	debug["locked_direction"] = _locked_direction
 	debug["rail_used"] = _rail_used
-	debug["holding"] = state in [State.HOLD, State.AIM]
+	debug["holding"] = state in [State.HOLD, State.AIM, State.RAIL_AIM]
 	debug["has_withdrawn"] = _has_withdrawn
 	return debug

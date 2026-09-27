@@ -31,7 +31,7 @@ const OVERLOAD_INTERVAL := 9.0
 const OVERLOAD_WARNING_SECONDS := 1.0
 const OVERLOAD_STEP_SECONDS := 0.1
 const OVERLOAD_STEPS := 16
-const OVERLOAD_RECOVERY_SECONDS := 0.6
+const OVERLOAD_REARM_SECONDS := 0.6
 const BRACE_DURATION_SECONDS := 1.2
 const BRACE_COOLDOWN_SECONDS := 3.5
 const BRACE_RADIUS_PIXELS := 200.0
@@ -147,7 +147,8 @@ func _configure_armor_plates() -> void:
 
 
 func _advance_movement(delta: float) -> void:
-	_observe_player()
+	if _advance_combat_state(delta):
+		return
 	_brace_cooldown = maxf(0.0, _brace_cooldown - delta)
 	if _second_ring_timer >= 0.0:
 		_second_ring_timer -= delta
@@ -168,7 +169,6 @@ func _advance_movement(delta: float) -> void:
 			_advance_strafe(delta, BRACE_SPEED_SCALE)
 			state_remaining = maxf(0.0, state_remaining - delta)
 			if state_remaining <= 0.0:
-				_end_brace()
 				_enter(State.TRANSIT)
 			return
 		State.OVERLOAD_WINDUP:
@@ -189,17 +189,11 @@ func _advance_movement(delta: float) -> void:
 				_discharge_overload_step()
 				_overload_shots += 1
 				if _overload_shots >= OVERLOAD_STEPS:
-					_end_overload()
-					_enter(State.RECOVERY, OVERLOAD_RECOVERY_SECONDS)
-			return
-		State.RECOVERY:
-			_advance_strafe(delta, WINDUP_SPEED_SCALE)
-			state_remaining = maxf(0.0, state_remaining - delta)
-			if state_remaining <= 0.0:
-				_enter(State.TRANSIT)
+					_burst_timer = maxf(_burst_timer, OVERLOAD_REARM_SECONDS)
+					_enter(State.TRANSIT)
 			return
 		State.WITHDRAW:
-			_integrate_velocity(delta)
+			_advance_velocity(_withdraw_velocity, delta)
 			return
 		_:
 			pass
@@ -222,15 +216,37 @@ func _advance_movement(delta: float) -> void:
 		_overload_timer -= delta
 		if _overload_timer <= 0.0 and _visible_time >= 0.35 and _try_begin_overload():
 			return
-	if _burst_timer > BARRAGE_WINDUP_SECONDS and _burst_timer - delta <= BARRAGE_WINDUP_SECONDS:
-		play_motion(&"windup", BARRAGE_WINDUP_SECONDS, true)
 	_burst_timer -= delta
 	if _burst_timer <= 0.0:
 		_burst_timer = _burst_interval_seconds()
-		play_motion(&"windup", BARRAGE_WINDUP_SECONDS, true)
 		_enter(State.BARRAGE, BARRAGE_WINDUP_SECONDS)
 		return
 	_advance_strafe(delta)
+
+
+func _exit_state(next: State) -> void:
+	if state == State.BRACE:
+		_end_brace()
+	if state in [State.OVERLOAD_WINDUP, State.OVERLOAD] and next != State.OVERLOAD:
+		_end_overload()
+	if next == State.WITHDRAW:
+		_second_ring_timer = -1.0
+	super._exit_state(next)
+
+
+func _on_state_entered(previous: State) -> void:
+	super._on_state_entered(previous)
+	if state == State.OVERLOAD_WINDUP:
+		overload_warning.show()
+	elif state == State.BRACE:
+		_braced = true
+		_strafe_sign = -_strafe_sign
+		_strafe_angle += _strafe_sign * 0.55
+		_brace_cooldown = BRACE_COOLDOWN_SECONDS
+		for plate in _armor_plates:
+			if is_instance_valid(plate) and plate.is_active:
+				plate.orbit_radius_pixels = _plate_base_radius * BRACE_ORBIT_SCALE
+				plate.orbit_speed_degrees = absf(plate.orbit_speed_degrees) * _strafe_sign
 
 
 func _burst_interval_seconds() -> float:
@@ -253,12 +269,6 @@ func _should_brace() -> bool:
 
 
 func _begin_brace() -> void:
-	_braced = true
-	_brace_cooldown = BRACE_COOLDOWN_SECONDS
-	for plate in _armor_plates:
-		if is_instance_valid(plate) and plate.is_active:
-			plate.orbit_radius_pixels = _plate_base_radius * BRACE_ORBIT_SCALE
-	play_motion(&"windup", BRACE_DURATION_SECONDS, true)
 	_enter(State.BRACE, BRACE_DURATION_SECONDS)
 
 
@@ -297,8 +307,6 @@ func _try_begin_overload() -> bool:
 		return false
 	if not is_instance_valid(_coordinator) or not _coordinator.request_major(self):
 		return false
-	play_motion(&"windup", OVERLOAD_WARNING_SECONDS, true)
-	overload_warning.show()
 	_enter(State.OVERLOAD_WINDUP, OVERLOAD_WARNING_SECONDS)
 	return true
 

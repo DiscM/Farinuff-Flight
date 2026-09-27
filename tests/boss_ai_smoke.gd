@@ -361,6 +361,13 @@ func _check_mobility_variety() -> void:
 		ai.state in [AI.State.DODGE, AI.State.CHASE, AI.State.STRAFE],
 		"Dodge resolves back into mobility"
 	)
+	for tick in 120:
+		if ai.state != AI.State.DODGE:
+			break
+		moved = boss.global_position
+		boss._advance_movement(1.0 / 60.0)
+		_expect(boss.global_position.distance_to(moved) > 0.0001, "Boss dodge carries movement through its final transition frame")
+	_expect(ai.state in [AI.State.CHASE, AI.State.STRAFE], "Completed boss dodge returns directly to flying")
 	projectile_manager.clear_player_projectiles()
 	boss._before_finish(BasicEnemy.FinishReason.ESCAPED, boss.global_position)
 	boss.queue_free()

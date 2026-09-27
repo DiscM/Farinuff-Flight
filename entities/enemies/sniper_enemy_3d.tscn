@@ -29,6 +29,7 @@ aim_material_gen2 = SubResource("AimMaterialGen2")
 aim_material_later = SubResource("AimMaterial")
 gameplay_stats = ExtResource("3_stats")
 surface_style = 1
+flight_style = 4
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("BoxShape3D_hitbox")

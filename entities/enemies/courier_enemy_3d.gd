@@ -1,6 +1,8 @@
 extends FastEnemy3D
 var field_objective := true
 var _courier_label: Label3D
+func _supports_maneuver(_action: Tactics.Action) -> bool:
+	return false
 func _configure_movement() -> void:
 	_speed_pixels = 85.0
 	velocity = _flight_space.screen_motion_to_combat(_flight_space.combat_motion_to_screen(_heading).normalized() * _speed_pixels)

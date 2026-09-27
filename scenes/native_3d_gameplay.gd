@@ -163,6 +163,7 @@ func _ready() -> void:
 	projectile_manager.player_projectile_hit.connect(_on_player_projectile_hit)
 	projectile_manager.enemy_projectile_hit.connect(_on_enemy_projectile_hit)
 	projectile_manager.enemy_projectile_deflected.connect(_on_enemy_projectile_deflected)
+	projectile_manager.player_projectile_reflected.connect(_on_player_projectile_reflected)
 	power_up_manager.power_up_collected.connect(_on_power_up_collected)
 	hazard_manager.mine_detonated.connect(_on_mine_detonated)
 	# Only the Expedition enables supplies and run rewards; practice stays isolated.
@@ -221,6 +222,10 @@ func _on_enemy_projectile_deflected(_projectile: Area3D, combat_position: Vector
 	if not GameManager.practice_mode:
 		GameManager.run_insights.reflections += 1
 	effect_manager.play_effect(NativeEffect.EffectKind.REFLECT, combat_position, player.boost_direction, 0.85)
+
+
+func _on_player_projectile_reflected(_target: Area3D, combat_position: Vector3) -> void:
+	effect_manager.play_effect(NativeEffect.EffectKind.REFLECT, combat_position, Vector3.UP, 0.65)
 
 
 func _on_power_up_collected(_power_up_type: int, combat_position: Vector3) -> void:

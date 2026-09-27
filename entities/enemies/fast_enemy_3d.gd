@@ -13,8 +13,8 @@ const FAST_STATS := [
 ]
 const HITBOX_PIXELS := [20.0, 21.0, 23.0, 25.0]
 const PHASE_WARNING_SECONDS := 0.4
-const PHASE_DASH_SECONDS := 0.16
-const PHASE_DISTANCE_PIXELS := 100.0
+const PHASE_DASH_SECONDS := 0.55
+const PHASE_DISTANCE_PIXELS := 420.0
 const PHASE_COOLDOWN_SECONDS := 1.5
 const STRAFE_RADIUS_PIXELS := 175.0
 const STRAFE_TANGENTIAL_PIXELS := 130.0
@@ -36,6 +36,23 @@ var _phase_origin := Vector3.ZERO
 
 func _is_basic_lineage() -> bool:
 	return false
+
+
+func _supports_maneuver(action: Tactics.Action) -> bool:
+	return _supports_fighter_maneuver(action)
+
+
+func _exit_state(next: State) -> void:
+	if state == State.PHASE_WINDUP:
+		phase_warning.hide()
+	super._exit_state(next)
+
+
+func _on_state_entered(previous: State) -> void:
+	super._on_state_entered(previous)
+	if state == State.PHASE_WINDUP:
+		phase_warning.show()
+		_update_phase_warning()
 
 
 func _get_generation_stats() -> GenerationStats:
@@ -61,18 +78,14 @@ func _configure_movement() -> void:
 
 
 func _advance_movement(delta: float) -> void:
-	_observe_player()
-	_evade_cooldown = maxf(0.0, _evade_cooldown - delta)
+	if _advance_combat_state(delta):
+		return
+	if _advance_defense(delta):
+		return
 	var in_view := _inside_view()
 	if in_view:
 		_visible_time += delta
 	match state:
-		State.EVADE:
-			_advance_strafe(delta, 1.1)
-			state_remaining = maxf(0.0, state_remaining - delta)
-			if state_remaining <= 0.0:
-				_enter(State.TRANSIT)
-			return
 		State.PHASE_WINDUP:
 			if not in_view:
 				_cancel_phase()
@@ -81,47 +94,38 @@ func _advance_movement(delta: float) -> void:
 			_update_phase_warning()
 			state_remaining = maxf(0.0, state_remaining - delta)
 			if state_remaining <= 0.0:
-				_phase_displacement = _trim_shift(_phase_displacement)
+				_phase_displacement = _clamp_maneuver_point(global_position + _phase_displacement) - global_position
 				_phase_origin = global_position
-				phase_warning.hide()
-				play_motion(&"attack", PHASE_DASH_SECONDS)
+				_start_maneuver_path(_phase_displacement, PHASE_DASH_SECONDS, 0.0)
 				_play_feedback(0.8)
 				_enter(State.PHASE_DASH, PHASE_DASH_SECONDS)
 			return
 		State.PHASE_DASH:
-			var step := minf(delta, state_remaining)
-			var progress := step / maxf(PHASE_DASH_SECONDS, 0.0001)
-			global_position += _phase_displacement * progress
-			global_position.y = 0.0
-			velocity = _phase_displacement / maxf(PHASE_DASH_SECONDS, 0.0001)
-			state_remaining = maxf(0.0, state_remaining - step)
+			_advance_maneuver_path(delta)
 			if state_remaining <= 0.0:
+				_strafe_sign = -_strafe_sign
 				_strafe_angle += _strafe_sign * 0.8
-				_enter(State.REPOSITION, 0.3)
-			return
-		State.REPOSITION:
-			_advance_strafe(delta, 1.0)
-			state_remaining = maxf(0.0, state_remaining - delta)
-			if state_remaining <= 0.0:
 				_enter(State.TRANSIT)
 			return
 		State.WITHDRAW:
-			_integrate_velocity(delta)
+			_advance_velocity(_withdraw_velocity, delta)
 			return
 		_:
 			pass
 	if _tick_engagement(delta):
 		_begin_withdraw()
 		return
+	if _try_begin_tactical_maneuver():
+		return
 	_phase_cooldown = maxf(0.0, _phase_cooldown - delta)
 	_pattern_timer -= delta
 	if generation >= 2 and _pattern_timer <= 0.0:
 		_change_pattern()
-	if generation >= 3 and in_view and _evade_cooldown <= 0.0:
+	if generation >= 2 and in_view and _evade_cooldown <= 0.0:
 		_evade_scan_timer -= delta
 		if _evade_scan_timer <= 0.0:
 			_evade_scan_timer = EVADE_SCAN_SECONDS
-			if _try_begin_weave_evade():
+			if _try_begin_defense():
 				return
 	if generation >= 4 and in_view and _visible_time >= 0.35 and _phase_cooldown <= 0.0:
 		if _try_begin_phase():
@@ -150,37 +154,18 @@ func _change_pattern() -> void:
 
 
 func _try_begin_weave_evade() -> bool:
-	if state != State.TRANSIT:
-		return false
-	var projectile := _find_incoming_projectile()
-	if projectile == null:
-		return false
-	var shot_direction := _flight_space.combat_motion_to_screen(projectile.velocity).normalized()
-	var side := Vector2(-shot_direction.y, shot_direction.x)
-	var shift := _choose_shift(side, EVADE_DISTANCE_PIXELS)
-	if shift.is_zero_approx():
-		return false
-	global_position += shift
-	global_position.y = 0.0
-	_strafe_angle += _strafe_sign * 0.5
-	_strafe_radius = clampf(_strafe_radius + (20.0 if randf() < 0.5 else -20.0), 110.0, 280.0)
-	play_motion(&"attack", 0.2)
-	_evade_cooldown = EVADE_COOLDOWN_SECONDS
-	_play_feedback(0.5)
-	_enter(State.EVADE, EVADE_DURATION_SECONDS)
-	return true
+	return _try_begin_evade()
 
 
 func _try_begin_phase() -> bool:
 	if state != State.TRANSIT:
 		return false
-	_phase_displacement = _choose_shift(_screen_perpendicular_axis(), PHASE_DISTANCE_PIXELS)
+	if not _tactics.attack_slot_available(self):
+		return false
+	_phase_displacement = _choose_maneuver_shift(_screen_perpendicular_axis(), PHASE_DISTANCE_PIXELS)
 	if _phase_displacement.is_zero_approx():
 		return false
 	_phase_cooldown = PHASE_COOLDOWN_SECONDS
-	play_motion(&"windup", PHASE_WARNING_SECONDS, true)
-	phase_warning.show()
-	_update_phase_warning()
 	_enter(State.PHASE_WINDUP, PHASE_WARNING_SECONDS)
 	return true
 

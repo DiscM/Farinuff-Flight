@@ -42,6 +42,7 @@ monitoring = false
 monitorable = false
 script = ExtResource("1")
 surface_style = 1
+flight_style = 5
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("Hull")
 disabled = true

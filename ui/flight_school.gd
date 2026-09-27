@@ -242,7 +242,7 @@ func get_page_text(index: int) -> String:
 	if index == 0:
 		return "Up %s · Left %s · Down %s · Right %s\nAim: mouse / right stick\nFire: hold %s · Pause: %s" % [InputBindings.binding_label("move_up"), InputBindings.binding_label("move_left"), InputBindings.binding_label("move_down"), InputBindings.binding_label("move_right"), InputBindings.binding_label("shoot"), InputBindings.binding_label("pause")]
 	if index == 1:
-		return "Boost: %s → reflect shots.\nDodge cyan diamonds; they cannot be reflected." % InputBindings.binding_label("boost")
+		return "Boost: %s → reflect shots.\nDodge cyan diamonds; they cannot be reflected.\nAmber REFLECT rolls return your shots. Boost them back or attack after the roll." % InputBindings.binding_label("boost")
 	return PAGE_TEXT[index]
 
 

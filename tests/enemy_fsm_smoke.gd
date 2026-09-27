@@ -74,10 +74,7 @@ func _check_basic_charge_cycle() -> void:
 	)
 	enemy.state_remaining = 0.0
 	enemy._advance_movement(0.016)
-	_expect(enemy.state == BasicEnemy3D.State.RECOVERY, "Released charge enters a brief recovery")
-	enemy.state_remaining = 0.0
-	enemy._advance_movement(0.016)
-	_expect(enemy.state == BasicEnemy3D.State.TRANSIT, "Recovery returns to TRANSIT")
+	_expect(enemy.state == BasicEnemy3D.State.TRANSIT, "Released charge resumes flight immediately")
 	_expect(not enemy._try_begin_charge(), "Charge stays single-use per activation")
 	enemy.queue_free()
 	await get_tree().process_frame
@@ -100,7 +97,7 @@ func _check_basic_evade() -> void:
 	_expect(enemy.state == BasicEnemy3D.State.EVADE, "Evade is an explicit state")
 	enemy.state_remaining = 0.0
 	enemy._advance_movement(0.016)
-	_expect(enemy.state == BasicEnemy3D.State.TRANSIT, "Evade resolves back into TRANSIT")
+	_expect(enemy.state == BasicEnemy3D.State.TRANSIT, "Barrel dodge returns directly to normal flight")
 	projectile_manager.clear_player_projectiles()
 	enemy.queue_free()
 	await get_tree().process_frame
@@ -120,10 +117,7 @@ func _check_fast_phase_cycle() -> void:
 	_expect(enemy.state == BasicEnemy3D.State.PHASE_DASH, "Warning releases into the dash")
 	enemy.state_remaining = 0.0
 	enemy._advance_movement(0.016)
-	_expect(enemy.state == BasicEnemy3D.State.REPOSITION, "Dash finishes with a re-approach")
-	enemy.state_remaining = 0.0
-	enemy._advance_movement(0.016)
-	_expect(enemy.state == BasicEnemy3D.State.TRANSIT, "Re-approach returns to the strafe")
+	_expect(enemy.state == BasicEnemy3D.State.TRANSIT, "Dash returns directly to its normal approach")
 	_expect(enemy.get_debug_state()["state"] == "TRANSIT", "Debug state reports the strafe")
 	enemy.queue_free()
 	await get_tree().process_frame
@@ -208,6 +202,12 @@ func _check_tank_pressure_cycle() -> void:
 	enemy.state_remaining = 0.0
 	enemy._advance_movement(0.016)
 	_expect(enemy.state == BasicEnemy3D.State.TRANSIT, "Barrage resolves back into TRANSIT")
+	enemy._enter(BasicEnemy3D.State.OVERLOAD_WINDUP, 0.01)
+	enemy._advance_movement(0.02)
+	enemy._overload_shots = TankEnemy3D.OVERLOAD_STEPS - 1
+	enemy._overload_step_timer = 0.0
+	enemy._advance_movement(0.016)
+	_expect(enemy.state == BasicEnemy3D.State.TRANSIT and enemy._burst_timer >= TankEnemy3D.OVERLOAD_REARM_SECONDS, "Overload resumes flight immediately while its guns rearm")
 	enemy.queue_free()
 	await get_tree().process_frame
 
@@ -249,14 +249,12 @@ func _check_constant_strafing_motion() -> void:
 			states.append_array([
 				BasicEnemy3D.State.CHARGE_WINDUP,
 				BasicEnemy3D.State.EVADE,
-				BasicEnemy3D.State.RECOVERY,
 				BasicEnemy3D.State.WITHDRAW,
 			])
 		elif role == "fast":
 			states.append_array([
 				BasicEnemy3D.State.EVADE,
 				BasicEnemy3D.State.PHASE_WINDUP,
-				BasicEnemy3D.State.REPOSITION,
 				BasicEnemy3D.State.WITHDRAW,
 			])
 		elif role == "bomber":
@@ -271,7 +269,6 @@ func _check_constant_strafing_motion() -> void:
 				BasicEnemy3D.State.BRACE,
 				BasicEnemy3D.State.OVERLOAD_WINDUP,
 				BasicEnemy3D.State.OVERLOAD,
-				BasicEnemy3D.State.RECOVERY,
 				BasicEnemy3D.State.WITHDRAW,
 			])
 		elif role == "sniper":

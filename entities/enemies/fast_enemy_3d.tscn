@@ -24,6 +24,7 @@ input_ray_pickable = false
 script = ExtResource("1_enemy")
 gameplay_stats = ExtResource("3_stats")
 surface_style = 1
+flight_style = 1
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]
 shape = SubResource("BoxShape3D_hitbox")
