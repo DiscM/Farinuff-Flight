@@ -1,142 +1,66 @@
 # Farinuff Flight
 
-A premium single-purchase native 3D arcade shooter built in Godot 4. Farinuff Flight centers on fast survival play, drift-heavy ship handling, boost-reflection combat, transformative run builds, and an authored Wave-20 Expedition that opens into optional Endless mastery.
+A native 3D space arcade shooter built in **Godot 4.6.3**. Fly a butterfly-shaped craft, reflect enemy fire with boost, and assemble a ship that changes as your run unfolds.
 
-Gameplay now runs entirely through native 3D actors, with five boss hulls, destructible boss weapon pods, all 13 elite abilities, modular ship upgrades, and pooled 3D effects. The old 2D combat runtime has been retired. Completion hardening is covered by native contract checks and a live Godot 4.6.3 scene run; target-hardware visual and performance acceptance remains a release-validation task. Changes and validation are recorded in [the transition log](docs/3d-migration-checklist.md).
+[![Smoke Tests](https://github.com/DiscM/Farinuff-Flight/actions/workflows/smoke_tests.yml/badge.svg?branch=main)](https://github.com/DiscM/Farinuff-Flight/actions/workflows/smoke_tests.yml)
 
-![Gameplay capture](assets/readme/gameplay-capture.png)
+![Wayfarer / Crescent Harbor — the flyable home port](design/home-base/game-crescent/crescent-homeport.png)
 
-![Elite boss fight capture 1](assets/readme/elite-boss-fight.png)
+## Fly, reflect, rebuild
 
-![Elite boss fight capture 2](assets/readme/elite-boss-fight-fullpower.png)
+- **Boost-reflection combat.** Hold boost to burn through the meter, steer through incoming fire, and return projectiles for extra damage. Reflections replenish boost and open follow-up chains.
+- **A 20-wave Expedition.** Collect XP orbs, survive increasingly capable enemy formations, and defeat four milestone bosses. Finish at Tempest Core or continue into Endless, where Void Harbinger awaits.
+- **Builds that change your craft.** Combine temporary power-ups with 13 elite abilities: homing fire, twin cannons, orbitals, piercing rounds, explosive rounds, a drone escort, and more. Installed modules appear on the ship.
+- **Progress between runs.** Bank salvage to unlock ship variants, permanent systems, blueprints, and challenge modifiers.
+- **A home port you can fly through.** Visit Launch Bay, Hangar, Flight School, Route Map, Archives, and Settings at Wayfarer / Crescent Harbor.
 
-## Gameplay Mechanics
+Start with **Flight School** to learn movement, reflection, collection, and build choices. Then choose a ship at Launch Bay and start an Expedition. Defeat offers a continue while stocks remain; finishing a run records your score, wave, and salvage earnings.
 
-Farinuff Flight uses a taught finite Expedition followed by optional Endless play. Standard enemies spawn from the screen edges, drop XP orbs on defeat, and increase pressure as the wave count rises. XP orbs fill the wave meter, restore lives after enough collection, and advance the run toward tougher enemy mixes.
+Settings and permanent progression are saved locally. Active runs are session-scoped and cannot be resumed after quitting.
 
-Combat uses held auto-fire with free aim support. The ship can aim with mouse movement or controller right stick input, while keyboard movement keeps the ship inside the visible playfield. Boosting adds a short high-speed dash, post-boost drift, native particle bursts, projectile deflection, and chain potential after multiple reflected shots.
+## Run the game
 
-The default window is 2560 × 1440, fitted to the display when necessary. Settings retains smaller window presets and fullscreen. The wide combat frame features larger voxel enemies and bosses for visible armor, reactor, and animation detail. Player cruise and boost run at 3× their reference speed to cover the larger arena; enemy and projectile speeds retain their existing world scale.
+The project is in active development. Open it from source with the pinned **Godot 4.6.3** editor and Forward+ rendering:
 
-The opening introduces enemy roles across successive waves, with precision-fire enemies joining after the first boss. Boost accepts a fresh press up to 120 ms before readiness, and three reflections open a 240 ms post-dash chain window. New sectors give a brief regrouping interval after rewards. Ship-system allocation previews its benefits, supports resetting unconfirmed choices, and prevents spending beyond stat caps. See [the refinement notes](docs/gameplay-refinement.md) for tuning and validation details.
+```sh
+git clone https://github.com/DiscM/Farinuff-Flight.git
+cd Farinuff-Flight
+```
 
-Power-ups appear during active waves and can be collected by contact or shot pickup. Current temporary effects include bullet scale increases, rapid fire, shield, spread shot, magnet, and nuke. These stack with run upgrades to create different weapon profiles across a session.
+Import `project.godot` in Godot, let asset imports finish, and press **F6** with `scenes/home_base.tscn` open, or **F5** to run the project. The game starts at Crescent Harbor.
 
-Progression adds permanent run choices at milestone moments. Every fifth cleared wave grants stat allocation points for fire rate, health, and movement speed. Native boss identities are authored at stable milestones: Assault Commander (Wave 5), Iron Bulwark (Wave 10), Tempest (Wave 15), Tempest Core (Wave 20), then Void Harbinger (Wave 25) as the first Endless revelation. Elite rewards offer up to three unowned upgrades, including homing fire, twin cannons, permanent spread, rear fire, shield bursts, overclock, permanent magnet, hull plating, afterburners, and a drone escort. Unlocked blueprints add orbitals, piercing, and explosive rounds. The cards preview the selected hull with its existing modules and the proposed addition; acquired modules also appear on the native craft. Temporary spread and permanent spread combine into a five-shot central fan.
-
-The first launch opens the flyable home port and points new pilots toward Flight School, a replayable five-page briefing covering movement, boost reflection, the orb/life economy, build decisions, and the Wave-20 target. Failure uses a try-again flow before final game over. Remaining try-again stocks can continue a run, clear immediate pressure, and return the ship with temporary invincibility. Final game over records score, high score, and highest wave reached.
-
-Live Flight School previews incoming volleys, tracks completed actions, and keeps its collection targets available until the lesson is finished. Completing practice opens ship selection directly. Keyboard/controller handoff preserves the first deliberate fire or boost, and ending a recoverable run respects the confirmation preference. Dense-combat projectile retention now matches its declared capacity. See the [playability hardening notes](docs/playability-hardening.md) for behavior and verification.
-
-Runs also earn salvage — a persistent currency banked from boss kills and an end-of-run bonus based on score and waves cleared. Salvage spends at the home port’s Hangar: tiered ship systems (starting lives, speed, fire rate, extra try-again stocks), elite blueprints that add Orbital Array, Piercing Rounds, and Explosive Rounds to the elite upgrade pool, ship variants, and challenge modifiers.
-
-Before each run, the launch bay offers a loadout choice: pick an unlocked ship variant (the balanced Swallowtail, the fast-but-fragile Interceptor, or the slow-but-tough Bulwark) and toggle any owned challenge modifiers — faster spawns, armored enemies, no power-ups, and more — each paying a percentage bonus on all salvage earned that run. The game-over screen itemizes where the run's salvage came from.
-
-Expedition runs are intentionally session-scoped: quitting the process or abandoning a run discards its current wave, enemies, projectiles, and in-run build. Saves retain durable progression and campaign discoveries, but an active run cannot be resumed after process exit.
-
-The [cohesion guideline](docs/indie-refinement-guideline.md), informed by [primary-source developer research](docs/indie-cohesion-research.md), now connects combat, build choices, and run feedback. Reflected shots deal double base-shot damage; legal drafts can offer an explained interaction with installed modules; the combat header names the next milestone. Formations leave a short recovery beat, pickups cycle through eligible types, and the continue decision no longer expires. Pause, defeat, and victory share a run-local flight record.
-
-## Wayfarer Home Port
-
-The game starts directly at **Wayfarer / Crescent Harbor**, an original textured voxel spaceport built in Blender. Its main ring and five asymmetric relay islands use twice the source scale while the player keeps its existing size. Fourteen spacecraft populate the port, with nine following approach and departure routes. Lights, machinery, cable articulation and station corrections share a synchronized animation loop. Fly to the six colored sections—**Launch Bay, Hangar, Flight School, Route Map, Archives, and Settings**—and press the displayed interaction button (normally `E` or gamepad `A`) to access each service. Directory selections set waypoints; services require proximity. Close a service to resume flight at the same position.
-
-The old Command Deck is deprecated. Run endings and practice returns lead back to the home port. `ui/main_menu.tscn` remains only as a compatibility redirect. The usual movement and boost controls apply; zoom with the mouse wheel / `−` / `+` or gamepad shoulder buttons.
-
-The home port is a safe free-flight scene. It does not spend supplies, start a run, or change progression. Asset source, authoring instructions, and validation are described in [the home-port notes](docs/wayfarer-home-port.md).
+Windows release candidates are built through [GitHub Actions](https://github.com/DiscM/Farinuff-Flight/actions/workflows/release_candidate.yml). See the [developer guide](docs/development.md) for exports, automated checks, and release validation.
 
 ## Controls
 
-- Movement: `WASD` or `Arrow Keys`, or gamepad left stick
-- Shoot: hold `Space`, gamepad `A` / right trigger
-- Boost: `Shift`, gamepad `B` / left trigger
-- Pause: `Escape`
-- Free aim: mouse movement or gamepad right stick
-- Camera angle: `C` or gamepad left bumper switches between the home-port angle and overhead view
-- Camera orbit: `V` or gamepad right bumper smoothly rotates 90° per press; four presses complete a full circle
-- Alt controls (Settings toggle): shoot with `Left Mouse Button`, boost with `Space`
+Default bindings; combat actions can be remapped in Settings.
 
-Normal runs use the **space battlefield** with the home port's camera angle, 220-unit orthographic zoom, warm starlight and cool fill light. The player model and its attachments are enlarged 40% for visibility relative to projectiles, with the original gameplay hitbox. Enemies and bosses are enlarged 3× for hull detail at this zoom, including their hitboxes, weapon mounts, armor plates and boss pods. The view centers on the combat arena, with the usual scenery, enemy waves, bosses and rewards. The camera keeps the pilot in frame near the edges. Camera changes are manual and can be remapped in Controls. Movement, boost steering and aiming follow the visible view through each 90° orbit. Transitions pause with gameplay, and Reduced Motion applies the selected view immediately. `scenes/harbor_combat.tscn` remains available as a separate harbor combat level.
+| Action | Keyboard / mouse | Gamepad |
+| --- | --- | --- |
+| Move | WASD / arrow keys | Left stick |
+| Aim | Mouse | Right stick |
+| Fire | Hold Space | A / right trigger |
+| Boost / reflect | Hold Shift | B / left trigger |
+| Pause | Escape | Start |
+| Change camera angle | C | Left bumper |
+| Rotate camera 90° | V | Right bumper |
+| Use a home-port service | E, while nearby | A, while nearby |
+| Home-port zoom | Mouse wheel / − / + | Shoulder buttons |
 
-## Tech Stack
+The alternate-controls setting uses left mouse button to fire and Space to boost. Movement and aiming follow the selected camera view.
 
-- Engine: Godot 4.6 project format with Forward+ rendering; the menu and retry flow launch the native 3D runtime; 2D HUD and backdrop remain
-- Language: GDScript 2.0 with typed scripts across gameplay systems
-- Architecture: scene-based composition with reusable player, enemy, bullet, power-up, HUD, menu, and popup scenes
-- Global state: autoload singletons for `GameManager`, `MetaProgression`, `SignalBus`, and `SaveManager`
-- Event flow: signal-driven score, combo, life, orb meter, wave, boss, allocation, elite upgrade, settings, and game-over updates
-- Rendering: procedural starfield and background layers, shader-driven CRT overlay, distortion pass, screen shake, tweens, and generated visual effects
-- Persistence: saved settings and high score through the save manager
-- Build target: exported Windows desktop build included with the repository
+## Combat preview
 
+![Tempest Core encounter in the native 3D battlefield](design/combat-scale/boss-combat-2560.png)
 
-## Native assets and checks
+These are development captures; UI and balance continue to evolve.
 
-The earlier compact 3D combat setup is deprecated and its camera-fitting branches and separate lighting resources have been removed. `scenes/native_3d_gameplay.tscn` is the shared current runtime for Expedition, Flight School and the harbor combat variant. All use `systems/flight_space_3d_config.tres` and the home-port presentation; practice teaches the same camera, actor scale and flight speed as a normal run. `scenes/native_3d_run.tscn` remains the launch/retry entry and owns encounters and rewards. The shared scene is a combat sandbox when opened directly, not an alternate old level.
+## Explore the project
 
-The completion asset source is `tools/generate_native_completion_assets.py`. It generates six original low-poly GLBs in `assets/models/native/`: an orbital sentinel, orbital/piercing/explosive modules, a shock ring, and a muzzle flare. Existing authored boss hulls and butterfly variants supply the rest of the fleet.
-
-Run `python3 tools/check_native_transition.py` for resource-reference and scene-ID checks. Godot import validates the assets themselves; runtime tests exercise the shipping scenes. Static and headless checks do not establish visual quality, combat balance, or frame rate. The gameplay screenshots above predate the completion changes.
-
-### GitHub smoke tests
-
-CI uses the checksum-pinned Godot 4.6.3 editor and a ten-scene smoke suite:
-
-| Scene | Coverage |
+| Resource | What it covers |
 | --- | --- |
-| `autoload_smoke` | Saves, settings persistence, progression, shared pool and game state |
-| `menu_boot_smoke` | Flyable home-port startup, practice service returns and legacy redirect |
-| `frontend_navigation_smoke` | Pages, focus, modals, navigation and launch signals |
-| `native_completion_smoke` | Shipping actors/models, upgrades, projectile reuse and boss variants |
-| `expedition_progression_smoke` | Campaign persistence, rewards and assisted production journeys |
-| `pooling_smoke` | Scene teardown and stale pooled references |
-| `resource_cache_smoke` | Paused loading and menu/run/practice cache reuse |
-| `audio_settings_smoke` | Audio controls and settings application |
-| `home_base_smoke` | Station scale, six spatial services, flight, camera, pause, quitting and save isolation |
-| `home_base_ui_smoke` | Home-port routing, service focus, device prompts and enlarged text layout |
-
-Each scene must exit successfully, print its completion marker, and report no GDScript or unexpected engine errors. Intentional negative-test errors require the expected scene and test backtrace; known teardown diagnostics are allowed only after completion. Each has a 120-second timeout; failures do not skip remaining scenes. GitHub retains import and scene logs as `smoke-test-logs`. Python tooling tests run together before installing Godot.
-
-Retired mockup showrooms are removed: their ignored preview outputs are not project dependencies. The source-text migration checker (`tests/check_native_completion.py`) is no longer a CI gate; its implementation-string assertions overlap runtime coverage. The resource checker no longer validates obsolete redesign GLBs or freezes migration-era source patterns.
-
-To reproduce CI in a **disposable checkout**, set `GODOT_PATH` to the Godot 4.6.3 executable and run:
-
-```sh
-python3 tools/check_native_transition.py
-python3 tools/check_home_base_assets.py
-python3 tools/check_crescent_harbor.py
-python3 -m unittest discover -s tests -p 'test_*.py'
-cat tests/ci_settings.cfg >> project.godot
-"$GODOT_PATH" --headless --path . --import > import.log 2>&1
-cat import.log
-if grep -Eq '(SCRIPT ERROR|ERROR):' import.log; then exit 1; fi
-printf '\n[gui]\ntheme/custom="res://ui/themes/farinuff_frontend_theme.tres"\n' >> project.godot
-python3 tools/run_smoke_tests.py --suite smoke
-```
-
-CI serializes asset imports to avoid a Godot font-import crash and disables Blender source imports: runtime scenes use checked-in GLB exports. The shipping theme is restored after its fonts import. Settings are appended directly because Godot ignores `override.cfg` during editor imports.
-
-After importing resources, the runner also works in a development checkout without appending CI settings. It creates a temporary project and a disposable user-data directory for each scene before autoloads start. Player saves and the working `project.godot` remain untouched; temporary profiles are removed after success, failure, or timeout. The runner requires filesystem symlinks (Linux/macOS, or Windows with symlink support). Local logs are stored in `.godot/smoke-logs/`.
-
-The default is the CI smoke suite. Focused boss behavior, VFX, material, motion, layout and backdrop tests remain available locally, along with the warmup benchmark:
-
-```sh
-python3 tools/run_smoke_tests.py --suite extended
-python3 tools/run_smoke_tests.py boss_ai_smoke voxel_boss_material_smoke
-```
-
-`extended` includes all ten smoke scenes plus the focused regressions and benchmark. Explicit scene names override suite selection. Performance evidence should be collected on representative hardware, outside the PR smoke gate.
-
-### Production release candidates
-
-The [implementation ledger](docs/production-implementation.md) tracks the production slices and their remaining acceptance evidence. `Release Candidate` can be dispatched in GitHub Actions or triggered with a `v*` tag. It requires the smoke suite to pass, downloads the matching verified export templates, and retains a Windows package as an artifact. It does not publish a release or update a storefront.
-
-From a clean checkout with Godot 4.6.3 available:
-
-```sh
-python3 tools/install_release_engine.py --templates
-python3 tools/export_release.py --godot "$GODOT_PATH" --output builds/windows-candidate
-```
-
-The output directory must be empty. Use `--allow-dirty` only for local development validation; the build records that state. Export uses a temporary project with serial imports and Blender imports disabled. Each artifact contains the executable/PCK, complete license files, notices, a checked PCK inventory, build version/revision, export log, and SHA-256 checksums. The gate rejects development/source-only files and missing runtime planet scenes. Authored runtime hulls under `assets/models/ships/` remain included.
-
-Export and automated checks do not establish Windows execution, minimum hardware, commercial asset permissions, or release approval. Test install, launch, a full run, controls, quit/reopen, update, and rollback on target machines before promoting a candidate. Current headless tests retain Godot teardown diagnostics in their logs; these are not a measured memory-stability result.
+| [Development and validation](docs/development.md) | Architecture, smoke tests, asset checks, and Windows exports |
+| [Home port](docs/wayfarer-home-port.md) | Crescent Harbor assets and authoring |
+| [Gameplay refinement](docs/gameplay-refinement.md) | Combat and progression design |
+| [Production ledger](docs/production-implementation.md) | Release work and remaining acceptance evidence |
+| [Third-party notices](THIRD_PARTY_NOTICES.md) | Asset and dependency attribution |
