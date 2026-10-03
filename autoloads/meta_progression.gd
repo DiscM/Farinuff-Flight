@@ -358,14 +358,19 @@ func consume_powerup_pod() -> bool:
 ## them claimed, persists, and returns the total bonus (0 when nothing new).
 ## Flat awards — intentionally not affected by the run's modifier multiplier.
 func claim_first_clear_milestones(waves_cleared: int) -> int:
+	var total := _claim_milestones(waves_cleared)
+	if total > 0:
+		_persist()
+	return total
+
+
+func _claim_milestones(waves_cleared: int) -> int:
 	var total := 0
 	for wave: Variant in FIRST_CLEAR_MILESTONES:
 		var milestone_wave := int(wave)
 		if waves_cleared >= milestone_wave and not claimed_milestones.has(milestone_wave):
 			claimed_milestones.append(milestone_wave)
 			total += int(FIRST_CLEAR_MILESTONES[wave])
-	if total > 0:
-		_persist()
 	return total
 
 # --- Lifetime stats ---
@@ -373,11 +378,27 @@ func claim_first_clear_milestones(waves_cleared: int) -> int:
 ## Records one finished run: bumps run/kill totals and the best-wave record.
 ## Sets last_run_set_best_wave for the game-over screen.
 func record_run_stats(wave_reached: int, kills: int) -> void:
+	_record_run_stats(wave_reached, kills)
+	_persist()
+
+
+func _record_run_stats(wave_reached: int, kills: int) -> void:
 	stat_total_runs += 1
 	stat_total_kills += maxi(kills, 0)
 	last_run_set_best_wave = wave_reached > stat_best_wave
 	stat_best_wave = maxi(stat_best_wave, wave_reached)
+
+
+## Claims, statistics, and payment are one committed save state. On write
+## failure the complete settlement remains in memory for save_before_quit's
+## retry; GameManager's run guard prevents awarding it a second time.
+func settle_run(wave_reached: int, kills: int, salvage_bonus: int) -> int:
+	var milestones := _claim_milestones(maxi(wave_reached - 1, 0))
+	_record_run_stats(wave_reached, kills)
+	salvage += maxi(salvage_bonus, 0) + milestones
 	_persist()
+	salvage_changed.emit(salvage)
+	return milestones
 
 # --- Salvage conversion ---
 

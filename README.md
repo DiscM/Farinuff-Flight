@@ -94,7 +94,7 @@ CI uses the checksum-pinned Godot 4.6.3 editor and a ten-scene smoke suite:
 | `home_base_smoke` | Station scale, six spatial services, flight, camera, pause, quitting and save isolation |
 | `home_base_ui_smoke` | Home-port routing, service focus, device prompts and enlarged text layout |
 
-Each scene must exit successfully, print its completion marker, and report no GDScript errors. Each has a 120-second timeout; failures do not skip remaining scenes. GitHub retains import and scene logs as `smoke-test-logs`. Python tooling tests run together before installing Godot.
+Each scene must exit successfully, print its completion marker, and report no GDScript or unexpected engine errors. Intentional negative-test errors require the expected scene and test backtrace; known teardown diagnostics are allowed only after completion. Each has a 120-second timeout; failures do not skip remaining scenes. GitHub retains import and scene logs as `smoke-test-logs`. Python tooling tests run together before installing Godot.
 
 Retired mockup showrooms are removed: their ignored preview outputs are not project dependencies. The source-text migration checker (`tests/check_native_completion.py`) is no longer a CI gate; its implementation-string assertions overlap runtime coverage. The resource checker no longer validates obsolete redesign GLBs or freezes migration-era source patterns.
 

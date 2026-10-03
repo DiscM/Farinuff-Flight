@@ -17,6 +17,7 @@ var _build_panel: Control
 var _confirmation: Control
 var _briefing: PanelContainer
 var _settings_focus: Dictionary = {}
+var _build_focus: Dictionary = {}
 
 ## Builds the UI layout and plays the fade-in animation. The scene's full-rect
 ## anchors fill the viewport. Runs in PROCESS_MODE_ALWAYS so it functions while
@@ -203,10 +204,12 @@ func _on_build() -> void:
 	var panel := preload("res://ui/shared/build_reference.gd").new()
 	_build_panel = panel
 	panel.closed.connect(func():
+		preload("res://ui/shared/modal_focus.gd").restore(_build_focus)
 		panel.queue_free()
 		get_node("LeftDock/MenuButtons/BuildWrap/Button").grab_focus()
 	)
 	add_child(panel)
+	_build_focus = preload("res://ui/shared/modal_focus.gd").suspend_outside(panel)
 
 
 func _on_retry() -> void:

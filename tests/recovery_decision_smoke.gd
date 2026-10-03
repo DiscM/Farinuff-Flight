@@ -22,6 +22,7 @@ func _run() -> void:
 	await _check_hold_and_quit_interruption()
 	await _check_no_continues()
 	await _check_nested_settings_focus()
+	await _check_build_focus()
 	GameManager.try_again_stocks = old_run[0]
 	GameManager.lives = old_run[1]
 	GameManager.starting_lives = old_run[2]
@@ -173,6 +174,32 @@ func _check_nested_settings_focus() -> void:
 	pause._settings_menu.queue_free()
 	await _frames(2)
 	_expect(settings_invoker.focus_mode == Control.FOCUS_ALL, "Removing a modal without its close signal still restores underlying focus")
+	layer.queue_free()
+	await _frames(2)
+
+
+func _check_build_focus() -> void:
+	var layer := CanvasLayer.new()
+	add_child(layer)
+	var pause := preload("res://ui/pause_menu.tscn").instantiate()
+	layer.add_child(pause)
+	await _frames(2)
+	var invoker: Button = pause.get_node("LeftDock/MenuButtons/BuildWrap/Button")
+	invoker.grab_focus()
+	invoker.pressed.emit()
+	await _frames(2)
+	var panel: Control = pause._build_panel
+	_expect(invoker.focus_mode == Control.FOCUS_NONE, "Ship Upgrades suspends covered pause controls")
+	_check_focus_cycle(panel, panel.get("close_button"), "Ship Upgrades")
+	_press_action(&"ui_cancel")
+	await _frames(2)
+	_expect(not is_instance_valid(pause._build_panel) and invoker.has_focus(), "Closing Ship Upgrades restores its pause action")
+	_expect(invoker.focus_mode == Control.FOCUS_ALL, "Closing Ship Upgrades restores pause focus modes")
+	invoker.pressed.emit()
+	await _frames(2)
+	pause._build_panel.queue_free()
+	await _frames(2)
+	_expect(invoker.focus_mode == Control.FOCUS_ALL, "Removing Ship Upgrades restores covered controls")
 	layer.queue_free()
 	await _frames(2)
 

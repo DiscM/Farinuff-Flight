@@ -64,6 +64,40 @@ EXTENDED_SCENES = (
 SCENES = SMOKE_SCENES + EXTENDED_SCENES
 
 
+def unexpected_engine_errors(output: str, scene: str) -> list[str]:
+    """Allow only attributed negative tests and completion-time teardown errors."""
+    completed = False
+    unexpected = []
+    blocks = re.split(r"(?=^\S)", output, flags=re.MULTILINE)
+    for block in blocks:
+        line = block.splitlines()[0] if block else ""
+        if re.match(rf"^{re.escape(scene.upper())}_PASS(?:\s|$)", line):
+            completed = True
+        if not line.startswith("ERROR:"):
+            continue
+        if completed and (
+            re.fullmatch(r"ERROR: \d+ resources still in use at exit \(run with --verbose for details\)\.", line)
+            or re.fullmatch(r"ERROR: \d+ RID allocations of type 'N13RendererDummy15MaterialStorage11DummyShaderE' were leaked at exit\.", line)
+        ):
+            continue
+        if not completed and scene == "autoload_smoke" and (
+            line == "ERROR: Parse JSON failed. Error at line 0: Expected key"
+            and ("(res://tests/player_trust_save_checks.gd:" in block
+                 or "_check_save_manager (res://tests/autoload_smoke.gd:" in block
+                 or "_check_settlement_storage (res://tests/autoload_smoke.gd:" in block)
+        ):
+            continue
+        if not completed and scene == "frontend_navigation_smoke" and (
+            (line == "ERROR: FrontendShell: unknown page id 'profile'"
+             and "_check_unknown_page_rejected (res://tests/frontend_navigation_smoke.gd:" in block)
+            or (line == "ERROR: FrontendShell: a modal is already open; modals are exclusive"
+                and "_check_modal_exclusive_and_blocking (res://tests/frontend_navigation_smoke.gd:" in block)
+        ):
+            continue
+        unexpected.append(line)
+    return unexpected
+
+
 @contextmanager
 def isolated_project():
     """Reuse imported resources, but never open a player's user:// directory.
@@ -106,10 +140,13 @@ def run_scene(godot: str, scene: str, log_dir: Path, timeout: float) -> bool:
     output = log_path.read_text(encoding="utf-8", errors="replace")
     print(output, end="" if output.endswith("\n") else "\n", flush=True)
     # Godot may return zero after a script error, and a scene that never ran
-    # its assertions must not count as a pass. Shutdown diagnostics and the
-    # autoload test's deliberately malformed JSON are not script failures.
+    # its assertions must not count as a pass. Engine errors need explicit
+    # negative-test attribution or a known completion-time teardown signature.
     if re.search(r"^SCRIPT ERROR:", output, re.MULTILINE):
         problem = problem or "Godot reported a script error"
+    errors = unexpected_engine_errors(output, scene)
+    if errors:
+        problem = problem or "Godot reported an unexpected engine error: " + errors[0]
     if not re.search(rf"^{re.escape(scene.upper())}_PASS(?:\s|$)", output, re.MULTILINE):
         problem = problem or "missing completion marker"
     if problem:

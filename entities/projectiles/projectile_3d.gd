@@ -304,7 +304,7 @@ func deflect(deflector_position: Vector3, deflector_velocity: Vector3) -> bool:
 	return true
 
 
-func _sweep_motion(motion: Vector3, piercing_contacts: int = 0) -> bool:
+func _sweep_motion(motion: Vector3, contacts: int = 0) -> bool:
 	last_sweep_performed = true
 	var target_motion := Vector3.ZERO
 	if (
@@ -331,15 +331,36 @@ func _sweep_motion(motion: Vector3, piercing_contacts: int = 0) -> bool:
 	sweep.transform = original_transform
 	sweep.target_position = Vector3.ZERO
 	if target != null and _inside_bounds(impact_position):
+		if _should_ignore_target(target):
+			if contacts >= 7:
+				return false
+			# Ignore only for this motion: a pooled actor may be reactivated before
+			# this projectile expires, so its collider must be eligible next tick.
+			sweep.add_exception(target)
+			var redirected := _sweep_motion(motion, contacts + 1)
+			sweep.remove_exception(target)
+			return redirected
 		var redirected := _report_hit(target, impact_position)
 		if redirected:
 			return true
 		# Recast the same motion after adding a piercing exception. This catches
 		# closely spaced targets crossed in one frame, with a bounded query budget.
-		if is_active and piercing and piercing_contacts < 7 and _hit_ids.has(target.get_instance_id()):
-			return _sweep_motion(motion, piercing_contacts + 1)
+		if is_active and piercing and contacts < 7 and _hit_ids.has(target.get_instance_id()):
+			return _sweep_motion(motion, contacts + 1)
 		return false
 	return false
+
+
+func _should_ignore_target(target: Area3D) -> bool:
+	# Collider removal is deferred after death; logical lifetime wins now.
+	if target.get(&"is_active") == false:
+		return true
+	# Non-damageable fields share the ordnance layer but do not stop shots.
+	return (
+		kind == Kind.PLAYER
+		and target.collision_layer & PhysicsLayers.HOSTILE_ORDNANCE
+		and not target.has_method(&"take_damage")
+	)
 
 
 func _on_area_entered(area: Area3D) -> void:
@@ -356,16 +377,7 @@ func _on_area_entered(area: Area3D) -> void:
 func _report_hit(target: Area3D, combat_position: Vector3) -> bool:
 	if target == null or not is_active or _impact_pending or _hit_ids.has(target.get_instance_id()):
 		return false
-	# Plasma fields share the hostile-ordnance layer for Player Craft contact,
-	# but the 2D reference does not let regular Player Projectiles defuse them.
-	# Keep those shots moving through a field instead of consuming the projectile
-	# on a non-damageable overlap.
-	if (
-		kind == Kind.PLAYER
-		and target != null
-		and target.collision_layer & PhysicsLayers.HOSTILE_ORDNANCE
-		and not target.has_method(&"take_damage")
-	):
+	if _should_ignore_target(target):
 		return false
 	combat_position.y = 0.0
 	# Contact listeners may redirect the projectile synchronously. Make its

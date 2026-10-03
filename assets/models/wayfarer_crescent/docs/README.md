@@ -68,6 +68,8 @@ Final integration verification passed the five focused Godot scenes `home_base_s
 
 The delivered composition has 183,624 triangles and 16 animation clips; the full GLB is 14.75 MB (14,753,236 bytes). Eleven GLBs provide the full composition, six station modules and four spacecraft modules. The current static audit is recorded in `validation.json`.
 
+The October 2, 2026 source-manifest reconciliation re-exported the current Blender checkpoint into a temporary directory and reproduced all eleven shipped GLBs byte for byte. `source-export-verification.json` records the source and matching export hashes. The manifest's source digest/size and the static and Blender verification reports were refreshed; the runtime GLBs and textures were unchanged.
+
 `blender-verification.json` records an independent Blender source check and GLB re-import, including normal orientation, actual local animation motion, loop closure, cable socket attachment and parked-ship transforms. Local pre-cleanup source and GLB backups (excluded from Git) are preserved in `../source/archive/pre-cleanup/`.
 
 `traffic-verification.json` checks ship/station, ship/cable and ship/ship geometry across the timeline, allowing only each parked ship's own named coupler or saddle contact. All 14 ships pass 1,921 samples at quarter-frame intervals (1/96 second) with no intersections or moving-ship near-clearance findings. This is sampled collision detection, not a mathematical continuous-sweep proof. `camera-traffic-verification.json` checks entry/exit, hidden returns, headings and loop continuity. The previous circular traffic is preserved locally (excluded from Git) in `../source/archive/pre-traffic/`.

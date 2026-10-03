@@ -48,6 +48,30 @@ class SmokeRunnerTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1)
         self.assertIn("Godot exited with code 2", result.stdout)
 
+    def test_resource_error_fails_even_with_completion(self) -> None:
+        result = self.run_fixture('print("ERROR: Failed loading resource: res://missing.glb")\nprint("POOLING_SMOKE_PASS")\n')
+        self.assertEqual(result.returncode, 1)
+        self.assertIn("unexpected engine error", result.stdout)
+
+    def test_only_known_shutdown_errors_are_allowed_after_completion(self) -> None:
+        shutdown = "ERROR: 1 resources still in use at exit (run with --verbose for details)."
+        result = self.run_fixture(f'print("POOLING_SMOKE_PASS")\nprint({shutdown!r})\n')
+        self.assertEqual(result.returncode, 0, result.stdout)
+        result = self.run_fixture(f'print({shutdown!r})\nprint("POOLING_SMOKE_PASS")\n')
+        self.assertEqual(result.returncode, 1)
+        result = self.run_fixture('print("POOLING_SMOKE_PASS")\nprint("ERROR: Failed loading resource: res://missing.glb")\n')
+        self.assertEqual(result.returncode, 1)
+
+    def test_negative_errors_require_the_expected_scene_and_backtrace(self) -> None:
+        error = "ERROR: Parse JSON failed. Error at line 0: Expected key"
+        trace = "       [0] run (res://tests/player_trust_save_checks.gd:57)"
+        result = self.run_fixture(f'print({error!r})\nprint({trace!r})\nprint("AUTOLOAD_SMOKE_PASS")\n', "autoload_smoke")
+        self.assertEqual(result.returncode, 0, result.stdout)
+        result = self.run_fixture(f'print({error!r})\nprint("AUTOLOAD_SMOKE_PASS")\n', "autoload_smoke")
+        self.assertEqual(result.returncode, 1)
+        result = self.run_fixture(f'print({error!r})\nprint({trace!r})\nprint("POOLING_SMOKE_PASS")\n')
+        self.assertEqual(result.returncode, 1)
+
     def test_hung_scene_times_out(self) -> None:
         result = self.run_fixture("import time\ntime.sleep(30)\n", timeout="0.2")
         self.assertEqual(result.returncode, 1)

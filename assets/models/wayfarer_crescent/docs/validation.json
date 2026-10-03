@@ -2083,7 +2083,7 @@
   ],
   "evidence_type": "Static GLB/PNG/source and manifest validation; no runtime import or visual approval claimed",
   "full_scene": "meshes/wayfarer_crescent.glb",
-  "manifest_sha256": "53af938d0e7c665f18729323a4bc35649dc13239e4eeeeda05bad171e2d6ea96",
+  "manifest_sha256": "c1de90ea64bd1289ba395183e09664c31aa523a548575805d46c6cc24908b01b",
   "outputs": [
     {
       "bytes": 392476,
@@ -2211,9 +2211,9 @@
       "sha256": "70b4f5d92d6e65a5c235fcd463b6a5ab1f2312a2aa0478aa9d3a7ec33f26e87a"
     },
     {
-      "bytes": 3550910,
+      "bytes": 3573019,
       "file": "source/wayfarer_crescent.blend",
-      "sha256": "4080c0449433c906a670334295a9c0d49ba04b82f1fd14a1ca55edea28e86110"
+      "sha256": "10a20b1947c0b29fadf5b29c6f64d2d86b651eb5fe6eba65a995e10e6e52a191"
     }
   ],
   "policy": {

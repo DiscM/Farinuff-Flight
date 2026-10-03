@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "status": "pass",
+  "blender_version": "5.2.1 LTS",
+  "source": "source/wayfarer_crescent.blend",
+  "source_sha256": "10a20b1947c0b29fadf5b29c6f64d2d86b651eb5fe6eba65a995e10e6e52a191",
+  "exporter": "tools/crescent_harbor/export_delivery.py",
+  "method": "Exported the existing source checkpoint into a temporary delivery directory without resaving, then compared SHA-256 of every shipped GLB. Runtime assets were not replaced.",
+  "exports": [
+    {
+      "path": "meshes/beacon_relay.glb",
+      "shipped_sha256": "b35984e65e936eb8218e74394812fe141c44e9bc81c885d128773c59754f0612",
+      "reexported_sha256": "b35984e65e936eb8218e74394812fe141c44e9bc81c885d128773c59754f0612",
+      "byte_identical": true
+    },
+    {
+      "path": "meshes/cargo_relay.glb",
+      "shipped_sha256": "2558395d31e04d4d62feeafabc886ce9938bf18f11d59ee1232723ff3a6de689",
+      "reexported_sha256": "2558395d31e04d4d62feeafabc886ce9938bf18f11d59ee1232723ff3a6de689",
+      "byte_identical": true
+    },
+    {
+      "path": "meshes/control_relay.glb",
+      "shipped_sha256": "4785fa9c52e2838377fb3b0367959b3864948dfbc27dff1a8297838804adcca9",
+      "reexported_sha256": "4785fa9c52e2838377fb3b0367959b3864948dfbc27dff1a8297838804adcca9",
+      "byte_identical": true
+    },
+    {
+      "path": "meshes/power_relay.glb",
+      "shipped_sha256": "16317c9b779ed6520bc2fcdf1b14ec51db483828c9ec0243cb2cde286654701d",
+      "reexported_sha256": "16317c9b779ed6520bc2fcdf1b14ec51db483828c9ec0243cb2cde286654701d",
+      "byte_identical": true
+    },
+    {
+      "path": "meshes/service_relay.glb",
+      "shipped_sha256": "ad1fdad602a1b46f738e928db17f85d7ff0d19d0a11a975f183fe715c29b59ac",
+      "reexported_sha256": "ad1fdad602a1b46f738e928db17f85d7ff0d19d0a11a975f183fe715c29b59ac",
+      "byte_identical": true
+    },
+    {
+      "path": "meshes/ship_01_berthedcarrier.glb",
+      "shipped_sha256": "e53016ad190db3f3e4e52d9352a259bfb22f30fe33b10c0f8125a0fe10c974bf",
+      "reexported_sha256": "e53016ad190db3f3e4e52d9352a259bfb22f30fe33b10c0f8125a0fe10c974bf",
+      "byte_identical": true
+    },
+    {
+      "path": "meshes/ship_03_arrivalsshuttle.glb",
+      "shipped_sha256": "8e0d8e58d217b6d6970a121f3d0ad656751180209a2d95cc80b243314c17d69a",
+      "reexported_sha256": "8e0d8e58d217b6d6970a121f3d0ad656751180209a2d95cc80b243314c17d69a",
+      "byte_identical": true
+    },
+    {
+      "path": "meshes/ship_04_chargingtug.glb",
+      "shipped_sha256": "a86c39104f964821850d28836bf3df61a969fb8891294113156534907f720299",
+      "reexported_sha256": "a86c39104f964821850d28836bf3df61a969fb8891294113156534907f720299",
+      "byte_identical": true
+    },
+    {
+      "path": "meshes/ship_10_cableinspector.glb",
+      "shipped_sha256": "e19912847bea2961522f7cf3d8ffce8acee0a191a148f1ef50439b1c3e4174f9",
+      "reexported_sha256": "e19912847bea2961522f7cf3d8ffce8acee0a191a148f1ef50439b1c3e4174f9",
+      "byte_identical": true
+    },
+    {
+      "path": "meshes/wayfarer_core.glb",
+      "shipped_sha256": "27a40310399d9597e29da03ddb152768cd59f429162d69fddd2a63c537765de8",
+      "reexported_sha256": "27a40310399d9597e29da03ddb152768cd59f429162d69fddd2a63c537765de8",
+      "byte_identical": true
+    },
+    {
+      "path": "meshes/wayfarer_crescent.glb",
+      "shipped_sha256": "27a31bbe5fa6785c5961527c33a87ff8887cb1b16553c032b61df62597db68d5",
+      "reexported_sha256": "27a31bbe5fa6785c5961527c33a87ff8887cb1b16553c032b61df62597db68d5",
+      "byte_identical": true
+    }
+  ]
+}

@@ -554,12 +554,9 @@ func finalize_run() -> void:
 	run_salvage_score_bonus = roundi(float(MetaProgression.score_to_salvage(score)) * run_salvage_multiplier)
 	run_salvage_wave_bonus = roundi(float(waves_cleared * MetaProgression.SALVAGE_PER_WAVE_CLEARED) * run_salvage_multiplier)
 	# Milestones are flat one-time awards — deliberately not multiplied.
-	run_salvage_milestones = MetaProgression.claim_first_clear_milestones(waves_cleared)
-	MetaProgression.record_run_stats(current_wave, run_kills)
-	var bonus := run_salvage_score_bonus + run_salvage_wave_bonus + run_salvage_milestones
-	if bonus > 0:
-		run_salvage += bonus
-		MetaProgression.earn_salvage(bonus)
+	var bonus := run_salvage_score_bonus + run_salvage_wave_bonus
+	run_salvage_milestones = MetaProgression.settle_run(current_wave, run_kills, bonus)
+	run_salvage += bonus + run_salvage_milestones
 
 # --- Restart ---
 

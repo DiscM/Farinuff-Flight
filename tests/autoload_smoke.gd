@@ -545,6 +545,7 @@ func _check_meta_progression() -> void:
 	GameManager.run_salvage_milestones = 0
 	GameManager.run_salvage_multiplier = 1.3
 	GameManager._run_finalized = false
+	MetaProgression._persist()
 	GameManager.finalize_run()
 	# sqrt(5000/10) ≈ 22.36 → 22 salvage; ×1.3 = 28.6 → 29 score bonus.
 	# 5 waves × ⬡3 × 1.3 = 19.5 → 20 wave bonus. Wave-5 milestone = flat ⬡50.
@@ -567,6 +568,7 @@ func _check_meta_progression() -> void:
 	)
 	GameManager.finalize_run()
 	_expect(GameManager.run_salvage == 99, "finalize_run must not bank twice for the same run")
+	_check_settlement_storage()
 
 	# Consumables: repeatable purchases with a stockpile cap and one-shot pod.
 	MetaProgression.salvage = 500
@@ -722,6 +724,36 @@ func _check_meta_progression() -> void:
 	GameManager.boss_active = original_boss_active
 	GameManager.is_game_active = original_game_active
 	await get_tree().process_frame
+
+
+func _check_settlement_storage() -> void:
+	var store = SaveManager.get("_progress_store")
+	var primary: Dictionary = store.read_candidate(SaveManager.SAVE_PATH)
+	var backup: Dictionary = store.read_candidate(SaveManager.SAVE_PATH + ".bak")
+	_expect(int(primary.salvage) == 99 and primary.claimed_milestones.has(5.0), "Settlement commits milestone and payment together")
+	_expect(int(backup.salvage) == 0 and not backup.claimed_milestones.has(5.0), "Settlement backup leaves unpaid milestones claimable")
+	var committed := FileAccess.get_file_as_bytes(SaveManager.SAVE_PATH)
+	_write_save("{broken")
+	var recovered: Dictionary = store.load_data()
+	_expect(int(recovered.salvage) == 0 and not recovered.claimed_milestones.has(5.0), "Corrupt settlement recovery never retains an unpaid claim")
+	var file := FileAccess.open(SaveManager.SAVE_PATH, FileAccess.WRITE)
+	file.store_buffer(committed)
+	file.close()
+	# Failed settlement stays complete in memory and is saved by the quit retry.
+	var original_path: String = store.path
+	store.path = "user://missing-settlement-folder/save.json"
+	MetaProgression.salvage = 0
+	MetaProgression.claimed_milestones = []
+	MetaProgression.stat_total_runs = 0
+	GameManager.run_salvage = 0
+	GameManager._run_finalized = false
+	GameManager.finalize_run()
+	GameManager.finalize_run()
+	_expect(MetaProgression.salvage == 99 and MetaProgression.stat_total_runs == 1, "Failed settlement remains complete and cannot award twice")
+	store.path = original_path
+	_expect(SaveManager.save_before_quit(), "Quit retries a failed settlement save")
+	var retried: Dictionary = store.read_candidate(original_path)
+	_expect(int(retried.salvage) == 99 and retried.claimed_milestones.has(5.0), "Retry saves payment and claims together")
 
 
 func _expect(condition: bool, message: String) -> void:

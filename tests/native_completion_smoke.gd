@@ -71,6 +71,7 @@ func _run_checks() -> void:
 	await _check_native_registries_and_checkout_reuse()
 	_check_upgrade_contract()
 	await _check_projectile_contract()
+	_failures.append_array(await preload("res://tests/projectile_sweep_checks.gd").new().run(self))
 	await _check_enemy_projectile_capacity()
 	await _check_boss_variants()
 	_check_continue_transition()

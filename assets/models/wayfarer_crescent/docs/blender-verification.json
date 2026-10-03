@@ -1,7 +1,7 @@
 {
   "blender_version": "5.2.1 LTS",
-  "source": "/Users/steve/Documents/GitHub/Farinuff-Flight/assets/models/wayfarer_crescent/source/wayfarer_crescent.blend",
-  "glb": "/Users/steve/Documents/GitHub/Farinuff-Flight/assets/models/wayfarer_crescent/meshes/wayfarer_crescent.glb",
+  "source": "/Users/steve/.codex/worktrees/b922/Farinuff-Flight/assets/models/wayfarer_crescent/source/wayfarer_crescent.blend",
+  "glb": "/Users/steve/.codex/worktrees/b922/Farinuff-Flight/assets/models/wayfarer_crescent/meshes/wayfarer_crescent.glb",
   "checks": {
     "source_has_motion": true,
     "source_all_loops_close": true,
@@ -14,7 +14,7 @@
   },
   "issues": [],
   "sha256": {
-    "wayfarer_crescent.blend": "4080c0449433c906a670334295a9c0d49ba04b82f1fd14a1ca55edea28e86110",
+    "wayfarer_crescent.blend": "10a20b1947c0b29fadf5b29c6f64d2d86b651eb5fe6eba65a995e10e6e52a191",
     "wayfarer_crescent.glb": "27a31bbe5fa6785c5961527c33a87ff8887cb1b16553c032b61df62597db68d5"
   },
   "source_attachments": {
