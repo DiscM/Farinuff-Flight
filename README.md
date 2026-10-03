@@ -4,7 +4,7 @@ A native 3D space arcade shooter built in **Godot 4.6.3**. Fly a butterfly-shape
 
 [![Smoke Tests](https://github.com/DiscM/Farinuff-Flight/actions/workflows/smoke_tests.yml/badge.svg?branch=main)](https://github.com/DiscM/Farinuff-Flight/actions/workflows/smoke_tests.yml)
 
-![Wayfarer / Crescent Harbor — the flyable home port](design/home-base/game-crescent/crescent-homeport.png)
+![Wayfarer / Crescent Harbor — the flyable home port](assets/readme/home-port-current.png)
 
 ## Fly, reflect, rebuild
 
@@ -51,9 +51,9 @@ The alternate-controls setting uses left mouse button to fire and Space to boost
 
 ## Combat preview
 
-![Tempest Core encounter in the native 3D battlefield](design/combat-scale/boss-combat-2560.png)
+![Tempest Core encounter in the native 3D battlefield](assets/readme/combat-current.png)
 
-These are development captures; UI and balance continue to evolve.
+Captured from the current Godot 4.6.3 build. The combat image shows Tempest Core firing during boss practice; UI and balance continue to evolve.
 
 ## Explore the project
 

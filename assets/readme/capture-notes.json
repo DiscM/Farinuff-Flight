@@ -1,0 +1,23 @@
+{
+  "source_commit": "d8fb4912b00849a8417b1bcc01402fbb3c616ae3",
+  "captured_at": "2026-10-03T02:05:50.966012+00:00",
+  "engine": "4.6.3.stable.official.7d41c59c4",
+  "renderer": "Forward+ / Metal",
+  "resolution": [
+    2560,
+    1440
+  ],
+  "home_port": {
+    "scene": "scenes/home_base.tscn",
+    "image": "home-port-current.png"
+  },
+  "combat": {
+    "scene": "scenes/flight_practice.tscn",
+    "image": "combat-current.png",
+    "boss": "Tempest Core",
+    "wave": 20,
+    "state": "ATTACK",
+    "active_enemy_projectiles": 12,
+    "setup": "Isolated save profile; boss practice with player invulnerability, positioned within engagement range. Practice lesson overlay hidden. Screenshot saved directly from the viewport during normal boss AI and projectile simulation. Player movement held for capture and camera framing adjusted."
+  }
+}
