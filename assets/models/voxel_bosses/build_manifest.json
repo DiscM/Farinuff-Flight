@@ -6,8 +6,8 @@
       "id": "boss_assault",
       "role": "assault",
       "file": "meshes/boss_assault.glb",
-      "bytes": 692640,
-      "sha256": "abef77052e8ca73166caf7a534d49fb454849c224759a2646956df65ba5b97a5",
+      "bytes": 691572,
+      "sha256": "bba505d2db2cee2c387f42cb0d11180357d4475a969589206bb4ea1d54bf6bbe",
       "meshes": 6,
       "bones": [
         "Body",
@@ -47,8 +47,8 @@
       "id": "boss_bulwark",
       "role": "bulwark",
       "file": "meshes/boss_bulwark.glb",
-      "bytes": 835752,
-      "sha256": "a7ad40305b8361df883557b3bed7bc187fe2ab0c251875f70782f931e1f2df61",
+      "bytes": 836796,
+      "sha256": "42e6f9e15bb81df6fbc92ceb244e11b0ece1afd98c6e87c348f383552ea02d7d",
       "meshes": 6,
       "bones": [
         "Body",
@@ -88,8 +88,8 @@
       "id": "boss_tempest",
       "role": "tempest",
       "file": "meshes/boss_tempest.glb",
-      "bytes": 603628,
-      "sha256": "b4a25cbafc1dee9b361729dd293878ea06786d06c41760df272fc183b0f32816",
+      "bytes": 582892,
+      "sha256": "59654c6701fb1b3ca262aab1ba81631a003c4e4b1f46dddd95fbe07379d4be72",
       "meshes": 6,
       "bones": [
         "Body",
@@ -131,8 +131,8 @@
       "id": "boss_void_harbinger",
       "role": "void_harbinger",
       "file": "meshes/boss_void_harbinger.glb",
-      "bytes": 689356,
-      "sha256": "83bf2ceb1d83920f5f07aed57d2054050f1f935690f7e309ba4c661f237ff75f",
+      "bytes": 670472,
+      "sha256": "fdf5a31f4a8ca5bd847464c0c6c982a1b3445e4bb15ae88e0a0ca3d2f706fb24",
       "meshes": 6,
       "bones": [
         "Body",
@@ -172,8 +172,8 @@
       "id": "boss_tempest_core",
       "role": "tempest_core",
       "file": "meshes/boss_tempest_core.glb",
-      "bytes": 957056,
-      "sha256": "f0c6f7e37ca4525f27aef78da3f163b256da5c63450f2de563b5b47158a49438",
+      "bytes": 939132,
+      "sha256": "0e144b08a46baea3e0884b0ce7477e7052e76c1b77ca11e4e1510ecf5cf4441e",
       "meshes": 6,
       "bones": [
         "Body",
@@ -215,8 +215,8 @@
       "id": "tempest_section",
       "role": "section",
       "file": "meshes/tempest_section.glb",
-      "bytes": 343704,
-      "sha256": "c1175669f64ee029d78f6d09dbaaac6a11910927e03d51e8b8f2560d05592b95",
+      "bytes": 334788,
+      "sha256": "f57a19fb99f1e1b27c43f51c635e655a1ba53a22a605e311f3fdbe156fbcb27a",
       "meshes": 6,
       "bones": [
         "Body",
@@ -252,5 +252,6 @@
       "voxel_size": 0.28
     }
   ],
-  "attack_motion_revision": 1
+  "attack_motion_revision": 1,
+  "geometry_revision": "original-hull-polish-2026-10-02"
 }

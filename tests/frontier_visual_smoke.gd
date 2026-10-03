@@ -10,6 +10,7 @@ func _ready() -> void:
 	await _check_effect_reuse()
 	await _check_pause_and_trails()
 	await _check_death_routes()
+	await _check_voxel_debris()
 	effect_manager.clear_effects()
 	await get_tree().process_frame
 	await get_tree().process_frame
@@ -93,6 +94,10 @@ func _check_death_routes() -> void:
 		enemy.activate_generation(flight_space, Vector3(20, 0, 0), Vector3.FORWARD, 3 if index == 2 else 1)
 		enemy.take_damage(99999)
 		var last_effect := effect_manager._checked_out.back() as NativeEffect
+		_expect(last_effect.fragments._voxels, "Destroyed enemy emits voxel cubes")
+		_expect(last_effect.fragments.multimesh.mesh is BoxMesh, "Death fragments use actual cube geometry")
+		_expect(last_effect.fragments.multimesh.visible_instance_count >= 28, "Enemy death has a dense voxel burst")
+		_expect(last_effect._duration > 1.0, "Debris survives the initial flash")
 		_expect(last_effect._kind == expected[index], "Enemy destruction route %d (%s): expected %d, got %d" % [index, enemy.archetype_id, expected[index], last_effect._kind])
 		await get_tree().process_frame
 
@@ -100,3 +105,48 @@ func _check_death_routes() -> void:
 func _expect(condition: bool, message: String) -> void:
 	if not condition:
 		_failures.append(message)
+
+
+func _check_voxel_debris() -> void:
+	effect_manager.clear_effects()
+	await get_tree().process_frame
+	var color := Color(0.7, 0.25, 0.3)
+	_expect(effect_manager.play_effect(NativeEffect.EffectKind.DEATH, Vector3.ZERO, Vector3.FORWARD, 1.0, true, color, 2.0), "Voxel death uses the warmed pool")
+	var effect := effect_manager._checked_out.back() as NativeEffect
+	effect.fragments.advance(0.35, 1.0, 0.0)
+	var first: Transform3D = effect.fragments.multimesh.get_instance_transform(1)
+	var first_spin: Vector3 = effect.fragments._spins[1]
+	var first_size: float = effect.fragments._sizes[1]
+	if DisplayServer.get_name() != "headless":
+		_expect(effect.fragments.multimesh.get_instance_color(1).is_equal_approx(color), "Armor pieces retain enemy color")
+	var cube_scale := first.basis.get_scale()
+	if DisplayServer.get_name() != "headless":
+		_expect(is_equal_approx(cube_scale.x, cube_scale.y) and is_equal_approx(cube_scale.y, cube_scale.z), "Pieces remain cubic as they tumble")
+	effect.fragments.configure_voxels(color, 2.0)
+	effect.fragments.advance(0.35, 1.0, 0.0)
+	_expect(not first_spin.is_equal_approx(effect.fragments._spins[1]) and not is_equal_approx(first_size, effect.fragments._sizes[1]), "Repeated deaths randomize scatter, sizes and spin")
+	effect._process(1.2)
+	await get_tree().process_frame
+	_expect(not effect.is_active and not effect.fragments.visible, "Voxel burst expires and returns to pool")
+	for wave in [5, 10, 15, 25, 20]:
+		GameManager.current_wave = wave
+		var boss := preload("res://entities/enemies/boss_enemy_3d.tscn").instantiate()
+		actors_root.add_child(boss)
+		boss.activate_generation(flight_space, Vector3(20, 0, 0), Vector3.FORWARD, 1)
+		boss.set_physics_process(false)
+		if wave == 20:
+			boss._sections[0].take_damage(99999)
+			var pod_effect := effect_manager._checked_out.back() as NativeEffect
+			_expect(pod_effect.fragments._voxels, "Destroyed boss pod emits voxel debris")
+		boss.take_damage(99999)
+		var boss_effect := effect_manager._checked_out.back() as NativeEffect
+		_expect(boss_effect.fragments._voxels and boss_effect.fragments.multimesh.visible_instance_count >= 40, "Boss %d produces a denser voxel explosion" % wave)
+		await get_tree().process_frame
+	effect_manager.clear_effects()
+	await get_tree().process_frame
+	# Ensure cube colors/counts do not leak into later non-death effects.
+	effect_manager.play_effect(NativeEffect.EffectKind.ARMOR_BREAK, Vector3.ZERO)
+	var reused := effect_manager._checked_out.back() as NativeEffect
+	_expect(not reused.fragments._voxels and reused.fragments.multimesh.visible_instance_count == 6, "Legacy fragment playback resets voxel state")
+	if DisplayServer.get_name() != "headless":
+		_expect(reused.fragments.multimesh.get_instance_color(1) == Color.WHITE, "Reused shard instances reset their tint")

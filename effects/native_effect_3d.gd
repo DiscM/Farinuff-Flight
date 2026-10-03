@@ -32,7 +32,7 @@ const SHOCK_RING := preload("res://assets/models/native/shock_ring.glb")
 const MUZZLE_FLARE := preload("res://assets/models/native/muzzle_flare.glb")
 
 const DEFAULT_DURATION := 0.24
-const MAX_EFFECT_DURATION := 0.85
+const MAX_EFFECT_DURATION := 1.25
 const MIN_INTENSITY := 0.1
 const MAX_INTENSITY := 2.5
 ## Keep the warm-up at the largest runtime particle buffer so no effect event
@@ -93,7 +93,7 @@ func configure_pool(idle_parent: Node3D) -> void:
 ## Render every mesh/material and the particle pipeline under the transition
 ## cover without arming gameplay, starting a live effect, or claiming a light.
 func prepare_visual_warmup() -> void:
-	fragments.configure(false)
+	fragments.configure_voxels(Color(0.5, 0.6, 0.7), 2.0)
 	fragments.advance(0.2, 1.0, 0.0)
 	is_active = false
 	transform = Transform3D.IDENTITY
@@ -129,7 +129,9 @@ func play(
 	direction: Vector3 = Vector3.FORWARD,
 	intensity: float = 1.0,
 	preserve_height: bool = false,
-	emit_local_light: bool = false
+	emit_local_light: bool = false,
+	debris_color: Color = Color.TRANSPARENT,
+	debris_extent: float = 0.0
 ) -> bool:
 	if is_active or _idle_parent == null:
 		return false
@@ -157,7 +159,11 @@ func play(
 	streak_mesh.visible = _uses_streak_mesh(kind)
 	fragments.visible = kind in [EffectKind.DEATH, EffectKind.ARMOR_BREAK, EffectKind.VOID_COLLAPSE]
 	if fragments.visible:
-		fragments.configure(kind == EffectKind.VOID_COLLAPSE)
+		if debris_extent > 0.0:
+			fragments.configure_voxels(debris_color, debris_extent)
+			_duration = 1.15
+		else:
+			fragments.configure(kind == EffectKind.VOID_COLLAPSE)
 		fragments.advance(0.0, _intensity, _phase_offset)
 	particles.amount = _get_particle_amount(kind)
 	particles.lifetime = _get_particle_lifetime(kind)

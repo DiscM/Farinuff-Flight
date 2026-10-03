@@ -188,4 +188,8 @@ func _before_finish(reason: FinishReason, _position: Vector3) -> void:
 			Callable(director, "finish_boss").call_deferred(GameManager.current_wave, get_reward_points())
 
 func _on_section_destroyed(_position: Vector3, _section: Section) -> void:
+	var game := get_tree().get_first_node_in_group(&"native_3d_gameplay")
+	if game != null:
+		var hull := preload("res://effects/frontier_fragments_3d.gd").hull_appearance(_section.get_node("Model"))
+		game.effect_manager.play_effect(NativeEffect3D.EffectKind.DEATH, _position, Vector3.FORWARD, 0.8, true, hull.color, hull.extent)
 	AudioManager.play_explosion(true)

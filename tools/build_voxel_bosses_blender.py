@@ -397,11 +397,16 @@ def build_all():
         scene.frame_start=0
         scene.frame_end=max(round(keys[-1][0]*30) for keys in poses.clips(role).values())
         grid,engine=geometry(role)
-        objects=grid.mesh_objects(scene,asset_id,mats[role])
+        refined=module("refine_voxel_bosses_blender").geometry(role)
+        objects=refined.mesh_objects(scene,asset_id,mats[role])
+        for obj in objects:
+            for vertex in obj.data.vertices:
+                vertex.co.z *= .82
         for obj in objects:
             obj.name=obj.name.replace("VF_","VB_",1)
         rig,sockets=rig_asset(scene,asset_id,role,objects,grid,engine)
         records.append(export_asset(scene,asset_id,role,sockets))
+        records[-1]["voxel_size"]=refined.cell
         for track in rig.animation_data.nla_tracks:
             track.mute=track.name!="cruise"
         scene.frame_set(0)

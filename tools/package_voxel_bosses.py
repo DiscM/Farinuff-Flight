@@ -25,6 +25,7 @@ CORE_FILES = (
     "tools/package_voxel_bosses.py",
     "tools/package_voxel_frontier.py",
     "tools/build_voxel_bosses_blender.py",
+    "tools/refine_voxel_bosses_blender.py",
     "tools/build_voxel_frontier_blender.py",
     "tools/build_voxel_frontier_atlas.py",
     "tools/build_combat_motion_blender.py",

@@ -88,7 +88,9 @@ func play_effect(
 	effect_position: Vector3,
 	direction: Vector3 = Vector3.FORWARD,
 	intensity: float = 1.0,
-	preserve_height: bool = false
+	preserve_height: bool = false,
+	debris_color: Color = Color.TRANSPARENT,
+	debris_extent: float = 0.0
 ) -> bool:
 	if not is_ready:
 		_rejected += 1
@@ -114,7 +116,7 @@ func play_effect(
 	var emit_local_light := _can_claim_local_light(kind)
 	if emit_local_light:
 		_lit_effects[effect.get_instance_id()] = true
-	if not effect.play(kind, effect_position, direction, intensity, preserve_height, emit_local_light):
+	if not effect.play(kind, effect_position, direction, intensity, preserve_height, emit_local_light, debris_color, debris_extent):
 		_checked_out.erase(effect)
 		_lit_effects.erase(effect.get_instance_id())
 		ObjectPool.release(effect, _idle_parent)

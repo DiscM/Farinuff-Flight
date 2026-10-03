@@ -429,12 +429,15 @@ func route_enemy_finish(
 		death_kind = NativeEffect.EffectKind.VOID_COLLAPSE
 	elif enemy.get("archetype_id") == &"tank" or enemy.is_in_group(&"native_3d_bosses"):
 		death_kind = NativeEffect.EffectKind.ARMOR_BREAK
+	var hull := NativeEffect.Fragments.hull_appearance(enemy.get_node("Visuals"))
 	effect_manager.play_effect(
 		death_kind,
 		death_position,
 		drift_direction,
 		0.86 + float(clampi(generation, 1, 4)) * 0.14,
-		true
+		true,
+		hull.color,
+		hull.extent
 	)
 	if enemy.get("field_objective") == true:
 		return

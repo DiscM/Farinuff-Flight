@@ -97,3 +97,9 @@ The delivered QA set includes five passing headless checks, 393 static integrati
 ### Attack-family animation revision (October 2, 2026)
 
 The production executor selects matching family windup/release clips and stretches the warning to its committed duration. Projectile recoil fits the burst interval; charge articulation spans the charge duration. Active weapon pods share the family selection. Damage feedback cannot replace held warnings or phase shifts. Clip pose continuity is checked by the package validator. `tools/build_attack_motion_blender.py` updates the existing editable sources and exports without rebinding or altering geometry; `tools/enemy_attack_motion.py` contains the authored pose recipes. The earlier 1.0.0 delivery ZIP remains a historical snapshot; the current source tree, catalog and validation describe this animation revision.
+
+### Original hull polish (October 2, 2026)
+
+The production boss silhouettes, armor layout, palette, reactor shapes and weapon placements are retained. Hull depth is reduced by 18%, and corners on raised armor lips are stepped down one cell. Small dark vent strips are inset visually within the existing wing armor. The rejected open-frame redesign has been replaced in all six production exports and in the editable source.
+
+`tools/refine_voxel_bosses_blender.py` applies this conservative geometry recipe while retaining rigs, animation actions and sockets. The original builder also uses it for fresh rebuilds. `design/voxel-bosses/blender/refined_collection.png` shows the current models; `design/voxel-bosses/refinement.json` records their bounds and triangle counts. Earlier gameplay images and the ZIP describe the historical delivery. Static validation has been regenerated for the current exports.
