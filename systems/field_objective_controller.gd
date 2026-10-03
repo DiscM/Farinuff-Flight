@@ -8,6 +8,9 @@ var _label: Label
 var _sealed := true
 var _cleanup_in := 0.0
 
+func _ready() -> void:
+	set_process(not _sealed or _cleanup_in > 0.0)
+
 func configure(encounters: Node) -> void:
 	director = encounters
 	_label = Label.new()
@@ -40,6 +43,7 @@ func try_start() -> bool:
 	var crossing: Vector3 = Vector3(bounds.size.x, 0, 0)
 	_remaining = clampf(director.gameplay.flight_space.combat_motion_to_screen(crossing).length() / 85.0, 3.0, 12.0)
 	_sealed = false
+	set_process(true)
 	craft.finished.connect(_on_finished)
 	_label.show()
 	return true
@@ -49,6 +53,8 @@ func _process(delta: float) -> void:
 		_cleanup_in -= delta
 		if _cleanup_in <= 0:
 			_label.hide()
+			if _sealed:
+				set_process(false)
 	if _sealed or not GameManager.is_game_active:
 		return
 	_remaining -= delta
@@ -79,7 +85,8 @@ func cancel(message: String = "") -> void:
 		_courier.queue_free()
 	_courier = null
 	_label.text = message
-	_cleanup_in = 3.0
+	_cleanup_in = 3.0 if not message.is_empty() else 0.0
+	set_process(_cleanup_in > 0.0)
 	_label.visible = not message.is_empty()
 
 func _on_wave_started(wave: int) -> void:

@@ -23,7 +23,6 @@ const PATTERN_MIN := 1.4
 const PATTERN_MAX := 2.2
 
 @export_range(0.0, 256.0, 0.5) var weave_amplitude_pixels: float = 80.0
-@export_range(0.0, 12.0, 0.1) var weave_frequency: float = 3.0
 
 @onready var phase_warning: MeshInstance3D = $Attachments/PhaseWarning
 
@@ -31,7 +30,6 @@ var _pattern_timer := 0.0
 var _visible_time := 0.0
 var _phase_displacement := Vector3.ZERO
 var _phase_cooldown := PHASE_COOLDOWN_SECONDS
-var _phase_origin := Vector3.ZERO
 
 
 func _is_basic_lineage() -> bool:
@@ -68,7 +66,6 @@ func _configure_movement() -> void:
 	_pattern_timer = randf_range(PATTERN_MIN, PATTERN_MAX)
 	_visible_time = 0.0
 	_phase_displacement = Vector3.ZERO
-	_phase_origin = global_position
 	_phase_cooldown = PHASE_COOLDOWN_SECONDS
 	phase_warning.hide()
 	state = State.TRANSIT
@@ -95,7 +92,6 @@ func _advance_movement(delta: float) -> void:
 			state_remaining = maxf(0.0, state_remaining - delta)
 			if state_remaining <= 0.0:
 				_phase_displacement = _clamp_maneuver_point(global_position + _phase_displacement) - global_position
-				_phase_origin = global_position
 				_start_maneuver_path(_phase_displacement, PHASE_DASH_SECONDS, 0.0)
 				_play_feedback(0.8)
 				_enter(State.PHASE_DASH, PHASE_DASH_SECONDS)
@@ -151,10 +147,6 @@ func _change_pattern() -> void:
 			if toward.dot(desired) < 0.0:
 				_strafe_sign = -_strafe_sign
 		_play_feedback(0.35)
-
-
-func _try_begin_weave_evade() -> bool:
-	return _try_begin_evade()
 
 
 func _try_begin_phase() -> bool:

@@ -8,6 +8,7 @@ const DEV_MENU_SCENE := preload("res://ui/dev_menu.tscn")
 const SETTINGS_MENU_SCENE := preload("res://ui/settings_menu.tscn")
 const NATIVE_RUN_PATH := "res://scenes/native_3d_run.tscn"
 const MAIN_MENU_PATH := "res://scenes/home_base.tscn"
+const ModalHost := preload("res://ui/shared/modal_host.gd")
 
 var _settings_menu: Node = null
 var _dev_panel: PanelContainer = null
@@ -16,8 +17,7 @@ var _transitioning := false
 var _build_panel: Control
 var _confirmation: Control
 var _briefing: PanelContainer
-var _settings_focus: Dictionary = {}
-var _build_focus: Dictionary = {}
+var _modals := ModalHost.new()
 
 ## Builds the UI layout and plays the fade-in animation. The scene's full-rect
 ## anchors fill the viewport. Runs in PROCESS_MODE_ALWAYS so it functions while
@@ -27,6 +27,7 @@ func _ready() -> void:
 	add_to_group("scalable_ui")
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_build_ui()
+	add_child(_modals)
 	_animate_in()
 	get_node("LeftDock/MenuButtons/ResumeWrap/Button").grab_focus()
 
@@ -173,16 +174,10 @@ func _menu_confirmed() -> void:
 
 ## Opens the settings menu as a modal child. Prevents duplicate instances.
 func _on_settings() -> void:
-	if is_instance_valid(_settings_menu):
+	if _modals.is_open():
 		return
 	_settings_menu = SETTINGS_MENU_SCENE.instantiate()
-	_settings_menu.connect("closed", func():
-		preload("res://ui/shared/modal_focus.gd").restore(_settings_focus)
-		_settings_menu = null
-		get_node("LeftDock/MenuButtons/SettingsWrap/Button").grab_focus()
-	)
-	add_child(_settings_menu)
-	_settings_focus = preload("res://ui/shared/modal_focus.gd").suspend_outside(_settings_menu)
+	_modals.present(_settings_menu, get_node("LeftDock/MenuButtons/SettingsWrap/Button"))
 
 # ── Animation ──────────────────────────────────────────────────────────────────
 
@@ -199,17 +194,11 @@ func _animate_in() -> void:
 
 
 func _on_build() -> void:
-	if is_instance_valid(_build_panel):
+	if _modals.is_open():
 		return
 	var panel := preload("res://ui/shared/build_reference.gd").new()
 	_build_panel = panel
-	panel.closed.connect(func():
-		preload("res://ui/shared/modal_focus.gd").restore(_build_focus)
-		panel.queue_free()
-		get_node("LeftDock/MenuButtons/BuildWrap/Button").grab_focus()
-	)
-	add_child(panel)
-	_build_focus = preload("res://ui/shared/modal_focus.gd").suspend_outside(panel)
+	_modals.present(panel, get_node("LeftDock/MenuButtons/BuildWrap/Button"))
 
 
 func _on_retry() -> void:
@@ -228,7 +217,7 @@ func _on_menu() -> void:
 
 
 func _confirm_transition(heading: String, message: String, action: Callable) -> void:
-	if _transitioning or is_instance_valid(_confirmation):
+	if _transitioning or _modals.is_open():
 		return
 	_confirmation = preload("res://ui/shared/run_confirmation.gd").new()
 	_confirmation.title = heading
@@ -238,4 +227,4 @@ func _confirm_transition(heading: String, message: String, action: Callable) -> 
 		action.call()
 	)
 	_confirmation.canceled.connect(func(): _confirmation.queue_free())
-	add_child(_confirmation)
+	_modals.present(_confirmation)

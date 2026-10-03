@@ -96,7 +96,6 @@ var initial_payload: Dictionary = {}
 var _history: Array[Dictionary] = []
 var _restore_focus_index := -1
 var _navigation_locked := false
-var _status_refresh_in := 0.0
 var _details_invoker: Control
 var _details_close: Button
 var _current_page_id: StringName = &""
@@ -127,6 +126,7 @@ func _ready() -> void:
 	if service_mode:
 		_prepare_service_header()
 	SaveManager.settings_changed.connect(_on_settings_changed)
+	SaveManager.storage_status_changed.connect(_refresh_status_rail)
 	_footer_build_label()
 	_last_device = _initial_device()
 	_update_prompts()
@@ -839,12 +839,6 @@ func _toggle_details() -> void:
 
 func _on_settings_changed() -> void:
 	set_reduced_flashing(_load_reduced_flashing_setting())
-
-func _process(delta: float) -> void:
-	_status_refresh_in -= delta
-	if _status_refresh_in <= 0.0:
-		_status_refresh_in = 0.25
-		_refresh_status_rail()
 
 func _page_context(page_id: StringName) -> String:
 	return str({

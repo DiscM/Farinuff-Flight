@@ -68,7 +68,9 @@ func _ready() -> void:
 	SignalBus.combo_changed.connect(_on_combo_changed)
 	SignalBus.lives_changed.connect(_on_lives_changed)
 	SignalBus.wave_started.connect(_on_wave_started)
-	SignalBus.wave_cleared.connect(_on_wave_cleared)
+	SignalBus.wave_cleared.connect(func(_wave: int): _refresh_progress())
+	SignalBus.xp_orb_collected.connect(func(_value: int): _refresh_progress())
+	SaveManager.storage_status_changed.connect(_refresh_progress)
 	SignalBus.power_up_collected.connect(_on_power_up_collected)
 	SignalBus.boss_spawned.connect(_on_boss_spawned)
 	SignalBus.boss_health_changed.connect(_on_boss_health_changed)
@@ -178,6 +180,7 @@ func _on_lives_changed(new_lives: int) -> void:
 
 ## Updates the persistent top-bar wave label.
 func _on_wave_started(wave_number: int) -> void:
+	_refresh_progress()
 	wave_label.text = "WAVE %02d / 20" % wave_number if wave_number <= 20 else "ENDLESS / %02d" % wave_number
 	if _milestone_label != null:
 		_milestone_label.text = preload("res://systems/run_compass.gd").snapshot(wave_number, GameManager.practice_mode).compact
@@ -189,18 +192,13 @@ func _compact_number(value: int) -> String:
 		return str(snappedf(float(value) / 1000.0, 0.1)) + "K"
 	return str(value)
 
-## Wave clears are handled by GameManager progression; the HUD keeps this
-## callback connected so future non-banner feedback can be added in one place.
-func _on_wave_cleared(_wave_number: int) -> void:
-	pass
-
-
 # --- Boss ---
 
 ## Initializes the boss health bar: sets max/current values, displays the
 ## boss name with an appropriate color, shows the container, and plays a
 ## pulsing entrance animation.
 func _on_boss_spawned(health: int, max_health: int, boss_name: String) -> void:
+	_refresh_progress()
 	boss_health_bar.max_value = max_health
 	boss_health_bar.value = health
 	var is_elite := GameManager.current_wave % 10 == 0
@@ -235,6 +233,7 @@ func _on_boss_health_changed(health: int) -> void:
 
 ## Fades out the boss health bar when the boss is defeated, then hides it.
 func _on_boss_died(_points: int) -> void:
+	_refresh_progress()
 	var tween := create_tween()
 	tween.tween_property(boss_bar_container, "modulate:a", 0.0, 0.4)
 	tween.tween_callback(func():
@@ -256,15 +255,6 @@ func _process(delta: float) -> void:
 		if GameManager.run_insights.reflections > 0 or GameManager.current_wave != 3:
 			_reflection_hint_remaining = 0.0
 		_reflection_hint.visible = _reflection_hint_remaining > 0.0
-	if _wave_progress != null:
-		_wave_progress.max_value = maxi(GameManager.orbs_needed_this_wave, 1)
-		_wave_progress.value = GameManager.orbs_collected_this_wave
-		_wave_progress.visible = not GameManager.boss_active
-		_wave_progress_label.text = "DEFEAT THE BOSS" if GameManager.boss_active else "ORBS  %d / %d" % [GameManager.orbs_collected_this_wave, GameManager.orbs_needed_this_wave]
-		wave_panel.tooltip_text = _wave_progress_label.text
-	if _route_label != null:
-		var route := ExpeditionManager.get_current_node()
-		_route_label.text = "PRACTICE" if GameManager.practice_mode else str(route.display_name).to_upper() if route != null and ExpeditionManager.is_expedition_active() else "ENDLESS" if GameManager.current_wave > 20 else "EXPEDITION"
 	_sync_power_up_timers()
 	power_up_panel.visible = power_up_container.get_child_count() > 0
 	_update_craft_visibility(delta)
@@ -315,6 +305,18 @@ func _get_boss_screen_rect(camera: Camera3D) -> Rect2:
 		return Rect2()
 	# A small border anticipates articulated panels extending beyond rest bounds.
 	return Rect2(minimum, maximum - minimum).grow(12.0)
+
+## Wave, orb, boss, and persisted route changes update static HUD text once.
+func _refresh_progress() -> void:
+	if _wave_progress != null:
+		_wave_progress.max_value = maxi(GameManager.orbs_needed_this_wave, 1)
+		_wave_progress.value = GameManager.orbs_collected_this_wave
+		_wave_progress.visible = not GameManager.boss_active
+		_wave_progress_label.text = "DEFEAT THE BOSS" if GameManager.boss_active else "ORBS  %d / %d" % [GameManager.orbs_collected_this_wave, GameManager.orbs_needed_this_wave]
+		wave_panel.tooltip_text = _wave_progress_label.text
+	if _route_label != null:
+		var route := ExpeditionManager.get_current_node()
+		_route_label.text = "PRACTICE" if GameManager.practice_mode else str(route.display_name).to_upper() if route != null and ExpeditionManager.is_expedition_active() else "ENDLESS" if GameManager.current_wave > 20 else "EXPEDITION"
 
 func _sync_power_up_timers() -> void:
 	if not is_instance_valid(_player):

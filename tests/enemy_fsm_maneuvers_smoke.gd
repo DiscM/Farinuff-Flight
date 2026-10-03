@@ -113,7 +113,7 @@ func _check_automatic_rolls() -> void:
 		_place_player(Vector2(0, 400))
 		var enemy := _spawn("fast", 4) if reflect else _spawn("basic", 2)
 		enemy._tactics._observe_in = 0.0
-		enemy._prefer_reflect = reflect
+		enemy._defense.prefer_reflect = reflect
 		enemy._evade_scan_timer = 0.0
 		if reflect:
 			# An interceptor travelling with the shot sees it early enough to
@@ -221,9 +221,9 @@ func _check_bomber_windup() -> void:
 	bomber._physics_process(0.02)
 	_expect(bomber.state == BasicEnemy3D.State.BOMB_WINDUP and bombs[0] == 0, "Ordinary bombs have a real windup state before release")
 	bomber._physics_process(0.39)
-	_expect(bombs[0] == 0 and bomber._motions[0].current_clip == &"windup", "Ordinary bomb warning holds for its complete interval")
+	_expect(bombs[0] == 0 and bomber._motions[0].current_clip == &"deploy_windup", "Ordinary bomb warning holds for its complete interval")
 	bomber._physics_process(0.02)
-	_expect(bombs[0] == 1 and bomber.state == BasicEnemy3D.State.TRANSIT and bomber._motions[0].current_clip == &"attack", "Bomb release returns to transit without canceling the payload recoil")
+	_expect(bombs[0] == 1 and bomber.state == BasicEnemy3D.State.TRANSIT and bomber._motions[0].current_clip == &"deploy_attack", "Bomb release returns to transit without canceling the payload recoil")
 	await _cleanup()
 
 
@@ -251,6 +251,6 @@ func _check_sniper_rail_commitment() -> void:
 		else:
 			rail._physics_process(0.91)
 			sniper._physics_process(0.01)
-			_expect(rail.fired and sniper.state == BasicEnemy3D.State.HOLD and sniper._motions[0].current_clip == &"attack", "The actual rail release ends the committed state while preserving recoil")
+			_expect(rail.fired and sniper.state == BasicEnemy3D.State.HOLD and sniper._motions[0].current_clip == &"rail_attack", "The actual rail release ends the committed state while preserving recoil")
 		hazard_manager.clear_hazards()
 		await _cleanup()

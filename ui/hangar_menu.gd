@@ -1,12 +1,16 @@
 extends Control
+
 ## Hangar — the meta-progression shop. Spends persistent salvage on
 ## permanent ship systems and elite-upgrade blueprints. Opened from the
 ## main menu; UI is built programmatically like the settings panel.
 
 signal closed
 
+const Briefing := preload("res://ui/shared/menu_briefing.gd")
+const HostedLayout := preload("res://ui/shared/hosted_menu_layout.gd")
 const CatalogIcons := preload("res://ui/catalog_icons.gd")
 
+var _hosted_layout: HostedLayout
 var _salvage_label: Label
 var _rows_by_id: Dictionary = {}
 var _wallet_connected: bool = false
@@ -32,25 +36,7 @@ func _exit_tree() -> void:
 ## salvage balance, a scrollable item list grouped by category, a note
 ## about salvage sources, and a close button.
 func _build_ui() -> void:
-	var bg := ColorRect.new()
-	bg.color = Color(0.0, 0.0, 0.06, 0.92)
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(bg)
-
-	var panel := PanelContainer.new()
-	panel.set_anchors_preset(Control.PRESET_CENTER)
-	panel.offset_left = -240.0
-	panel.offset_top = -330.0
-	panel.offset_right = 240.0
-	panel.offset_bottom = 330.0
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.04, 0.06, 0.15)
-	style.border_color = Color(1.0, 0.75, 0.2, 0.85)
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(12)
-	style.set_content_margin_all(20)
-	panel.add_theme_stylebox_override("panel", style)
-	add_child(panel)
+	var panel := Briefing.make_surface(self, Color(1.0, 0.75, 0.2, 0.85))
 
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 12)
@@ -62,7 +48,7 @@ func _build_ui() -> void:
 	title.add_theme_font_size_override("font_size", 28)
 	title.add_theme_color_override("font_color", Color(1.0, 0.8, 0.25))
 	column.add_child(title)
-	preload("res://ui/shared/menu_briefing.gd").wrap_heading(title)
+	Briefing.wrap_heading(title)
 
 	_salvage_label = Label.new()
 	_salvage_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -115,7 +101,8 @@ func _build_ui() -> void:
 	close_button.add_theme_font_size_override("font_size", 18)
 	close_button.pressed.connect(_on_close_pressed)
 	column.add_child(close_button)
-	preload("res://ui/shared/menu_briefing.gd").fit_panel(panel, column, [close_button])
+	Briefing.fit_panel(panel, column, [close_button])
+	_hosted_layout = HostedLayout.new(panel, [close_button], close_button)
 	close_button.grab_focus()
 
 func get_primary_safe_action() -> Control:
@@ -240,3 +227,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("ui_cancel") and not event.is_echo():
 		get_viewport().set_input_as_handled()
 		_on_close_pressed()
+
+
+func get_hosted_layout() -> HostedLayout:
+	return _hosted_layout

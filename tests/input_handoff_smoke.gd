@@ -22,7 +22,7 @@ func _run() -> void:
 			player._update_shooting()
 			_expect(InputBindings.family == family, "Real fire event changes to " + family)
 			_expect(_shots == before + 1, "First %s fire press works (toggle=%s)" % [family, toggle])
-			_expect(player._fire_latched == toggle, "Toggle fire keeps the first intentional press")
+			_expect(player._weapons.latched == toggle, "Toggle fire keeps the first intentional press")
 			_send("shoot", family, false, binding[1])
 	for binding in [["gamepad", 0], ["gamepad", 1], ["keyboard", 0]]:
 		var family := str(binding[0])
@@ -52,14 +52,14 @@ func _check_old_device_release() -> void:
 	_send("shoot", "gamepad", true)
 	player._update_shooting()
 	_send("move_right", "keyboard", false)
-	_expect(InputBindings.family == "gamepad" and player._fire_latched, "Old keyboard release cannot steal controller focus or stop toggle fire")
+	_expect(InputBindings.family == "gamepad" and player._weapons.latched, "Old keyboard release cannot steal controller focus or stop toggle fire")
 	_send("shoot", "gamepad", false)
 	await _neutral()
 	_send("boost", "gamepad", true)
 	_send("shoot", "keyboard", true)
 	player._update_shooting()
 	_send("boost", "gamepad", false)
-	_expect(InputBindings.family == "keyboard" and player._fire_latched, "Old controller release cannot steal keyboard focus or stop toggle fire")
+	_expect(InputBindings.family == "keyboard" and player._weapons.latched, "Old controller release cannot steal keyboard focus or stop toggle fire")
 	_send("shoot", "keyboard", false)
 
 func _check_held_input_guards() -> void:
@@ -75,7 +75,7 @@ func _check_held_input_guards() -> void:
 	player.shoot_timer.stop()
 	var before := _shots
 	player._update_shooting()
-	_expect(not player._fire_latched and _shots == before, "Device handoff clears old latched and held fire")
+	_expect(not player._weapons.latched and _shots == before, "Device handoff clears old latched and held fire")
 	_send("move_right", "gamepad", false)
 	_send("shoot", "keyboard", false)
 	await _neutral()

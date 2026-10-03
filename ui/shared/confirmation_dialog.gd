@@ -68,12 +68,14 @@ func _on_confirm_pressed() -> void:
 func _on_confirm_button_down() -> void:
 	if hold_to_confirm_seconds > 0.0:
 		_holding_confirm = true
+		set_process(true)
 		_held_time = 0.0
 		confirm_progress.value = 0.0
 
 
 func _on_confirm_button_up() -> void:
 	_holding_confirm = false
+	set_process(false)
 	confirm_progress.value = 0.0
 
 
@@ -115,10 +117,6 @@ func get_cancel_button() -> Button:
 	return cancel_button
 
 
-func get_confirm_button() -> Button:
-	return confirm_button
-
-
 func _refresh_labels() -> void:
 	title_label.text = title_text
 	body_label.text = body_text
@@ -129,7 +127,7 @@ func _refresh_labels() -> void:
 func _configure_hold_if_needed() -> void:
 	confirm_progress.visible = hold_to_confirm_seconds > 0.0
 	confirm_progress.value = 0.0
-	set_process(hold_to_confirm_seconds > 0.0)
+	set_process(hold_to_confirm_seconds > 0.0 and _holding_confirm)
 
 
 func _emit_confirmed() -> void:

@@ -36,6 +36,7 @@ func _run() -> void:
 				combat_voice_found = true
 				_expect(voice.bus == &"SFX", "Boost playback reaches the combat bus")
 		_expect(combat_voice_found, "The public boost cue starts a combat voice")
+	_check_percentage_controls(settings)
 	_check_player_preferences(settings)
 	settings.queue_free()
 	await get_tree().process_frame
@@ -73,3 +74,18 @@ func _check_player_preferences(panel: Control) -> void:
 	add_child(reloaded)
 	_expect(is_equal_approx(float(reloaded.get_setting("hud_scale")), 1.3) and reloaded.get_setting("toggle_fire"), "HUD scale and toggle fire persist through the real controls")
 	reloaded.queue_free()
+
+
+func _check_percentage_controls(panel: Control) -> void:
+	for key in ["master_volume", "music_volume", "sfx_volume", "ui_volume", "aim_deadzone"]:
+		var name: String = "SFXVolume" if key == "sfx_volume" else key
+		var slider := panel.find_child(name, true, false) as HSlider
+		_expect(slider != null, key + " exposes its percentage control")
+		if slider == null:
+			continue
+		slider.value = 0.45
+		_expect(is_equal_approx(float(SaveManager.get_setting(key)), 0.45), key + " persists changes through its real slider")
+		var expected := "%s: 45%%" % slider.accessibility_name
+		_expect(panel.find_children("*", "Label", true, false).any(func(label: Label): return label.text == expected), key + " refreshes its percentage label")
+		if key == "aim_deadzone":
+			_expect(is_equal_approx(slider.min_value, 0.15) and is_equal_approx(slider.max_value, 0.6), "Aim deadzone retains its narrower adjustment range")

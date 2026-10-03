@@ -1,6 +1,34 @@
 extends RefCounted
 ## Shared briefing treatment; screens retain ownership of their data and actions.
 
+## The shared menu surface replaces repeated backdrop/frame construction.
+static func make_surface(root: Control, border: Color, radius: int = 12, padding: int = 20, opacity: float = 0.92) -> PanelContainer:
+	var backdrop := ColorRect.new()
+	backdrop.color = Color(0.0, 0.0, 0.06, opacity)
+	backdrop.set_anchors_preset(Control.PRESET_FULL_RECT)
+	root.add_child(backdrop)
+	var panel := PanelContainer.new()
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.04, 0.06, 0.15)
+	style.border_color = border
+	style.set_border_width_all(2)
+	style.set_corner_radius_all(radius)
+	style.set_content_margin_all(padding)
+	panel.add_theme_stylebox_override("panel", style)
+	root.add_child(panel)
+	_fit_surface(panel)
+	return panel
+
+
+static func _fit_surface(panel: PanelContainer) -> void:
+	var viewport := panel.get_viewport_rect().size
+	panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	panel.offset_left = maxf(24, (viewport.x - 920) * 0.5)
+	panel.offset_right = -panel.offset_left
+	panel.offset_top = 24
+	panel.offset_bottom = -24
+
+
 static func frame() -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color(0.015, 0.035, 0.075, 0.96)
@@ -39,12 +67,7 @@ static func enable_scroll(scroll: ScrollContainer, description: String) -> void:
 	scroll.get_v_scroll_bar().accessibility_name = description
 
 static func fit_panel(panel: PanelContainer, body: VBoxContainer, actions: Array[Control]) -> void:
-	var viewport := panel.get_viewport_rect().size
-	panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	panel.offset_left = maxf(24, (viewport.x - 920) * 0.5)
-	panel.offset_right = -panel.offset_left
-	panel.offset_top = 24
-	panel.offset_bottom = -24
+	_fit_surface(panel)
 	var layout := VBoxContainer.new()
 	layout.add_theme_constant_override("separation", 14)
 	panel.add_child(layout)

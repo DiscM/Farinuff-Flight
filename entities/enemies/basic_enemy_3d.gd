@@ -65,6 +65,8 @@ const SurfaceMaterials := preload("res://effects/rendering/enemy_surface_materia
 const ShipMotion := preload("res://effects/ship_motion_3d.gd")
 const FlightMotion := preload("res://effects/enemy_flight_motion_3d.gd")
 const ReflectTell := preload("res://effects/enemy_reflect_tell_3d.gd")
+const ManeuverPath := preload("res://entities/enemies/enemy_maneuver_path.gd")
+const ReflectionDefense := preload("res://entities/enemies/enemy_reflection_defense.gd")
 const Tactics := preload("res://systems/enemy_tactics_3d.gd")
 const ManeuverAttack := preload("res://systems/enemy_maneuver_attack_3d.gd")
 const GENERATION_STATS := [
@@ -133,7 +135,6 @@ var _exit_bounds := Rect2()
 var _heading := Vector3.BACK
 var _speed_pixels := 0.0
 var _meshes: Array[MeshInstance3D] = []
-var _socket_markers: Array[Marker3D] = []
 var _animation_time := 0.0
 var _flash_time_left := 0.0
 var _motions: Array[ShipMotion] = []
@@ -155,16 +156,9 @@ var _strafe_weave := DEFAULT_STRAFE_WEAVE_PIXELS
 var _strafe_sign := 1.0
 var _strafe_clock := 0.0
 var _engagement_timer := ENGAGEMENT_SECONDS
-var _reflect_cooldown := 0.0
-var _reflect_charges := 0
-var _prefer_reflect := true
+var _defense := ReflectionDefense.new()
 var _reflect_tell: ReflectTell
-var _maneuver_origin := Vector3.ZERO
-var _maneuver_target := Vector3.ZERO
-var _maneuver_control := Vector3.ZERO
-var _maneuver_duration := 0.0
-var _maneuver_entry_velocity := Vector3.ZERO
-var _maneuver_exit_velocity := Vector3.ZERO
+var _maneuver := ManeuverPath.new()
 var _withdraw_velocity := Vector3.ZERO
 var _tactics := Tactics.new()
 var _maneuver_attack := ManeuverAttack.new()
@@ -182,9 +176,6 @@ func _ready() -> void:
 	SurfaceMaterials.apply_to(visuals, surface_style, surface_pixel_density)
 	for node in visuals.find_children("*", "MeshInstance3D", true, false):
 		_meshes.append(node as MeshInstance3D)
-	for child in sockets.get_children():
-		if child is Marker3D:
-			_socket_markers.append(child as Marker3D)
 	area_entered.connect(_on_area_entered)
 	_set_instance_parameter(&"instance_animation_time", 0.0)
 	_set_instance_parameter(&"instance_flash", 0.0)
@@ -233,10 +224,8 @@ func activate_generation(
 	state = State.TRANSIT
 	state_remaining = 0.0
 	_evade_cooldown = 0.0
-	_reflect_cooldown = 0.0
-	_reflect_charges = 0
-	_prefer_reflect = get_instance_id() % 2 == 0
-	_maneuver_duration = 0.0
+	_defense.reset(get_instance_id() % 2 == 0)
+	_maneuver.duration = 0.0
 	_tactics.reset(get_instance_id())
 	_maneuver_attack.cancel()
 	if _reflect_tell != null:
@@ -461,7 +450,7 @@ func _advance_movement(delta: float) -> void:
 func _advance_combat_state(delta: float) -> bool:
 	_observe_player()
 	_evade_cooldown = maxf(0.0, _evade_cooldown - delta)
-	_reflect_cooldown = maxf(0.0, _reflect_cooldown - delta)
+	_defense.advance(delta)
 	_tactics.tick(self, delta)
 	match state:
 		State.TACTICAL_WINDUP:
@@ -577,11 +566,11 @@ func _exit_state(next: State) -> void:
 	elif next != _maneuver_entry_state():
 		_tactics.discard_followup()
 	if state in [State.REFLECT_WINDUP, State.REFLECT_ROLL] and next != State.REFLECT_ROLL:
-		_reflect_charges = 0
+		_defense.charges = 0
 		if is_instance_valid(_reflect_tell):
 			_reflect_tell.hide()
 	if state in [State.EVADE, State.REPOSITION, State.PHASE_DASH]:
-		_maneuver_duration = 0.0
+		_maneuver.duration = 0.0
 	# Release held bone warnings on an interruption without masking shot recoil.
 	for motion in _motions:
 		if motion.is_windup():
@@ -685,7 +674,7 @@ func _try_begin_defense() -> bool:
 	var threat := _find_incoming_projectile(REFLECT_ALERT_PIXELS)
 	if threat == null:
 		return false
-	if _prefer_reflect and _try_begin_reflect(threat):
+	if _defense.prefer_reflect and _try_begin_reflect(threat):
 		return true
 	var distance := _flight_space.combat_motion_to_screen(threat.global_position - global_position).length()
 	if distance < PROJECTILE_ALERT_PIXELS and _begin_barrel_dodge(threat):
@@ -694,31 +683,26 @@ func _try_begin_defense() -> bool:
 
 
 func _try_begin_reflect(threat: Projectile) -> bool:
-	if generation < 2 or state != State.TRANSIT or _reflect_cooldown > 0.0 or _evade_cooldown > 0.0 or not _inside_view():
+	if generation < 2 or state != State.TRANSIT or _defense.cooldown > 0.0 or _evade_cooldown > 0.0 or not _inside_view():
 		return false
 	if not is_instance_valid(threat) or not threat.is_active:
 		return false
 	var offset := _flight_space.combat_motion_to_screen(global_position - threat.global_position)
-	var closing := _flight_space.combat_motion_to_screen(threat.velocity - velocity).dot(offset.normalized())
+	var relative_velocity := _flight_space.combat_motion_to_screen(threat.velocity - velocity)
 	var radius := _flight_space.combat_motion_to_screen(_maneuver_half_extents()).length()
-	# Do not create a last-frame parry. Shots arriving during the tell still hit.
-	if closing <= 0.0 or (offset.length() - radius) / closing < REFLECT_WARNING_SECONDS + 0.08:
+	if not _defense.begin(offset, relative_velocity, radius, REFLECT_WARNING_SECONDS, REFLECT_COOLDOWN_SECONDS, REFLECT_MAX_SHOTS):
 		return false
-	_reflect_cooldown = REFLECT_COOLDOWN_SECONDS
 	_evade_cooldown = EVADE_COOLDOWN_SECONDS
-	_reflect_charges = REFLECT_MAX_SHOTS
-	_prefer_reflect = false
 	_enter(State.REFLECT_WINDUP, REFLECT_WARNING_SECONDS)
 	return true
 
 
 func can_reflect_projectile() -> bool:
-	return is_active and GameManager.is_game_active and state == State.REFLECT_ROLL and state_remaining > 0.0 and _reflect_charges > 0
+	return is_active and GameManager.is_game_active and state == State.REFLECT_ROLL and state_remaining > 0.0 and _defense.charges > 0
 
 
 func consume_reflection() -> void:
-	_reflect_charges = maxi(0, _reflect_charges - 1)
-	if _reflect_charges == 0:
+	if _defense.consume():
 		_enter(State.TRANSIT)
 	else:
 		_update_reflect_tell(true)
@@ -729,7 +713,7 @@ func _update_reflect_tell(armed: bool) -> void:
 		_reflect_tell = ReflectTell.new()
 		add_child(_reflect_tell)
 	var extent := _maneuver_half_extents()
-	_reflect_tell.present(maxf(extent.x, extent.z) * 1.2, armed, _reflect_charges)
+	_reflect_tell.present(maxf(extent.x, extent.z) * 1.2, armed, _defense.charges)
 
 
 func _advance_defense(delta: float) -> bool:
@@ -761,8 +745,7 @@ func _begin_barrel_dodge(projectile: Projectile) -> bool:
 	var duration := EVADE_DURATION_SECONDS * (0.85 if flight_style == FlightMotion.Style.INTERCEPTOR else 1.0)
 	_start_maneuver_path(shift, duration)
 	_evade_cooldown = EVADE_COOLDOWN_SECONDS
-	_reflect_cooldown = maxf(_reflect_cooldown, EVADE_COOLDOWN_SECONDS)
-	_prefer_reflect = true
+	_defense.after_dodge(EVADE_COOLDOWN_SECONDS)
 	_strafe_sign = signf(side.dot(_flight_space.combat_motion_to_screen(shift)))
 	_enter(State.EVADE, duration)
 	return true
@@ -803,39 +786,30 @@ func _choose_maneuver_shift(side: Vector2, pixels: float) -> Vector3:
 
 
 func _start_maneuver_path(shift: Vector3, duration: float, bend_pixels: float = -1.0) -> void:
-	_maneuver_origin = global_position
-	_maneuver_target = _clamp_maneuver_point(global_position + shift)
+	var target := _clamp_maneuver_point(global_position + shift)
 	var bend := minf(150.0, _flight_space.combat_motion_to_screen(shift).length() * 0.32) if bend_pixels < 0.0 else bend_pixels
 	var forward := _flight_space.combat_motion_to_screen(_heading).normalized() * bend
-	_maneuver_control = _clamp_maneuver_point(global_position + shift * 0.5 + _flight_space.screen_motion_to_combat(forward))
-	_maneuver_duration = duration
-	_maneuver_entry_velocity = velocity
-	_maneuver_exit_velocity = _cruise_velocity(_maneuver_target - _maneuver_control)
+	var control := _clamp_maneuver_point(global_position + shift * 0.5 + _flight_space.screen_motion_to_combat(forward))
+	_maneuver.begin(global_position, control, target, duration, velocity, _cruise_velocity(target - control))
 
 
 func _advance_maneuver_path(delta: float) -> void:
 	var step := minf(delta, state_remaining)
 	state_remaining = maxf(0.0, state_remaining - delta)
-	if _maneuver_duration <= 0.0:
+	if _maneuver.duration <= 0.0:
 		_advance_strafe(delta)
 		return
-	var progress := clampf(1.0 - state_remaining / _maneuver_duration, 0.0, 1.0)
-	# A dodge commits lateral thrust early enough to clear incoming fire, then
-	# brakes into its new lane. Standoff wingovers ease in and out more slowly.
-	var t := 1.0 - pow(1.0 - progress, 3.0) if state == State.EVADE else smoothstep(0.0, 1.0, progress)
-	var next := _maneuver_origin.lerp(_maneuver_control, t).lerp(_maneuver_control.lerp(_maneuver_target, t), t)
-	var initial_velocity := (_maneuver_control - _maneuver_origin) * 6.0 / _maneuver_duration if state == State.EVADE else Vector3.ZERO
-	next = Tactics.carry_path_velocity(next, progress, _maneuver_duration, _maneuver_entry_velocity, _maneuver_exit_velocity, initial_velocity, 0.08 if state == State.EVADE else 0.18)
+	var next := _maneuver.sample(state_remaining, state == State.EVADE)
 	next = _clamp_maneuver_point(next)
 	velocity = (next - global_position) / maxf(step, 0.0001)
 	global_position = next
 	if state_remaining <= 0.0:
-		velocity = _maneuver_exit_velocity
+		velocity = _maneuver.exit_velocity
 	if velocity.length_squared() > 0.001:
 		_heading = velocity.normalized()
 		_update_facing(_heading, delta)
 	if state_remaining <= 0.0:
-		_maneuver_duration = 0.0
+		_maneuver.duration = 0.0
 		if is_instance_valid(_observed_player):
 			var offset := _flight_space.combat_motion_to_screen(global_position - _observed_player.global_position)
 			_strafe_angle = offset.angle()
@@ -895,10 +869,6 @@ func take_damage(amount: int) -> void:
 		play_motion(&"hit")
 
 
-func get_socket_markers() -> Array[Marker3D]:
-	return _socket_markers
-
-
 func get_socket(socket_name: StringName) -> Marker3D:
 	return sockets.get_node_or_null(NodePath(String(socket_name))) as Marker3D
 
@@ -936,8 +906,8 @@ func get_debug_state() -> Dictionary:
 		"engagement_remaining": _engagement_timer,
 		"flight_maneuver": FlightMotion.Maneuver.keys()[_flight_motion.current_maneuver],
 		"reflecting": can_reflect_projectile(),
-		"reflect_charges": _reflect_charges,
-		"reflect_cooldown": _reflect_cooldown,
+		"reflect_charges": _defense.charges,
+		"reflect_cooldown": _defense.cooldown,
 		"tactics": _tactics.debug_state(),
 		"maneuver_attack": _maneuver_attack.debug_state(),
 	}

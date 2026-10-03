@@ -5,10 +5,8 @@ extends Control
 signal try_again_accepted
 signal try_again_declined
 
-const NativeUpgradeCatalog := preload("res://entities/player/native_player_upgrades.gd")
+const RunLoadout := preload("res://systems/run_loadout.gd")
 const SHIP_PREVIEW_SCRIPT := preload("res://entities/player/ship_upgrade_preview.gd")
-const FALLBACK_ICON := "✦"
-const FALLBACK_NAME := "YOUR SHIP"
 
 var _end_confirmation: Control
 
@@ -60,14 +58,15 @@ func _build_ui() -> void:
 	stocks_lbl.add_theme_font_size_override("font_size", 22)
 	vbox.add_child(stocks_lbl)
 
+	var loadout := RunLoadout.snapshot(get_tree().get_first_node_in_group("player_craft"))
 	var preview := SHIP_PREVIEW_SCRIPT.new() as ShipUpgradePreview
 	if preview != null:
-		preview.configure(_active_upgrade_ids(), "", _selected_hull_id())
+		preview.configure(loadout.upgrade_ids, "", loadout.hull_id)
 		preview.custom_minimum_size = Vector2(0.0, 76.0)
 		vbox.add_child(preview)
 
 	var loadout_label := Label.new()
-	loadout_label.text = _format_loadout(_selected_hull_id(), _active_upgrade_ids())
+	loadout_label.text = loadout.text
 	loadout_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	loadout_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	loadout_label.add_theme_color_override("font_color", Color(0.65, 0.82, 1.0))
@@ -190,63 +189,6 @@ func _close_popup() -> void:
 	else:
 		queue_free()
 
-
-func _selected_hull_id() -> String:
-	var selected_id := str(MetaProgression.selected_ship)
-	for ship in MetaProgression.SHIP_VARIANTS:
-		if str(ship.get("id", "")) == selected_id:
-			return selected_id
-	return MetaProgression.DEFAULT_SHIP
-
-
-func _active_upgrade_ids() -> Array[String]:
-	var ids: Array[String] = []
-	var player := get_tree().get_first_node_in_group("player_craft")
-	if player == null or not player.has_method("get_active_elite_upgrade_ids"):
-		return ids
-	for raw_id: Variant in player.get_active_elite_upgrade_ids():
-		var upgrade_id := str(raw_id)
-		if NativeUpgradeCatalog.SUPPORTED_IDS.has(upgrade_id) and not ids.has(upgrade_id):
-			ids.append(upgrade_id)
-	return ids
-
-
-func _format_loadout(hull_id: String, active_ids: Array[String]) -> String:
-	var hull_name := FALLBACK_NAME
-	for ship in MetaProgression.SHIP_VARIANTS:
-		if str(ship.get("id", "")) == hull_id:
-			hull_name = str(ship.get("name", FALLBACK_NAME)).strip_edges()
-			if hull_name == "":
-				hull_name = FALLBACK_NAME
-			break
-	var modules: Array[String] = []
-	for upgrade_id in active_ids:
-		var definition := _upgrade_definition(upgrade_id)
-		var name := _safe_text(definition, "name", upgrade_id.replace("_", " ").to_upper())
-		modules.append(name)
-	var module_text := "NONE INSTALLED" if modules.is_empty() else " · ".join(modules)
-	return "SHIP  ·  %s\nUPGRADES  %d/%d  ·  %s" % [
-		hull_name.to_upper(),
-		active_ids.size(),
-		NativeUpgradeCatalog.SUPPORTED_IDS.size(),
-		module_text,
-	]
-
-
-func _upgrade_definition(upgrade_id: String) -> Dictionary:
-	for definition in GameManager.ALL_UPGRADES:
-		if str(definition.get("id", "")) == upgrade_id:
-			return definition
-	for definition in GameManager.META_ELITE_UPGRADES:
-		if str(definition.get("id", "")) == upgrade_id:
-			return definition
-	return {}
-
-
-func _safe_text(data: Dictionary, key: String, fallback: String) -> String:
-	var value: Variant = data.get(key, "")
-	var text := str(value).strip_edges()
-	return text if text != "" else fallback
 
 # ── Animation ──────────────────────────────────────────────────────────────────
 

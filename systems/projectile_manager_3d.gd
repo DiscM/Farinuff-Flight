@@ -1,5 +1,7 @@
 extends Node
 class_name ProjectileManager3D
+
+const IndexedNodes := preload("res://systems/indexed_nodes.gd")
 ## Scene-owned projectile policy around the shared ObjectPool.
 ## Damage routing belongs to the native gameplay controller; this manager owns
 ## bounded-pool acquisition, Interaction Range, and Enemy Projectile deflection.
@@ -357,25 +359,11 @@ func _on_projectile_returned(projectile: Area3D, pool: PoolState) -> void:
 
 
 func _track_checkout(pool: PoolState, projectile: Projectile) -> void:
-	var instance_id := projectile.get_instance_id()
-	pool.checked_out_indices[instance_id] = pool.checked_out.size()
-	pool.checked_out.append(projectile)
+	IndexedNodes.add(projectile, pool.checked_out, pool.checked_out_indices)
 
 
 func _untrack_checkout(pool: PoolState, projectile: Projectile) -> void:
-	if projectile == null:
-		return
-	var instance_id := projectile.get_instance_id()
-	if not pool.checked_out_indices.has(instance_id):
-		return
-	var index := int(pool.checked_out_indices[instance_id])
-	var last_index := pool.checked_out.size() - 1
-	if index != last_index:
-		var last_projectile := pool.checked_out[last_index]
-		pool.checked_out[index] = last_projectile
-		pool.checked_out_indices[last_projectile.get_instance_id()] = index
-	pool.checked_out.pop_back()
-	pool.checked_out_indices.erase(instance_id)
+	IndexedNodes.remove(projectile, pool.checked_out, pool.checked_out_indices)
 
 
 ## Disables incoming projectiles in a radius without allocating a group snapshot.

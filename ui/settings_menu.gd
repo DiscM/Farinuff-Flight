@@ -1,14 +1,16 @@
 extends Control
+
 ## Modal settings panel backed by SaveManager persistence.
 
 signal closed
 
+const Briefing := preload("res://ui/shared/menu_briefing.gd")
+const HostedLayout := preload("res://ui/shared/hosted_menu_layout.gd")
 const WindowLayout := preload("res://systems/game_window_layout.gd")
-var volume_label: Label
-var music_label: Label
+var _hosted_layout: HostedLayout
 var _controls_layer: CanvasLayer
 var _controls_button: Button
-var _controls_focus: Dictionary = {}
+var _controls_host: Node
 
 ## Sets up the settings panel as a process-always full-rect control and
 ## builds the UI contents.
@@ -23,25 +25,7 @@ func _ready() -> void:
 ## panel with volume slider, toggle switches for screen shake/CRT/distortion,
 ## a save-note label, and a close button.
 func _build_ui() -> void:
-	var bg := ColorRect.new()
-	bg.color = Color(0.0, 0.0, 0.06, 0.9)
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(bg)
-
-	var panel := PanelContainer.new()
-	panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	panel.offset_left = maxf(24, (get_viewport_rect().size.x - 920) * 0.5)
-	panel.offset_right = -panel.offset_left
-	panel.offset_top = 24
-	panel.offset_bottom = -24
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.04, 0.06, 0.15)
-	style.border_color = Color(0.2, 0.75, 1.0, 0.8)
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(12)
-	style.set_content_margin_all(24)
-	panel.add_theme_stylebox_override("panel", style)
-	add_child(panel)
+	var panel := Briefing.make_surface(self, Color(0.2, 0.75, 1.0, 0.8), 12, 24, 0.9)
 
 	var column := VBoxContainer.new()
 	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -54,7 +38,7 @@ func _build_ui() -> void:
 	title.add_theme_font_size_override("font_size", 30)
 	title.add_theme_color_override("font_color", Color(0.3, 0.85, 1.0))
 	column.add_child(title)
-	preload("res://ui/shared/menu_briefing.gd").wrap_heading(title)
+	Briefing.wrap_heading(title)
 	var tabs := TabContainer.new()
 	tabs.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	tabs.custom_minimum_size.y = 160
@@ -66,65 +50,10 @@ func _build_ui() -> void:
 	var controls := _make_category(tabs, "Controls")
 	tabs.tab_changed.connect(func(_index: int): MenuAudio.play(&"UI.NAV.MOVE"))
 
-	volume_label = Label.new()
-	volume_label.add_theme_color_override("font_color", Color(0.8, 0.9, 1.0))
-	audio.add_child(volume_label)
-
-	var volume := HSlider.new()
-	volume.min_value = 0.0
-	volume.max_value = 1.0
-	volume.step = 0.05
-	volume.value = float(SaveManager.get_setting("master_volume", 0.8))
-	volume.custom_minimum_size = Vector2(260, 34)
-	volume.value_changed.connect(_on_volume_changed)
-	audio.add_child(volume)
-	_refresh_volume_label(volume.value)
-
-	music_label = Label.new()
-	music_label.add_theme_color_override("font_color", Color(0.8, 0.9, 1.0))
-	audio.add_child(music_label)
-
-	var music := HSlider.new()
-	music.min_value = 0.0
-	music.max_value = 1.0
-	music.step = 0.05
-	music.value = float(SaveManager.get_setting("music_volume", 0.8))
-	music.custom_minimum_size = Vector2(260, 34)
-	music.value_changed.connect(_on_music_changed)
-	audio.add_child(music)
-	_refresh_music_label(music.value)
-
-	var sfx_label := Label.new()
-	sfx_label.text = "Sound effects: %d%%" % roundi(float(SaveManager.get_setting("sfx_volume", 1.0)) * 100)
-	audio.add_child(sfx_label)
-	var sfx_volume := HSlider.new()
-	sfx_volume.name = "SFXVolume"
-	sfx_volume.tooltip_text = "Combat sounds, including boost, reflection, damage, and pickups."
-	sfx_volume.min_value = 0.0
-	sfx_volume.max_value = 1.0
-	sfx_volume.step = 0.05
-	sfx_volume.value = float(SaveManager.get_setting("sfx_volume", 1.0))
-	sfx_volume.custom_minimum_size.y = 34
-	sfx_volume.value_changed.connect(func(value: float):
-		SaveManager.update_setting("sfx_volume", value)
-		sfx_label.text = "Sound effects: %d%%" % roundi(value * 100)
-	)
-	audio.add_child(sfx_volume)
-
-	var ui_label := Label.new()
-	ui_label.text = "Menu audio: %d%%" % roundi(float(SaveManager.get_setting("ui_volume", 0.8)) * 100)
-	audio.add_child(ui_label)
-	var ui_volume := HSlider.new()
-	ui_volume.min_value = 0.0
-	ui_volume.max_value = 1.0
-	ui_volume.step = 0.05
-	ui_volume.value = float(SaveManager.get_setting("ui_volume", 0.8))
-	ui_volume.custom_minimum_size.y = 34
-	ui_volume.value_changed.connect(func(value: float):
-		SaveManager.update_setting("ui_volume", value)
-		ui_label.text = "Menu audio: %d%%" % roundi(value * 100)
-	)
-	audio.add_child(ui_volume)
+	_add_percentage_slider(audio, "Master Volume", "master_volume", 0.8, Vector2(260, 34), "", "", Vector2(0, 1), Color(0.8, 0.9, 1.0))
+	_add_percentage_slider(audio, "Music Volume", "music_volume", 0.8, Vector2(260, 34), "", "", Vector2(0, 1), Color(0.8, 0.9, 1.0))
+	_add_percentage_slider(audio, "Sound effects", "sfx_volume", 1.0, Vector2(0, 34), "SFXVolume", "Combat sounds, including boost, reflection, damage, and pickups.")
+	_add_percentage_slider(audio, "Menu audio", "ui_volume", 0.8)
 	var story := OptionButton.new()
 	story.add_item("Story: Full", 0)
 	story.add_item("Story: Short", 1)
@@ -168,21 +97,7 @@ func _build_ui() -> void:
 	fire_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	fire_note.add_theme_font_size_override("font_size", 14)
 	controls.add_child(fire_note)
-	var deadzone_label := Label.new()
-	deadzone_label.text = "Right stick aim deadzone: %d%%" % roundi(float(SaveManager.get_setting("aim_deadzone", 0.4)) * 100)
-	controls.add_child(deadzone_label)
-	var deadzone := HSlider.new()
-	deadzone.tooltip_text = "Aim stick threshold. Increase to reduce drift."
-	deadzone.min_value = 0.15
-	deadzone.max_value = 0.6
-	deadzone.step = 0.05
-	deadzone.value = float(SaveManager.get_setting("aim_deadzone", 0.4))
-	deadzone.custom_minimum_size.y = 34
-	deadzone.value_changed.connect(func(value: float):
-		SaveManager.update_setting("aim_deadzone", value)
-		deadzone_label.text = "Right stick aim deadzone: %d%%" % roundi(value * 100)
-	)
-	controls.add_child(deadzone)
+	_add_percentage_slider(controls, "Right stick aim deadzone", "aim_deadzone", 0.4, Vector2(0, 34), "", "Aim stick threshold. Increase to reduce drift.", Vector2(0.15, 0.6))
 	_controls_button = Button.new()
 	_controls_button.text = "CHANGE CONTROLS"
 	_controls_button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -204,6 +119,7 @@ func _build_ui() -> void:
 	close_button.add_theme_font_size_override("font_size", 18)
 	close_button.pressed.connect(_on_close_pressed)
 	column.add_child(close_button)
+	_hosted_layout = HostedLayout.new(panel, [close_button], tabs.get_tab_bar(), [tabs])
 	tabs.get_tab_bar().grab_focus()
 
 ## Helper: creates a CheckButton toggle with a label, initialized from
@@ -220,25 +136,27 @@ func _make_toggle(label_text: String, setting_key: String, fallback: bool = true
 	toggle.toggled.connect(_on_toggle_changed.bind(setting_key))
 	return toggle
 
-## Called when the volume slider value changes. Persists the new value
-## via SaveManager and refreshes the percentage label.
-func _on_volume_changed(value: float) -> void:
-	SaveManager.update_setting("master_volume", value)
-	_refresh_volume_label(value)
-
-## Updates the volume label to display the current percentage (0–100%).
-func _refresh_volume_label(value: float) -> void:
-	volume_label.text = "Master Volume: %d%%" % int(round(value * 100.0))
-
-## Called when the music slider value changes. Persists the new value
-## via SaveManager and refreshes the percentage label.
-func _on_music_changed(value: float) -> void:
-	SaveManager.update_setting("music_volume", value)
-	_refresh_music_label(value)
-
-## Updates the music label to display the current percentage (0–100%).
-func _refresh_music_label(value: float) -> void:
-	music_label.text = "Music Volume: %d%%" % int(round(value * 100.0))
+## All percentage sliders persist and refresh their own label through one path.
+func _add_percentage_slider(parent: Control, title: String, key: String, fallback: float, minimum_size: Vector2 = Vector2(0, 34), node_name: String = "", tooltip: String = "", limits: Vector2 = Vector2(0, 1), color: Color = Color.TRANSPARENT) -> void:
+	var label := Label.new()
+	if color != Color.TRANSPARENT:
+		label.add_theme_color_override("font_color", color)
+	parent.add_child(label)
+	var slider := HSlider.new()
+	slider.name = key if node_name.is_empty() else node_name
+	slider.accessibility_name = title
+	slider.tooltip_text = tooltip
+	slider.min_value = limits.x
+	slider.max_value = limits.y
+	slider.step = 0.05
+	slider.value = float(SaveManager.get_setting(key, fallback))
+	slider.custom_minimum_size = minimum_size
+	label.text = "%s: %d%%" % [title, roundi(slider.value * 100)]
+	slider.value_changed.connect(func(value: float):
+		SaveManager.update_setting(key, value)
+		label.text = "%s: %d%%" % [title, roundi(value * 100)]
+	)
+	parent.add_child(slider)
 
 ## Called when any toggle switch changes. Persists the new boolean value
 ## under the given setting key via SaveManager.
@@ -269,14 +187,13 @@ func _open_controls() -> void:
 	_controls_layer.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(_controls_layer)
 	var controls := preload("res://ui/controls_menu.gd").new()
-	controls.closed.connect(func():
-		preload("res://ui/shared/modal_focus.gd").restore(_controls_focus)
+	_controls_host = preload("res://ui/shared/modal_host.gd").new()
+	_controls_layer.add_child(_controls_host)
+	_controls_host.dismissed.connect(func(_modal: Control):
 		_controls_layer.queue_free()
 		_controls_layer = null
-		_controls_button.grab_focus()
 	)
-	_controls_layer.add_child(controls)
-	_controls_focus = preload("res://ui/shared/modal_focus.gd").suspend_outside(controls)
+	_controls_host.present(controls, _controls_button)
 
 
 func _make_category(tabs: TabContainer, category_name: String) -> VBoxContainer:
@@ -301,3 +218,7 @@ func _choice(node_name: String, title: String, key: String, values: Array, label
 	choice.select(maxi(values.find(SaveManager.get_setting(key)), 0))
 	choice.item_selected.connect(func(index: int): SaveManager.update_setting(key, values[index]))
 	return choice
+
+
+func get_hosted_layout() -> HostedLayout:
+	return _hosted_layout

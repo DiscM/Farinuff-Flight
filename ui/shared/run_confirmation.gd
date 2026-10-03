@@ -21,6 +21,7 @@ func _ready() -> void:
 	theme = preload("res://ui/themes/farinuff_frontend_theme.tres")
 	_return_focus = get_viewport().gui_get_focus_owner()
 	_requires_hold = bool(SaveManager.get_setting("hold_to_confirm", false))
+	set_process(false)
 	var shade := ColorRect.new()
 	shade.color = Color(0.005, 0.012, 0.035, 0.98)
 	shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -47,7 +48,11 @@ func _ready() -> void:
 	_confirm.text = "HOLD TO " + confirm_text + " · 1 SECOND" if _requires_hold else confirm_text
 	_confirm.custom_minimum_size.y = 48
 	_confirm.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	_confirm.button_down.connect(func(): _holding = true; _elapsed = 0.0)
+	_confirm.button_down.connect(func():
+		_holding = true
+		_elapsed = 0.0
+		set_process(_requires_hold)
+	)
 	_confirm.button_up.connect(_reset_hold)
 	_confirm.focus_exited.connect(_reset_hold)
 	_confirm.mouse_exited.connect(_reset_hold)
@@ -92,6 +97,7 @@ func _process(delta: float) -> void:
 
 func _reset_hold() -> void:
 	_holding = false
+	set_process(false)
 	_elapsed = 0.0
 	if is_instance_valid(_progress):
 		_progress.value = 0.0
@@ -105,6 +111,7 @@ func _finish(accept: bool) -> void:
 	if _resolved:
 		return
 	_resolved = true
+	set_process(false)
 	MenuAudio.play(&"UI.NAV.CONFIRM" if accept else &"UI.NAV.CANCEL")
 	if not accept and is_instance_valid(_return_focus):
 		_return_focus.grab_focus()

@@ -25,6 +25,7 @@ func _run() -> void:
 	_prepare_volley()
 	_expect(get_tree().get_nodes_in_group("enemy_projectiles").is_empty(), "Volley warning precedes hostile shots")
 	_expect(_volley_cue.origins.size() == 3 and _volley_warning > 0, "All three shot origins are previewed")
+	_expect(_volley_cue.is_processing(), "An active volley warning schedules redraws")
 	var warning_before := _volley_warning
 	set_physics_process(true)
 	get_tree().paused = true
@@ -33,6 +34,7 @@ func _run() -> void:
 	set_physics_process(false)
 	get_tree().paused = false
 	_physics_process(VOLLEY_WARNING + 0.01)
+	_expect(not _volley_cue.is_processing(), "Released volleys stop scheduling cue redraws")
 	var shots := get_tree().get_nodes_in_group("enemy_projectiles")
 	_expect(shots.size() == 3, "One warning releases exactly three production shots")
 	player.is_boosting = true

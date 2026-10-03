@@ -1,4 +1,5 @@
 extends Control
+
 ## Launch Bay — the pre-run loadout screen. The player picks an owned ship
 ## variant, toggles owned challenge modifiers for bonus salvage, and sees
 ## the resulting salvage multiplier before launching. Opened from the main
@@ -10,6 +11,8 @@ signal launch_confirmed
 ## Emitted when the player backs out without launching.
 signal closed
 
+const Briefing := preload("res://ui/shared/menu_briefing.gd")
+const HostedLayout := preload("res://ui/shared/hosted_menu_layout.gd")
 const SHIP_PREVIEW_SCRIPT := preload("res://entities/player/ship_upgrade_preview.gd")
 const CatalogIcons := preload("res://ui/catalog_icons.gd")
 const NATIVE_HULL_IDS: Array[String] = [
@@ -22,6 +25,7 @@ const FALLBACK_NAME := "UNKNOWN SHIP"
 const FALLBACK_DESCRIPTION := "Ship details unavailable."
 const FALLBACK_COLOR := Color(0.55, 0.65, 0.82)
 
+var _hosted_layout: HostedLayout
 var _ship_cards_by_id: Dictionary = {}
 var _multiplier_label: Label
 var _supply_label: Label
@@ -38,25 +42,7 @@ func _ready() -> void:
 	_build_ui()
 
 func _build_ui() -> void:
-	var bg := ColorRect.new()
-	bg.color = Color(0.0, 0.0, 0.06, 0.92)
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(bg)
-
-	var panel := PanelContainer.new()
-	panel.set_anchors_preset(Control.PRESET_CENTER)
-	panel.offset_left = -285.0
-	panel.offset_top = -350.0
-	panel.offset_right = 285.0
-	panel.offset_bottom = 350.0
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.04, 0.06, 0.15)
-	style.border_color = Color(0.2, 0.75, 1.0, 0.85)
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(2)
-	style.set_content_margin_all(20)
-	panel.add_theme_stylebox_override("panel", style)
-	add_child(panel)
+	var panel := Briefing.make_surface(self, Color(0.2, 0.75, 1.0, 0.85), 2)
 
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 10)
@@ -69,7 +55,7 @@ func _build_ui() -> void:
 	title.add_theme_font_size_override("font_size", 26)
 	title.add_theme_color_override("font_color", Color(0.3, 0.85, 1.0))
 	column.add_child(title)
-	preload("res://ui/shared/menu_briefing.gd").wrap_heading(title)
+	Briefing.wrap_heading(title)
 
 	column.add_child(_make_section_label("SHIP"))
 	var ships_row := HBoxContainer.new()
@@ -132,7 +118,8 @@ func _build_ui() -> void:
 	buttons_row.add_child(launch_button)
 	NeonUI.style_primary(launch_button)
 	_refresh_launch_button()
-	preload("res://ui/shared/menu_briefing.gd").fit_panel(panel, column, [buttons_row])
+	Briefing.fit_panel(panel, column, [buttons_row])
+	_hosted_layout = HostedLayout.new(panel, [buttons_row], launch_button)
 	launch_button.grab_focus()
 
 func _make_section_label(text: String) -> Label:
@@ -372,3 +359,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func get_primary_safe_action() -> Control:
 	return _launch_button
+
+
+func get_hosted_layout() -> HostedLayout:
+	return _hosted_layout

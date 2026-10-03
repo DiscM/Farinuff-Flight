@@ -300,13 +300,13 @@ func _check_input_interruptions() -> void:
 	_close_pause_menu()
 	var after_pause: int = shots[0]
 	player._update_shooting()
-	_expect(shots[0] == after_pause and not player._fire_latched, "Resuming with a held fire button cannot restart firing")
+	_expect(shots[0] == after_pause and not player._weapons.latched, "Resuming with a held fire button cannot restart firing")
 	Input.action_release("shoot")
 	player._update_shooting()
 	await get_tree().process_frame
 	Input.action_press("shoot")
 	player._update_shooting()
-	_expect(player._fire_latched, "A fresh press can restart toggle fire after resume")
+	_expect(player._weapons.latched, "A fresh press can restart toggle fire after resume")
 	Input.action_release("shoot")
 
 	InputBindings.family = "gamepad"
@@ -314,7 +314,7 @@ func _check_input_interruptions() -> void:
 	InputBindings._on_joy_connection_changed(41, false)
 	_expect(not get_tree().paused, "An unrelated controller disconnect does not pause flight")
 	InputBindings._on_joy_connection_changed(42, false)
-	_expect(get_tree().paused and InputBindings.family == "keyboard" and not player._fire_latched, "Losing the active pad pauses and clears automatic fire")
+	_expect(get_tree().paused and InputBindings.family == "keyboard" and not player._weapons.latched, "Losing the active pad pauses and clears automatic fire")
 	var pause_overlay := _pause_overlay
 	get_window().focus_exited.emit()
 	_expect(_pause_overlay == pause_overlay, "Repeated interruptions cannot stack pause menus")

@@ -3,7 +3,14 @@ extends Node2D
 var flight_space: FlightSpace3D
 var origins: Array[Vector3] = []
 var target := Vector3.ZERO
-var remaining := 0.0
+var remaining := 0.0:
+	set(value):
+		remaining = value
+		set_process(value > 0.0)
+		queue_redraw()
+
+func _ready() -> void:
+	set_process(remaining > 0.0)
 
 func _process(_delta: float) -> void:
 	queue_redraw()

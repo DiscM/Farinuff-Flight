@@ -245,7 +245,7 @@ func _check_geometry(level: Node) -> void:
 func _check_shooting(level: Node, origin: Vector3 = Layout.INITIAL_POSITION) -> void:
 	level.player.set_combat_position(origin)
 	level.player.last_aim_direction = Vector3.FORWARD
-	level.player._fire_waiting_for_release = false
+	level.player._weapons.waiting_for_release = false
 	level.player.shoot_timer.stop()
 	Input.action_press("shoot")
 	level.player._update_shooting()

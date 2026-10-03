@@ -98,7 +98,7 @@ func _revive() -> void:
 		enemy.queue_free()
 	projectile_manager.clear_projectiles()
 	hazard_manager.clear_hazards()
-	power_up_manager.clear_power_ups()
+	power_up_manager.clear_pickups()
 	player.reset_damage_state()
 	player._start_invincibility(3.0)
 	_ended = false

@@ -24,8 +24,6 @@ const HOVER_SMOOTHING := 6.0
 @onready var sockets: Node3D = $Attachments/Sockets
 
 var is_active := false
-var shots_fired := 0
-var contact_hits := 0
 
 var _player: PlayerCraft
 var _flight_space: FlightSpace
@@ -48,8 +46,6 @@ func configure(player: PlayerCraft, flight_space: FlightSpace) -> bool:
 		return false
 	_player = player
 	_flight_space = flight_space
-	shots_fired = 0
-	contact_hits = 0
 	_shoot_timer = 0.0
 	set_combat_position(_hover_target_position())
 	collision_layer = PhysicsLayers.PLAYER_PROJECTILE
@@ -107,16 +103,6 @@ func get_socket(socket_name: StringName) -> Marker3D:
 	return sockets.get_node_or_null(NodePath(String(socket_name))) as Marker3D
 
 
-func get_status() -> Dictionary:
-	return {
-		"active": is_active,
-		"shots_fired": shots_fired,
-		"contact_hits": contact_hits,
-		"fire_interval": fire_interval,
-		"hover_offset_pixels": hover_offset_pixels,
-	}
-
-
 func _hover_target_position() -> Vector3:
 	var player_position := _player.get_combat_position()
 	var offset := _flight_space.screen_motion_to_combat(hover_offset_pixels)
@@ -132,7 +118,6 @@ func _fire() -> void:
 	var muzzle := get_socket(&"MuzzleCenter")
 	var spawn_position := muzzle.global_position if muzzle != null else global_position
 	spawn_position.y = 0.0
-	shots_fired += 1
 	fire_requested.emit(spawn_position, direction)
 
 
@@ -162,7 +147,6 @@ func _on_area_entered(area: Area3D) -> void:
 		return
 	if not (area.collision_layer & PhysicsLayers.ENEMY_CRAFT):
 		return
-	contact_hits += 1
 	var combat_position := get_combat_position()
 	contact_damage_requested.emit(area, combat_position)
 

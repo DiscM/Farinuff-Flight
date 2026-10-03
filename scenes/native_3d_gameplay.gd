@@ -1,5 +1,7 @@
 extends Node
 class_name Native3DGameplay
+
+const IndexedNodes := preload("res://systems/indexed_nodes.gd")
 ## Shared combat runtime and presentation for Expedition, Flight School,
 ## harbor combat and focused gameplay checks.
 
@@ -132,10 +134,10 @@ func _ready() -> void:
 	if not await hazard_manager.warm_hazard_pool():
 		$TransitionOverlay/Message.text = "Hazard preparation failed. See the debugger."
 		return
-	if not await xp_orb_manager.warm_orb_pool():
+	if not await xp_orb_manager.warm_pool():
 		$TransitionOverlay/Message.text = "Pickup preparation failed. See the debugger."
 		return
-	if not await power_up_manager.warm_power_up_pool():
+	if not await power_up_manager.warm_pool():
 		$TransitionOverlay/Message.text = "Power-up preparation failed. See the debugger."
 		return
 	if not await _warm_drone_visual():
@@ -314,30 +316,12 @@ func _on_actor_exiting_tree(actor: Node) -> void:
 
 
 func _track_native_enemy(actor: Node) -> void:
-	if not actor is BasicEnemy:
-		return
-	var enemy := actor as BasicEnemy
-	var instance_id := enemy.get_instance_id()
-	if _native_enemy_indices.has(instance_id):
-		return
-	_native_enemy_indices[instance_id] = _native_enemies.size()
-	_native_enemies.append(enemy)
+	if actor is BasicEnemy:
+		IndexedNodes.add(actor, _native_enemies, _native_enemy_indices)
 
 
 func _untrack_native_enemy(actor: Node) -> void:
-	if actor == null:
-		return
-	var instance_id := actor.get_instance_id()
-	if not _native_enemy_indices.has(instance_id):
-		return
-	var index := int(_native_enemy_indices[instance_id])
-	var last_index := _native_enemies.size() - 1
-	if index != last_index:
-		var last_enemy := _native_enemies[last_index]
-		_native_enemies[index] = last_enemy
-		_native_enemy_indices[last_enemy.get_instance_id()] = index
-	_native_enemies.pop_back()
-	_native_enemy_indices.erase(instance_id)
+	IndexedNodes.remove(actor, _native_enemies, _native_enemy_indices)
 
 
 func _get_homing_targets() -> Array[BasicEnemy]:
@@ -354,22 +338,6 @@ func _on_enemy_charge_released(combat_position: Vector3, direction: Vector3) -> 
 
 func set_drone_escort_enabled(enabled: bool) -> void:
 	player.set_drone_escort_enabled(enabled)
-
-
-func get_drone() -> PlayerDrone:
-	return _drone
-
-
-func get_drone_status() -> Dictionary:
-	if is_instance_valid(_drone):
-		return _drone.get_status()
-	return {
-		"active": false,
-		"shots_fired": 0,
-		"contact_hits": 0,
-		"fire_interval": PlayerDrone.FIRE_INTERVAL,
-		"hover_offset_pixels": PlayerDrone.HOVER_OFFSET_PIXELS,
-	}
 
 
 func _on_drone_escort_changed(enabled: bool) -> void:
@@ -494,20 +462,6 @@ func _spawn_enemy_orb(combat_position: Vector3, value: int, drift_direction: Vec
 		xp_orb_spawned.emit(value, combat_position)
 
 
-func reset_native_progression() -> void:
-	projectile_manager.clear_projectiles()
-	xp_orb_manager.clear_orbs()
-	power_up_manager.clear_power_ups()
-	hazard_manager.clear_hazards()
-	special_attack_coordinator.reset_pressure()
-	effect_manager.clear_effects()
-	GameManager.start_game(false)
-	player.reset_damage_state()
-	player.reset_elite_upgrades()
-	player.reset_power_up_state()
-	player.reset_developer_state()
-
-
 func _process(delta: float) -> void:
 	if _presentation_metrics_enabled:
 		_sample_presentation_frame_timing()
@@ -515,7 +469,7 @@ func _process(delta: float) -> void:
 	if aim_reticle.visible:
 		aim_reticle.position = flight_space.combat_to_screen(player.get_aim_reticle_combat_position())
 	_metrics_timer -= delta
-	if _metrics_timer <= 0.0 and projectile_manager.is_ready:
+	if _metrics_timer <= 0.0 and projectile_manager.is_ready and (_presentation_metrics_enabled or projectile_status.is_visible_in_tree()):
 		_metrics_timer = _metrics_interval
 		var metrics := projectile_manager.get_metrics()
 		var effect_metrics := effect_manager.get_metrics()
@@ -523,25 +477,26 @@ func _process(delta: float) -> void:
 		var hazard_metrics := hazard_manager.get_metrics()
 		var power_up_metrics := power_up_manager.get_metrics()
 		_cache_presentation_pool_metrics(metrics, effect_metrics, orb_metrics, hazard_metrics, power_up_metrics)
-		var pool_growth := int(metrics["pool_growth_after_warmup"])
-		pool_growth += int(effect_metrics["pool_growth_after_warmup"])
-		pool_growth += int(orb_metrics["pool_growth_after_warmup"])
-		pool_growth += int(hazard_metrics["pool_growth_after_warmup"])
-		pool_growth += int(power_up_metrics["pool_growth_after_warmup"])
-		projectile_status.text = "P %d/%d  •  E %d/%d  •  FX %d/%d  •  ORB %d/%d  •  PU %d/%d  •  FRAG %d/%d  •  MINE %d/%d  •  FIELD %d/%d  •  GROWTH %d (H F%d/M%d/P%d)" % [
-			metrics["player"]["active"], metrics["player"]["pool_size"],
-			metrics["enemy"]["active"], metrics["enemy"]["pool_size"],
-			effect_metrics["active"], effect_metrics["pool_size"],
-			orb_metrics["active"], orb_metrics["pool_size"],
-			power_up_metrics["active"], power_up_metrics["pool_size"],
-			hazard_metrics["active"], hazard_metrics["pool_size"],
-			hazard_metrics["mine_active"], hazard_metrics["mine_pool_size"],
-			hazard_metrics["field_active"], hazard_metrics["field_pool_size"],
-			pool_growth,
-			hazard_metrics["fragment_pool_growth_after_warmup"],
-			hazard_metrics["mine_pool_growth_after_warmup"],
-			hazard_metrics["field_pool_growth_after_warmup"]
-		]
+		if projectile_status.is_visible_in_tree():
+			var pool_growth := int(metrics["pool_growth_after_warmup"])
+			pool_growth += int(effect_metrics["pool_growth_after_warmup"])
+			pool_growth += int(orb_metrics["pool_growth_after_warmup"])
+			pool_growth += int(hazard_metrics["pool_growth_after_warmup"])
+			pool_growth += int(power_up_metrics["pool_growth_after_warmup"])
+			projectile_status.text = "P %d/%d  •  E %d/%d  •  FX %d/%d  •  ORB %d/%d  •  PU %d/%d  •  FRAG %d/%d  •  MINE %d/%d  •  FIELD %d/%d  •  GROWTH %d (H F%d/M%d/P%d)" % [
+				metrics["player"]["active"], metrics["player"]["pool_size"],
+				metrics["enemy"]["active"], metrics["enemy"]["pool_size"],
+				effect_metrics["active"], effect_metrics["pool_size"],
+				orb_metrics["active"], orb_metrics["pool_size"],
+				power_up_metrics["active"], power_up_metrics["pool_size"],
+				hazard_metrics["active"], hazard_metrics["pool_size"],
+				hazard_metrics["mine_active"], hazard_metrics["mine_pool_size"],
+				hazard_metrics["field_active"], hazard_metrics["field_pool_size"],
+				pool_growth,
+				hazard_metrics["fragment_pool_growth_after_warmup"],
+				hazard_metrics["mine_pool_growth_after_warmup"],
+				hazard_metrics["field_pool_growth_after_warmup"]
+			]
 
 
 func _apply_presentation_settings() -> void:

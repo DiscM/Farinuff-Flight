@@ -10,6 +10,8 @@ func _ready() -> void:
 
 func _run() -> void:
 	player.set_physics_process(false)
+	_check_idle_objectives()
+	_check_event_driven_wave_hud()
 	_check_encounters()
 	await _check_boost()
 	_check_allocation()
@@ -171,3 +173,30 @@ func _check_run_balance() -> void:
 func _expect(condition: bool, message: String) -> void:
 	if not condition and not _failures.has(message):
 		_failures.append(message)
+
+
+func _check_idle_objectives() -> void:
+	var director := Director.new()
+	add_child(director)
+	director.configure(self)
+	var objectives: Node = director.objectives
+	_expect(not objectives.is_processing(), "Courier objectives do no idle frame work")
+	GameManager.current_wave = 3
+	director.start()
+	director.set_physics_process(false)
+	_expect(objectives.try_start() and objectives.is_processing(), "Admitting a courier enables objective timing")
+	objectives.cancel("COURIER ESCAPED")
+	_expect(objectives.is_processing(), "Objective feedback retains its cleanup countdown")
+	objectives._process(3.1)
+	_expect(not objectives.is_processing(), "Expired feedback stops objective processing")
+	director.queue_free()
+	GameManager.current_wave = 1
+
+func _check_event_driven_wave_hud() -> void:
+	GameManager.current_wave = 1
+	GameManager.orbs_collected_this_wave = 0
+	hud.update_all()
+	SignalBus.xp_orb_collected.emit(1)
+	_expect(hud._wave_progress.value == GameManager.orbs_collected_this_wave and hud._wave_progress_label.text.contains("1 /"), "Orb collection updates wave progress without an idle frame")
+	GameManager.orbs_collected_this_wave = 0
+	hud.update_all()

@@ -37,6 +37,7 @@ func _run() -> void:
 	add_child(_shell)
 	await _wait_frames(2)
 
+	_check_event_driven_status()
 	await _check_unknown_page_rejected()
 	await check_page_focuses_primary()
 	await _check_registered_pages()
@@ -319,3 +320,14 @@ func _wait_frames(count: int) -> void:
 func _expect(condition: bool, message: String) -> void:
 	if not condition:
 		_failures.append(message)
+
+
+func _check_event_driven_status() -> void:
+	var disk := preload("res://tests/save_file_snapshot.gd").new()
+	var prior := MetaProgression.salvage
+	_expect(not _shell.is_processing(), "The shell has no per-frame status poll")
+	MetaProgression.earn_salvage(1)
+	_expect(_shell.salvage_value.text == "SALVAGE  ⬡ %d" % (prior + 1), "Wallet persistence refreshes the rail immediately")
+	MetaProgression.salvage = prior
+	MetaProgression.select_ship(MetaProgression.selected_ship)
+	disk.restore()

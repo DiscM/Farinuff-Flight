@@ -1,4 +1,5 @@
 extends Control
+
 ## First-run onboarding for the core Farinuff Flight loop.
 ##
 ## This is intentionally short and replayable from the main menu. It teaches
@@ -9,6 +10,7 @@ extends Control
 signal practice_requested(boss_wave: int)
 signal finished
 
+const HostedLayout := preload("res://ui/shared/hosted_menu_layout.gd")
 const PAGE_TITLES: Array[String] = [
 	"MOVE / AIM",
 	"BOOST / REFLECT",
@@ -37,6 +39,7 @@ const YELLOW := Color(1.0, 0.84, 0.12)
 const MAGENTA := Color(1.0, 0.16, 0.55)
 const INK := Color(0.005, 0.012, 0.04, 0.98)
 
+var _hosted_layout: HostedLayout
 var _practice_picker: OptionButton
 var _page_index := 0
 var _finished := false
@@ -179,6 +182,7 @@ func _build_ui() -> void:
 	_skip_button.custom_minimum_size = Vector2(0.0, 38.0)
 	_skip_button.pressed.connect(finish)
 	content.add_child(_skip_button)
+	_hosted_layout = HostedLayout.new(panel, [navigation, _skip_button], _next_button, [scroll])
 
 
 func _make_button(label: String, color: Color) -> Button:
@@ -293,3 +297,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func get_primary_safe_action() -> Control:
 	return _next_button
+
+
+func get_hosted_layout() -> HostedLayout:
+	return _hosted_layout

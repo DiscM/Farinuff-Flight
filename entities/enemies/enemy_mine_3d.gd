@@ -123,10 +123,6 @@ func _detonate() -> void:
 	despawn()
 
 
-func detonate_for_review() -> void:
-	_detonate()
-
-
 func despawn() -> void:
 	if _return_pending or get_parent() == _idle_parent:
 		return

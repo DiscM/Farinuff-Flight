@@ -11,6 +11,8 @@ const MENUS := {
 	"flight_school": preload("res://ui/flight_school.tscn"),
 	"settings": preload("res://ui/settings_menu.tscn"),
 }
+const HostedLayout := preload("res://ui/shared/hosted_menu_layout.gd")
+var _layout: HostedLayout
 var _menu: Control
 var _payload: Dictionary = {}
 var _leaving := false
@@ -37,56 +39,8 @@ func _ready() -> void:
 		primary.grab_focus()
 
 func _embed_panel() -> void:
-	# Move the authored menu panel into a scrolling page. Its inner controls,
-	# callbacks, selection state, and wallet subscriptions stay on the same root.
-	var panels := _menu.find_children("*", "PanelContainer", true, false)
-	if panels.is_empty():
-		return
-	var panel := panels[0] as PanelContainer
-	for child in _menu.get_children():
-		if child is Control:
-			child.hide()
-	var margin := MarginContainer.new()
-	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	for side in ["left", "right", "top", "bottom"]:
-		margin.add_theme_constant_override("margin_" + side, 12)
-	_menu.add_child(margin)
-	var layout := VBoxContainer.new()
-	layout.add_theme_constant_override("separation", 12)
-	margin.add_child(layout)
-	var scroll := ScrollContainer.new()
-	scroll.follow_focus = true
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	layout.add_child(scroll)
-	panel.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
-	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	panel.custom_minimum_size = Vector2.ZERO
-	panel.reparent(scroll)
-	panel.show()
-	if menu_kind == "launch_bay":
-		# Keep the launch and back decisions visible while loadout details scroll.
-		var action := _menu.get_primary_safe_action() as Button
-		if action != null:
-			action.get_parent().reparent(layout)
-	elif menu_kind in ["settings", "hangar"]:
-		# Large text can make the settings panel taller than the hosted viewport.
-		# Keep its exit action reachable while the options scroll.
-		var close_button := _menu.find_child("CloseButton", true, false)
-		if close_button != null:
-			close_button.reparent(layout)
-		panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		var tabs := _menu.find_children("*", "TabContainer", true, false)
-		if not tabs.is_empty():
-			tabs[0].custom_minimum_size.y = 160
-	elif menu_kind == "flight_school":
-		# Lesson navigation stays available even with large text or a long tip.
-		var next := _menu.get_primary_safe_action() as Button
-		next.get_parent().reparent(layout)
-		_menu._skip_button.reparent(layout)
-		for inner in panel.find_children("*", "ScrollContainer", true, false):
-			inner.custom_minimum_size.y = 160
-	NeonUI.style_screen(_menu)
+	_layout = _menu.get_hosted_layout()
+	_layout.mount(_menu)
 
 func _back() -> void:
 	if _leaving:
@@ -120,9 +74,4 @@ func _practice(wave: int) -> void:
 func get_primary_safe_action() -> Control:
 	if not is_instance_valid(_menu):
 		return null
-	if _menu.has_method("get_primary_safe_action"):
-		return _menu.get_primary_safe_action()
-	for control in _menu.find_children("*", "Control", true, false):
-		if control is BaseButton and control.is_visible_in_tree() and not control.disabled:
-			return control
-	return null
+	return _layout.get_primary_safe_action() if _layout != null else null

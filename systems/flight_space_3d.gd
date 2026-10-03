@@ -170,11 +170,3 @@ func get_view_bounds(baseline_margin_pixels: float = 0.0) -> Rect2:
 		minimum = minimum.min(combat_corner)
 		maximum = maximum.max(combat_corner)
 	return Rect2(minimum, maximum - minimum)
-
-
-func clamp_to_combat_plane(combat_position: Vector3) -> Vector3:
-	var bounds := get_combat_bounds()
-	combat_position.x = clampf(combat_position.x, bounds.position.x, bounds.end.x)
-	combat_position.y = 0.0
-	combat_position.z = clampf(combat_position.z, bounds.position.y, bounds.end.y)
-	return combat_position

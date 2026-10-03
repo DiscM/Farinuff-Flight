@@ -78,7 +78,7 @@ func _hostile() -> Shot:
 
 func _arm_reflect(enemy: BasicEnemy3D) -> void:
 	var threat := _incoming(enemy)
-	enemy._prefer_reflect = true
+	enemy._defense.prefer_reflect = true
 	_expect(enemy._try_begin_defense(), "Incoming fire selects the aileron defense")
 	_expect(enemy.state == BasicEnemy3D.State.REFLECT_WINDUP and not enemy.can_reflect_projectile(), "Reflect starts with a vulnerable warning")
 	threat.despawn()
@@ -91,7 +91,7 @@ func _arm_reflect(enemy: BasicEnemy3D) -> void:
 func _check_reflect_lifecycle() -> void:
 	var enemy := _spawn("basic", 2)
 	var threat := _incoming(enemy)
-	enemy._prefer_reflect = true
+	enemy._defense.prefer_reflect = true
 	_expect(enemy._try_begin_defense(), "Generation II fighter anticipates incoming fire")
 	var health_before := enemy.health
 	threat._report_hit(enemy, enemy.global_position)
@@ -135,9 +135,9 @@ func _check_reflect_lifecycle() -> void:
 		var redirected := returned._report_hit(player, player.global_position)
 		_expect(redirected and returned.is_active and returned.is_deflected, "Boost can counter-reflect the returned shot through the real contact route")
 		health_before = enemy.health
-		var charges := enemy._reflect_charges
+		var charges := enemy._defense.charges
 		returned._report_hit(enemy, enemy.global_position)
-		_expect(enemy.health == health_before - 2 and enemy._reflect_charges == charges, "Boost counters pierce the reflect defense without an infinite reflection loop")
+		_expect(enemy.health == health_before - 2 and enemy._defense.charges == charges, "Boost counters pierce the reflect defense without an infinite reflection loop")
 		player.is_boosting = false
 	await _cleanup(enemy)
 
@@ -179,9 +179,9 @@ func _check_clear_and_pool_pressure() -> void:
 		projectile_manager.fire_enemy_projectile(Vector3.ZERO, Vector3.FORWARD)
 		pool.checked_out.back().set_physics_process(false)
 	var health_before := enemy.health
-	var charges := enemy._reflect_charges
+	var charges := enemy._defense.charges
 	_incoming(enemy)._report_hit(enemy, enemy.global_position)
-	_expect(enemy.health < health_before and enemy._reflect_charges == charges, "A saturated hostile pool fails open to normal damage")
+	_expect(enemy.health < health_before and enemy._defense.charges == charges, "A saturated hostile pool fails open to normal damage")
 	_expect(pool.checked_out.size() == pool.warmed_ids.size() and pool.pool_growth == 0, "Reflection respects pool capacity without allocating extra shots")
 	await _cleanup(enemy)
 	projectile_manager.fire_player_projectile(Vector3.ZERO, Vector3.FORWARD)
@@ -198,7 +198,7 @@ func _check_physical_dodge(role: String) -> void:
 	var collider_origin := enemy.collision_shape.global_position
 	_expect(enemy._try_begin_evade(), role + " selects a physical barrel dodge")
 	_expect(enemy.global_position.is_equal_approx(origin), role + " does not teleport on dodge entry")
-	var destination := enemy._maneuver_target
+	var destination := enemy._maneuver.target
 	var duration := enemy.state_remaining
 	enemy._physics_process(duration * 0.35)
 	var moved := enemy.global_position - origin
@@ -219,7 +219,7 @@ func _check_physical_dodge(role: String) -> void:
 	# enough to avoid a moving shot, not merely finish outside a frozen lane.
 	enemy = _spawn(role)
 	incoming = _incoming(enemy, 300.0)
-	enemy._prefer_reflect = false
+	enemy._defense.prefer_reflect = false
 	_expect(enemy._try_begin_defense() and enemy.state == BasicEnemy3D.State.EVADE, role + " chooses dodge when reflection is not preferred")
 	health_before = enemy.health
 	enemy.set_physics_process(true)

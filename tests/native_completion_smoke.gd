@@ -68,6 +68,7 @@ func _run_checks() -> void:
 	_check_generation_resources()
 	await _check_enemy_model_integrations()
 	_check_pool_contract()
+	await _check_pickup_pool_reuse()
 	await _check_native_registries_and_checkout_reuse()
 	_check_upgrade_contract()
 	await _check_projectile_contract()
@@ -240,6 +241,27 @@ func _has_authored_role_color(archetype: StringName, colors: Array[Color]) -> bo
 				if color.h > 0.49 and color.h < 0.64:
 					return true
 	return false
+
+
+func _check_pickup_pool_reuse() -> void:
+	for manager in [xp_orb_manager, power_up_manager]:
+		var ids := {}
+		for cycle in 2:
+			var capacity: int = manager.get_metrics()["pool_size"]
+			for index in capacity:
+				var pickup = manager.spawn_xp_orb(Vector3.ZERO, 1) if manager == xp_orb_manager else manager.spawn_power_up(Vector3.ZERO, 1)
+				_expect(pickup != null, "Both pickup pools can fill their warmed capacity")
+				if pickup != null:
+					ids[pickup.get_instance_id()] = true
+			var overflow = manager.spawn_xp_orb(Vector3.ZERO, 1) if manager == xp_orb_manager else manager.spawn_power_up(Vector3.ZERO, 1)
+			_expect(overflow == null, "Saturated pickup pools reject growth")
+			manager.clear_pickups()
+			_expect(manager.get_metrics()["returning"] == capacity, "Pending returns retain pickup capacity")
+			GameManager.is_game_active = false
+			await _wait_for_pool_returns()
+			GameManager.is_game_active = true
+			_expect(manager.get_metrics()["idle"] == capacity, "Deferred returns restore all pickup slots")
+			_expect(ids.size() == capacity and manager.get_metrics()["pool_growth_after_warmup"] == 0, "Both pickup adapters reuse the same warmed instances")
 
 
 func _check_pool_contract() -> void:

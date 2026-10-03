@@ -26,6 +26,7 @@ const ShipMotion := preload("res://effects/ship_motion_3d.gd")
 const PhysicsLayers := preload("res://systems/native_3d_physics_layers.gd")
 const FlightSpace := preload("res://systems/flight_space_3d.gd")
 const FlightTuning := preload("res://entities/player/player_flight_tuning.gd")
+const WeaponSystem := preload("res://entities/player/player_weapon_system.gd")
 const WeaponTuning := preload("res://entities/player/player_weapon_tuning.gd")
 const DamageTuning := preload("res://entities/player/player_damage_tuning.gd")
 const PowerUpTypes := preload("res://entities/powerups/power_up_types.gd")
@@ -96,8 +97,7 @@ var _orbital_hit_clock := 0.0
 var _upgrade_visuals: UpgradeVisuals
 var _elite_upgrades: Dictionary[String, bool] = {}
 var dev_god_mode := false
-var _fire_latched := false
-var _fire_waiting_for_release := true
+var _weapons := WeaponSystem.new()
 var _chain_awarded := false
 var _boost_waiting_for_release := true
 var _dev_power_overrides: Dictionary[String, bool] = {}
@@ -310,20 +310,6 @@ func reset_developer_state() -> void:
 		set_visual_debug(flag, false)
 
 
-func get_power_up_status() -> Dictionary:
-	return {
-		"scale": bullet_scale_level,
-		"shield": has_shield,
-		"armor_guard": armor_guard_ready,
-		"rapid": has_rapid_fire,
-		"spread": has_spread_shot,
-		"magnet": has_magnet,
-		"rapid_remaining": rapid_fire_remaining,
-		"spread_remaining": spread_shot_remaining,
-		"magnet_remaining": magnet_remaining,
-	}
-
-
 ## Native counterpart to the reference Player's elite upgrade hook. The
 ## gameplay controller owns the top-level Drone Escort instance; Player3D
 ## owns only the run-facing upgrade state and change notification.
@@ -404,20 +390,13 @@ func _get_invulnerability_duration(source: DamageSource) -> float:
 
 
 func _update_shooting() -> void:
-	if _fire_waiting_for_release:
-		_fire_waiting_for_release = Input.is_action_pressed("shoot")
-		return
-	var wants_fire := Input.is_action_pressed("shoot")
-	if bool(SaveManager.get_setting("toggle_fire", false)):
-		if Input.is_action_just_pressed("shoot"):
-			_fire_latched = not _fire_latched
-		wants_fire = _fire_latched
+	var wants_fire := _weapons.wants_fire(Input.is_action_pressed("shoot"), Input.is_action_just_pressed("shoot"), bool(SaveManager.get_setting("toggle_fire", false)))
 	if not wants_fire or not shoot_timer.is_stopped():
 		return
 	var muzzle := get_socket(&"MuzzleCenter")
 	if muzzle == null:
 		return
-	var interval := WeaponTuning.fire_interval(
+	var interval := _weapons.interval(
 		base_fire_interval,
 		GameManager.bonus_fire_rate_pct + GameManager.meta_fire_rate_pct + GameManager.ship_fire_rate_pct,
 		has_rapid_fire or get_dev_power_override("rapid_fire"),
@@ -454,18 +433,7 @@ func _emit_muzzle_shot(muzzle: Marker3D, direction: Vector3) -> void:
 
 
 func _get_fire_directions() -> Array[Vector3]:
-	var directions: Array[Vector3] = [last_aim_direction]
-	var temporary_spread := has_spread_shot or get_dev_power_override("spread_shot")
-	if (not temporary_spread and not has_elite_upgrade("spread_shot_elite")) or _flight_space == null:
-		return directions
-	var screen_direction := _flight_space.combat_motion_to_view(last_aim_direction).normalized()
-	var angles: Array[float] = [-deg_to_rad(15.0), deg_to_rad(15.0)]
-	if temporary_spread and has_elite_upgrade("spread_shot_elite"):
-		angles.append_array([-deg_to_rad(30.0), deg_to_rad(30.0)])
-	for spread_angle in angles:
-		var spread_screen_direction := screen_direction.rotated(spread_angle)
-		directions.append(_flight_space.view_motion_to_combat(spread_screen_direction).normalized())
-	return directions
+	return _weapons.directions(last_aim_direction, _flight_space, has_spread_shot or get_dev_power_override("spread_shot"), has_elite_upgrade("spread_shot_elite"))
 
 
 func get_projectile_scale() -> float:
@@ -510,7 +478,7 @@ func _on_power_up_collected(type: int, _combat_position: Vector3) -> void:
 		PowerUpTypes.Type.MAGNET:
 			_apply_magnet()
 		PowerUpTypes.Type.NUKE:
-			_apply_nuke()
+			apply_nuke()
 
 
 func _apply_scale_up() -> void:
@@ -536,10 +504,6 @@ func _apply_spread_shot() -> void:
 func _apply_magnet() -> void:
 	has_magnet = true
 	magnet_remaining = 10.0
-
-
-func _apply_nuke() -> void:
-	apply_nuke()
 
 
 ## Clears native enemy actors, active hostile payload projectiles, and pooled
@@ -726,10 +690,6 @@ func get_socket(socket_name: StringName) -> Marker3D:
 	if not _socket_names.has(socket_name):
 		return null
 	return sockets.get_node_or_null(NodePath(String(socket_name))) as Marker3D
-
-
-func get_socket_names() -> Array[StringName]:
-	return _socket_names.duplicate()
 
 
 func _cache_socket_names() -> void:
@@ -1038,8 +998,7 @@ func get_boost_state() -> Dictionary:
 
 
 func reset_action_input() -> void:
-	_fire_latched = false
-	_fire_waiting_for_release = true
+	_weapons.reset_input()
 	_boost_waiting_for_release = true
 
 
@@ -1047,7 +1006,7 @@ func _on_input_device_changed() -> void:
 	# The event announcing a new device may itself be a deliberate fire/boost
 	# press. Clear old automatic fire, but admit this fresh action immediately.
 	reset_action_input()
-	_fire_waiting_for_release = Input.is_action_pressed("shoot") and not Input.is_action_just_pressed("shoot")
+	_weapons.reset_input(Input.is_action_pressed("shoot") and not Input.is_action_just_pressed("shoot"))
 	_boost_waiting_for_release = Input.is_action_pressed("boost") and not Input.is_action_just_pressed("boost")
 
 

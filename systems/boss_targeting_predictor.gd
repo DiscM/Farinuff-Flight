@@ -24,10 +24,6 @@ func configure(space: FlightSpace3D, shot_speed_pixels: float) -> void:
 	clear()
 
 
-func set_shot_speed(shot_speed_pixels: float) -> void:
-	_shot_speed_pixels = maxf(shot_speed_pixels, 1.0)
-
-
 func clear() -> void:
 	_clock = 0.0
 	_times.clear()
