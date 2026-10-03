@@ -1,7 +1,7 @@
 {
   "valid": true,
   "roles": 6,
-  "clips": 24,
+  "clips": 78,
   "bones": [
     "Body",
     "Port",
@@ -29,6 +29,42 @@
         "attack": {
           "seconds": 0.64,
           "keys": 6
+        },
+        "charge_windup": {
+          "seconds": 1.0,
+          "keys": 4
+        },
+        "charge_attack": {
+          "seconds": 0.65,
+          "keys": 5
+        },
+        "slam_windup": {
+          "seconds": 1.0,
+          "keys": 4
+        },
+        "slam_attack": {
+          "seconds": 0.65,
+          "keys": 5
+        },
+        "volley_windup": {
+          "seconds": 1.0,
+          "keys": 4
+        },
+        "volley_attack": {
+          "seconds": 0.65,
+          "keys": 5
+        },
+        "alternate_windup": {
+          "seconds": 1.0,
+          "keys": 4
+        },
+        "alternate_attack": {
+          "seconds": 0.65,
+          "keys": 5
+        },
+        "phase_shift": {
+          "seconds": 1.1,
+          "keys": 5
         }
       }
     },
@@ -52,6 +88,42 @@
         "attack": {
           "seconds": 0.96,
           "keys": 6
+        },
+        "charge_windup": {
+          "seconds": 1.0,
+          "keys": 4
+        },
+        "charge_attack": {
+          "seconds": 0.95,
+          "keys": 5
+        },
+        "slam_windup": {
+          "seconds": 1.0,
+          "keys": 4
+        },
+        "slam_attack": {
+          "seconds": 0.95,
+          "keys": 5
+        },
+        "volley_windup": {
+          "seconds": 1.0,
+          "keys": 4
+        },
+        "volley_attack": {
+          "seconds": 0.95,
+          "keys": 5
+        },
+        "alternate_windup": {
+          "seconds": 1.0,
+          "keys": 4
+        },
+        "alternate_attack": {
+          "seconds": 0.95,
+          "keys": 5
+        },
+        "phase_shift": {
+          "seconds": 1.1,
+          "keys": 5
         }
       }
     },
@@ -75,6 +147,42 @@
         "attack": {
           "seconds": 0.58,
           "keys": 6
+        },
+        "charge_windup": {
+          "seconds": 1.0,
+          "keys": 4
+        },
+        "charge_attack": {
+          "seconds": 0.6,
+          "keys": 5
+        },
+        "slam_windup": {
+          "seconds": 1.0,
+          "keys": 4
+        },
+        "slam_attack": {
+          "seconds": 0.6,
+          "keys": 5
+        },
+        "volley_windup": {
+          "seconds": 1.0,
+          "keys": 4
+        },
+        "volley_attack": {
+          "seconds": 0.6,
+          "keys": 5
+        },
+        "alternate_windup": {
+          "seconds": 1.0,
+          "keys": 4
+        },
+        "alternate_attack": {
+          "seconds": 0.6,
+          "keys": 5
+        },
+        "phase_shift": {
+          "seconds": 1.1,
+          "keys": 5
         }
       }
     },
@@ -98,6 +206,42 @@
         "attack": {
           "seconds": 0.94,
           "keys": 6
+        },
+        "charge_windup": {
+          "seconds": 1.0,
+          "keys": 4
+        },
+        "charge_attack": {
+          "seconds": 0.9,
+          "keys": 5
+        },
+        "slam_windup": {
+          "seconds": 1.0,
+          "keys": 4
+        },
+        "slam_attack": {
+          "seconds": 0.9,
+          "keys": 5
+        },
+        "volley_windup": {
+          "seconds": 1.0,
+          "keys": 4
+        },
+        "volley_attack": {
+          "seconds": 0.9,
+          "keys": 5
+        },
+        "alternate_windup": {
+          "seconds": 1.0,
+          "keys": 4
+        },
+        "alternate_attack": {
+          "seconds": 0.9,
+          "keys": 5
+        },
+        "phase_shift": {
+          "seconds": 1.1,
+          "keys": 5
         }
       }
     },
@@ -121,6 +265,42 @@
         "attack": {
           "seconds": 0.82,
           "keys": 6
+        },
+        "charge_windup": {
+          "seconds": 1.0,
+          "keys": 4
+        },
+        "charge_attack": {
+          "seconds": 0.8,
+          "keys": 5
+        },
+        "slam_windup": {
+          "seconds": 1.0,
+          "keys": 4
+        },
+        "slam_attack": {
+          "seconds": 0.8,
+          "keys": 5
+        },
+        "volley_windup": {
+          "seconds": 1.0,
+          "keys": 4
+        },
+        "volley_attack": {
+          "seconds": 0.8,
+          "keys": 5
+        },
+        "alternate_windup": {
+          "seconds": 1.0,
+          "keys": 4
+        },
+        "alternate_attack": {
+          "seconds": 0.8,
+          "keys": 5
+        },
+        "phase_shift": {
+          "seconds": 1.1,
+          "keys": 5
         }
       }
     },
@@ -144,10 +324,44 @@
         "attack": {
           "seconds": 0.46,
           "keys": 6
+        },
+        "charge_windup": {
+          "seconds": 1.0,
+          "keys": 4
+        },
+        "charge_attack": {
+          "seconds": 0.5,
+          "keys": 5
+        },
+        "slam_windup": {
+          "seconds": 1.0,
+          "keys": 4
+        },
+        "slam_attack": {
+          "seconds": 0.5,
+          "keys": 5
+        },
+        "volley_windup": {
+          "seconds": 1.0,
+          "keys": 4
+        },
+        "volley_attack": {
+          "seconds": 0.5,
+          "keys": 5
+        },
+        "alternate_windup": {
+          "seconds": 1.0,
+          "keys": 4
+        },
+        "alternate_attack": {
+          "seconds": 0.5,
+          "keys": 5
+        },
+        "phase_shift": {
+          "seconds": 1.1,
+          "keys": 5
         }
       }
     }
-  ],
-  "source_sha256": "732c5d9364a229aab699a0cb6946587f4c5f994acd46b45f1b7776ef49893765",
-  "evidence_type": "Analytic recipe checks; actual GLB motion and runtime checks are separate"
+  ]
 }

@@ -68,7 +68,7 @@ const SHOP_ITEMS: Array[Dictionary] = [
 		"id": "meta_explosive",
 		"name": "Blueprint: Explosive Rounds",
 		"icon": "💣",
-		"description": "Adds Explosive Rounds to boss rewards.",
+		"description": "Adds Explosive Rounds to rewards from boss 10 onward.",
 		"costs": [250],
 		"category": "blueprint",
 		"color": Color(1.0, 0.35, 0.35),

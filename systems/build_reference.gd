@@ -26,4 +26,4 @@ static func compact(owned: Array[String]) -> String:
 	return "INSTALLED · " + (" · ".join(names) if not names.is_empty() else "No modules yet")
 
 static func systems_text() -> String:
-	return "SYSTEM ALLOCATIONS\nShot delay −%.1f%% · Thrust +%.1f%% · Extra lives granted %d\nThese bonuses last this run. Hull, hangar and module effects apply separately." % [GameManager.bonus_fire_rate_pct * 100.0, GameManager.bonus_speed_pct * 100.0, GameManager.stat_health_level]
+	return "SYSTEM ALLOCATIONS\nFire rate +%.1f%% · Thrust +%.1f%% · Hull capacity added %d\nThese bonuses last this run. Hull, hangar and module effects apply separately." % [GameManager.bonus_fire_rate_pct * 100.0, GameManager.bonus_speed_pct * 100.0, GameManager.stat_health_level]

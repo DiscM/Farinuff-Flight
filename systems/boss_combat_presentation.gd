@@ -6,6 +6,8 @@ var _actor: BasicEnemy3D
 var _space: FlightSpace3D
 var _warning: MeshInstance3D
 var _lane: MeshInstance3D
+var _attack_prefix: StringName = &"volley"
+var _plan: BossAttackPlan
 var _slam: MeshInstance3D
 
 func _ready() -> void:
@@ -42,7 +44,15 @@ func face(delta: float, target: Vector3, response: float) -> void:
 
 func telegraph(plan: BossAttackPlan) -> void:
 	clear()
-	_actor.play_motion(&"windup", plan.warning_seconds, true)
+	_plan = plan
+	match plan.definition.family:
+		Definition.Family.SLAM:
+			_attack_prefix = &"slam"
+		Definition.Family.CHARGE:
+			_attack_prefix = &"charge"
+		Definition.Family.PROJECTILE:
+			_attack_prefix = &"alternate" if plan.definition.alternate_pattern else &"volley"
+	_actor.play_motion(StringName(String(_attack_prefix) + "_windup"), plan.warning_seconds, true)
 	_warning.show()
 	_place_geometry(plan)
 	progress(0.0)
@@ -79,11 +89,19 @@ func progress(fraction: float) -> void:
 	_warning.scale = Vector3.ONE * (1.0 + fraction * 0.15)
 
 func release() -> void:
-	clear()
-	attack_pulse()
+	# The executor owns the release. Animation never dispatches damage events.
+	clear(false)
+	if _plan != null and _plan.definition.family == Definition.Family.CHARGE:
+		var length := _space.combat_motion_to_screen(_plan.charge_endpoint - _plan.origin).length()
+		_actor.play_motion(&"charge_attack", maxf(0.1, length / maxf(1.0, _plan.definition.charge_speed)))
+	else:
+		attack_pulse()
 
 func attack_pulse() -> void:
-	_actor.play_motion(&"attack")
+	var duration := 0.0
+	if _plan != null and _plan.definition.family == Definition.Family.PROJECTILE:
+		duration = _plan.burst_interval_seconds
+	_actor.play_motion(StringName(String(_attack_prefix) + "_attack"), duration)
 
 func clear(reset_motion: bool = true) -> void:
 	_lane.hide()
@@ -92,4 +110,5 @@ func clear(reset_motion: bool = true) -> void:
 		_warning.hide()
 		_warning.scale = Vector3.ONE
 	if reset_motion and is_instance_valid(_actor):
+		_plan = null
 		_actor.play_motion(&"cruise")

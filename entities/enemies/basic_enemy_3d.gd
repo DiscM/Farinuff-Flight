@@ -118,7 +118,7 @@ const DEFAULT_STRAFE_WEAVE_PIXELS := 34.0
 @onready var _authored_attachment_transform: Transform3D = attachments.transform
 @onready var _authored_collision_scale: Vector3 = collision_shape.scale
 
-var archetype_id: StringName = &"basic"
+@export var archetype_id: StringName = &"basic"
 var is_active := false
 var health: int = 0
 var max_health: int = 0
@@ -584,7 +584,7 @@ func _exit_state(next: State) -> void:
 		_maneuver_duration = 0.0
 	# Release held bone warnings on an interruption without masking shot recoil.
 	for motion in _motions:
-		if motion.current_clip == &"windup":
+		if motion.is_windup():
 			motion.play(&"cruise")
 	_flight_motion.set_telegraph(false)
 	_flight_motion.play(FlightMotion.Maneuver.NONE, 0.0, FlightMotion.BLEND_SECONDS)
@@ -1074,9 +1074,23 @@ func _update_facing(direction: Vector3, delta: float = 0.0) -> void:
 
 
 func play_motion(clip: StringName, seconds: float = 0.0, hold: bool = false) -> void:
-	if clip == &"windup":
+	# State-specific articulation complements the flight maneuver on Visuals.
+	var prefix := ""
+	if state in [State.CHARGE_WINDUP, State.CHARGE] and archetype_id == &"basic":
+		prefix = "charge"
+	elif state in [State.PHASE_WINDUP, State.PHASE_DASH] and archetype_id in [&"fast", &"courier"]:
+		prefix = "phase"
+	elif state in [State.MINE_DEPLOY, State.BOMB_WINDUP] and archetype_id == &"bomber":
+		prefix = "deploy"
+	elif state in [State.BARRAGE, State.OVERLOAD_WINDUP, State.OVERLOAD] and archetype_id == &"tank":
+		prefix = "radial"
+	elif state in [State.AIM, State.RAIL_AIM] and archetype_id == &"sniper":
+		prefix = "rail"
+	if not prefix.is_empty() and clip in [&"windup", &"attack"]:
+		clip = StringName(prefix + "_" + String(clip))
+	if clip == &"windup" or String(clip).ends_with("_windup"):
 		_flight_motion.set_telegraph(true)
-	elif clip in [&"attack", &"cruise"]:
+	elif clip == &"cruise" or clip == &"attack" or String(clip).ends_with("_attack"):
 		_flight_motion.set_telegraph(false)
 	for motion in _motions:
 		if motion.model_root.visible:

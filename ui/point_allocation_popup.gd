@@ -109,7 +109,7 @@ func _build_ui() -> void:
 
 	# Stat rows
 	_add_stat_row(vbox, "FIRE RATE", "fire_rate", Color(1.0, 0.75, 0.15))
-	_add_stat_row(vbox, "EXTRA LIVES", "health", Color(1.0, 0.4, 0.55))
+	_add_stat_row(vbox, "HULL CAPACITY", "health", Color(1.0, 0.4, 0.55))
 	_add_stat_row(vbox, "THRUST", "speed", Color(0.3, 0.85, 1.0))
 
 	# Spacer
@@ -165,7 +165,7 @@ func _add_stat_row(parent: VBoxContainer, label_text: String, stat_id: String, c
 	name_label.add_theme_font_size_override("font_size", 17 if panel_only else 18)
 	caption.add_child(name_label)
 	var benefit := Label.new()
-	benefit.text = {"health": "+1 life / point", "fire_rate": "Shot delay −4.5% / point", "speed": "+4.5% / point · max 45%"}[stat_id]
+	benefit.text = {"health": "+1 capacity and repair / point", "fire_rate": "Fire rate +4.5% / point", "speed": "+4.5% / point · max 45%"}[stat_id]
 	benefit.add_theme_font_size_override("font_size", 11 if panel_only else 12)
 	benefit.add_theme_color_override("font_color", Color(0.57, 0.68, 0.78))
 	caption.add_child(benefit)
@@ -288,14 +288,14 @@ func _refresh_ui() -> void:
 	var fr_total: int = GameManager.stat_fire_rate_level + alloc_fire_rate
 	var sp_total: int = GameManager.stat_speed_level + alloc_speed
 
-	fire_rate_label.text = "−%.1f%%" % (minf(fr_total * GameManager.STAT_BONUS_STEP, GameManager.STAT_BONUS_CAP) * 100.0)
-	health_label.text = "%d → %d" % [GameManager.lives, GameManager.lives + alloc_health] if alloc_health > 0 else str(GameManager.lives)
+	fire_rate_label.text = "+%.1f%%" % (minf(fr_total * GameManager.STAT_BONUS_STEP, GameManager.STAT_BONUS_CAP) * 100.0)
+	health_label.text = "%d → %d" % [GameManager.hull_capacity, GameManager.hull_capacity + alloc_health] if alloc_health > 0 else str(GameManager.hull_capacity)
 	speed_label.text = "+%.1f%%" % (minf(sp_total * GameManager.STAT_BONUS_STEP, GameManager.STAT_BONUS_CAP) * 100.0)
 	fire_rate_btn.text = "MAX" if fr_total >= GameManager.STAT_MAX_LEVEL else "+"
 	speed_btn.text = "MAX" if sp_total >= GameManager.STAT_MAX_LEVEL else "+"
-	fire_rate_btn.tooltip_text = "Reduce base shot delay by 4.5% per point, up to 45%. Other fire-rate upgrades stack with this reduction."
+	fire_rate_btn.tooltip_text = "Add 4.5% firing frequency per point, up to 45%. Permanent bonuses add together."
 	speed_btn.tooltip_text = "Add 4.5% thrust. Maximum allocation bonus: 45%."
-	health_btn.tooltip_text = "Restore one life immediately when upgrades are applied."
+	health_btn.tooltip_text = "Increase hull capacity by one and repair one life when applied."
 	reset_btn.disabled = alloc_fire_rate + alloc_health + alloc_speed == 0
 
 	# Disable + buttons when no points left

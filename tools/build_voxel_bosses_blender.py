@@ -2,7 +2,7 @@
 """Original articulated voxel bosses. Run in Blender; existing scenes are preserved.
 
 Blender +Y nose / +Z up becomes glTF -Z forward / +Y up. All exports use
-four rigid bones, a packed shared atlas, and the runtime's four motion clips.
+four rigid bones, a packed shared atlas, and the runtime's attack-family motion clips.
 """
 from pathlib import Path
 import hashlib

@@ -12,6 +12,11 @@ import math
 import re
 import struct
 
+import sys
+if str(Path(__file__).resolve().parent) not in sys.path:
+    sys.path.insert(0, str(Path(__file__).resolve().parent))
+from enemy_attack_motion import regular_clips
+
 import bpy
 from mathutils import Vector, Matrix
 
@@ -118,6 +123,8 @@ def clips(role):
         }[role]
         result["windup"] = [(0,pose()), (.38,anticipation), (.55,anticipation)]
         result["attack"] = [(0,anticipation), (.045,impulse), (.12,impulse), (.34,pose())]
+    if role in ENEMIES:
+        result.update(regular_clips(role))
     return result
 
 

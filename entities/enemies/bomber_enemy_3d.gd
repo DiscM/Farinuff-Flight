@@ -210,7 +210,7 @@ func _drop_bomb(run_progress: float = -1.0) -> void:
 	if marker == null:
 		return
 	_drop_left = not _drop_left
-	play_motion(&"attack")
+	play_motion(&"deploy_attack")
 	var origin := marker.global_position
 	var direction := _heading
 	if run_progress >= 0.0:
@@ -240,7 +240,7 @@ func _try_drop_mine() -> void:
 		marker.global_position, cluster, leaves_plasma
 	)
 	if mine != null:
-		play_motion(&"attack")
+		play_motion(&"deploy_attack")
 		_mine_count += 1
 		mine_dropped.emit(cluster, leaves_plasma)
 

@@ -9,85 +9,135 @@
       "display_name": "CINDER / Raider",
       "file": "meshes/basic_enemy.glb",
       "category": "enemy",
-      "bytes": 204544,
-      "sha256": "af88a72ae07f8f7bd0c030b0288b995a242789814581cacf9f1ee85a864905fa",
+      "bytes": 213848,
+      "sha256": "c37d9dfab11fc8ff26da41e18bc0f1dea76dc354a1a2c9c8f1bfebfc83fa47d0",
       "animations": [
         "cruise",
         "hit",
         "windup",
-        "attack"
+        "attack",
+        "charge_windup",
+        "charge_attack"
       ],
       "meshes": 6,
       "embedded_images": 1,
-      "voxel_size": 0.25
+      "voxel_size": 0.25,
+      "clips": [
+        "cruise",
+        "hit",
+        "windup",
+        "attack",
+        "charge_windup",
+        "charge_attack"
+      ]
     },
     {
       "id": "fast_enemy",
       "display_name": "NEEDLE / Interceptor",
       "file": "meshes/fast_enemy.glb",
       "category": "enemy",
-      "bytes": 206112,
-      "sha256": "12b9351b9a91b1e6cf4802b444487f87fdfac0b4d875515a6b892eed55bf01c4",
+      "bytes": 215044,
+      "sha256": "9063694e8b20e067f11a830f0c8329189aa6f234de6ff51cd9f11546a37ff07c",
       "animations": [
         "cruise",
         "hit",
         "windup",
-        "attack"
+        "attack",
+        "phase_windup",
+        "phase_attack"
       ],
       "meshes": 6,
       "embedded_images": 1,
-      "voxel_size": 0.22
+      "voxel_size": 0.22,
+      "clips": [
+        "cruise",
+        "hit",
+        "windup",
+        "attack",
+        "phase_windup",
+        "phase_attack"
+      ]
     },
     {
       "id": "bomber_enemy",
       "display_name": "MANTIS / Carrier",
       "file": "meshes/bomber_enemy.glb",
       "category": "enemy",
-      "bytes": 303828,
-      "sha256": "9bc6ebfd3bd88ae8b227b3d6907bb34dbbd6b43270823d5f37d4461b23cd42fc",
+      "bytes": 312920,
+      "sha256": "999dc8e9f569a362bc527f53ba40469cfb7e05a9c48ac9f52481e6023b8bbaad",
       "animations": [
         "cruise",
         "hit",
         "windup",
-        "attack"
+        "attack",
+        "deploy_windup",
+        "deploy_attack"
       ],
       "meshes": 6,
       "embedded_images": 1,
-      "voxel_size": 0.28
+      "voxel_size": 0.28,
+      "clips": [
+        "cruise",
+        "hit",
+        "windup",
+        "attack",
+        "deploy_windup",
+        "deploy_attack"
+      ]
     },
     {
       "id": "tank_enemy",
       "display_name": "BASTION / Heavy",
       "file": "meshes/tank_enemy.glb",
       "category": "enemy",
-      "bytes": 358572,
-      "sha256": "63b54413c4347b0bb9d3e4f9dd9b456fdc3e8b716756830e8c397103188c621b",
+      "bytes": 367248,
+      "sha256": "5d80026188c990461b3c9b8aa63cecc169594f8a015d6b96fdab5d0c17f3c6ec",
       "animations": [
         "cruise",
         "hit",
         "windup",
-        "attack"
+        "attack",
+        "radial_windup",
+        "radial_attack"
       ],
       "meshes": 6,
       "embedded_images": 1,
-      "voxel_size": 0.28
+      "voxel_size": 0.28,
+      "clips": [
+        "cruise",
+        "hit",
+        "windup",
+        "attack",
+        "radial_windup",
+        "radial_attack"
+      ]
     },
     {
       "id": "sniper_enemy",
       "display_name": "LONGBOW / Marksman",
       "file": "meshes/sniper_enemy.glb",
       "category": "enemy",
-      "bytes": 206924,
-      "sha256": "43e8d42df5d124c1935e122389bd5235a26e63dccf28bdf6a1d02adbc8c95ca6",
+      "bytes": 215896,
+      "sha256": "b44a40677974247949916070500980362ffccb1b19b94ad844663d393c531e8f",
       "animations": [
         "cruise",
         "hit",
         "windup",
-        "attack"
+        "attack",
+        "rail_windup",
+        "rail_attack"
       ],
       "meshes": 6,
       "embedded_images": 1,
-      "voxel_size": 0.24
+      "voxel_size": 0.24,
+      "clips": [
+        "cruise",
+        "hit",
+        "windup",
+        "attack",
+        "rail_windup",
+        "rail_attack"
+      ]
     },
     {
       "id": "relay_fragment",
@@ -161,5 +211,6 @@
       "embedded_images": 1,
       "voxel_size": 0.28
     }
-  ]
+  ],
+  "attack_motion_revision": 1
 }

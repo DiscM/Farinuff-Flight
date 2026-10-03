@@ -14,6 +14,7 @@ monitoring = false
 monitorable = false
 input_ray_pickable = false
 script = ExtResource("1_enemy")
+archetype_id = &"bomber"
 gameplay_stats = ExtResource("3_stats")
 surface_style = 1
 flight_style = 2

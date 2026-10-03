@@ -20,6 +20,6 @@ Surfaces are material partitions; they are not a measured GPU draw-call count. H
 
 The complete set contains 16,712 triangles. Every GLB embeds the same 256 × 256 RGB atlas and supplies TEXCOORD_0 UVs on every surface.
 
-Each enemy has one four-joint skeleton and four clips: `cruise`, `hit`, `windup`, `attack`. All vertices carry one full-weight bone influence. Debris contains no skeletons or animation clips.
+Each enemy has one four-joint skeleton, a role-specific windup/release pair, and the four shared clips: `cruise`, `hit`, `windup`, `attack`. All vertices carry one full-weight bone influence. Debris contains no skeletons or animation clips.
 
 The static validator requires nondegenerate geometry and UV triangles, finite coordinates, valid material tints and atlas references, and no collision meshes/cameras/lights. The exact check policy, all material factors, texture digests, and animation durations are in `validation.json`.

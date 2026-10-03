@@ -155,7 +155,7 @@ func _check_states() -> void:
 		if ai.state == AI.State.RECOVERY:
 			break
 	_expect(ai.state == AI.State.RECOVERY and _fired > 0, "A completed volley enters Recovery")
-	_expect(boss._motions[0].current_clip == &"attack", "Entering Recovery preserves the final release animation")
+	_expect(boss._motions[0].current_clip == &"volley_attack", "Entering Recovery preserves the final release animation")
 	var count := _fired
 	boss._advance_movement(plan.recovery_seconds - .01)
 	_expect(ai.state == AI.State.RECOVERY and _fired == count, "Recovery leaves a full attack-free punish window")

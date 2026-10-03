@@ -1,0 +1,290 @@
+{
+  "scope": "All shipping regular enemy, boss and destructible boss-pod GLBs. Courier shares Fast. Historical animated/mockup exports are not used by shipping enemy scenes.",
+  "passed": true,
+  "assets": [
+    {
+      "file": "assets/models/voxel_frontier/meshes/basic_enemy.glb",
+      "bytes": 213848,
+      "sha256": "c37d9dfab11fc8ff26da41e18bc0f1dea76dc354a1a2c9c8f1bfebfc83fa47d0",
+      "meshes": 6,
+      "clips": [
+        "cruise",
+        "hit",
+        "windup",
+        "attack",
+        "charge_windup",
+        "charge_attack"
+      ],
+      "checks": {
+        "geometry_unchanged": true,
+        "four_rigid_bones": true,
+        "palette_unchanged": true,
+        "texture_embedded": true,
+        "sockets_preserved": true,
+        "clips_animate": true
+      }
+    },
+    {
+      "file": "assets/models/voxel_frontier/meshes/fast_enemy.glb",
+      "bytes": 215044,
+      "sha256": "9063694e8b20e067f11a830f0c8329189aa6f234de6ff51cd9f11546a37ff07c",
+      "meshes": 6,
+      "clips": [
+        "cruise",
+        "hit",
+        "windup",
+        "attack",
+        "phase_windup",
+        "phase_attack"
+      ],
+      "checks": {
+        "geometry_unchanged": true,
+        "four_rigid_bones": true,
+        "palette_unchanged": true,
+        "texture_embedded": true,
+        "sockets_preserved": true,
+        "clips_animate": true
+      }
+    },
+    {
+      "file": "assets/models/voxel_frontier/meshes/bomber_enemy.glb",
+      "bytes": 312920,
+      "sha256": "999dc8e9f569a362bc527f53ba40469cfb7e05a9c48ac9f52481e6023b8bbaad",
+      "meshes": 6,
+      "clips": [
+        "cruise",
+        "hit",
+        "windup",
+        "attack",
+        "deploy_windup",
+        "deploy_attack"
+      ],
+      "checks": {
+        "geometry_unchanged": true,
+        "four_rigid_bones": true,
+        "palette_unchanged": true,
+        "texture_embedded": true,
+        "sockets_preserved": true,
+        "clips_animate": true
+      }
+    },
+    {
+      "file": "assets/models/voxel_frontier/meshes/tank_enemy.glb",
+      "bytes": 367248,
+      "sha256": "5d80026188c990461b3c9b8aa63cecc169594f8a015d6b96fdab5d0c17f3c6ec",
+      "meshes": 6,
+      "clips": [
+        "cruise",
+        "hit",
+        "windup",
+        "attack",
+        "radial_windup",
+        "radial_attack"
+      ],
+      "checks": {
+        "geometry_unchanged": true,
+        "four_rigid_bones": true,
+        "palette_unchanged": true,
+        "texture_embedded": true,
+        "sockets_preserved": true,
+        "clips_animate": true
+      }
+    },
+    {
+      "file": "assets/models/voxel_frontier/meshes/sniper_enemy.glb",
+      "bytes": 215896,
+      "sha256": "b44a40677974247949916070500980362ffccb1b19b94ad844663d393c531e8f",
+      "meshes": 6,
+      "clips": [
+        "cruise",
+        "hit",
+        "windup",
+        "attack",
+        "rail_windup",
+        "rail_attack"
+      ],
+      "checks": {
+        "geometry_unchanged": true,
+        "four_rigid_bones": true,
+        "palette_unchanged": true,
+        "texture_embedded": true,
+        "sockets_preserved": true,
+        "clips_animate": true
+      }
+    },
+    {
+      "file": "assets/models/voxel_bosses/meshes/boss_assault.glb",
+      "bytes": 692640,
+      "sha256": "abef77052e8ca73166caf7a534d49fb454849c224759a2646956df65ba5b97a5",
+      "meshes": 6,
+      "clips": [
+        "cruise",
+        "hit",
+        "windup",
+        "attack",
+        "charge_windup",
+        "charge_attack",
+        "slam_windup",
+        "slam_attack",
+        "volley_windup",
+        "volley_attack",
+        "alternate_windup",
+        "alternate_attack",
+        "phase_shift"
+      ],
+      "checks": {
+        "geometry_unchanged": true,
+        "four_rigid_bones": true,
+        "palette_unchanged": true,
+        "texture_embedded": true,
+        "sockets_preserved": true,
+        "clips_animate": true
+      }
+    },
+    {
+      "file": "assets/models/voxel_bosses/meshes/boss_bulwark.glb",
+      "bytes": 835752,
+      "sha256": "a7ad40305b8361df883557b3bed7bc187fe2ab0c251875f70782f931e1f2df61",
+      "meshes": 6,
+      "clips": [
+        "cruise",
+        "hit",
+        "windup",
+        "attack",
+        "charge_windup",
+        "charge_attack",
+        "slam_windup",
+        "slam_attack",
+        "volley_windup",
+        "volley_attack",
+        "alternate_windup",
+        "alternate_attack",
+        "phase_shift"
+      ],
+      "checks": {
+        "geometry_unchanged": true,
+        "four_rigid_bones": true,
+        "palette_unchanged": true,
+        "texture_embedded": true,
+        "sockets_preserved": true,
+        "clips_animate": true
+      }
+    },
+    {
+      "file": "assets/models/voxel_bosses/meshes/boss_tempest.glb",
+      "bytes": 603628,
+      "sha256": "b4a25cbafc1dee9b361729dd293878ea06786d06c41760df272fc183b0f32816",
+      "meshes": 6,
+      "clips": [
+        "cruise",
+        "hit",
+        "windup",
+        "attack",
+        "charge_windup",
+        "charge_attack",
+        "slam_windup",
+        "slam_attack",
+        "volley_windup",
+        "volley_attack",
+        "alternate_windup",
+        "alternate_attack",
+        "phase_shift"
+      ],
+      "checks": {
+        "geometry_unchanged": true,
+        "four_rigid_bones": true,
+        "palette_unchanged": true,
+        "texture_embedded": true,
+        "sockets_preserved": true,
+        "clips_animate": true
+      }
+    },
+    {
+      "file": "assets/models/voxel_bosses/meshes/boss_tempest_core.glb",
+      "bytes": 957056,
+      "sha256": "f0c6f7e37ca4525f27aef78da3f163b256da5c63450f2de563b5b47158a49438",
+      "meshes": 6,
+      "clips": [
+        "cruise",
+        "hit",
+        "windup",
+        "attack",
+        "charge_windup",
+        "charge_attack",
+        "slam_windup",
+        "slam_attack",
+        "volley_windup",
+        "volley_attack",
+        "alternate_windup",
+        "alternate_attack",
+        "phase_shift"
+      ],
+      "checks": {
+        "geometry_unchanged": true,
+        "four_rigid_bones": true,
+        "palette_unchanged": true,
+        "texture_embedded": true,
+        "sockets_preserved": true,
+        "clips_animate": true
+      }
+    },
+    {
+      "file": "assets/models/voxel_bosses/meshes/boss_void_harbinger.glb",
+      "bytes": 689356,
+      "sha256": "83bf2ceb1d83920f5f07aed57d2054050f1f935690f7e309ba4c661f237ff75f",
+      "meshes": 6,
+      "clips": [
+        "cruise",
+        "hit",
+        "windup",
+        "attack",
+        "charge_windup",
+        "charge_attack",
+        "slam_windup",
+        "slam_attack",
+        "volley_windup",
+        "volley_attack",
+        "alternate_windup",
+        "alternate_attack",
+        "phase_shift"
+      ],
+      "checks": {
+        "geometry_unchanged": true,
+        "four_rigid_bones": true,
+        "palette_unchanged": true,
+        "texture_embedded": true,
+        "sockets_preserved": true,
+        "clips_animate": true
+      }
+    },
+    {
+      "file": "assets/models/voxel_bosses/meshes/tempest_section.glb",
+      "bytes": 343704,
+      "sha256": "c1175669f64ee029d78f6d09dbaaac6a11910927e03d51e8b8f2560d05592b95",
+      "meshes": 6,
+      "clips": [
+        "cruise",
+        "hit",
+        "windup",
+        "attack",
+        "charge_windup",
+        "charge_attack",
+        "slam_windup",
+        "slam_attack",
+        "volley_windup",
+        "volley_attack",
+        "alternate_windup",
+        "alternate_attack",
+        "phase_shift"
+      ],
+      "checks": {
+        "geometry_unchanged": true,
+        "four_rigid_bones": true,
+        "palette_unchanged": true,
+        "texture_embedded": true,
+        "sockets_preserved": true,
+        "clips_animate": true
+      }
+    }
+  ]
+}

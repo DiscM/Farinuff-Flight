@@ -168,7 +168,7 @@ func _on_lives_changed(new_lives: int) -> void:
 		heart.add_theme_color_override("font_color", NeonUI.PINK)
 		heart.add_theme_font_size_override("font_size", 20)
 		lives_container.add_child(heart)
-	lives_count_label.text = "♥ %d" % new_lives
+	lives_count_label.text = "♥ %d/%d" % [new_lives, GameManager.hull_capacity]
 	if new_lives > MAX_VISIBLE_HEARTS:
 		var overflow_label := Label.new()
 		overflow_label.text = "+" + str(new_lives - MAX_VISIBLE_HEARTS)
@@ -522,7 +522,7 @@ func _arrange_cabinet_hud() -> void:
 	orb_title.text = "+♥"
 	orb_title.custom_minimum_size.x = 18
 	orb_title.add_theme_font_size_override("font_size", 12)
-	orb_panel.tooltip_text = "Collect orbs to restore a life"
+	orb_panel.tooltip_text = "Collect 12 orb units to repair one life while damaged. Repairs stop at hull capacity; orbs always advance the wave."
 	orb_bar.custom_minimum_size = Vector2(48, 3)
 	orb_label.add_theme_font_size_override("font_size", 11)
 	power_up_panel.get_node("PowerUpVBox/PowerUpTitle").hide()

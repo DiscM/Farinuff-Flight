@@ -98,3 +98,8 @@ Static validation checks the actual GLB header, buffers, valid indices, finite g
 Static validation cannot establish the final game appearance. Runtime texture-toggle captures and pixel-difference evidence, when present, are separate evidence that the imported atlas reaches each rendered asset through the assigned shader. Visual quality is reviewed at both gallery and gameplay scale.
 
 See `RIGHTS.md` and `docs/provenance.json` for the original request and provenance. No public redistribution license is invented by this package; the project owner controls release terms.
+
+
+## Attack animation revision — October 2, 2026
+
+Each regular enemy now also exports a role-specific warning/release pair: Basic `charge`, Fast `phase`, Bomber `deploy`, Tank `radial`, Sniper `rail`, each suffixed `_windup` and `_attack`. The four shared clips remain available. Original geometry, rigid binding, textures, colors and sockets are preserved. The pose recipes live in `tools/enemy_attack_motion.py`, imported by the original builder. Current manifests and validation reflect six clips per enemy; earlier delivery ZIPs remain historical snapshots.

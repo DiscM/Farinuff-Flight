@@ -11,6 +11,6 @@ Bounds are measured from the delivered GLB rest scene in Godot coordinates: X wi
 | `boss_tempest_core.glb` | 7,908 | 15,816 | 17 | 6 | 9.52 × 3.08 × 8.40 | 11 |
 | `tempest_section.glb` | 2,496 | 4,992 | 11 | 6 | 4.48 × 1.96 × 6.16 | 8 |
 
-Total geometry: 33,072 triangles. Every asset has a four-bone rigid skeleton, four moving animation clips, valid UVs and the shared embedded atlas. Hard face normals intentionally split vertices. Surfaces are material partitions; they are not a measured draw-call count.
+Total geometry: 33,072 triangles. Every asset has a four-bone rigid skeleton, thirteen moving animation clips, valid UVs and the shared embedded atlas. Hard face normals intentionally split vertices. Surfaces are material partitions; they are not a measured draw-call count.
 
 Exact bone/socket bindings, moving bones per clip, clip durations, material factors, atlas hashes and file digests are recorded in `validation.json`.

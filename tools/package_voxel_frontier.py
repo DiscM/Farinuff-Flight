@@ -33,6 +33,7 @@ CORE_FILES = (
     "tools/build_voxel_frontier_blender.py",
     "tools/build_voxel_frontier_atlas.py",
     "tools/build_combat_motion_blender.py",
+    "tools/enemy_attack_motion.py",
     "effects/rendering/enemy_surface_materials.gd",
     "effects/rendering/station_debris_materials.gd",
     "effects/shaders/models/imported_enemy_surface_3d.gdshader",
@@ -207,7 +208,7 @@ class GLB:
         start = view.get("byteOffset", 0)
         return png_info(self.bin[start:start + view["byteLength"]])
 
-    def audit(self, stable_id):
+    def audit(self, stable_id, required_clips=None):
         doc = self.doc
         require(not doc.get("cameras"), "Camera included in asset export")
         require(not doc.get("extensionsRequired"), "Runtime-critical glTF extensions are outside this package policy")
@@ -252,7 +253,11 @@ class GLB:
             animation_info.append({"name": animation.get("name", ""), "duration_seconds": max(durations), "channels": len(durations)})
         if skins:
             names = {item["name"].split("/")[-1] for item in animation_info}
-            require(names == {"cruise", "hit", "windup", "attack"}, "Enemy animation clip set differs from contract")
+            expected_clips = {"cruise", "hit", "windup", "attack"}
+            if stable_id.startswith("ff.vf.enemy."):
+                from enemy_attack_motion import regular_clips
+                expected_clips.update(regular_clips(stable_id.rsplit(".", 1)[1]))
+            require(names == (set(required_clips) if required_clips is not None else expected_clips), "Enemy animation clip set differs from contract")
         else:
             require(not animation_info, "Debris should be static; game owns tumbling motion")
         images = [self.image(item) for item in doc.get("images", [])]
@@ -417,7 +422,7 @@ def technical_sheet(report):
         lines.append(f"| `{asset['file']}` | {asset['triangles']:,} | {asset['vertices']:,} | {asset['surfaces']} | {asset['mesh_nodes']} | {dims} |")
     lines += ["", "Surfaces are material partitions; they are not a measured GPU draw-call count. Hard face normals intentionally split corner vertices.", "",
         f"The complete set contains {sum(a['triangles'] for a in report['assets']):,} triangles. Every GLB embeds the same 256 × 256 RGB atlas and supplies TEXCOORD_0 UVs on every surface.", "",
-        "Each enemy has one four-joint skeleton and four clips: `cruise`, `hit`, `windup`, `attack`. All vertices carry one full-weight bone influence. Debris contains no skeletons or animation clips.", "",
+        "Each enemy has one four-joint skeleton, a role-specific windup/release pair, and the four shared clips: `cruise`, `hit`, `windup`, `attack`. All vertices carry one full-weight bone influence. Debris contains no skeletons or animation clips.", "",
         "The static validator requires nondegenerate geometry and UV triangles, finite coordinates, valid material tints and atlas references, and no collision meshes/cameras/lights. The exact check policy, all material factors, texture digests, and animation durations are in `validation.json`.", ""]
     return "\n".join(lines).encode()
 

@@ -57,7 +57,7 @@ func _run() -> void:
 			"sniper":
 				enemy._locked_direction = Vector3.FORWARD
 				enemy._fire_locked_shot(enemy.get_socket(&"MuzzleCenter"))
-		_expect(motion.current_clip == &"attack", role + " actual attack releases its Blender clip")
+		_expect(motion.current_clip == {"basic": &"charge_attack", "fast": &"phase_attack", "bomber": &"deploy_attack", "tank": &"radial_attack", "sniper": &"rail_attack"}[role], role + " actual attack releases its specialized Blender clip")
 		for step in 42:
 			enemy.advance_motion(1.0/60.0)
 		_expect(motion.current_clip == &"cruise", role + " settles after firing")

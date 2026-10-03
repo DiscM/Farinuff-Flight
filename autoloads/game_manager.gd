@@ -18,6 +18,7 @@ var lives: int = 3
 ## Lives the current run started with (after hull, ship, and modifier
 ## deltas). Try-again revives restore to this instead of a flat value.
 var starting_lives: int = 3
+var hull_capacity: int = 3
 var current_wave: int = 1
 var is_game_active: bool = false
 var boss_active: bool = false
@@ -69,7 +70,7 @@ const ALL_UPGRADES: Array[Dictionary] = [
 		"role": "Survival",
 		"name": "Hull Plating",
 		"icon": "🛡️",
-		"description": "+1 life. Reflect 3 shots in one boost to ready a one-hit armor guard.",
+		"description": "+1 hull capacity and repair. Reflect 3 shots in one boost to ready a one-hit armor guard.",
 		"color": Color(0.8, 0.55, 1.0),
 	},
 	{
@@ -110,7 +111,7 @@ const ALL_UPGRADES: Array[Dictionary] = [
 		"role": "Firepower",
 		"name": "Overclock",
 		"icon": "⚡",
-		"description": "3× fire rate for 2.5s every 16s. Stacks with Rapid Fire.",
+		"description": "2× fire rate for 2.5s every 16s. Combined Rapid Fire bonus capped at 3×.",
 		"color": Color(0.9, 1.0, 0.2),
 	},
 	{
@@ -152,6 +153,7 @@ const META_ELITE_UPGRADES: Array[Dictionary] = [
 		"description": "Explosive shots deal splash damage.",
 		"color": Color(1.0, 0.35, 0.35),
 		"meta_unlock": "meta_explosive",
+		"minimum_reward_wave": 10,
 	},
 ]
 
@@ -163,6 +165,32 @@ func get_upgrade_pool() -> Array[Dictionary]:
 		if MetaProgression.is_unlocked(str(upgrade["meta_unlock"])):
 			pool.append(upgrade)
 	return pool
+
+## Reward eligibility is separate from the owned blueprint catalog.
+func get_eligible_upgrade_pool(reward_wave: int = current_wave) -> Array[Dictionary]:
+	var pool: Array[Dictionary] = []
+	for upgrade in get_upgrade_pool():
+		if reward_wave >= int(upgrade.get("minimum_reward_wave", 0)):
+			pool.append(upgrade)
+	return pool
+
+
+func repair_hull(amount: int) -> void:
+	if amount <= 0 or lives >= hull_capacity:
+		return
+	lives = mini(hull_capacity, lives + amount)
+	if lives == hull_capacity:
+		orbs_collected = 0
+		SignalBus.orb_meter_changed.emit(orbs_collected, orbs_per_heart)
+	SignalBus.lives_changed.emit(lives)
+
+
+func grant_hull_capacity(amount: int) -> void:
+	if amount <= 0:
+		return
+	hull_capacity += amount
+	repair_hull(amount)
+
 
 # --- Difficulty scaling ---
 var base_spawn_interval: float = 1.55
@@ -302,8 +330,7 @@ func claim_elite_supplies() -> bool:
 	if not elite_supply_pending or practice_mode or not is_game_active or not has_all_available_elites():
 		return false
 	elite_supply_pending = false
-	lives += 5
-	SignalBus.lives_changed.emit(lives)
+	repair_hull(5)
 	SignalBus.xp_orb_collected.emit(50)
 	return true
 
@@ -325,16 +352,22 @@ func continue_into_endless() -> bool:
 # --- Orb Meter ---
 
 ## Called when an XP orb is collected. Accumulates orb value into the
-## meter; each time the meter fills, the player gains +1 life and the
-## remainder carries over. Also tracks per-wave orb progress and
+## repair meter while damaged; each fill repairs one life up to hull capacity.
+## Full hulls discard repair progress. Also tracks per-wave orb progress and
 ## triggers a wave advance when the threshold is met (unless a boss is active).
 func _on_orb_collected(value: int) -> void:
-	orbs_collected += value
-	# If we gained more than enough for a heart, carry over the remainder
-	while orbs_collected >= orbs_per_heart:
-		orbs_collected -= orbs_per_heart
-		lives += 1
-		SignalBus.lives_changed.emit(lives)
+	if value <= 0:
+		return
+	if lives >= hull_capacity:
+		# Full hulls spend collection on progression, never bank future repairs.
+		orbs_collected = 0
+	else:
+		orbs_collected += value
+		while orbs_collected >= orbs_per_heart and lives < hull_capacity:
+			orbs_collected -= orbs_per_heart
+			repair_hull(1)
+		if lives >= hull_capacity:
+			orbs_collected = 0
 	SignalBus.orb_meter_changed.emit(orbs_collected, orbs_per_heart)
 
 	orbs_collected_this_wave += value
@@ -367,8 +400,7 @@ func apply_stat_point(stat_name: String) -> void:
 			bonus_fire_rate_pct = minf(float(stat_fire_rate_level) * STAT_BONUS_STEP, STAT_BONUS_CAP)
 		"health":
 			stat_health_level += 1
-			lives += 1
-			SignalBus.lives_changed.emit(lives)
+			grant_hull_capacity(1)
 		"speed":
 			stat_speed_level += 1
 			bonus_speed_pct = minf(float(stat_speed_level) * STAT_BONUS_STEP, STAT_BONUS_CAP)
@@ -603,6 +635,7 @@ func start_game(consume_field_supplies: bool = true, practice: bool = false) -> 
 		run_salvage_multiplier = 1.0
 	# Try-again revives restore to the loadout's starting lives, not a flat 3.
 	starting_lives = lives
+	hull_capacity = starting_lives
 
 	is_game_active = true
 	boss_active = false

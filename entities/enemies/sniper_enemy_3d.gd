@@ -308,7 +308,7 @@ func _fire_locked_shot(muzzle: Marker3D, telegraphed: bool = false) -> void:
 	)
 	if telegraphed:
 		speed *= ShotTuning.TELEGRAPH_SPEED_MULTIPLIER
-	play_motion(&"attack")
+	play_motion(&"rail_attack")
 	manager.fire_enemy_projectile(muzzle.global_position, _locked_direction, speed)
 	if _bracket_shot:
 		var screen_aim := _flight_space.combat_motion_to_screen(_locked_direction).normalized()

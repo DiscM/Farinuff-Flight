@@ -13,6 +13,7 @@ func _run() -> void:
 	_check_encounters()
 	await _check_boost()
 	_check_allocation()
+	_check_run_balance()
 	for failure in _failures:
 		push_error(failure)
 	print("GAMEPLAY_REFINEMENT_SMOKE_PASS" if _failures.is_empty() else "GAMEPLAY_REFINEMENT_SMOKE_FAIL")
@@ -108,7 +109,7 @@ func _check_allocation() -> void:
 	popup._on_plus_pressed("fire_rate")
 	popup._on_plus_pressed("fire_rate")
 	_expect(popup.alloc_fire_rate == 1 and popup.points_remaining == 2, "Pending points respect remaining capacity")
-	_expect(popup.fire_rate_label.text == "−45.0%", "Preview shows actual capped benefit")
+	_expect(popup.fire_rate_label.text == "+45.0%", "Preview shows actual capped benefit")
 	var original_lives := GameManager.lives
 	popup._on_plus_pressed("health")
 	_expect(GameManager.stat_fire_rate_level == 9 and GameManager.lives == original_lives, "Preview does not mutate the ship")
@@ -126,6 +127,46 @@ func _check_allocation() -> void:
 	GameManager.apply_stat_point("fire_rate")
 	_expect(GameManager.stat_fire_rate_level == 10, "Stat model also rejects over-cap upgrades")
 	popup.queue_free()
+
+func _check_run_balance() -> void:
+	var tuning := preload("res://entities/player/player_weapon_tuning.gd")
+	_expect(is_equal_approx(tuning.fire_interval(0.22, 0.24, false, false), 0.22 / 1.24), "Permanent fire bonuses increase frequency by their stated amount")
+	_expect(is_equal_approx(tuning.fire_interval(0.22, 0.0, true, true), 0.22 / 3.0), "Rapid Fire and Overclock share the temporary frequency ceiling")
+	_expect(is_equal_approx(tuning.fire_interval(0.22, 0.79, true, true), 0.05), "Final interval floor includes Overclock")
+	var unlocks := MetaProgression.unlock_levels.duplicate()
+	MetaProgression.unlock_levels["meta_explosive"] = 1
+	for wave in [5, 10, 15]:
+		var eligible: Array[String] = []
+		for upgrade in GameManager.get_eligible_upgrade_pool(wave):
+			eligible.append(str(upgrade.id))
+		_expect(eligible.has("explosive_rounds") == (wave >= 10), "Explosive synergy enters rewards at boss 10")
+		_expect(eligible.has("twin_cannons") and eligible.has("auto_aim"), "First reward retains distinct build choices")
+	MetaProgression.unlock_levels = unlocks
+	GameManager.hull_capacity = 3
+	GameManager.lives = 3
+	GameManager.orbs_collected = 0
+	GameManager.orbs_collected_this_wave = 0
+	GameManager._on_orb_collected(60)
+	_expect(GameManager.lives == 3 and GameManager.orbs_collected == 0, "Full hull collection cannot bank extra lives or repairs")
+	_expect(GameManager.orbs_collected_this_wave == 60, "Full hull collection still advances wave progress")
+	GameManager.lives = 1
+	GameManager._on_orb_collected(11)
+	_expect(GameManager.lives == 1, "Repair requires a complete meter")
+	GameManager._on_orb_collected(1)
+	_expect(GameManager.lives == 2, "Damaged hull repairs on meter completion")
+	GameManager._on_orb_collected(100)
+	_expect(GameManager.lives == 3 and GameManager.orbs_collected == 0, "Large collections stop repairs at capacity and discard excess")
+	GameManager.lives = 2
+	GameManager._on_orb_collected(1)
+	_expect(GameManager.lives == 2, "Excess collected at full hull cannot repair the next hit")
+	GameManager.grant_hull_capacity(1)
+	_expect(GameManager.hull_capacity == 4 and GameManager.lives == 3, "Hull upgrades add capacity and repair one without filling all damage")
+	GameManager.start_game(false, false)
+	var wave := GameManager.current_wave
+	GameManager._on_orb_collected(GameManager.orbs_needed_this_wave)
+	_expect(GameManager.current_wave == wave + 1 and GameManager.lives == GameManager.hull_capacity, "Full hull still completes an ordinary production wave")
+	GameManager.start_game(false, true)
+	_expect(GameManager.hull_capacity == 3 and GameManager.orbs_collected == 0, "New runs reset capacity and repair progress")
 
 func _expect(condition: bool, message: String) -> void:
 	if not condition and not _failures.has(message):

@@ -25,6 +25,7 @@ monitoring = false
 monitorable = false
 input_ray_pickable = false
 script = ExtResource("1_enemy")
+archetype_id = &"sniper"
 aim_material_gen2 = SubResource("AimMaterialGen2")
 aim_material_later = SubResource("AimMaterial")
 gameplay_stats = ExtResource("3_stats")

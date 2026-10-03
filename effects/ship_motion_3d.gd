@@ -40,7 +40,7 @@ func play(clip: StringName, seconds: float = 0.0, hold: bool = false, blend: flo
 	if animation_player == null or not _clips.has(clip):
 		return
 	# Damage never masks a telegraphed release; shader hit feedback still runs.
-	if clip == &"hit" and current_clip == &"windup":
+	if clip == &"hit" and (is_windup() or current_clip == &"phase_shift"):
 		return
 	current_clip = clip
 	_hold = hold
@@ -51,6 +51,10 @@ func play(clip: StringName, seconds: float = 0.0, hold: bool = false, blend: flo
 	# Explicit restart makes repeated volleys responsive instead of queuing.
 	animation_player.seek(0.0, true)
 	_update_bones()
+
+
+func is_windup() -> bool:
+	return current_clip == &"windup" or String(current_clip).ends_with("_windup")
 
 
 func set_boost(enabled: bool) -> void:

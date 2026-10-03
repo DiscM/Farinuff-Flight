@@ -38,7 +38,7 @@ static func capture(game: Native3DGameplay, index: int) -> Dictionary:
 		await game.get_tree().physics_frame
 		var executor = boss._boss_ai.executor
 		if not report.windup and executor.winding_up and executor.elapsed > executor.plan.warning_seconds * .65:
-			report.windup = boss._motions[index].current_clip == &"windup"
+			report.windup = boss._motions[index].is_windup()
 			report.windup_attack = String(executor.plan.definition.id)
 			report.windup_pods = []
 			for section in boss._sections:
@@ -47,7 +47,7 @@ static func capture(game: Native3DGameplay, index: int) -> Dictionary:
 			await RenderingServer.frame_post_draw
 			game.get_viewport().get_texture().get_image().save_png(OUTPUT + "/%s_windup.png" % IDS[index])
 		var fired: int = game.projectile_manager._pools[1].shots_fired - initial_shots
-		if report.windup and fired > 0 and boss._motions[index].current_clip == &"attack":
+		if report.windup and fired > 0 and String(boss._motions[index].current_clip).ends_with("_attack"):
 			report.attack = true
 			report.projectiles_fired = fired
 			report.attack_id = String(executor.plan.definition.id) if executor.plan != null else String(boss._boss_ai.selector.last_attack)

@@ -291,7 +291,7 @@ func _fire_radial_burst(angle_offset: float = 0.0) -> void:
 	var muzzle := sockets.get_node_or_null("MuzzleCenter") as Marker3D
 	if manager == null or not manager.is_ready or muzzle == null:
 		return
-	play_motion(&"attack")
+	play_motion(&"radial_attack")
 	for index in range(bullet_count):
 		var angle := (TAU / float(bullet_count)) * float(index) + angle_offset
 		var screen_direction := Vector2(sin(angle), cos(angle))
@@ -320,7 +320,7 @@ func _discharge_overload_step() -> void:
 		) as ProjectileManager
 		var muzzle := get_socket(&"MuzzleCenter")
 		if manager != null and manager.is_ready and muzzle != null:
-			play_motion(&"attack")
+			play_motion(&"radial_attack")
 			manager.fire_enemy_projectile(
 				muzzle.global_position,
 				_flight_space.screen_motion_to_combat(Vector2.from_angle(angle)),

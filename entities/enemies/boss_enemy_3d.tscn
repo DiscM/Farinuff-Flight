@@ -41,6 +41,7 @@ collision_mask = 0
 monitoring = false
 monitorable = false
 script = ExtResource("1")
+archetype_id = &"boss"
 surface_style = 1
 flight_style = 5
 [node name="CollisionShape3D" type="CollisionShape3D" parent="."]

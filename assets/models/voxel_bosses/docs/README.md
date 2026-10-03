@@ -40,7 +40,7 @@ Blender uses +Z up and +Y forward; glTF/Godot uses +Y up and −Z forward. One s
 
 Each exported asset has six mesh parts (`Body`, `Port`, `Starboard`, `Weapon`, `Reactor`, `Engines`) and one four-bone rigid skeleton (`Body`, `Port`, `Starboard`, `Weapon`). Every vertex carries one full-weight bone influence, preserving square voxel forms during articulation. The detached section is an independently animated asset.
 
-All six assets contain `cruise`, `hit`, `windup`, and `attack`. Clip names are stable integration identifiers. Bone movement provides role-specific idle motion, attack anticipation, firing recoil, and damage response. Gameplay code remains responsible for when an attack fires, interruption rules, collision, health, and effects.
+All six assets contain the shared `cruise`, `hit`, `windup`, and `attack` clips, plus `slam_windup/attack`, `charge_windup/attack`, `volley_windup/attack`, `alternate_windup/attack`, and `phase_shift` (13 clips). Clip names are stable integration identifiers. Bone movement provides role-specific idle motion, attack anticipation, firing recoil, and damage response. Gameplay code remains responsible for when an attack fires, interruption rules, collision, health, and effects.
 
 Loop `cruise`; play `hit` and `attack` once and return to cruise. Play `windup` once and hold its final charged pose until the gameplay release. Its last pose matches the first attack pose; attack and hit finish at neutral. The packaged playback helper configures these behaviors for the game.
 
@@ -92,3 +92,8 @@ Rendered texture comparisons and gameplay animation checks are separate evidence
 The delivered QA set includes five passing headless checks, 393 static integration assertions, twelve GPU atlas-toggle comparisons, and successful first-attack checks for all five bosses. Pod damage, independent flash, animation, and destruction were checked in the native playfield. See `design/voxel-bosses/qa/README.md` for precise coverage, reproduction steps, and existing teardown diagnostics. Staged presentation images are identified separately from actual AI-driven encounter frames.
 
 `docs/provenance.json` preserves the exact request and the prior Voxel Frontier style/atlas provenance. `RIGHTS.md` records license scope without inventing a public redistribution grant for the original project artwork.
+
+
+### Attack-family animation revision (October 2, 2026)
+
+The production executor selects matching family windup/release clips and stretches the warning to its committed duration. Projectile recoil fits the burst interval; charge articulation spans the charge duration. Active weapon pods share the family selection. Damage feedback cannot replace held warnings or phase shifts. Clip pose continuity is checked by the package validator. `tools/build_attack_motion_blender.py` updates the existing editable sources and exports without rebinding or altering geometry; `tools/enemy_attack_motion.py` contains the authored pose recipes. The earlier 1.0.0 delivery ZIP remains a historical snapshot; the current source tree, catalog and validation describe this animation revision.

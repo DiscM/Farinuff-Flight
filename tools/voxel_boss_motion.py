@@ -9,6 +9,8 @@ pitch are degrees; spread and recoil are model-space units.
 
 Only visual bones animate. Body lift remains zero and body scale remains one,
 so no clip changes the actor origin, collision shape, or gameplay timing.
+The shared poses below are supplemented by enemy_attack_motion.py with
+slam/charge/volley/alternate handoffs and a phase-shift animation.
 Godot's ShipMotion3D stretches windup to the encounter's warning duration and
 holds its final pose; attack starts in precisely that pose. Sample at 30 fps
 with AUTO_CLAMPED Bezier handles to preserve each release and prevent ringing.
@@ -19,11 +21,12 @@ print a compact duration/key-count report. Importing it performs no I/O.
 
 import json
 import math
+from enemy_attack_motion import boss_clips
 
 
 ROLES = ("assault", "bulwark", "tempest", "void_harbinger", "tempest_core", "section")
 BONES = ("Body", "Port", "Starboard", "Weapon")
-CLIP_NAMES = ("cruise", "hit", "windup", "attack")
+CLIP_NAMES = ("cruise", "hit", "windup", "attack", "charge_windup", "charge_attack", "slam_windup", "slam_attack", "volley_windup", "volley_attack", "alternate_windup", "alternate_attack", "phase_shift")
 POSE_KEYS = ("fold", "sweep", "spread", "recoil", "pitch", "lift", "scale")
 
 DESIGN_NOTES = {
@@ -191,7 +194,7 @@ def clips(role):
     # Copy each key separately: repeated held poses and clip-boundary matches
     # must not alias one another when an author adjusts a returned timeline.
     return {clip: [(seconds, dict(values)) for seconds, values in keys]
-            for clip, keys in _CLIPS[role].items()}
+            for clip, keys in (_CLIPS[role] | boss_clips(role)).items()}
 
 
 def validate_clips(role, animation_clips=None):
@@ -209,7 +212,7 @@ def validate_clips(role, animation_clips=None):
         if not condition:
             raise ValueError(f"{role}: {message}")
 
-    require(set(data) == set(CLIP_NAMES), "must contain exactly cruise/hit/windup/attack")
+    require(set(data) == set(CLIP_NAMES), "must contain the complete boss attack clip suite")
     limits = dict(fold=24, sweep=15, spread=.60, recoil=.50, pitch=3)
     if role == "section":
         limits.update(fold=16, sweep=8, spread=.18, recoil=.18, pitch=1.5)

@@ -20,13 +20,31 @@
         "cruise",
         "hit",
         "windup",
-        "attack"
+        "attack",
+        "charge_windup",
+        "charge_attack",
+        "slam_windup",
+        "slam_attack",
+        "volley_windup",
+        "volley_attack",
+        "alternate_windup",
+        "alternate_attack",
+        "phase_shift"
       ],
       "clip_durations_seconds": {
         "cruise": 2.8,
         "hit": 0.28,
         "windup": 0.76,
-        "attack": 0.64
+        "attack": 0.64,
+        "charge_windup": 1.0,
+        "charge_attack": 0.65,
+        "slam_windup": 1.0,
+        "slam_attack": 0.65,
+        "volley_windup": 1.0,
+        "volley_attack": 0.65,
+        "alternate_windup": 1.0,
+        "alternate_attack": 0.65,
+        "phase_shift": 1.1
       },
       "sockets": {
         "Socket_Muzzle": "Weapon",
@@ -57,13 +75,31 @@
         "cruise",
         "hit",
         "windup",
-        "attack"
+        "attack",
+        "charge_windup",
+        "charge_attack",
+        "slam_windup",
+        "slam_attack",
+        "volley_windup",
+        "volley_attack",
+        "alternate_windup",
+        "alternate_attack",
+        "phase_shift"
       ],
       "clip_durations_seconds": {
         "cruise": 3.6,
         "hit": 0.4,
         "windup": 1.02,
-        "attack": 0.96
+        "attack": 0.96,
+        "charge_windup": 1.0,
+        "charge_attack": 0.95,
+        "slam_windup": 1.0,
+        "slam_attack": 0.95,
+        "volley_windup": 1.0,
+        "volley_attack": 0.95,
+        "alternate_windup": 1.0,
+        "alternate_attack": 0.95,
+        "phase_shift": 1.1
       },
       "sockets": {
         "Socket_Muzzle": "Weapon",
@@ -94,13 +130,31 @@
         "cruise",
         "hit",
         "windup",
-        "attack"
+        "attack",
+        "charge_windup",
+        "charge_attack",
+        "slam_windup",
+        "slam_attack",
+        "volley_windup",
+        "volley_attack",
+        "alternate_windup",
+        "alternate_attack",
+        "phase_shift"
       ],
       "clip_durations_seconds": {
         "cruise": 2.4,
         "hit": 0.25,
         "windup": 0.7,
-        "attack": 0.58
+        "attack": 0.58,
+        "charge_windup": 1.0,
+        "charge_attack": 0.6,
+        "slam_windup": 1.0,
+        "slam_attack": 0.6,
+        "volley_windup": 1.0,
+        "volley_attack": 0.6,
+        "alternate_windup": 1.0,
+        "alternate_attack": 0.6,
+        "phase_shift": 1.1
       },
       "sockets": {
         "Socket_Muzzle": "Weapon",
@@ -133,13 +187,31 @@
         "cruise",
         "hit",
         "windup",
-        "attack"
+        "attack",
+        "charge_windup",
+        "charge_attack",
+        "slam_windup",
+        "slam_attack",
+        "volley_windup",
+        "volley_attack",
+        "alternate_windup",
+        "alternate_attack",
+        "phase_shift"
       ],
       "clip_durations_seconds": {
         "cruise": 4.2,
         "hit": 0.36,
         "windup": 0.96,
-        "attack": 0.94
+        "attack": 0.94,
+        "charge_windup": 1.0,
+        "charge_attack": 0.9,
+        "slam_windup": 1.0,
+        "slam_attack": 0.9,
+        "volley_windup": 1.0,
+        "volley_attack": 0.9,
+        "alternate_windup": 1.0,
+        "alternate_attack": 0.9,
+        "phase_shift": 1.1
       },
       "sockets": {
         "Socket_Muzzle": "Weapon",
@@ -170,13 +242,31 @@
         "cruise",
         "hit",
         "windup",
-        "attack"
+        "attack",
+        "charge_windup",
+        "charge_attack",
+        "slam_windup",
+        "slam_attack",
+        "volley_windup",
+        "volley_attack",
+        "alternate_windup",
+        "alternate_attack",
+        "phase_shift"
       ],
       "clip_durations_seconds": {
         "cruise": 3.2,
         "hit": 0.32,
         "windup": 0.88,
-        "attack": 0.82
+        "attack": 0.82,
+        "charge_windup": 1.0,
+        "charge_attack": 0.8,
+        "slam_windup": 1.0,
+        "slam_attack": 0.8,
+        "volley_windup": 1.0,
+        "volley_attack": 0.8,
+        "alternate_windup": 1.0,
+        "alternate_attack": 0.8,
+        "phase_shift": 1.1
       },
       "sockets": {
         "Socket_Muzzle": "Weapon",
@@ -209,13 +299,31 @@
         "cruise",
         "hit",
         "windup",
-        "attack"
+        "attack",
+        "charge_windup",
+        "charge_attack",
+        "slam_windup",
+        "slam_attack",
+        "volley_windup",
+        "volley_attack",
+        "alternate_windup",
+        "alternate_attack",
+        "phase_shift"
       ],
       "clip_durations_seconds": {
         "cruise": 2.0,
         "hit": 0.22,
         "windup": 0.58,
-        "attack": 0.46
+        "attack": 0.46,
+        "charge_windup": 1.0,
+        "charge_attack": 0.5,
+        "slam_windup": 1.0,
+        "slam_attack": 0.5,
+        "volley_windup": 1.0,
+        "volley_attack": 0.5,
+        "alternate_windup": 1.0,
+        "alternate_attack": 0.5,
+        "phase_shift": 1.1
       },
       "sockets": {
         "Socket_Muzzle": "Weapon",

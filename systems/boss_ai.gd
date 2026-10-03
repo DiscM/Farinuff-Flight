@@ -341,6 +341,8 @@ func _enter(next: State, duration: float = 0.0) -> void:
 		movement.mode = Movement.Mode.STRAFE
 	if next == State.DODGE:
 		_actor._flight_motion.play(_actor.FlightMotion.Maneuver.BANK_REVERSAL, movement.dodge_side, duration)
+	elif next == State.PHASE_TRANSITION:
+		_actor.play_motion(&"phase_shift", duration)
 	elif next == State.RECOVERY:
 		_actor._flight_motion.play(_actor.FlightMotion.Maneuver.PITCH_RECOVERY, 1.0, duration)
 
@@ -351,6 +353,7 @@ func begin_phase(next: int) -> void:
 	movement.begin_phase(phase)
 	if state == State.PHASE_TRANSITION:
 		state_remaining = profile.phase_transition_duration
+		_actor.play_motion(&"phase_shift", state_remaining)
 		combat_cancelled.emit()
 	else:
 		_enter(State.PHASE_TRANSITION, profile.phase_transition_duration)

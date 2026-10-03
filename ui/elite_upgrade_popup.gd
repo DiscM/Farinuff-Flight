@@ -204,7 +204,7 @@ func _make_empty_state() -> PanelContainer:
 	card.add_child(content)
 
 	var message := Label.new()
-	message.text = "ALL UPGRADES INSTALLED\n+50 orb points · +5 lives" if GameManager.elite_supply_pending else "ALL UPGRADES INSTALLED"
+	message.text = "ALL UPGRADES INSTALLED\n+50 orb points · repair up to 5 lives" if GameManager.elite_supply_pending else "ALL UPGRADES INSTALLED"
 	message.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	message.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	message.add_theme_color_override("font_color", Color(0.75, 0.84, 0.98))

@@ -417,15 +417,12 @@ func _update_shooting() -> void:
 	var muzzle := get_socket(&"MuzzleCenter")
 	if muzzle == null:
 		return
-	var rate_multiplier := maxf(
-		1.0 - GameManager.bonus_fire_rate_pct - GameManager.meta_fire_rate_pct - GameManager.ship_fire_rate_pct,
-		WeaponTuning.MIN_FIRE_RATE_MULTIPLIER
+	var interval := WeaponTuning.fire_interval(
+		base_fire_interval,
+		GameManager.bonus_fire_rate_pct + GameManager.meta_fire_rate_pct + GameManager.ship_fire_rate_pct,
+		has_rapid_fire or get_dev_power_override("rapid_fire"),
+		has_elite_upgrade("overclock") and fmod(_elite_clock, 16.0) < 2.5
 	)
-	if has_rapid_fire or get_dev_power_override("rapid_fire"):
-		rate_multiplier *= 0.4
-	var interval := maxf(base_fire_interval * rate_multiplier, WeaponTuning.MIN_FIRE_INTERVAL)
-	if has_elite_upgrade("overclock") and fmod(_elite_clock, 16.0) < 2.5:
-		interval /= 3.0
 	shoot_timer.start(interval)
 	var motion := get_ship_motion()
 	if motion != null:
@@ -799,8 +796,7 @@ func set_elite_upgrade_enabled(
 				armor_guard_ready = false
 				shield_visual.visible = has_shield
 			if enabled and grant_one_time_reward:
-				GameManager.lives += 1
-				SignalBus.lives_changed.emit(GameManager.lives)
+				GameManager.grant_hull_capacity(1)
 		"shield_burst":
 			_shield_burst_clock = 0.0
 		"orbitals":

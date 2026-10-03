@@ -29,6 +29,7 @@ CORE_FILES = (
     "tools/build_voxel_frontier_atlas.py",
     "tools/build_combat_motion_blender.py",
     "tools/voxel_boss_motion.py",
+    "tools/enemy_attack_motion.py",
     "effects/ship_motion_3d.gd",
     "effects/rendering/enemy_surface_materials.gd",
     "effects/shaders/models/imported_enemy_surface_3d.gdshader",
@@ -42,7 +43,7 @@ json_bytes = shared.json_bytes
 
 def audit_asset(path, spec):
     model = shared.GLB(path)
-    report = model.audit(spec["id"])
+    report = model.audit(spec["id"], spec["clips"])
     nodes, skins = model.doc["nodes"], model.doc.get("skins", [])
     names = [node.get("name", "") for node in nodes]
     require(len(names) == len(set(names)), "Duplicate exported node names")
@@ -104,6 +105,11 @@ def audit_asset(path, spec):
     same_pose("hit", 0, "hit", 1)
     same_pose("windup", 1, "attack", 0)
     same_pose("attack", 1, "cruise", 0)
+    for family in ("slam", "charge", "volley", "alternate"):
+        same_pose(family + "_windup", 1, family + "_attack", 0)
+        same_pose(family + "_attack", 1, "cruise", 0)
+    same_pose("phase_shift", 0, "cruise", 0)
+    same_pose("phase_shift", 1, "cruise", 0)
     report.update({"name": spec["name"], "role": spec["role"], "rig_node": spec["rig_node"], "bones": sorted(joint_names), "sockets": sockets, "motion": motion, "pose_continuity": "pass: cruise loop, hit return, windup-to-attack handoff, attack-to-idle return"})
     return report
 
@@ -121,7 +127,7 @@ def collect(root):
     pixels = {(image["width"], image["height"], image["rgba_pixels_sha256"]) for image in textures}
     for report in reports:
         require(all((image["width"], image["height"], image["rgba_pixels_sha256"]) in pixels for image in report["embedded_images"]), report["file"] + ": embedded atlas pixels differ from packaged PNG")
-    return {"schema_version": 1, "package_id": catalog["package_id"], "status": "pass", "evidence_type": "Static file validation; rendered and gameplay evidence is separate", "policy": {"max_triangles_per_asset": shared.MAX_TRIANGLES, "max_vertices_per_asset": shared.MAX_VERTICES, "required_texture": "embedded 256×256 atlas on every material; distinct base-color tints", "rig": "one four-bone rigid skeleton on every asset", "sockets": "exact named markers parented to their catalogued bone", "clips": "cruise, hit, windup, attack; actual nonconstant bone motion required", "collisionless": True}, "assets": reports, "textures": textures}
+    return {"schema_version": 1, "package_id": catalog["package_id"], "status": "pass", "evidence_type": "Static file validation; rendered and gameplay evidence is separate", "policy": {"max_triangles_per_asset": shared.MAX_TRIANGLES, "max_vertices_per_asset": shared.MAX_VERTICES, "required_texture": "embedded 256×256 atlas on every material; distinct base-color tints", "rig": "one four-bone rigid skeleton on every asset", "sockets": "exact named markers parented to their catalogued bone", "clips": "four shared clips, eight attack-family clips, phase_shift; actual nonconstant bone motion required", "collisionless": True}, "assets": reports, "textures": textures}
 
 
 def technical_sheet(report):
@@ -129,7 +135,7 @@ def technical_sheet(report):
     for asset in report["assets"]:
         dimensions = " × ".join(f"{value:.2f}" for value in asset["dimensions_xyz"])
         lines.append(f"| `{asset['file']}` | {asset['triangles']:,} | {asset['vertices']:,} | {asset['surfaces']} | {asset['mesh_nodes']} | {dimensions} | {len(asset['sockets'])} |")
-    lines += ["", f"Total geometry: {sum(asset['triangles'] for asset in report['assets']):,} triangles. Every asset has a four-bone rigid skeleton, four moving animation clips, valid UVs and the shared embedded atlas. Hard face normals intentionally split vertices. Surfaces are material partitions; they are not a measured draw-call count.", "", "Exact bone/socket bindings, moving bones per clip, clip durations, material factors, atlas hashes and file digests are recorded in `validation.json`.", ""]
+    lines += ["", f"Total geometry: {sum(asset['triangles'] for asset in report['assets']):,} triangles. Every asset has a four-bone rigid skeleton, thirteen moving animation clips, valid UVs and the shared embedded atlas. Hard face normals intentionally split vertices. Surfaces are material partitions; they are not a measured draw-call count.", "", "Exact bone/socket bindings, moving bones per clip, clip durations, material factors, atlas hashes and file digests are recorded in `validation.json`.", ""]
     return "\n".join(lines).encode()
 
 
